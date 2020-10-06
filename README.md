@@ -26,7 +26,7 @@
      To manually obtain an assumed role for your Jomax account:
 
      ```
-     eval $(aws-okta-processor authenticate -d 7200 -e -o godaddy.okta.com -u ${USER} -k okta')
+     eval $(aws-okta-processor authenticate -d 7200 -e -o godaddy.okta.com -u ${USER} -k okta)
      ```
 
    * Verify your current role:
