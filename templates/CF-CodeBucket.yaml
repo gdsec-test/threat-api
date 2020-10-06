@@ -1,0 +1,8 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: ThreatTools API Code Bucket
+
+Resources:
+  CodeBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub gd-threattools-${AWS::AccountId}-code-bucket

@@ -1,0 +1,46 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: ThreatTools API Core Permissions
+
+Parameters:
+  ApiId:
+    Type: String
+    Description: API Gateway Identifier
+
+Resources:
+  SwaggerRootPermission:
+    Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
+    Properties:
+      ProductName: LambdaPermission
+      ProvisioningArtifactName: 1.0.1
+      ProvisionedProductName: SwaggerRootPermission
+      ProvisioningParameters:
+        - Key: Action
+          Value: lambda:InvokeFunction
+        - Key: FunctionName
+          Value: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:SwaggerUI
+        - Key: Principal
+          Value: apigateway.amazonaws.com
+        - Key: SourceArn
+          Value: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ApiId}/*/GET/swagger
+      Tags:
+        - Key: doNotShutDown
+          Value: true
+
+  SwaggerPathPermission:
+    Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
+    Properties:
+      ProductName: LambdaPermission
+      ProvisioningArtifactName: 1.0.1
+      ProvisionedProductName: SwaggerPathPermission
+      ProvisioningParameters:
+        - Key: Action
+          Value: lambda:InvokeFunction
+        - Key: FunctionName
+          Value: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:SwaggerUI
+        - Key: Principal
+          Value: apigateway.amazonaws.com
+        - Key: SourceArn
+          Value: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ApiId}/*/GET/swagger/*
+      Tags:
+        - Key: doNotShutDown
+          Value: true

@@ -1,0 +1,20 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: ThreatTools API Code Bucket
+
+Resources:
+  CodeBucket:
+    Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
+    Properties:
+      ProductName: S3
+      ProvisioningArtifactName: 1.6.0
+      ProvisionedProductName: CodeBucket
+      ProvisioningParameters:
+        - Key: BucketNameSuffix
+          Value: code-bucket
+        - Key: BucketPolicy
+          Value: Private
+        - Key: OldVersionExpirationDays
+          Value: 7
+      Tags:
+        - Key: doNotShutDown
+          Value: true

@@ -1,0 +1,186 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: ThreatTools API Core Resources
+
+Parameters:
+  DevelopmentTeam:
+    Type: AWS::SSM::Parameter::Value<String>
+    Description: SSM Parameter for team owning the created resources.
+    Default: /AdminParams/Team/Name
+    AllowedValues:
+      - /AdminParams/Team/Name
+  DevelopmentEnvironment:
+    Type: AWS::SSM::Parameter::Value<String>
+    Description: SSM Parameter for development environment this will live in.
+    Default: /AdminParams/Team/Environment
+    AllowedValues:
+      - /AdminParams/Team/Environment
+  CustomDomainName:
+    Type: String
+    Description: Custom Domain Name for ThreatTools API
+    Default: ""
+  CustomDomainAcmCertificateId:
+    Type: String
+    Description: ID of the ACM Certificate to use for the Custom Domain Name.
+    Default: ""
+
+Resources:
+  SwaggerUIRole:
+    Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
+    Properties:
+      ProductName: IAMRole
+      ProvisioningArtifactName: 1.0.9
+      ProvisionedProductName: SwaggerUIRole
+      ProvisioningParameters:
+        - Key: RoleNameSuffix
+          Value: SwaggerUIRole
+        - Key: ManagedPolicyArns
+          Value: !Join
+            - ","
+            -
+              - arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess
+              - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+        - Key: AssumingServices
+          Value: lambda.amazonaws.com
+      Tags:
+        - Key: doNotShutDown
+          Value: true
+
+  SwaggerUIBucket:
+    Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
+    Properties:
+      ProductName: S3
+      ProvisioningArtifactName: 1.6.0
+      ProvisionedProductName: SwaggerUIBucket
+      ProvisioningParameters:
+        - Key: BucketNameSuffix
+          Value: swagger-ui-bucket
+        - Key: BucketPolicy
+          Value: Private
+        - Key: OldVersionExpirationDays
+          Value: 7
+      Tags:
+        - Key: doNotShutDown
+          Value: true
+
+  SwaggerUILambda:
+    DependsOn:
+      - SwaggerUIRole
+      - SwaggerUIBucket
+    Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
+    Properties:
+      ProductName: Lambda
+      ProvisioningArtifactName: 2.3.0
+      ProvisionedProductName: SwaggerUILambda
+      ProvisioningParameters:
+        - Key: InlineCode
+          Value: !Sub |
+            import boto3
+            def handler(event, context):
+                try:
+                    s3_key = event["pathParameters"]["proxy"]
+                except:
+                    s3_key = "index.html"
+                try:
+                    s3_object = boto3.resource("s3").Object("gd-${DevelopmentTeam}-${DevelopmentEnvironment}-swagger-ui-bucket", s3_key)
+                    result = {
+                        "statusCode": 200,
+                        "headers": {"Content-Type": s3_object.content_type},
+                        "body": s3_object.get().get("Body").read().decode("utf-8"),
+                    }
+                except:
+                    result = {"statusCode": 404, "body": "NOT FOUND"}
+                return result
+        - Key: Handler
+          Value: index.handler
+        - Key: LambdaName
+          Value: SwaggerUI
+        - Key: LambdaDescription
+          Value: Serves Swagger UI resources from S3
+        - Key: MemorySize
+          Value: 256
+        - Key: Runtime
+          Value: python3.7
+        - Key: Timeout
+          Value: 15
+        - Key: CustomIAMRoleNameSuffix
+          Value: SwaggerUIRole
+      Tags:
+        - Key: doNotShutDown
+          Value: true
+
+  ThreatRole:
+    Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
+    Properties:
+      ProductName: IAMRole
+      ProvisioningArtifactName: 1.0.9
+      ProvisionedProductName: ThreatRole
+      ProvisioningParameters:
+        - Key: RoleNameSuffix
+          Value: ThreatRole
+        - Key: ManagedPolicyArns
+          Value: !Join
+            - ","
+            -
+              - arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess
+              - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+        - Key: AssumingServices
+          Value: lambda.amazonaws.com
+      Tags:
+        - Key: doNotShutDown
+          Value: true
+
+  ThreatAPI:
+    DependsOn: SwaggerUILambda
+    Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
+    Properties:
+      ProductName: APIGateway
+      ProvisioningArtifactName: 1.8.0
+      ProvisionedProductName: ThreatAPI
+      ProvisioningParameters:
+        - Key: ApiName
+          Value: ThreatAPI
+        - Key: ApiEndpoint
+          Value: UNUSED
+        - Key: ApiDescription
+          Value: ThreatTools API Gateway
+        - Key: EndpointType
+          Value: REGIONAL
+        - Key: ApiSpecS3Key
+          Value: api-setup.json
+        - Key: ApiSpecS3Bucket
+          Value: !Sub gd-${DevelopmentTeam}-${DevelopmentEnvironment}-code-bucket
+        - Key: DisableSetupIntegration
+          Value: true
+        - Key: RequireApiKey
+          Value: false
+        - Key: DisableIamAuth
+          Value: true
+        - Key: EnableJwtAuth
+          Value: true
+        - Key: SsoJwtEndpoint
+          Value: sso.godaddy.com
+        - Key: RequireApiKey
+          Value: false
+        - Key: ResourcePolicy
+          Value: !Sub '{
+            "Version": "2012-10-17",
+            "Statement": [
+                {
+                    "Effect": "Allow",
+                    "Principal": "*",
+                    "Action": "execute-api:Invoke",
+                    "Resource": "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:*/gddeploy/*/*"
+                }
+            ]
+          }'
+        - Key: CustomDomainName
+          Value: !Ref CustomDomainName
+        - Key: CustomDomainAcmCertificateId
+          Value: !Ref CustomDomainAcmCertificateId
+      Tags:
+        - Key: doNotShutDown
+          Value: true
+
+Outputs:
+  StackArn:
+    Value: !GetAtt ThreatAPI.CloudformationStackArn

@@ -1,0 +1,119 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: ThreatTools API Core Resources
+
+Resources:
+  SwaggerUIRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: threattools-custom-SwaggerUIRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+
+  SwaggerUIBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub gd-threattools-${AWS::AccountId}-swagger-ui-bucket
+
+  SwaggerUILambda:
+    DependsOn:
+      - SwaggerUIRole
+      - SwaggerUIBucket
+    Type: AWS::Lambda::Function
+    Properties:
+      Code:
+        ZipFile: !Sub |
+          import boto3
+          def handler(event, context):
+              try:
+                  s3_key = event["pathParameters"]["proxy"]
+              except:
+                  s3_key = "index.html"
+              try:
+                  s3_object = boto3.resource("s3").Object("gd-threattools-${AWS::AccountId}-swagger-ui-bucket", s3_key)
+                  result = {
+                      "statusCode": 200,
+                      "headers": {"Content-Type": s3_object.content_type},
+                      "body": s3_object.get().get("Body").read().decode("utf-8"),
+                  }
+              except:
+                  result = {"statusCode": 404, "body": "NOT FOUND"}
+              return result
+      Description: Serves Swagger UI resources from S3
+      FunctionName: SwaggerUI
+      Handler: index.handler
+      MemorySize: 256
+      Role: !GetAtt SwaggerUIRole.Arn
+      Runtime: python3.7
+      Timeout: 15
+
+  ThreatRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: threattools-custom-ThreatRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+
+  ThreatAPI:
+    DependsOn: SwaggerUILambda
+    Type: AWS::ApiGateway::RestApi
+    Properties:
+      Name: ThreatAPI
+      Description: ThreatTools API Gateway
+      EndpointConfiguration:
+        Types:
+          - REGIONAL
+      BodyS3Location:
+        Bucket: !Sub gd-threattools-${AWS::AccountId}-code-bucket
+        Key: api-setup.json
+      Policy:
+        Version: 2012-10-17
+        Statement:
+          -
+            Effect: Allow
+            Principal: "*"
+            Action: execute-api:Invoke
+            Resource: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:*/gddeploy/*/*"
+
+  ThreatDeployment:
+    Type: AWS::ApiGateway::Deployment
+    Properties:
+      RestApiId: !Ref ThreatAPI
+      StageName: gddeploy
+
+  SwaggerRootPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:SwaggerUI
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ThreatAPI}/gddeploy/GET/swagger"
+
+  SwaggerPathPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:SwaggerUI
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ThreatAPI}/gddeploy/GET/swagger/*"
+
+Outputs:
+  ThreatURL:
+    Value: !Sub "https://${ThreatAPI}.execute-api.${AWS::Region}.amazonaws.com/gddeploy"
