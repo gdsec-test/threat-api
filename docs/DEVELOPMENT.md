@@ -34,8 +34,7 @@ should be `sso-jwt` followed by the JWT, separated by a space character.
 
 ### Authorization
 
-- THREAT-??? will provide a library which individual APIs can use to check
-  authorization (using a specified list of JOMAX AD groups)
+* You can use the [util lambda](https://github.secureserver.net/threat/util/tree/master/lambda) tools to check authorization in individual lambdas (using a specified list of JOMAX AD groups).
 
 ### Standards / Best Practices
 
