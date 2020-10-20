@@ -11,4 +11,3 @@
 
   Simple script to get AD groups for a JWT.  Accepts a JWT as the first
   argument and returns a sorted list of AD groups.
-

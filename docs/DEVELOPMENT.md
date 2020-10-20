@@ -95,4 +95,3 @@ the pre-commit hooks, use the following command:
 ```bash
 pre-commit run -a
 ```
-

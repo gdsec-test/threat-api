@@ -71,4 +71,3 @@ This git repository contains resources grouped by the following functions:
   `cicd/` (TBD)
 
   TBD
-

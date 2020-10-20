@@ -16,4 +16,3 @@ and API implementations for the ThreatTools API hosted on AWS.
 ### Links
 
 * Add links (Confluence, GitHub repos) here
-
