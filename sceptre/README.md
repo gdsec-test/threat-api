@@ -120,4 +120,3 @@ sceptre launch dev-private/us-west-2
        --query regionalDomainName \
        --output text
    ```
-
