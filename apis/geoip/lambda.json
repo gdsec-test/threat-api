@@ -1,0 +1,6 @@
+{
+  "runtime": "go1.x",
+  "timeout": "15",
+  "memory-size": "256",
+  "handler": "main"
+}
