@@ -13,7 +13,6 @@ import (
 )
 
 func handler(ctx context.Context, request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
-
 	b, err := json.Marshal(request)
 	if err != nil {
 		fmt.Println("error:", err)
