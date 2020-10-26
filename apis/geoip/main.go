@@ -4,12 +4,18 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/aws/aws-lambda-go/events"
-	"github.com/aws/aws-lambda-go/lambda"
-	"github.com/oschwald/geoip2-golang"
 	"log"
 	"net"
 	"net/http"
+
+	"github.com/aws/aws-lambda-go/events"
+	"github.com/aws/aws-lambda-go/lambda"
+	"github.com/oschwald/geoip2-golang"
+
+	// This line adds apm tracing to this lambda
+	// Yep, it's that simple!
+	// Note that you must have the `ELASTIC_APM_SERVER_URL` and `ELASTIC_APM_API_KEY` env vars set
+	_ "go.elastic.co/apm/module/apmlambda"
 )
 
 func handler(ctx context.Context, request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
