@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/oschwald/geoip2-golang"
+	"github.secureserver.net/threat/util/lambda/toolbox"
 
 	// This line adds apm tracing to this lambda
 	// Yep, it's that simple!
@@ -29,6 +30,15 @@ func handler(ctx context.Context, request events.APIGatewayProxyRequest) (events
 	}
 
 	log.Printf("Received event: %s", b)
+
+	t := toolbox.GetToolbox()
+	t.Logger.Info("Logger")
+	httpClient := t.GetHTTPClient(nil)
+	resp, err := httpClient.Get("https://google.com")
+	if err != nil {
+		t.Logger.WithError(err).Error("Failed to make request")
+	}
+	t.Logger.WithField("StatusCode", resp.StatusCode).Info("Got response")
 
 	db, err := geoip2.Open("GeoLite2-City.mmdb")
 	if err != nil {
