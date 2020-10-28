@@ -18,8 +18,7 @@ fi
 
 env GOOS=linux GOARCH=amd64 go build main.go
 
-zip -9r function.zip main
- # GeoLite2-City.mmdb
+zip -9r function.zip main GeoLite2-City.mmdb
 
 # The following section will be replaced by generic code that iterates through
 # all of the lambda functions; for now, the following code will create or
