@@ -55,6 +55,23 @@ Resources:
       Runtime: python3.7
       Timeout: 15
 
+  ThreatPolicyDynamoDB:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      ManagedPolicyName: threattools-custom-ThreatPolicyDynamoDB
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action:
+              - dynamodb:GetItem
+              - dynamodb:Query
+              - dynamodb:Scan
+              - dynamodb:DeleteItem
+              - dynamodb:PutItem
+              - dynamodb:UpdateItem
+            Resource: "*"
+
   ThreatRole:
     Type: AWS::IAM::Role
     Properties:
@@ -62,6 +79,7 @@ Resources:
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess
         - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+        - !Ref ThreatPolicyDynamoDB
       AssumeRolePolicyDocument:
         Version: 2012-10-17
         Statement:
@@ -70,6 +88,25 @@ Resources:
               Service: lambda.amazonaws.com
             Action:
               - sts:AssumeRole
+
+  ThreatRequestsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      AttributeDefinitions:
+        -
+          AttributeName: request_id
+          AttributeType: S
+      KeySchema:
+        -
+          AttributeName: request_id
+          KeyType: HASH
+      TimeToLiveSpecification:
+        AttributeName: ttl
+        Enabled: true
+      ProvisionedThroughput:
+        ReadCapacityUnits: 5
+        WriteCapacityUnits: 5
+      TableName: requests
 
   ThreatAPI:
     DependsOn: SwaggerUILambda
