@@ -108,7 +108,39 @@ Resources:
         - Key: doNotShutDown
           Value: true
 
+  ThreatPolicyDynamoDB:
+    Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
+    Properties:
+      ProductName: IAMPolicy
+      ProvisioningArtifactName: 1.0.0
+      ProvisionedProductName: ThreatPolicyDynamoDB
+      ProvisioningParameters:
+        - Key: PolicyNameSuffix
+          Value: ThreatPolicyDynamoDB
+        - Key: PolicyJSON
+          Value: '{
+            "Version": "2012-10-17",
+            "Statement": [
+                {
+                    "Action": [
+                        "dynamodb:GetItem",
+                        "dynamodb:Query",
+                        "dynamodb:Scan",
+                        "dynamodb:DeleteItem",
+                        "dynamodb:PutItem",
+                        "dynamodb:UpdateItem"
+                    ],
+                    "Resource": "*",
+                    "Effect": "Allow"
+                }
+            ]
+        }'
+      Tags:
+        - Key: doNotShutDown
+          Value: true
+
   ThreatRole:
+    DependsOn: ThreatPolicyDynamoDB
     Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
     Properties:
       ProductName: IAMRole
@@ -123,8 +155,28 @@ Resources:
             -
               - arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess
               - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+              - !Sub arn:aws:iam::${AWS::AccountId}:policy/${DevelopmentTeam}-custom-ThreatPolicyDynamoDB
         - Key: AssumingServices
           Value: lambda.amazonaws.com
+      Tags:
+        - Key: doNotShutDown
+          Value: true
+
+  ThreatRequestsTable:
+    Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
+    Properties:
+      ProductName: DynamoDB
+      ProvisioningArtifactName: 1.2.1
+      ProvisionedProductName: ThreatRequestsTable
+      ProvisioningParameters:
+        - Key: DynamoDBTableName
+          Value: requests
+        - Key: PartitionKeyAttributeName
+          Value: request_id
+        - Key: PartitionKeyAttributeType
+          Value: S
+        - Key: TimeToLiveAttributeName
+          Value: ttl
       Tags:
         - Key: doNotShutDown
           Value: true
