@@ -40,10 +40,6 @@ def generate_swagger():
     
     return {'bytes': open("../swagger.json").read(), 'dictionary':parent_swagger}
 
-    # # reurn the dictionary ?
-    # return json.dumps(parent_swagger)
-
-
 
 def upload_swagger_json(swagger_spec):
     """\
@@ -133,8 +129,8 @@ def update_apigateway(api_spec):
 if __name__ == "__main__":
     # Update swagger.json for SwaggerUI
     swagger = generate_swagger() # returns [bytes, dictionary]
-    # upload_swagger_json(swagger['bytes']) # bytes used in uploading to S3
+    upload_swagger_json(swagger['bytes']) # bytes used in uploading to S3
 
-    # # Update the API Gateway specification
+    # Update the API Gateway specification
     api_definitions = generate_api_definitions(swagger['dictionary']) # dictionary used in api definition 
-    # update_apigateway(api_definitions)
+    update_apigateway(api_definitions)
