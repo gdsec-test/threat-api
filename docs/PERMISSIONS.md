@@ -17,10 +17,10 @@ This list is a plan on what permissions to give to what module.  In the future, 
 * whois
   * Any GoDaddy employee
 * SNOW
-  * Any IOC -> searches SNOW (physical_security, incidents) - IR, Treat
+  * Any IOC -> searches SNOW (physical_security (maybe remove some data), incidents) - IR, Threat
   * Godaddy hostname -> CMDB - Infosec
 * Tanium (WIP)
-  * Hostname -> installed software - Any GoDaddy employee
+  * Hostname -> installed software - Only infosec (to start)
   * CVE -> All machines with vulnerable software related to the CVE - Only infosec (to start)
 * Recorded Future
   * Given CVE -> RF Report - All infosec
