@@ -10,6 +10,8 @@ import os
 import logging
 import boto3
 
+APIGATEWAY_ARN_URI_TEMPLATE = "arn:aws:apigateway:"
+
 
 def get_apigateway_template():
     """\
@@ -81,7 +83,7 @@ def generate_api_definitions(json_template):
     parent_api = json_template.copy()
     apigateway_integration = {
         "type": "aws_proxy",
-        "uri": "",  # to be updated later to the invoked lambdas
+        "uri": None,  # to be updated later to the invoked lambdas
         "responses": {"default": {"statusCode": "200"}},
         "passthroughBehavior": "when_no_match",
         "httpMethod": "POST",
@@ -116,8 +118,8 @@ def generate_api_definitions(json_template):
 
                         lambda_name = key.split(os.sep)[1]
                         uri = (
-                            "arn:aws:apigateway:us-west-2:"
-                            + "lambda:path/2015-03-31/functions/arn:aws:lambda:us-west-2:"
+                            APIGATEWAY_ARN_URI_TEMPLATE
+                            + "us-west-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-west-2:"
                             + aws_account_id
                             + ":function:"
                             + lambda_name
@@ -187,10 +189,10 @@ def update_apigateway(api_spec):
 
 if __name__ == "__main__":
     # Update swagger.json for SwaggerUI
-    json_template = get_apigateway_template()
-    swagger_json = generate_swagger(json_template)
+    apigateway_json_template = get_apigateway_template()
+    swagger_json = generate_swagger(apigateway_json_template)
     upload_swagger_json(swagger_json)
 
     # Update the API Gateway specification
-    api_definitions = generate_api_definitions(json_template)
+    api_definitions = generate_api_definitions(apigateway_json_template)
     update_apigateway(api_definitions)
