@@ -26,6 +26,8 @@ github.com/joeshaw/multierror v0.0.0-20140124173710-69b34d4ec901/go.mod h1:Z86h9
 github.com/kr/pretty v0.1.0/go.mod h1:dAy3ld7l9f0ibDNOQOHHMYYIIbhfbHSm3C4ZsoJORNo=
 github.com/kr/pty v1.1.1/go.mod h1:pFQYn66WHrOpPYNljwOMqo10TkYh1fy3cYio2l3bCsQ=
 github.com/kr/text v0.1.0/go.mod h1:4Jbv+DJW3UT/LiOwJeYQe1efqtUx/iVham/4vfdArNI=
+github.com/opentracing/opentracing-go v1.1.0 h1:pWlfV3Bxv7k65HYwkikxat0+s3pV4bsqf19k25Ur8rU=
+github.com/opentracing/opentracing-go v1.1.0/go.mod h1:UkNAQd3GIcIGf0SeVgPpRdFStlNbqXla1AfSYxPUl2o=
 github.com/oschwald/geoip2-golang v1.4.0 h1:5RlrjCgRyIGDz/mBmPfnAF4h8k0IAcRv9PvrpOfz+Ug=
 github.com/oschwald/geoip2-golang v1.4.0/go.mod h1:8QwxJvRImBH+Zl6Aa6MaIcs5YdlZSTKtzmPGzQqi9ng=
 github.com/oschwald/maxminddb-golang v1.6.0 h1:KAJSjdHQ8Kv45nFIbtoLGrGWqHFajOIm7skTyz/+Dls=
@@ -58,10 +60,14 @@ github.secureserver.net/threat/go-ldap v0.0.0-20201017001259-d06e7b5f7252/go.mod
 github.secureserver.net/threat/hashtype v0.0.0-20190719164940-596969fc3cf6/go.mod h1:2D4idLZ4OSmyV6lm/WmZV2FRlvio6cCWYxYLfk8Lb3A=
 go.elastic.co/apm v1.8.0 h1:AWEKpHwRal0yCMd4K8Oxy1HAa7xid+xq1yy+XjgoVU0=
 go.elastic.co/apm v1.8.0/go.mod h1:tCw6CkOJgkWnzEthFN9HUP1uL3Gjc/Ur6m7gRPLaoH0=
-go.elastic.co/apm/module/apmhttp v1.8.0 h1:5AJPefWJzWDLX/47XIDfaloGiYWkkOQEULvlrI6Ieaw=
-go.elastic.co/apm/module/apmhttp v1.8.0/go.mod h1:9LPFlEON51/lRbnWDfqAWErihIiAFDUMfMV27YjoWQ8=
+go.elastic.co/apm v1.9.0 h1:uLOZniTuJ2rU2fFGiNI0ZswzKr9fryHDkNMV8iVDDDI=
+go.elastic.co/apm v1.9.0/go.mod h1:qoOSi09pnzJDh5fKnfY7bPmQgl8yl2tULdOu03xhui0=
+go.elastic.co/apm/module/apmhttp v1.9.0 h1:yAsxgx5bzWTFva1MJ1PqwhKsPUAUARPJ/sXIwv+uqvs=
+go.elastic.co/apm/module/apmhttp v1.9.0/go.mod h1:evGjj1bVDqi47Lg2+/uKre/PDSBrOso/eTRrgeJqZyE=
 go.elastic.co/apm/module/apmlambda v1.8.0 h1:s4YzsoihPSdDLs2Q66CmxfSJyNvz9094SSBXxZRy+RA=
 go.elastic.co/apm/module/apmlambda v1.8.0/go.mod h1:tW2ioimvU3aZ6bIcmETOzBFCKm1vkL0YL0jEZEpNkpg=
+go.elastic.co/apm/module/apmot v1.9.0 h1:0f8hRGeCsk1gQ9/GfERkfDmHJ3CoOQjL5wNRXWfEUMY=
+go.elastic.co/apm/module/apmot v1.9.0/go.mod h1:GgfKLL+DZNNIBe0z+Hns0YR9RW31WwR4oObtWDGR+1c=
 go.elastic.co/fastjson v1.0.0/go.mod h1:PmeUOMMtLHQr9ZS9J9owrAVg0FkaZDRZJEFTTGHtchs=
 go.elastic.co/fastjson v1.1.0 h1:3MrGBWWVIxe/xvsbpghtkFoPciPhOCmjsR/HfwEeQR4=
 go.elastic.co/fastjson v1.1.0/go.mod h1:boNGISWMjQsUPy/t6yqt2/1Wx4YNPSe+mZjlyw9vKKI=
@@ -70,7 +76,6 @@ golang.org/x/crypto v0.0.0-20191011191535-87dc89f01550/go.mod h1:yigFU9vqHzYiE8U
 golang.org/x/mod v0.2.0/go.mod h1:s0Qsj1ACt9ePp/hMypM3fl4fZqREWJwdYDEqhRiZZUA=
 golang.org/x/net v0.0.0-20190404232315-eb5bcb51f2a3/go.mod h1:t9HGtf8HONx5eT2rtn7q6eTqICYqUVnKs3thJo3Qplg=
 golang.org/x/net v0.0.0-20190620200207-3b0461eec859/go.mod h1:z5CRVTTTmAJ677TzLLGU+0bjPO0LkuOLi4/5GtJWs/s=
-golang.org/x/net v0.0.0-20190724013045-ca1201d0de80/go.mod h1:z5CRVTTTmAJ677TzLLGU+0bjPO0LkuOLi4/5GtJWs/s=
 golang.org/x/net v0.0.0-20200226121028-0de0cce0169b/go.mod h1:z5CRVTTTmAJ677TzLLGU+0bjPO0LkuOLi4/5GtJWs/s=
 golang.org/x/sync v0.0.0-20181221193216-37e7f081c4d4/go.mod h1:RxMgew5VJxzue5/jJTE5uejpjVlOe/izrB70Jof72aM=
 golang.org/x/sync v0.0.0-20190423024810-112230192c58/go.mod h1:RxMgew5VJxzue5/jJTE5uejpjVlOe/izrB70Jof72aM=

@@ -5,10 +5,11 @@ import (
 	"encoding/json"
 	"net"
 	"net/http"
-	"os"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
+	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/log"
 	"github.com/oschwald/geoip2-golang"
 	"github.com/sirupsen/logrus"
 	"github.secureserver.net/threat/util/lambda/toolbox"
@@ -24,47 +25,22 @@ func handler(ctx context.Context, request events.APIGatewayProxyRequest) (events
 	// Get the toolbox
 	// This helps standardize things accross services
 	t := toolbox.GetToolbox()
-	httpClient := t.GetHTTPClient(nil)
 	// Defer sending of tracing info
 	defer func() {
-		t.Tracer.Flush(nil)
-		t.Tracer.SendMetrics(nil)
-		t.Tracer.Close()
+		apm.DefaultTracer.Flush(nil)
+		apm.DefaultTracer.SendMetrics(nil)
+		apm.DefaultTracer.Close()
 	}()
 
 	t.Logger.Info("Starting handling of request")
 
 	// Start transaction to process geoip request
-	geoipTx := t.Tracer.StartTransaction("GeoIP", "job")
-	defer geoipTx.End()
-	ctx = apm.ContextWithTransaction(ctx, geoipTx)
-
-	// Make a sample HTTP request
-	// The request should be traced
-	req, err := http.NewRequestWithContext(ctx, "GET", os.Getenv("ELASTIC_APM_SERVER_URL"), nil)
-	if err != nil {
-		// Capture error with tracer
-		apm.CaptureError(ctx, err).Send()
-
-		// Log error
-		t.Logger.WithError(err).Error("Failed to make request")
-		return events.APIGatewayProxyResponse{}, nil
-	}
-
-	resp, err := httpClient.Do(req)
-	if err != nil {
-		// Capture error with tracer
-		apm.CaptureError(ctx, err).Send()
-
-		// Log error
-		t.Logger.WithError(err).Error("Failed to make request")
-		return events.APIGatewayProxyResponse{}, nil
-	}
-	t.Logger.WithField("StatusCode", resp.StatusCode).Info("Got response")
-	resp.Body.Close()
+	geoipTx := t.Tracer.StartSpan("GeoIP")
+	defer geoipTx.Finish()
+	ctx = opentracing.ContextWithSpan(ctx, geoipTx)
 
 	// Start a span
-	span := geoipTx.StartSpan("OpenDB", "job", nil)
+	span, _ := opentracing.StartSpanFromContext(ctx, "OpenDB")
 	// Open DB
 	db, err := geoip2.Open("GeoLite2-City.mmdb")
 	if err != nil {
@@ -75,21 +51,21 @@ func handler(ctx context.Context, request events.APIGatewayProxyRequest) (events
 		}, err
 	}
 	defer db.Close()
-	span.End()
+	span.Finish()
 
-	span = geoipTx.StartSpan("GetUserIP", "job", nil)
+	span, _ = opentracing.StartSpanFromContext(ctx, "GetUserIP")
 	ipString := "72.210.63.111" // Default ip
 	ipParam, found := request.QueryStringParameters["ip"]
 	if found {
 		t.Logger.WithField("IP", ipParam).Info("Got supplied IP")
 		ipString = ipParam
 	}
-	span.Context.SetLabel("IP", ipString)
+	span.LogFields(log.String("IP", ipParam))
 	ip := net.ParseIP(ipString)
-	span.End()
+	span.Finish()
 
 	// If you are using strings that may be invalid, check that ip is not nil
-	span = geoipTx.StartSpan("ProcessUserIP", "job", nil)
+	span, _ = opentracing.StartSpanFromContext(ctx, "ProcessUserIP")
 	record, err := db.City(ip)
 	if err != nil {
 		apm.CaptureError(ctx, err).Send()
@@ -98,7 +74,7 @@ func handler(ctx context.Context, request events.APIGatewayProxyRequest) (events
 			Body:       err.Error(),
 		}, err
 	}
-	span.End()
+	span.Finish()
 
 	t.Logger.WithFields(logrus.Fields{
 		"EnglishCity":    record.City.Names["en"],
