@@ -5,40 +5,133 @@ Programmatically generate and update an API Gateway configuration by walking
 the various API lambdas.
 """
 
-import boto3
-import json 
+import json
 import os
 import logging
-
-# NOTE: this uses hard-coded files for now; eventually this will be dynamically
-# generated and wired into CICD
+import boto3
 
 
-def generate_swagger():
+def get_apigateway_template():
+    """\
+    Fetches the export from API Gateway for reusing as a template for Swagger.
+    Also to update new API Gateway with current state.
+    """
+    apigateway_client = boto3.client("apigateway")
+    apigateway_list = [
+        x
+        for x in apigateway_client.get_rest_apis()["items"]
+        if x["name"].startswith("Threat")
+    ]
+    # if not apigateway_list:
+    #     # No API Gateways
+    #     return
+
+    apigateway_id = apigateway_list[0]["id"]
+
+    response = apigateway_client.get_export(
+        restApiId=apigateway_id,
+        stageName="gddeploy",
+        exportType="oas30",
+        parameters={"extensions": "apigateway"},
+    )
+    template = json.loads(response["body"].read())
+
+    return template
+
+
+def generate_swagger(json_template):
     """\
     Consolidate swagger specs for individual lambdas and return a consolidated
-    swagger spec for the whole API.  For now, just return a hardcoded file
-    present in the source tree.
+    swagger spec for the whole API.
     """
 
-    parent_swagger = json.load(open("../swagger.json"))
+    parent_swagger = {}
+    for key, value in json_template.items():
+        if key == "paths":
+            parent_swagger["paths"] = {}
+        else:
+            parent_swagger[key] = value
 
-    for subdir, dirs, files in os.walk("../apis/"):
+    # populating from swagger's in /apis
+    for subdir, _, files in os.walk("../apis/"):
         for filename in files:
             filepath = subdir + os.sep + filename
 
             if filepath.endswith("swagger.json"):
                 inside_dict = json.load(open(filepath))
 
-                for key,value in inside_dict["paths"].items():
+                for key, value in inside_dict["paths"].items():
                     if key in parent_swagger["paths"].keys():
-                        logging.error(key+' already exists')
-                    parent_swagger["paths"][key]=value
+                        logging.error("%s already exists", key)
+                    parent_swagger["paths"][key] = value
 
-    with open("../swagger.json", "w") as fp:
-        json.dump(parent_swagger, fp, indent=2)
-    
-    return {'bytes': open("../swagger.json").read(), 'dictionary':parent_swagger}
+    return parent_swagger
+
+
+def generate_api_definitions(json_template):
+    """\
+    Build an API definition by consolidating information for the various
+    lambdas.
+    """
+
+    sts = boto3.client("sts")
+    aws_account_id = sts.get_caller_identity()["Account"]
+
+    parent_api = {}
+    parent_api = json_template.copy()
+    apigateway_integration = {
+        "type": "aws_proxy",
+        "uri": "",  # to be updated later to the invoked lambdas
+        "responses": {"default": {"statusCode": "200"}},
+        "passthroughBehavior": "when_no_match",
+        "httpMethod": "POST",
+        "contentHandling": "CONVERT_TO_TEXT",
+    }
+
+    # get the template copied retaining the swagger paths
+    for key, value in json_template.items():
+        if key == "paths":
+            parent_api["paths"] = {}
+            for paths, path_values in json_template["paths"].items():
+                if paths.startswith("/swagger"):
+                    parent_api["paths"][paths] = path_values
+        else:
+            parent_api[key] = value
+
+    # loop through the current dictionaries, add to the paths with apigateway definitions
+    for subdir, _, files in os.walk("../apis/"):
+        for filename in files:
+            filepath = subdir + os.sep + filename
+
+            if filepath.endswith("swagger.json"):
+                inside_dict = json.load(open(filepath))
+
+                for key, value in inside_dict["paths"].items():
+                    # for duplicate paths - throw error
+                    if key in parent_api["paths"].keys():
+                        logging.error("%s already exists", key)
+                    # loop through and add an api-gateway connection to all paths
+                    else:
+                        parent_api["paths"][key] = value
+
+                        lambda_name = key.split(os.sep)[1]
+                        uri = (
+                            "arn:aws:apigateway:us-west-2:"
+                            + "lambda:path/2015-03-31/functions/arn:aws:lambda:us-west-2:"
+                            + aws_account_id
+                            + ":function:"
+                            + lambda_name
+                            + "/invocations"
+                        )
+                        temp = apigateway_integration.copy()
+                        temp["uri"] = uri
+                        # For every method of the path, loop through and add the apigateway data
+                        for methods in parent_api["paths"][key]:
+                            parent_api["paths"][key][methods][
+                                "x-amazon-apigateway-integration"
+                            ] = temp
+
+    return parent_api
 
 
 def upload_swagger_json(swagger_spec):
@@ -50,44 +143,7 @@ def upload_swagger_json(swagger_spec):
     bucket_list = [x for x in s3.buckets.all() if x.name.endswith("swagger-ui-bucket")]
 
     if bucket_list:
-        bucket_list[0].put_object(Body=swagger_spec, Key="swagger.json")
-
-
-def generate_api_definitions(parent_swagger):
-    """\
-    Build an API definition by consolidating information for the various
-    lambdas.  For now, just return a hardcoded file present in the source tree,
-    but replace symbolic references to the AWS account number with the real
-    account number.
-    """
-
-    sts = boto3.client("sts")
-    aws_account_id = sts.get_caller_identity()["Account"]
-
-    apigateway_integration =  {
-        "type": "aws_proxy",
-        "uri": "", # to be set later according to the funtions
-        "responses": {
-        "default": {
-            "statusCode": "200"
-        }
-        },
-        "passthroughBehavior": "when_no_match",
-        "httpMethod": "POST",
-        "contentHandling": "CONVERT_TO_TEXT"
-    }
-
-    for key in parent_swagger["paths"]:
-        current_dir = key.split(os.sep)[1]
-        uri = "arn:aws:apigateway:us-west-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-west-2:"+aws_account_id+":function:"+current_dir+"/invocations"
-        temp = apigateway_integration.copy()
-        temp["uri"]=uri
-        parent_swagger["paths"][key]["x-amazon-apigateway-integration"]=temp
-
-    with open("../api.json", "w") as fp:
-        json.dump(parent_swagger, fp, indent=2)
-
-    return open("../api.json").read()
+        bucket_list[0].put_object(Body=json.dumps(swagger_spec), Key="swagger.json")
 
 
 def update_apigateway(api_spec):
@@ -109,7 +165,10 @@ def update_apigateway(api_spec):
     apigateway_id = apigateway_list[0]["id"]
 
     response = apigateway_client.put_rest_api(
-        restApiId=apigateway_id, mode="merge", body=api_spec
+        restApiId=apigateway_id,
+        mode="overwrite",
+        failOnWarnings=True,
+        body=json.dumps(api_spec),
     )
 
     print(
@@ -128,9 +187,10 @@ def update_apigateway(api_spec):
 
 if __name__ == "__main__":
     # Update swagger.json for SwaggerUI
-    swagger = generate_swagger() # returns [bytes, dictionary]
-    upload_swagger_json(swagger['bytes']) # bytes used in uploading to S3
+    json_template = get_apigateway_template()
+    swagger_json = generate_swagger(json_template)
+    upload_swagger_json(swagger_json)
 
     # Update the API Gateway specification
-    api_definitions = generate_api_definitions(swagger['dictionary']) # dictionary used in api definition 
+    api_definitions = generate_api_definitions(json_template)
     update_apigateway(api_definitions)
