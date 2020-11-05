@@ -22,9 +22,9 @@ def get_apigateway_template():
         for x in apigateway_client.get_rest_apis()["items"]
         if x["name"].startswith("Threat")
     ]
-    # if not apigateway_list:
-    #     # No API Gateways
-    #     return
+    if not apigateway_list:
+        # No API Gateways
+        return None
 
     apigateway_id = apigateway_list[0]["id"]
 
@@ -52,7 +52,7 @@ def generate_swagger(json_template):
         else:
             parent_swagger[key] = value
 
-    # populating from swagger's in /apis
+    # populating from swaggers in /apis
     for subdir, _, files in os.walk("../apis/"):
         for filename in files:
             filepath = subdir + os.sep + filename
