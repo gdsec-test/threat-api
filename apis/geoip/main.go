@@ -70,7 +70,7 @@ func handler(ctx context.Context, request events.APIGatewayProxyRequest) (events
 	ctx = opentracing.ContextWithSpan(ctx, geoipTx)
 
 	// Start a span
-	span, _ = opentracing.StartSpanFromContext(ctx, "OpenDB")
+	span, _ := opentracing.StartSpanFromContext(ctx, "OpenDB")
 	// Open DB
 	db, err := geoip2.Open("GeoLite2-City.mmdb")
 	if err != nil {
