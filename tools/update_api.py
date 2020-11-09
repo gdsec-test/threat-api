@@ -10,7 +10,7 @@ import os
 import logging
 import boto3
 
-APIGATEWAY_ARN_URI_TEMPLATE = "arn:aws:apigateway:"
+APIGATEWAY_ARN_URI_TEMPLATE = "arn:aws:apigateway:us-west-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-west-2:%s:function:%s/invocations"
 
 
 def get_apigateway_template():
@@ -19,26 +19,34 @@ def get_apigateway_template():
     Also to update new API Gateway with current state.
     """
     apigateway_client = boto3.client("apigateway")
-    apigateway_list = [
-        x
-        for x in apigateway_client.get_rest_apis()["items"]
-        if x["name"].startswith("Threat")
-    ]
-    if not apigateway_list:
-        # No API Gateways
-        return None
 
-    apigateway_id = apigateway_list[0]["id"]
+    try:
+        apigateway_list = [
+            x
+            for x in apigateway_client.get_rest_apis()["items"]
+            if x["name"].startswith("Threat")
+        ]
+    except Exception as exception:
+        logging.exception("exception occured \n%s", exception)
+    else:
+        if not apigateway_list:
+            # No API Gateways
+            return None
 
-    response = apigateway_client.get_export(
-        restApiId=apigateway_id,
-        stageName="gddeploy",
-        exportType="oas30",
-        parameters={"extensions": "apigateway"},
-    )
-    template = json.loads(response["body"].read())
+        apigateway_id = apigateway_list[0]["id"]
 
-    return template
+        try:
+            response = apigateway_client.get_export(
+                restApiId=apigateway_id,
+                stageName="gddeploy",
+                exportType="oas30",
+                parameters={"extensions": "apigateway"},
+            )
+        except Exception as exception:
+            logging.exception("exception occured \n%s", exception)
+        else:
+            template = json.loads(response["body"].read())
+            return template
 
 
 def generate_swagger(json_template):
@@ -77,63 +85,62 @@ def generate_api_definitions(json_template):
     """
 
     sts = boto3.client("sts")
-    aws_account_id = sts.get_caller_identity()["Account"]
+    try:
+        aws_account_id = sts.get_caller_identity()["Account"]
+    except Exception as exception:
+        logging.exception("exception occured \n%s", exception)
+    else:
+        parent_api = {}
+        parent_api = json_template.copy()
+        apigateway_integration = {
+            "type": "aws_proxy",
+            "uri": None,  # to be updated later to the invoked lambdas
+            "responses": {"default": {"statusCode": "200"}},
+            "passthroughBehavior": "when_no_match",
+            "httpMethod": "POST",
+            "contentHandling": "CONVERT_TO_TEXT",
+        }
 
-    parent_api = {}
-    parent_api = json_template.copy()
-    apigateway_integration = {
-        "type": "aws_proxy",
-        "uri": None,  # to be updated later to the invoked lambdas
-        "responses": {"default": {"statusCode": "200"}},
-        "passthroughBehavior": "when_no_match",
-        "httpMethod": "POST",
-        "contentHandling": "CONVERT_TO_TEXT",
-    }
+        # get the template copied retaining the swagger paths
+        for key, value in json_template.items():
+            if key == "paths":
+                parent_api["paths"] = {}
+                for paths, path_values in json_template["paths"].items():
+                    if paths.startswith("/swagger"):
+                        parent_api["paths"][paths] = path_values
+            else:
+                parent_api[key] = value
 
-    # get the template copied retaining the swagger paths
-    for key, value in json_template.items():
-        if key == "paths":
-            parent_api["paths"] = {}
-            for paths, path_values in json_template["paths"].items():
-                if paths.startswith("/swagger"):
-                    parent_api["paths"][paths] = path_values
-        else:
-            parent_api[key] = value
+        # loop through the current dictionaries, add to the paths with apigateway definitions
+        for subdir, _, files in os.walk("../apis/"):
+            for filename in files:
+                filepath = subdir + os.sep + filename
 
-    # loop through the current dictionaries, add to the paths with apigateway definitions
-    for subdir, _, files in os.walk("../apis/"):
-        for filename in files:
-            filepath = subdir + os.sep + filename
+                if filepath.endswith("swagger.json"):
+                    inside_dict = json.load(open(filepath))
 
-            if filepath.endswith("swagger.json"):
-                inside_dict = json.load(open(filepath))
+                    for key, value in inside_dict["paths"].items():
+                        # for duplicate paths - throw error
+                        if key in parent_api["paths"].keys():
+                            logging.error("%s already exists", key)
+                        # loop through and add an api-gateway connection to all paths
+                        else:
+                            parent_api["paths"][key] = value
 
-                for key, value in inside_dict["paths"].items():
-                    # for duplicate paths - throw error
-                    if key in parent_api["paths"].keys():
-                        logging.error("%s already exists", key)
-                    # loop through and add an api-gateway connection to all paths
-                    else:
-                        parent_api["paths"][key] = value
+                            lambda_name = key.split(os.sep)[1]
+                            uri = APIGATEWAY_ARN_URI_TEMPLATE % (
+                                aws_account_id,
+                                lambda_name,
+                            )
+                            temp = apigateway_integration.copy()
+                            temp["uri"] = uri
+                            # For every method of the path, loop through and add the apigateway data
+                            for methods in parent_api["paths"][key]:
+                                parent_api["paths"][key][methods][
+                                    "x-amazon-apigateway-integration"
+                                ] = temp
 
-                        lambda_name = key.split(os.sep)[1]
-                        uri = (
-                            APIGATEWAY_ARN_URI_TEMPLATE
-                            + "us-west-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-west-2:"
-                            + aws_account_id
-                            + ":function:"
-                            + lambda_name
-                            + "/invocations"
-                        )
-                        temp = apigateway_integration.copy()
-                        temp["uri"] = uri
-                        # For every method of the path, loop through and add the apigateway data
-                        for methods in parent_api["paths"][key]:
-                            parent_api["paths"][key][methods][
-                                "x-amazon-apigateway-integration"
-                            ] = temp
-
-    return parent_api
+        return parent_api
 
 
 def upload_swagger_json(swagger_spec):
@@ -142,10 +149,20 @@ def upload_swagger_json(swagger_spec):
     """
 
     s3 = boto3.resource("s3")
-    bucket_list = [x for x in s3.buckets.all() if x.name.endswith("swagger-ui-bucket")]
-
-    if bucket_list:
-        bucket_list[0].put_object(Body=json.dumps(swagger_spec), Key="swagger.json")
+    try:
+        bucket_list = [
+            x for x in s3.buckets.all() if x.name.endswith("swagger-ui-bucket")
+        ]
+    except Exception as exception:
+        logging.exception("exception occured \n%s", exception)
+    else:
+        if bucket_list:
+            try:
+                bucket_list[0].put_object(
+                    Body=json.dumps(swagger_spec), Key="swagger.json"
+                )
+            except Exception as exception:
+                logging.exception("exception occured \n%s", exception)
 
 
 def update_apigateway(api_spec):
@@ -155,44 +172,56 @@ def update_apigateway(api_spec):
 
     apigateway_client = boto3.client("apigateway")
 
-    apigateway_list = [
-        x
-        for x in apigateway_client.get_rest_apis()["items"]
-        if x["name"].startswith("Threat")
-    ]
-    if not apigateway_list:
-        # No API Gateways
-        return
+    try:
+        apigateway_list = [
+            x
+            for x in apigateway_client.get_rest_apis()["items"]
+            if x["name"].startswith("Threat")
+        ]
+    except Exception as exception:
+        logging.exception("exception occured \n%s", exception)
+    else:
+        if not apigateway_list:
+            # No API Gateways
+            return
 
-    apigateway_id = apigateway_list[0]["id"]
+        apigateway_id = apigateway_list[0]["id"]
 
-    response = apigateway_client.put_rest_api(
-        restApiId=apigateway_id,
-        mode="overwrite",
-        failOnWarnings=True,
-        body=json.dumps(api_spec),
-    )
+    try:
+        response = apigateway_client.put_rest_api(
+            restApiId=apigateway_id,
+            mode="overwrite",
+            failOnWarnings=True,
+            body=json.dumps(api_spec),
+        )
+    except Exception as exception:
+        logging.exception("exception occured \n%s", exception)
+    else:
+        print(
+            "put_rest_api() response: %d"
+            % response["ResponseMetadata"]["HTTPStatusCode"]
+        )
 
-    print(
-        "put_rest_api() response: %d" % response["ResponseMetadata"]["HTTPStatusCode"]
-    )
-
-    response = apigateway_client.create_deployment(
-        restApiId=apigateway_id, stageName="gddeploy"
-    )
-
-    print(
-        "create_deployment() response: %d"
-        % response["ResponseMetadata"]["HTTPStatusCode"]
-    )
+    try:
+        response = apigateway_client.create_deployment(
+            restApiId=apigateway_id, stageName="gddeploy"
+        )
+    except Exception as exception:
+        logging.exception("exception occured \n%s", exception)
+    else:
+        print(
+            "create_deployment() response: %d"
+            % response["ResponseMetadata"]["HTTPStatusCode"]
+        )
 
 
 if __name__ == "__main__":
     # Update swagger.json for SwaggerUI
     apigateway_json_template = get_apigateway_template()
-    swagger_json = generate_swagger(apigateway_json_template)
-    upload_swagger_json(swagger_json)
+    if apigateway_json_template is not None:
+        swagger_json = generate_swagger(apigateway_json_template)
+        upload_swagger_json(swagger_json)
 
-    # Update the API Gateway specification
-    api_definitions = generate_api_definitions(apigateway_json_template)
-    update_apigateway(api_definitions)
+        # Update the API Gateway specification
+        api_definitions = generate_api_definitions(apigateway_json_template)
+        update_apigateway(api_definitions)
