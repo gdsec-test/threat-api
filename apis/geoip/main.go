@@ -3,70 +3,91 @@ package main
 import (
 	"context"
 	"encoding/json"
-	"fmt"
-	"github.com/aws/aws-lambda-go/events"
-	"github.com/aws/aws-lambda-go/lambda"
-	"github.com/oschwald/geoip2-golang"
-	"log"
 	"net"
 	"net/http"
+
+	"github.com/aws/aws-lambda-go/events"
+	"github.com/aws/aws-lambda-go/lambda"
+	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/log"
+	"github.com/oschwald/geoip2-golang"
+	"github.com/sirupsen/logrus"
+	"github.secureserver.net/threat/util/lambda/toolbox"
+
+	// This line adds apm tracing to this lambda
+	// Yep, it's that simple!
+	// Note that you must have the `ELASTIC_APM_SERVER_URL` and `ELASTIC_APM_API_KEY` env vars set
+	"go.elastic.co/apm"
+	_ "go.elastic.co/apm/module/apmlambda"
 )
 
 func handler(ctx context.Context, request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
-	b, err := json.Marshal(request)
-	if err != nil {
-		fmt.Println("error:", err)
-		return events.APIGatewayProxyResponse{
-			StatusCode: http.StatusInternalServerError,
-			Body:       err.Error(),
-		}, err
-	}
+	// Get the toolbox
+	// This helps standardize things accross services
+	t := toolbox.GetToolbox()
+	// Defer sending of tracing info
+	defer func() {
+		apm.DefaultTracer.Flush(nil)
+		apm.DefaultTracer.SendMetrics(nil)
+		apm.DefaultTracer.Close()
+	}()
 
-	log.Printf("Received event: %s", b)
+	t.Logger.Info("Starting handling of request")
 
+	// Start transaction to process geoip request
+	geoipTx := t.Tracer.StartSpan("GeoIP")
+	defer geoipTx.Finish()
+	ctx = opentracing.ContextWithSpan(ctx, geoipTx)
+
+	// Start a span
+	span, _ := opentracing.StartSpanFromContext(ctx, "OpenDB")
+	// Open DB
 	db, err := geoip2.Open("GeoLite2-City.mmdb")
 	if err != nil {
-		log.Fatal(err)
+		apm.CaptureError(ctx, err).Send()
 		return events.APIGatewayProxyResponse{
 			StatusCode: http.StatusInternalServerError,
 			Body:       err.Error(),
 		}, err
 	}
 	defer db.Close()
+	span.Finish()
 
-	ipString := "72.210.63.111"
-
+	span, _ = opentracing.StartSpanFromContext(ctx, "GetUserIP")
+	ipString := "72.210.63.111" // Default ip
 	ipParam, found := request.QueryStringParameters["ip"]
 	if found {
-		log.Printf("You specified: %s", ipParam)
+		t.Logger.WithField("IP", ipParam).Info("Got supplied IP")
 		ipString = ipParam
 	}
-
+	span.LogFields(log.String("IP", ipParam))
 	ip := net.ParseIP(ipString)
+	span.Finish()
 
 	// If you are using strings that may be invalid, check that ip is not nil
+	span, _ = opentracing.StartSpanFromContext(ctx, "ProcessUserIP")
 	record, err := db.City(ip)
 	if err != nil {
-		log.Fatal(err)
+		apm.CaptureError(ctx, err).Send()
 		return events.APIGatewayProxyResponse{
 			StatusCode: http.StatusInternalServerError,
 			Body:       err.Error(),
 		}, err
 	}
+	span.Finish()
 
-	fmt.Printf("English city name: %v\n", record.City.Names["en"])
-	if len(record.Subdivisions) > 0 {
-		fmt.Printf("English subdivision name: %v\n", record.Subdivisions[0].Names["en"])
-	}
-	fmt.Printf("English country name: %v\n", record.Country.Names["en"])
-
-	fmt.Printf("ISO country code: %v\n", record.Country.IsoCode)
-	fmt.Printf("Time zone: %v\n", record.Location.TimeZone)
-	fmt.Printf("Coordinates: %v, %v\n", record.Location.Latitude, record.Location.Longitude)
+	t.Logger.WithFields(logrus.Fields{
+		"EnglishCity":    record.City.Names["en"],
+		"EnglishCountry": record.Country.Names["en"],
+		"ISOCountryCode": record.Country.IsoCode,
+		"TimeZone":       record.Location.TimeZone,
+		"Lat":            record.Location.Latitude,
+		"Long":           record.Location.Longitude,
+	}).Info("Found result")
 
 	js, err := json.Marshal(record)
 	if err != nil {
-		log.Fatal(err)
+		apm.CaptureError(ctx, err).Send()
 		return events.APIGatewayProxyResponse{
 			StatusCode: http.StatusInternalServerError,
 			Body:       err.Error(),
