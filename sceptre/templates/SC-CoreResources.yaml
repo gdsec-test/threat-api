@@ -210,7 +210,7 @@ Resources:
         - Key: EnableJwtAuth
           Value: true
         - Key: SsoJwtEndpoint
-          Value: sso.godaddy.com
+          Value: sso.gdcorp.tools
         - Key: RequireApiKey
           Value: false
         - Key: ResourcePolicy

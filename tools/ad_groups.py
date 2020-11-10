@@ -10,7 +10,7 @@ def get_ad_groups(jwt):
     """Get a list of AD groups from a JWT"""
     try:
         response = requests.get(
-            "https://sso.godaddy.com/api/my/ad_membership",
+            "https://sso.gdcorp.tools/api/my/ad_membership",
             headers={
                 "Content-Type": "application/json",
                 "Accept": "application/json",

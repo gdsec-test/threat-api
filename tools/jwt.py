@@ -11,7 +11,7 @@ def get_jwt(username, password):
     """Get a JWT from SSO (JOMAX realm)"""
     try:
         response = requests.post(
-            "https://sso.godaddy.com/v1/api/token",
+            "https://sso.gdcorp.tools/v1/api/token",
             headers={"Content-Type": "application/json", "Accept": "application/json"},
             data=json.dumps(
                 {"username": username, "password": password, "realm": "jomax"}
