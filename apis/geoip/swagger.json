@@ -12,6 +12,11 @@
     "/geoip/lookup": {
       "get": {
         "description": "Get GeoIP information for an IP",
+        "security": [
+          {
+            "nujylzzkn4-JWTAuthorizer": []
+          }
+        ],
         "parameters": [
           {
             "name": "ip",

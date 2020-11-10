@@ -27,7 +27,7 @@ def get_apigateway_template():
             if x["name"].startswith("Threat")
         ]
     except Exception as exception:
-        logging.exception("exception occured \n%s", exception)
+        logging.exception("apigateway get_rest_api threw an exception")
     else:
         if not apigateway_list:
             # No API Gateways
@@ -43,7 +43,7 @@ def get_apigateway_template():
                 parameters={"extensions": "apigateway"},
             )
         except Exception as exception:
-            logging.exception("exception occured \n%s", exception)
+            logging.exception("apigateway get_export exception")
         else:
             template = json.loads(response["body"].read())
             return template
@@ -88,7 +88,7 @@ def generate_api_definitions(json_template):
     try:
         aws_account_id = sts.get_caller_identity()["Account"]
     except Exception as exception:
-        logging.exception("exception occured \n%s", exception)
+        logging.exception("get_caller_identity couldnt be retrieved")
     else:
         parent_api = {}
         parent_api = json_template.copy()
@@ -154,7 +154,7 @@ def upload_swagger_json(swagger_spec):
             x for x in s3.buckets.all() if x.name.endswith("swagger-ui-bucket")
         ]
     except Exception as exception:
-        logging.exception("exception occured \n%s", exception)
+        logging.exception("couldn't retrieve s3 buckets")
     else:
         if bucket_list:
             try:
@@ -162,7 +162,7 @@ def upload_swagger_json(swagger_spec):
                     Body=json.dumps(swagger_spec), Key="swagger.json"
                 )
             except Exception as exception:
-                logging.exception("exception occured \n%s", exception)
+                logging.exception("exception in putting swagger.json object in s3")
 
 
 def update_apigateway(api_spec):
@@ -179,7 +179,7 @@ def update_apigateway(api_spec):
             if x["name"].startswith("Threat")
         ]
     except Exception as exception:
-        logging.exception("exception occured \n%s", exception)
+        logging.exception("apigateway get_rest_apis threw an exception")
     else:
         if not apigateway_list:
             # No API Gateways
@@ -195,7 +195,7 @@ def update_apigateway(api_spec):
             body=json.dumps(api_spec),
         )
     except Exception as exception:
-        logging.exception("exception occured \n%s", exception)
+        logging.exception("exception in put_rest_api in writing to apigateway")
     else:
         print(
             "put_rest_api() response: %d"
@@ -207,7 +207,7 @@ def update_apigateway(api_spec):
             restApiId=apigateway_id, stageName="gddeploy"
         )
     except Exception as exception:
-        logging.exception("exception occured \n%s", exception)
+        logging.exception("exception in apigateway create_deployment")
     else:
         print(
             "create_deployment() response: %d"
@@ -218,10 +218,16 @@ def update_apigateway(api_spec):
 if __name__ == "__main__":
     # Update swagger.json for SwaggerUI
     apigateway_json_template = get_apigateway_template()
+    with open("check_template.json", "w") as fp:
+        json.dump(apigateway_json_template, fp, indent=4)
     if apigateway_json_template is not None:
         swagger_json = generate_swagger(apigateway_json_template)
+        with open("check_swagger.json", "w") as fp:
+            json.dump(swagger_json, fp, indent=4)
         upload_swagger_json(swagger_json)
 
         # Update the API Gateway specification
         api_definitions = generate_api_definitions(apigateway_json_template)
+        with open("check_api.json", "w") as fp:
+            json.dump(swagger_json, fp, indent=4)
         update_apigateway(api_definitions)

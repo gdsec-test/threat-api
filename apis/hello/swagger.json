@@ -12,6 +12,11 @@
     "/hello": {
       "get": {
         "description": "Hello world in Python",
+        "security": [
+          {
+            "nujylzzkn4-JWTAuthorizer": []
+          }
+        ],
         "responses": {
           "200": {
             "description": "JSON response",
@@ -26,6 +31,11 @@
     "/hello/{path_arg1}": {
       "get": {
         "description": "Hello world in Python",
+        "security": [
+          {
+            "nujylzzkn4-JWTAuthorizer": []
+          }
+        ],
         "parameters": [
           {
             "name": "path_arg1",
