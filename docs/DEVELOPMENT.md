@@ -6,9 +6,9 @@ All AWS accounts are in the us-west-2 (Oregon) region.
 
 | AWS Account | API Endpoint | Environment | Description
 | --- | --- | --- | ---
-| 345790377847 | https://api-dev.threat.gdcorp.tools | dev-private | Account for active development (non-CICD)
+| 345790377847 | https://api-dev.threat.int.gdcorp.tools | dev-private | Account for active development (non-CICD)
 | TBD | TBD | dev | Account for active development (CICD)
-| TBD | https://api.threat.gdcorp.tools | prod | Production account (CICD)
+| TBD | https://api.threat.int.gdcorp.tools | prod | Production account (CICD)
 
 ### Authentication
 
