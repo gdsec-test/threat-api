@@ -52,6 +52,7 @@ func handler(ctx context.Context, request events.APIGatewayProxyRequest) (events
 	// Check permissions
 	authorized, err := t.Authorize(ctx, jwtSplit[1], "read", "geoip")
 	if err != nil {
+		apm.CaptureError(ctx, err)
 		return events.APIGatewayProxyResponse{
 			StatusCode: http.StatusInternalServerError,
 			Body:       "",
@@ -60,7 +61,7 @@ func handler(ctx context.Context, request events.APIGatewayProxyRequest) (events
 	if !authorized {
 		return events.APIGatewayProxyResponse{
 			StatusCode: http.StatusUnauthorized,
-			Body:       "No authorized",
+			Body:       "Not authorized",
 		}, nil
 	}
 
