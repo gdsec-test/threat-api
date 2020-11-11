@@ -13,3 +13,4 @@ __pycache__/
 
 # Unit test / coverage reports
 .coverage
+.DS_Store
