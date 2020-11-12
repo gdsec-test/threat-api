@@ -1,0 +1,19 @@
+# .coveragerc to control coverage.py
+[run]
+branch = True
+
+[report]
+show_missing = True
+
+include =
+    ./*.py
+
+omit =
+    */__init__.py
+    */test_*.py
+
+# Regexes for lines to exclude from consideration
+exclude_lines =
+    # Don't complain if non-runnable code isn't run:
+    if 0:
+    if __name__ == .__main__.:
