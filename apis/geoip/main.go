@@ -85,7 +85,7 @@ func handler(ctx context.Context, request events.APIGatewayProxyRequest) (events
 	span.Finish()
 
 	span, _ = opentracing.StartSpanFromContext(ctx, "GetUserIP")
-	ipString := "72.210.63.111" // Default ip
+	ipString := "8.8.8.8" // Default ip
 	ipParam, found := request.QueryStringParameters["ip"]
 	if found {
 		t.Logger.WithField("IP", ipParam).Info("Got supplied IP")
