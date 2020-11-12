@@ -44,3 +44,22 @@ Resources:
       Tags:
         - Key: doNotShutDown
           Value: true
+
+  AuthorizerPermission:
+    Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
+    Properties:
+      ProductName: LambdaPermission
+      ProvisioningArtifactName: 1.0.1
+      ProvisionedProductName: AuthorizerPermission
+      ProvisioningParameters:
+        - Key: Action
+          Value: lambda:InvokeFunction
+        - Key: FunctionName
+          Value: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:authorizer
+        - Key: Principal
+          Value: apigateway.amazonaws.com
+        - Key: SourceArn
+          Value: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ApiId}/authorizers/*
+      Tags:
+        - Key: doNotShutDown
+          Value: true

@@ -1,8 +1,8 @@
 {
   "openapi": "3.0.1",
   "info": {
-    "title": "Threat API v2",
-    "version": "1.0.1",
+    "title": "ThreatAPI",
+    "version": "2.0.0",
     "description": "Available APIs provided by the InfoSec TI team",
     "contact": {
       "name": "GoDaddy Threat Intelligence team"
