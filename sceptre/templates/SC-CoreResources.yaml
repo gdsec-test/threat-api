@@ -108,6 +108,57 @@ Resources:
         - Key: doNotShutDown
           Value: true
 
+  AuthorizerRole:
+    Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
+    Properties:
+      ProductName: IAMRole
+      ProvisioningArtifactName: 1.0.9
+      ProvisionedProductName: AuthorizerRole
+      ProvisioningParameters:
+        - Key: RoleNameSuffix
+          Value: AuthorizerRole
+        - Key: ManagedPolicyArns
+          Value: !Join
+            - ","
+            -
+              - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+        - Key: AssumingServices
+          Value: lambda.amazonaws.com
+      Tags:
+        - Key: doNotShutDown
+          Value: true
+
+  AuthorizerLambda:
+    DependsOn:
+      - AuthorizerRole
+    Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
+    Properties:
+      ProductName: Lambda
+      ProvisioningArtifactName: 2.3.0
+      ProvisionedProductName: AuthorizerLambda
+      ProvisioningParameters:
+        - Key: InlineCode
+          Value: !Sub |
+            # Stub authorizer that denies everything
+            raise Exception("ACCESS DENIED")
+        - Key: Handler
+          Value: index.handler
+        - Key: LambdaName
+          Value: authorizer
+        - Key: LambdaDescription
+          Value: Validates JWTs when API Gateway resources are accessed
+        - Key: MemorySize
+          Value: 128
+        - Key: Runtime
+          Value: python3.6
+        - Key: Timeout
+          Value: 5
+        - Key: CustomIAMRoleNameSuffix
+          Value: AuthorizerRole
+      Tags:
+        - Key: doNotShutDown
+          Value: true
+
   ThreatPolicyDynamoDB:
     Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
     Properties:
@@ -182,7 +233,9 @@ Resources:
           Value: true
 
   ThreatAPI:
-    DependsOn: SwaggerUILambda
+    DependsOn:
+      - SwaggerUILambda
+      - AuthorizerLambda
     Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
     Properties:
       ProductName: APIGateway
@@ -209,8 +262,8 @@ Resources:
           Value: true
         - Key: EnableJwtAuth
           Value: true
-        - Key: SsoJwtEndpoint
-          Value: sso.godaddy.com
+        - Key: CustomAuthorizerLambdaName
+          Value: authorizer
         - Key: RequireApiKey
           Value: false
         - Key: ResourcePolicy
