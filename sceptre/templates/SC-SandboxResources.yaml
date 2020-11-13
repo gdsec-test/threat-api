@@ -1,0 +1,40 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Malware Sandbox Resources
+
+Resources:
+  SandboxInstanceRole:
+    Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
+    Properties:
+      ProductName: IAMRole
+      ProvisioningArtifactName: 1.0.9
+      ProvisionedProductName: SandboxInstanceRole
+      ProvisioningParameters:
+        - Key: RoleNameSuffix
+          Value: SandboxInstanceRole
+        - Key: ManagedPolicyArns
+          Value: !Join
+            - ","
+            -
+              - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
+              - arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy
+        - Key: AssumingServices
+          Value: ec2.amazonaws.com
+      Tags:
+        - Key: doNotShutDown
+          Value: true
+
+  SandboxInstanceProfile:
+    DependsOn: SandboxInstanceRole
+    Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
+    Properties:
+      ProductName: IAMInstanceProfile
+      ProvisioningArtifactName: 1.0.0
+      ProvisionedProductName: SandboxInstanceProfile
+      ProvisioningParameters:
+        - Key: RoleArnSSMKey
+          Value: /Team/IAM/Role/Custom/us-west-2/SandboxInstanceRole
+        - Key: InstanceProfileName
+          Value: SandboxInstanceProfile
+      Tags:
+        - Key: doNotShutDown
+          Value: "true"
