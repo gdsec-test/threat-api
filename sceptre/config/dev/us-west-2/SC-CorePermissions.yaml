@@ -1,0 +1,5 @@
+template_path: SC-CorePermissions.yaml
+dependencies:
+  - {{environment}}/{{region}}/SC-CoreResources.yaml
+parameters:
+  ApiId: !gd_output_from_arn -s {{environment}}-{{region}}-SC-CoreResources -r ApiId
