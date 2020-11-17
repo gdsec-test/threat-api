@@ -86,7 +86,8 @@ class TestUpdate(unittest.TestCase):
         """\
             Tests cases for the following :
             paths : '/lambda1' & '/swagger' is present
-            Dictionary 'x-amazon-apigateway-integration' is inserted in every method of path
+            Dictionary additions :
+                'x-amazon-apigateway-integration'  & 'security' is inserted in every method of path
             uri has account id 'test' and '/lambda1' inserted
         """
 
@@ -95,7 +96,7 @@ class TestUpdate(unittest.TestCase):
         ]
         mock_json.load.return_value = SWAGGER_TEST_JSON
 
-        api_json = generate_api_definitions("test", JSON_TEMPLATE)
+        api_json = generate_api_definitions("test", JSON_TEMPLATE, "test_apigateway")
         mock_open.assert_called_once_with("/api/test_swagger.json", "r")
 
         self.assertIn("/swagger", api_json["paths"].keys())
@@ -111,6 +112,16 @@ class TestUpdate(unittest.TestCase):
                 "uri"
             ],
             "arn:aws:apigateway:us-west-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-west-2:test:function:lambda1/invocations",
+        )
+
+        self.assertIn(
+            "security",
+            api_json["paths"]["/lambda1"]["get"].keys(),
+        )
+
+        self.assertIn(
+            "test_apigateway-JWTAuthorizer",
+            api_json["paths"]["/lambda1"]["get"]["security"][0].keys(),
         )
 
 

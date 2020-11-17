@@ -13,10 +13,9 @@ import boto3
 APIGATEWAY_ARN_URI_TEMPLATE = "arn:aws:apigateway:us-west-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-west-2:%s:function:%s/invocations"
 
 
-def get_apigateway_template():
+def get_apigateway_id():
     """\
-    Fetches the export from API Gateway for reusing as a template for Swagger.
-    Also to update new API Gateway with current state.
+    Retrieves the apigateway id
     """
     apigateway_client = boto3.client("apigateway")
 
@@ -34,19 +33,28 @@ def get_apigateway_template():
             return None
 
         apigateway_id = apigateway_list[0]["id"]
+        return apigateway_id
 
-        try:
-            response = apigateway_client.get_export(
-                restApiId=apigateway_id,
-                stageName="gddeploy",
-                exportType="oas30",
-                parameters={"extensions": "apigateway"},
-            )
-        except Exception as exception:
-            logging.exception("apigateway get_export exception")
-        else:
-            template = json.loads(response["body"].read())
-            return template
+
+def get_apigateway_template(apigateway_id):
+    """\
+    Fetches the export from API Gateway for reusing as a template for Swagger.
+    Also to update new API Gateway with current state.
+    """
+    apigateway_client = boto3.client("apigateway")
+
+    try:
+        response = apigateway_client.get_export(
+            restApiId=get_apigateway_id(),
+            stageName="gddeploy",
+            exportType="oas30",
+            parameters={"extensions": "apigateway"},
+        )
+    except Exception as exception:
+        logging.exception("apigateway get_export exception")
+    else:
+        template = json.loads(response["body"].read())
+        return template
 
 
 def generate_swagger(json_template):
@@ -78,7 +86,7 @@ def generate_swagger(json_template):
     return parent_swagger
 
 
-def generate_api_definitions(aws_account_id, json_template):
+def generate_api_definitions(aws_account_id, json_template, apigateway_id):
     """\
     Build an API definition by consolidating information for the various
     lambdas.
@@ -93,6 +101,8 @@ def generate_api_definitions(aws_account_id, json_template):
         "httpMethod": "POST",
         "contentHandling": "CONVERT_TO_TEXT",
     }
+    security_key = apigateway_id + "-JWTAuthorizer"
+    api_gateway_security_tag = {security_key: []}
 
     # get the template copied retaining the swagger paths
     for key, value in json_template.items():
@@ -130,11 +140,15 @@ def generate_api_definitions(aws_account_id, json_template):
                         temp = apigateway_integration.copy()
                         temp["uri"] = uri
 
-                        # For every method of the path, loop through and add the apigateway data
+                        # For every method of the path, loop through and add the apigateway, security data
                         for methods in parent_api["paths"][key]:
                             parent_api["paths"][key][methods][
                                 "x-amazon-apigateway-integration"
                             ] = temp
+                            parent_api["paths"][key][methods]["security"] = [
+                                api_gateway_security_tag
+                            ]
+
     return parent_api
 
 
@@ -212,7 +226,9 @@ def update_apigateway(api_spec):
 
 if __name__ == "__main__":
     # Update swagger.json for SwaggerUI
-    apigateway_json_template = get_apigateway_template()
+    apigateway_id = get_apigateway_id()
+    apigateway_json_template = get_apigateway_template(apigateway_id)
+
     if apigateway_json_template is not None:
         swagger_json = generate_swagger(apigateway_json_template)
         upload_swagger_json(swagger_json)
@@ -225,8 +241,11 @@ if __name__ == "__main__":
             logging.exception("get_caller_identity couldn't be retrieved")
         else:
             api_definitions = generate_api_definitions(
-                aws_account_id, apigateway_json_template
+                aws_account_id,
+                apigateway_json_template,
+                apigateway_id,
             )
+
             update_apigateway(api_definitions)
     else:
         logging.error("json_template couldn't be retrieved")
