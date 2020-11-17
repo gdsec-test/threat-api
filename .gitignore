@@ -1,2 +1,16 @@
 *.env
 .vscode
+
+# Temporary files created by vim
+.*.swp
+
+*.py[cod]
+
+.venv/
+__pycache__/
+
+.idea/
+
+# Unit test / coverage reports
+.coverage
+.DS_Store

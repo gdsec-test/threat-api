@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"net"
 	"net/http"
+	"strings"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
@@ -21,6 +22,10 @@ import (
 	_ "go.elastic.co/apm/module/apmlambda"
 )
 
+const (
+	resourceName = "geoip"
+)
+
 func handler(ctx context.Context, request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
 	// Get the toolbox
 	// This helps standardize things accross services
@@ -33,6 +38,32 @@ func handler(ctx context.Context, request events.APIGatewayProxyRequest) (events
 	}()
 
 	t.Logger.Info("Starting handling of request")
+
+	// Check permissions
+	// Check for JWT
+	jwt, ok := request.Headers["Authorization"]
+	jwtSplit := strings.Split(jwt, " ")
+	if !ok || len(jwtSplit) != 2 {
+		return events.APIGatewayProxyResponse{
+			StatusCode: http.StatusUnauthorized,
+			Body:       "No JWT supplied",
+		}, nil
+	}
+	// Check permissions
+	authorized, err := t.Authorize(ctx, jwtSplit[1], "read", "geoip")
+	if err != nil {
+		apm.CaptureError(ctx, err)
+		return events.APIGatewayProxyResponse{
+			StatusCode: http.StatusInternalServerError,
+			Body:       "",
+		}, nil
+	}
+	if !authorized {
+		return events.APIGatewayProxyResponse{
+			StatusCode: http.StatusUnauthorized,
+			Body:       "Not authorized",
+		}, nil
+	}
 
 	// Start transaction to process geoip request
 	geoipTx := t.Tracer.StartSpan("GeoIP")
@@ -54,7 +85,7 @@ func handler(ctx context.Context, request events.APIGatewayProxyRequest) (events
 	span.Finish()
 
 	span, _ = opentracing.StartSpanFromContext(ctx, "GetUserIP")
-	ipString := "72.210.63.111" // Default ip
+	ipString := "8.8.8.8" // Default ip
 	ipParam, found := request.QueryStringParameters["ip"]
 	if found {
 		t.Logger.WithField("IP", ipParam).Info("Got supplied IP")

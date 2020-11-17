@@ -1,0 +1,3 @@
+region: us-west-2
+threatapi_domain_name: api-dev.threat.int.gdcorp.tools
+threatapi_certificate_arn: 9165c01b-493f-42fb-8f81-7046f307a2be

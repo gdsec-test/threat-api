@@ -68,4 +68,3 @@ This list is a plan on what permissions to give to what module.  In the future, 
   * All GoDaddy
 * EagleEye
   * Listens for HIBP Breaches, Pastebin, enrich, then re-alert (SNOW)
-  

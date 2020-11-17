@@ -1,0 +1,24 @@
+AWSTemplateFormatVersion : '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: A sample SAM template for deploying Lambda functions.
+
+Resources:
+  geoip:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ./
+      Handler: main
+      Runtime: go1.x
+      Environment:
+        Variables:
+          ELASTIC_APM_SERVICE_NAME: "geoiplocal"
+          ELASTIC_APM_SERVER_URL: $ELASTIC_APM_SERVER_URL
+          ELASTIC_APM_SECRET_TOKEN: $ELASTIC_APM_SECRET_TOKEN
+          ELASTIC_APM_LOG_LEVEL: "debug"
+          ELASTIC_APM_LOG_FILE: "stderr"
+      Events:
+        HelloWorld:
+          Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
+          Properties:
+            Path: /geoip
+            Method: get
