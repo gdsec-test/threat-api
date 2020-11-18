@@ -167,7 +167,7 @@ Resources:
     Properties:
       AuthorizerResultTtlInSeconds: 0
       AuthorizerUri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:authorizer/invocations
-      Name: ThreatAPIAuthorizer
+      Name: !Sub "${ThreatAPI}-JWTAuthorizer"
       RestApiId: !Sub "${ThreatAPI}"
       Type: REQUEST
 
