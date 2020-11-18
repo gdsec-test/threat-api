@@ -12,11 +12,6 @@
     "/hello": {
       "get": {
         "description": "Hello world in Python",
-        "security": [
-          {
-            "nujylzzkn4-JWTAuthorizer": []
-          }
-        ],
         "responses": {
           "200": {
             "description": "JSON response",
