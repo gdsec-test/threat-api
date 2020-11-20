@@ -1,31 +1,19 @@
 {
-  "openapi": "3.0.1",
-  "info": {
-    "title": "Threat API v2",
-    "version": "1.0.1",
-    "description": "Available APIs provided by the InfoSec TI team",
-    "contact": {
-      "name": "GoDaddy Threat Intelligence team"
-    }
-  },
   "paths": {
     "/hello": {
       "get": {
-        "description": "Hello world in Python",
+        "description": "Hello example service",
         "responses": {
           "200": {
             "description": "JSON response",
             "content": {}
           }
-        },
-        "tags": [
-          "Python APIs"
-        ]
+        }
       }
     },
     "/hello/{path_arg1}": {
       "get": {
-        "description": "Hello world in Python",
+        "description": "Hello example service (with arguments)",
         "parameters": [
           {
             "name": "path_arg1",
@@ -47,18 +35,8 @@
             "description": "JSON response",
             "content": {}
           }
-        },
-        "tags": [
-          "Python APIs"
-        ]
+        }
       }
     }
-  },
-  "components": {},
-  "tags": [
-    {
-      "name": "Python APIs",
-      "description": "Set of APIs written in Python"
-    }
-  ]
+  }
 }

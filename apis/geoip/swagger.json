@@ -1,13 +1,4 @@
 {
-  "openapi": "3.0.1",
-  "info": {
-    "title": "Threat API v2",
-    "version": "1.0.1",
-    "description": "Available APIs provided by the InfoSec TI team",
-    "contact": {
-      "name": "GoDaddy Threat Intelligence team"
-    }
-  },
   "paths": {
     "/geoip/lookup": {
       "get": {
@@ -28,18 +19,8 @@
             "description": "JSON response",
             "content": {}
           }
-        },
-        "tags": [
-          "Golang APIs"
-        ]
+        }
       }
     }
-  },
-  "components": {},
-  "tags": [
-    {
-      "name": "Golang APIs",
-      "description": "Set of APIs written in Go"
-    }
-  ]
+  }
 }
