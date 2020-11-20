@@ -104,6 +104,17 @@ Resources:
               - dynamodb:UpdateItem
             Resource: "*"
 
+  ThreatPolicyLambda:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      ManagedPolicyName: threattools-custom-ThreatPolicyLambda
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action: lambda:InvokeFunction
+            Resource: "*"
+
   ThreatRole:
     Type: AWS::IAM::Role
     Properties:
@@ -113,6 +124,7 @@ Resources:
         - arn:aws:iam::aws:policy/AmazonSSMReadOnlyAccess
         - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
         - !Ref ThreatPolicyDynamoDB
+        - !Ref ThreatPolicyLambda
       AssumeRolePolicyDocument:
         Version: 2012-10-17
         Statement:
@@ -122,16 +134,16 @@ Resources:
             Action:
               - sts:AssumeRole
 
-  ThreatRequestsTable:
+  ThreatJobsTable:
     Type: AWS::DynamoDB::Table
     Properties:
       AttributeDefinitions:
         -
-          AttributeName: request_id
+          AttributeName: jobId
           AttributeType: S
       KeySchema:
         -
-          AttributeName: request_id
+          AttributeName: jobId
           KeyType: HASH
       TimeToLiveSpecification:
         AttributeName: ttl
@@ -139,7 +151,7 @@ Resources:
       ProvisionedThroughput:
         ReadCapacityUnits: 5
         WriteCapacityUnits: 5
-      TableName: requests
+      TableName: jobs
 
   ThreatAPI:
     DependsOn: SwaggerUILambda
