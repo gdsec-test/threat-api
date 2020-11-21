@@ -30,16 +30,9 @@ if [ "${RC}" != "0" ]; then
     aws lambda add-permission \
         --function-name hello \
         --action lambda:InvokeFunction \
-        --statement-id apigateway-1 \
+        --statement-id apigateway \
         --principal apigateway.amazonaws.com \
-        --source-arn "arn:aws:execute-api:us-west-2:${AWS_ACCOUNT_ID}:${API_GATEWAY_ID}/*/GET/hello"
-
-    aws lambda add-permission \
-        --function-name hello \
-        --action lambda:InvokeFunction \
-        --statement-id apigateway-2 \
-        --principal apigateway.amazonaws.com \
-        --source-arn "arn:aws:execute-api:us-west-2:${AWS_ACCOUNT_ID}:${API_GATEWAY_ID}/*/GET/hello/*"
+        --source-arn "arn:aws:execute-api:us-west-2:${AWS_ACCOUNT_ID}:${API_GATEWAY_ID}/gddeploy/*/*"
 
 else
     aws lambda update-function-code \

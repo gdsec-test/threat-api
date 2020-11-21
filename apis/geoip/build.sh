@@ -48,9 +48,9 @@ if [ "${RC}" != "0" ]; then
     aws lambda add-permission \
         --function-name geoip \
         --action lambda:InvokeFunction \
-        --statement-id apigateway-1 \
+        --statement-id apigateway \
         --principal apigateway.amazonaws.com \
-        --source-arn "arn:aws:execute-api:us-west-2:${AWS_ACCOUNT_ID}:${API_GATEWAY_ID}/*/GET/geoip/lookup"
+        --source-arn "arn:aws:execute-api:us-west-2:${AWS_ACCOUNT_ID}:${API_GATEWAY_ID}/gddeploy/*/*"
 
 else
     aws lambda update-function-code \
