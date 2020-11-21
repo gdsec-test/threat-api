@@ -2,7 +2,7 @@
   "paths": {
     "/hello": {
       "get": {
-        "description": "Hello example service",
+        "description": "Example service",
         "responses": {
           "200": {
             "description": "JSON response",
@@ -13,26 +13,43 @@
     },
     "/hello/{path_arg1}": {
       "get": {
-        "description": "Hello example service (with arguments)",
+        "description": "Example service (with arguments)",
         "parameters": [
           {
             "name": "path_arg1",
             "in": "path",
-            "description": "sample path argument",
+            "description": "Sample path argument",
             "required": true,
             "schema": {}
           },
           {
+            "name": "async",
+            "in": "header",
+            "description": "Asynchronous execution flag",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "false",
+                "true"
+              ]
+            }
+          },
+          {
             "name": "query_arg1",
             "in": "query",
-            "description": "sample query argument",
+            "description": "Sample query argument",
             "required": false,
             "schema": {}
           }
         ],
         "responses": {
           "200": {
-            "description": "JSON response",
+            "description": "JSON response (synchronous execution)",
+            "content": {}
+          },
+          "202": {
+            "description": "JSON response (asynchronous execution)",
             "content": {}
           }
         }
