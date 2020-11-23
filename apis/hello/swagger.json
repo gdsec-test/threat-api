@@ -1,64 +1,59 @@
 {
-  "openapi": "3.0.1",
-  "info": {
-    "title": "Threat API v2",
-    "version": "1.0.1",
-    "description": "Available APIs provided by the InfoSec TI team",
-    "contact": {
-      "name": "GoDaddy Threat Intelligence team"
-    }
-  },
   "paths": {
     "/hello": {
       "get": {
-        "description": "Hello world in Python",
+        "description": "Example service",
         "responses": {
           "200": {
             "description": "JSON response",
             "content": {}
           }
-        },
-        "tags": [
-          "Python APIs"
-        ]
+        }
       }
     },
     "/hello/{path_arg1}": {
       "get": {
-        "description": "Hello world in Python",
+        "description": "Example service (with arguments)",
         "parameters": [
           {
             "name": "path_arg1",
             "in": "path",
-            "description": "sample path argument",
+            "description": "Sample path argument",
             "required": true,
             "schema": {}
           },
           {
+            "name": "async",
+            "in": "header",
+            "description": "Asynchronous execution flag",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "false",
+                "true"
+              ]
+            }
+          },
+          {
             "name": "query_arg1",
             "in": "query",
-            "description": "sample query argument",
+            "description": "Sample query argument",
             "required": false,
             "schema": {}
           }
         ],
         "responses": {
           "200": {
-            "description": "JSON response",
+            "description": "JSON response (synchronous execution)",
+            "content": {}
+          },
+          "202": {
+            "description": "JSON response (asynchronous execution)",
             "content": {}
           }
-        },
-        "tags": [
-          "Python APIs"
-        ]
+        }
       }
     }
-  },
-  "components": {},
-  "tags": [
-    {
-      "name": "Python APIs",
-      "description": "Set of APIs written in Python"
-    }
-  ]
+  }
 }

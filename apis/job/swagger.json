@@ -1,0 +1,32 @@
+{
+  "paths": {
+    "/job/{jobId}": {
+      "get": {
+        "description": "Job status and output retrieval",
+        "parameters": [
+          {
+            "name": "jobId",
+            "in": "path",
+            "description": "Job ID",
+            "required": true,
+            "schema": {}
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Job output",
+            "content": {}
+          },
+          "404": {
+            "description": "Requested Job ID was not found",
+            "content": {}
+          },
+          "500": {
+            "description": "An internal server error occurred",
+            "content": {}
+          }
+        }
+      }
+    }
+  }
+}
