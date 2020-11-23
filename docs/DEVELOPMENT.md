@@ -94,3 +94,27 @@ the pre-commit hooks, use the following command:
 ```bash
 pre-commit run -a
 ```
+
+### Go Env setup
+
+Because we rely on internal (non public) libraries like the [util](https://github.secureserver.net/threat/util) library, you need to configure go to be able to authenticate and download those libraries.
+
+First we need to have git use ssh instead of prompt for user/pass for private repos:
+
+```sh
+git config --global url.git@github.secureserver.net:.insteadOf https://github.secureserver.net/
+```
+
+Then if you run `cat ~/.gitconfig` you should see this addition
+
+```sh
+> cat ~/.gitignore
+[url "git@github.secureserver.net:"]
+        insteadOf = https://github.secureserver.net/
+```
+
+Then set this env var whenever you run `go get`.  You may even need to run it multiple times if you haven't run it recently.  A good rule of thumb is whenever you are getting a `410 GONE` error, run this command again
+
+```sh
+export GOPRIVATE=github.secureserver.net
+```
