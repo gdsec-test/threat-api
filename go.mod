@@ -12,4 +12,4 @@ require (
 	go.elastic.co/apm/module/apmlambda v1.8.0
 )
 
-replace github.secureserver.net/threat/util => ../../threat/util
+// replace github.secureserver.net/threat/util => ../../threat/util

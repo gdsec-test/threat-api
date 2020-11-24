@@ -32,9 +32,7 @@ func handler(ctx context.Context, request events.APIGatewayProxyRequest) (events
 	t := toolbox.GetToolbox()
 	// Defer sending of tracing info
 	defer func() {
-		apm.DefaultTracer.Flush(nil)
-		apm.DefaultTracer.SendMetrics(nil)
-		apm.DefaultTracer.Close()
+		t.Close()
 	}()
 
 	t.Logger.Info("Starting handling of request")
