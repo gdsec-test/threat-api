@@ -108,7 +108,7 @@ git config --global url.git@github.secureserver.net:.insteadOf https://github.se
 Then if you run `cat ~/.gitconfig` you should see this addition
 
 ```sh
-> cat ~/.gitignore
+> cat ~/.gitconfig
 [url "git@github.secureserver.net:"]
         insteadOf = https://github.secureserver.net/
 ```
