@@ -1,5 +1,7 @@
 # GoPhish
 
+TODO: Move this to gophish deployment repo
+
 [Gophish](https://github.secureserver.net/threat/threat-tools#GoPhish) is currently hosted on-prem but will be moved to AWS. This document describes handling and response to the AWS architecture.
 
 ## Web application problems
