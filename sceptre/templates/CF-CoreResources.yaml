@@ -134,6 +134,28 @@ Resources:
             Action:
               - sts:AssumeRole
 
+  ThreatEncryptionKeyTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      AttributeDefinitions:
+        -
+          AttributeName: Id
+          AttributeType: S
+        -
+          AttributeName: Created
+          AttributeType: N
+      KeySchema:
+        -
+          AttributeName: Id
+          KeyType: HASH
+        -
+          AttributeName: Created
+          KeyType: RANGE
+      ProvisionedThroughput:
+        ReadCapacityUnits: 5
+        WriteCapacityUnits: 5
+      TableName: EncryptionKey
+
   ThreatJobsTable:
     Type: AWS::DynamoDB::Table
     Properties:

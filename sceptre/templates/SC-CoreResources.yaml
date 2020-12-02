@@ -241,6 +241,27 @@ Resources:
         - Key: doNotShutDown
           Value: true
 
+  ThreatEncryptionKeyTable:
+    Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
+    Properties:
+      ProductName: DynamoDB
+      ProvisioningArtifactName: 1.2.1
+      ProvisionedProductName: ThreatEncryptionKeyTable
+      ProvisioningParameters:
+        - Key: DynamoDBTableName
+          Value: EncryptionKey
+        - Key: PartitionKeyAttributeName
+          Value: Id
+        - Key: PartitionKeyAttributeType
+          Value: S
+        - Key: RangeKeyAttributeName
+          Value: Created
+        - Key: RangeKeyAttributeType
+          Value: N
+      Tags:
+        - Key: doNotShutDown
+          Value: true
+
   ThreatJobsTable:
     Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
     Properties:
