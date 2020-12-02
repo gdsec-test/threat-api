@@ -1,0 +1,31 @@
+@startuml "Asynchronous"
+actor User
+box "AWS" #LightBlue
+User -> WAF : POST request
+WAF -> API_Gateway : POST request
+API_Gateway -> API_Gateway : Validate request \n and parameters
+API_Gateway -> JWT_Autorizor: Check JWT
+JWT_Autorizor -> API_Gateway: JWT good
+API_Gateway -> Job_Spawner : Path and parameters
+activate Job_Spawner
+Job_Spawner -> DynamoDB : Store job_id
+Job_Spawner -> Queue : Add job to queue
+Job_Spawner -> User : job_id
+deactivate Job_Spawner
+note over User : At this point the \n request is done and the user \n must poll for the result
+Queue -> Router_Lambda : invokes
+Router_Lambda -> Requested_Lambda : invokes
+activate Requested_Lambda
+participant Asherah
+database DynamoDB
+end box
+box "Service Now" #LightRed
+Requested_Lambda -> ServiceNow : API Call (With JWT)
+ServiceNow -> Requested_Lambda : Response
+Requested_Lambda -> DynamoDB : Update request_status to DONE
+Requested_Lambda -> Asherah : Store request results
+Asherah -> DynamoDB : Store encrypted data
+note over Requested_Lambda : Job done
+deactivate Requested_Lambda
+end box
+@enduml

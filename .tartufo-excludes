@@ -1,2 +1,5 @@
 go.sum
 apis/geoip/build.sh
+docs/diagrams/Polling.svg
+docs/diagrams/asynchronous.svg
+docs/diagrams/lambda_architecture.svg

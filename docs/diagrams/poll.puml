@@ -1,0 +1,14 @@
+@startuml "Polling"
+actor User
+note over User : The user waits some time\nfor the request to finish
+box "AWS" #LightBlue
+User -> WAF : GET /status
+WAF -> API_Gateway : GET /status
+API_Gateway -> JWT_Autorizor: Check JWT
+JWT_Autorizor -> API_Gateway: JWT good
+API_Gateway -> Job_Status_Lambda : Check status with job_id
+Job_Status_Lambda -> DynamoDB : Look up job_id
+DynamoDB -> Job_Status_Lambda : job_id, job_status, result_data
+Job_Status_Lambda -> User : job_id, job_status, result_data
+end box
+@enduml
