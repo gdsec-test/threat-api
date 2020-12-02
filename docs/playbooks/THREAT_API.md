@@ -23,6 +23,10 @@ From there you can click in to an individual service and view traces (example TO
 
 </details>
 
+## Deployment and development
+
+For information on deployment and development see [DEVELOPMENT.md](../DEVELOPMENT.md)
+
 ## Permissions error
 
 Check the permissions of the API Gateway...TODO
