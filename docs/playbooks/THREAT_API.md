@@ -6,15 +6,26 @@ This document will be more and more populated as we encounter and document commo
 
 ## General
 
-For most app level errors and problems, check the [ELK Stack APM Server](https://threattools-non-prod.kibana.int.gdcorp.tools/app/home) (you may need to sign in via okta).  It will most likely have errors that would provide the best trail to follow.
+For most app level errors and problems, check the [ELK Stack APM Server](https://threattools-non-prod.kibana.int.gdcorp.tools/app/apm) (sign in via okta).  It will most likely have errors that would provide the best trail to follow.
+
+<details>
+<summary>APM Instructions</summary>
+
+Log in to the kibana instance from okta
+
+![okta](./img/elk/okta.png)
+
+Find the APM selection in the sidebar
+
+![apm](./img/elk/apm.png)
+
+From there you can click in to an individual service and view traces (example TODO).
+
+</details>
 
 ## Permissions error
 
 Check the permissions of the API Gateway...TODO
-
-## 500 Error for a module
-
-Check APM as specified in [#General](#General).
 
 ## Gateway is not calling a lambda
 
