@@ -4,6 +4,7 @@ go 1.15
 
 require (
 	github.com/aws/aws-lambda-go v1.19.1
+	github.com/aws/aws-sdk-go v1.35.27
 	github.com/opentracing/opentracing-go v1.1.0
 	github.com/oschwald/geoip2-golang v1.4.0
 	github.com/sirupsen/logrus v1.7.0
