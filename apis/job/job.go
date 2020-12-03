@@ -38,19 +38,18 @@ func handler(ctx context.Context, request events.APIGatewayProxyRequest) (events
 	jobID, ok := request.PathParameters["job_id"]
 	if ok {
 		// Assume they are checking on the status of this job
-		span, ctx := opentracing.StartSpanFromContext(ctx, "GetJobStatus")
-		defer span.Finish()
 		return getJobStatus(ctx, jobID)
 	}
 
 	// Assume they want to create a new job
-	span, ctx := opentracing.StartSpanFromContext(ctx, "QueueJob")
-	defer span.Finish()
-	return queueJob(ctx, request)
+	return createJob(ctx, request)
 }
 
 // getJobStatus gets the job status from dynamoDB and send it as a response
 func getJobStatus(ctx context.Context, jobID string) (events.APIGatewayProxyResponse, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "GetJobStatus")
+	defer span.Finish()
+
 	// Fetch job from database
 	t.LoadAWSSession(ctx, credentials.NewEnvCredentials(), "us-west-2")
 	item, err := dynamoDBClient.GetItem(&dynamodb.GetItemInput{
@@ -81,13 +80,16 @@ func getJobStatus(ctx context.Context, jobID string) (events.APIGatewayProxyResp
 	}, nil
 }
 
-// queueJob creates a new job ID in dynamo DB and enqueue it in the queue
-func queueJob(ctx context.Context, request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
+// createJob creates a new job ID in dynamo DB and enqueue it in the queue
+func createJob(ctx context.Context, request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "CreateJob")
+	defer span.Finish()
+
 	// Generate job_id
 	jobID := t.GenerateJobID(ctx)
 
 	// Store in database
-	span, ctx := opentracing.StartSpanFromContext(ctx, "StoreJob")
+	span, ctx = opentracing.StartSpanFromContext(ctx, "StoreJob")
 	span.LogKV("job_id", jobID)
 	_, err := dynamoDBClient.PutItem(&dynamodb.PutItemInput{
 		Item: map[string]*dynamodb.AttributeValue{
@@ -105,7 +107,7 @@ func queueJob(ctx context.Context, request events.APIGatewayProxyRequest) (event
 	span.Finish()
 
 	// Add to queue
-	span, ctx = opentracing.StartSpanFromContext(ctx, "QueueJob")
+	span, ctx = opentracing.StartSpanFromContext(ctx, "SQSJob")
 
 	// Marshal body
 	requestMarshalled, err := json.Marshal(request)
