@@ -115,6 +115,18 @@ Resources:
             Action: lambda:InvokeFunction
             Resource: "*"
 
+  ThreatPolicySQS:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      ManagedPolicyName: threattools-custom-ThreatPolicySQS
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action:
+              - sqs:SendMessage
+            Resource: "arn:aws:sqs:*:*:*"
+
   ThreatRole:
     Type: AWS::IAM::Role
     Properties:
@@ -122,6 +134,43 @@ Resources:
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess
         - arn:aws:iam::aws:policy/AmazonSSMReadOnlyAccess
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+
+  ThreatManagerRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: threattools-custom-ThreatManagerRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess
+        - arn:aws:iam::aws:policy/AmazonSSMReadOnlyAccess
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+        - !Ref ThreatPolicyDynamoDB
+        - !Ref ThreatPolicySQS
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+
+  ThreatRouterRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: threattools-custom-ThreatRouterRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess
+        - arn:aws:iam::aws:policy/AmazonSSMReadOnlyAccess
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaSQSQueueExecutionRole
         - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
         - !Ref ThreatPolicyDynamoDB
         - !Ref ThreatPolicyLambda
@@ -133,6 +182,41 @@ Resources:
               Service: lambda.amazonaws.com
             Action:
               - sts:AssumeRole
+
+  ThreatJobsQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: JobsQueue
+      VisibilityTimeout: 5400
+
+  ThreatJobsQueueParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: /ThreatTools/JobsQueue
+      Type: String
+      Value: !Ref ThreatJobsQueue
+
+  ThreatEncryptionKeyTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      AttributeDefinitions:
+        -
+          AttributeName: Id
+          AttributeType: S
+        -
+          AttributeName: Created
+          AttributeType: N
+      KeySchema:
+        -
+          AttributeName: Id
+          KeyType: HASH
+        -
+          AttributeName: Created
+          KeyType: RANGE
+      ProvisionedThroughput:
+        ReadCapacityUnits: 5
+        WriteCapacityUnits: 5
+      TableName: EncryptionKey
 
   ThreatJobsTable:
     Type: AWS::DynamoDB::Table
