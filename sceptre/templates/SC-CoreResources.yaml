@@ -214,10 +214,31 @@ Resources:
         - Key: doNotShutDown
           Value: true
 
+  ThreatPolicySQS:
+    Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
+    Properties:
+      ProductName: IAMPolicy
+      ProvisioningArtifactName: 1.0.0
+      ProvisionedProductName: ThreatPolicySQS
+      ProvisioningParameters:
+        - Key: PolicyNameSuffix
+          Value: ThreatPolicySQS
+        - Key: PolicyJSON
+          Value: '{
+            "Version": "2012-10-17",
+            "Statement": [
+                {
+                    "Action": "sqs:SendMessage",
+                    "Resource": "arn:aws:sqs:*:*:*",
+                    "Effect": "Allow"
+                }
+            ]
+        }'
+      Tags:
+        - Key: doNotShutDown
+          Value: true
+
   ThreatRole:
-    DependsOn:
-      - ThreatPolicyDynamoDB
-      - ThreatPolicyLambda
     Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
     Properties:
       ProductName: IAMRole
@@ -233,6 +254,59 @@ Resources:
               - arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess
               - arn:aws:iam::aws:policy/AmazonSSMReadOnlyAccess
               - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+        - Key: AssumingServices
+          Value: lambda.amazonaws.com
+      Tags:
+        - Key: doNotShutDown
+          Value: true
+
+  ThreatManagerRole:
+    DependsOn:
+      - ThreatPolicyDynamoDB
+      - ThreatPolicySQS
+    Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
+    Properties:
+      ProductName: IAMRole
+      ProvisioningArtifactName: 1.0.9
+      ProvisionedProductName: ThreatManagerRole
+      ProvisioningParameters:
+        - Key: RoleNameSuffix
+          Value: ThreatManagerRole
+        - Key: ManagedPolicyArns
+          Value: !Join
+            - ","
+            -
+              - arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess
+              - arn:aws:iam::aws:policy/AmazonSSMReadOnlyAccess
+              - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+              - !Sub arn:aws:iam::${AWS::AccountId}:policy/${DevelopmentTeam}-custom-ThreatPolicyDynamoDB
+              - !Sub arn:aws:iam::${AWS::AccountId}:policy/${DevelopmentTeam}-custom-ThreatPolicySQS
+        - Key: AssumingServices
+          Value: lambda.amazonaws.com
+      Tags:
+        - Key: doNotShutDown
+          Value: true
+
+  ThreatRouterRole:
+    DependsOn:
+      - ThreatPolicyDynamoDB
+      - ThreatPolicyLambda
+    Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
+    Properties:
+      ProductName: IAMRole
+      ProvisioningArtifactName: 1.0.9
+      ProvisionedProductName: ThreatRouterRole
+      ProvisioningParameters:
+        - Key: RoleNameSuffix
+          Value: ThreatRouterRole
+        - Key: ManagedPolicyArns
+          Value: !Join
+            - ","
+            -
+              - arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess
+              - arn:aws:iam::aws:policy/AmazonSSMReadOnlyAccess
+              - arn:aws:iam::aws:policy/service-role/AWSLambdaSQSQueueExecutionRole
+              - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
               - !Sub arn:aws:iam::${AWS::AccountId}:policy/${DevelopmentTeam}-custom-ThreatPolicyDynamoDB
               - !Sub arn:aws:iam::${AWS::AccountId}:policy/${DevelopmentTeam}-custom-ThreatPolicyLambda
         - Key: AssumingServices
@@ -240,6 +314,28 @@ Resources:
       Tags:
         - Key: doNotShutDown
           Value: true
+
+  ThreatJobsQueue:
+    Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
+    Properties:
+      ProductName: SQS
+      ProvisioningArtifactName: 1.0.8
+      ProvisionedProductName: ThreatJobsQueue
+      ProvisioningParameters:
+        - Key: QueueName
+          Value: JobsQueue
+        - Key: VisibilityTimeout
+          Value: 5400
+      Tags:
+        - Key: doNotShutDown
+          Value: true
+
+  ThreatJobsQueueParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: /ThreatTools/JobsQueue
+      Type: String
+      Value: !Sub https://sqs.${AWS::Region}.amazonaws.com/${AWS::AccountId}/JobsQueue
 
   ThreatEncryptionKeyTable:
     Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
