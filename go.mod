@@ -7,9 +7,9 @@ require (
 	github.com/opentracing/opentracing-go v1.1.0
 	github.com/oschwald/geoip2-golang v1.4.0
 	github.com/sirupsen/logrus v1.7.0
-	github.secureserver.net/threat/util v0.0.0-20201017001357-49a72cdebd27
+	github.secureserver.net/threat/util v0.0.0-20201204165339-de25413b4bbd
 	go.elastic.co/apm v1.9.0
 	go.elastic.co/apm/module/apmlambda v1.8.0
 )
 
-replace github.secureserver.net/threat/util => ../../threat/util
+// replace github.secureserver.net/threat/util => ../../threat/util
