@@ -123,7 +123,7 @@ func createJob(ctx context.Context, request events.APIGatewayProxyRequest) (even
 	}
 	requestMarshalledString := string(requestMarshalled)
 
-	// Send the entire request marshalled
+	// Get the name of the SQS queue
 	queueName, err := t.GetFromParameterStore(ctx, asherahQueueNameParameterName, false)
 	if err != nil {
 		span.LogKV("error", err)
@@ -134,6 +134,8 @@ func createJob(ctx context.Context, request events.APIGatewayProxyRequest) (even
 		}, nil
 	}
 	queueNameString := queueName.String()
+
+	// Send the entire request marshalled
 	sqsClient := sqs.New(t.AWSSession)
 	_, err = sqsClient.SendMessage(&sqs.SendMessageInput{
 		MessageBody: &requestMarshalledString,
