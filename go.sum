@@ -35,9 +35,11 @@ github.com/docker/docker v0.7.3-0.20190506211059-b20a14b54661/go.mod h1:eEKB0N0r
 github.com/docker/go-connections v0.4.0/go.mod h1:Gbd7IOopHjR8Iph03tsViu4nIes5XhDvyHbTtUxmeec=
 github.com/docker/go-units v0.3.3 h1:Xk8S3Xj5sLGlG5g67hJmYMmUgXv5N4PhkjJHHqrwnTk=
 github.com/docker/go-units v0.3.3/go.mod h1:fgPhTUdO+D/Jk86RDLlptpiXQzgHJF7gydDDbaIK4Dk=
+github.com/elastic/go-sysinfo v1.1.1 h1:ZVlaLDyhVkDfjwPGU55CQRCRolNpc7P0BbyhhQZQmMI=
 github.com/elastic/go-sysinfo v1.1.1/go.mod h1:i1ZYdU10oLNfRzq4vq62BEwD2fH8KaWh6eh0ikPT9F0=
 github.com/elastic/go-sysinfo v1.4.0 h1:LUnK6TNOuy8JEByuDzTAQH3iQ6bIywy55+Z+QlKNSWk=
 github.com/elastic/go-sysinfo v1.4.0/go.mod h1:i1ZYdU10oLNfRzq4vq62BEwD2fH8KaWh6eh0ikPT9F0=
+github.com/elastic/go-windows v1.0.0 h1:qLURgZFkkrYyTTkvYpsZIgf83AUsdIHfvlJaqaZ7aSY=
 github.com/elastic/go-windows v1.0.0/go.mod h1:TsU0Nrp7/y3+VwE82FoZF8gC/XFg/Elz6CcloAxnPgU=
 github.com/elastic/go-windows v1.0.1 h1:AlYZOldA+UJ0/2nBuqWdo90GFCgG9xuyw9SYzGUtJm0=
 github.com/elastic/go-windows v1.0.1/go.mod h1:FoVvqWSun28vaDQPbj2Elfc0JahhPB7WQEGa3c814Ss=
@@ -114,6 +116,7 @@ github.com/pkg/errors v0.8.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINE
 github.com/pkg/errors v0.9.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/prometheus/procfs v0.0.0-20190425082905-87a4384529e0/go.mod h1:TjEm7ze935MbeOT/UhFTIMYKhuLP4wbCsTZCD3I8kEA=
+github.com/prometheus/procfs v0.0.3 h1:CTwfnzjQ+8dS6MhHHu4YswVAD99sL2wjPqP+VkURmKE=
 github.com/prometheus/procfs v0.0.3/go.mod h1:4A/X28fw3Fc593LaREMrKMqOKvUAntwMDaekg4FpcdQ=
 github.com/prometheus/procfs v0.2.0 h1:wH4vA7pcjKuZzjF7lM8awk4fnuJO6idemZXoKnULUx4=
 github.com/prometheus/procfs v0.2.0/go.mod h1:lV6e/gmhEcM9IjHGsFOCxxuZ+z1YqCvr4OA4YeYWdaU=
@@ -146,6 +149,8 @@ github.secureserver.net/auth-contrib/go-auth v1.2.1/go.mod h1:AzLUi56S3nSh/vK+IG
 github.secureserver.net/threat/go-ldap v0.0.0-20201017001259-d06e7b5f7252 h1:bIUX4Cw94igHxeSu6Yl44a/9VRO1BKfUuBv8JtbadO0=
 github.secureserver.net/threat/go-ldap v0.0.0-20201017001259-d06e7b5f7252/go.mod h1:k7kUhrR6aWUC86oL8hc7yDnu4Lwr0mTYdOahKFmeW0g=
 github.secureserver.net/threat/hashtype v0.0.0-20190719164940-596969fc3cf6/go.mod h1:2D4idLZ4OSmyV6lm/WmZV2FRlvio6cCWYxYLfk8Lb3A=
+github.secureserver.net/threat/util v0.0.0-20201204165339-de25413b4bbd h1:UjoQ6B0H0e/fzdnbeRhTL2wqc1NlEbYMYAiRpbY05pI=
+github.secureserver.net/threat/util v0.0.0-20201204165339-de25413b4bbd/go.mod h1:406ipyj1qO/+NQ25EY6uRYYhHSQCdssoxrXi/p0z194=
 go.elastic.co/apm v1.8.0 h1:AWEKpHwRal0yCMd4K8Oxy1HAa7xid+xq1yy+XjgoVU0=
 go.elastic.co/apm v1.8.0/go.mod h1:tCw6CkOJgkWnzEthFN9HUP1uL3Gjc/Ur6m7gRPLaoH0=
 go.elastic.co/apm v1.9.0 h1:uLOZniTuJ2rU2fFGiNI0ZswzKr9fryHDkNMV8iVDDDI=
@@ -228,6 +233,7 @@ gopkg.in/yaml.v3 v3.0.0-20200615113413-eeeca48fe776/go.mod h1:K4uyk7z7BCEPqu6E+C
 gotest.tools v0.0.0-20181223230014-1083505acf35 h1:zpdCK+REwbk+rqjJmHhiCN6iBIigrZ39glqSF0P3KF0=
 gotest.tools v0.0.0-20181223230014-1083505acf35/go.mod h1:R//lfYlUuTOTfblYI3lGoAAAebUdzjvbmQsuB7Ykd90=
 honnef.co/go/tools v0.0.0-20180728063816-88497007e858/go.mod h1:rf3lG4BRIbNafJWhAfAdb/ePZxsR/4RtNHQocxwk9r4=
+howett.net/plist v0.0.0-20181124034731-591f970eefbb h1:jhnBjNi9UFpfpl8YZhA9CrOqpnJdvzuiHsl/dnxl11M=
 howett.net/plist v0.0.0-20181124034731-591f970eefbb/go.mod h1:vMygbs4qMhSZSc4lCUl2OEE+rDiIIJAIdR4m7MiMcm0=
 howett.net/plist v0.0.0-20201026045517-117a925f2150 h1:s7O/9fwMNd6O1yXyQ8zv+U7dfl8k+zdiLWAY8h7XdVI=
 howett.net/plist v0.0.0-20201026045517-117a925f2150/go.mod h1:vMygbs4qMhSZSc4lCUl2OEE+rDiIIJAIdR4m7MiMcm0=
