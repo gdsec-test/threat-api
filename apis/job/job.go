@@ -16,7 +16,8 @@ import (
 )
 
 const (
-	resourceName = "geoip"
+	resourceName                  = "geoip"
+	asherahQueueNameParameterName = "/ThreatTools/JobsQueue"
 )
 
 // Normall I wouldn't use global variables like this, but in such a small
@@ -99,6 +100,7 @@ func createJob(ctx context.Context, request events.APIGatewayProxyRequest) (even
 	})
 	if err != nil {
 		span.LogKV("error", err)
+		span.Finish()
 		return events.APIGatewayProxyResponse{
 			StatusCode: 500,
 			Body:       "Error creating job",
@@ -113,6 +115,7 @@ func createJob(ctx context.Context, request events.APIGatewayProxyRequest) (even
 	requestMarshalled, err := json.Marshal(request)
 	if err != nil {
 		span.LogKV("error", err)
+		span.Finish()
 		return events.APIGatewayProxyResponse{
 			StatusCode: 500,
 			Body:       "error marshalling request",
@@ -121,12 +124,24 @@ func createJob(ctx context.Context, request events.APIGatewayProxyRequest) (even
 	requestMarshalledString := string(requestMarshalled)
 
 	// Send the entire request marshalled
+	queueName, err := t.GetFromParameterStore(ctx, asherahQueueNameParameterName, false)
+	if err != nil {
+		span.LogKV("error", err)
+		span.Finish()
+		return events.APIGatewayProxyResponse{
+			StatusCode: 500,
+			Body:       "error finding queue name",
+		}, nil
+	}
+	queueNameString := queueName.String()
 	sqsClient := sqs.New(t.AWSSession)
 	_, err = sqsClient.SendMessage(&sqs.SendMessageInput{
 		MessageBody: &requestMarshalledString,
+		QueueUrl:    &queueNameString,
 	})
 	if err != nil {
 		span.LogKV("error", err)
+		span.Finish()
 		return events.APIGatewayProxyResponse{
 			StatusCode: 500,
 			Body:       "error queueing job",
