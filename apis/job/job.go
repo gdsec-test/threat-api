@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/aws/aws-sdk-go/service/sqs"
+	"github.com/gdcorp-infosec/threat-api/apis/common"
 	"github.com/opentracing/opentracing-go"
 	"github.secureserver.net/threat/util/lambda/toolbox"
 	_ "go.elastic.co/apm/module/apmlambda"
@@ -81,12 +82,6 @@ func getJobStatus(ctx context.Context, jobID string) (events.APIGatewayProxyResp
 	}, nil
 }
 
-// queueStructure is the structure inserted in to the queue to queue a job
-type queueStructure struct {
-	JobID           string                        `json:"jobID"`
-	OriginalRequest events.APIGatewayProxyRequest `json:"original_request"`
-}
-
 // createJob creates a new job ID in dynamo DB and enqueue it in the queue
 func createJob(ctx context.Context, request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "CreateJob")
@@ -118,7 +113,7 @@ func createJob(ctx context.Context, request events.APIGatewayProxyRequest) (even
 	span, ctx = opentracing.StartSpanFromContext(ctx, "SQSJob")
 
 	// Marshal body
-	requestMarshalled, err := json.Marshal(queueStructure{
+	requestMarshalled, err := json.Marshal(common.QueuedJob{
 		OriginalRequest: request,
 		JobID:           jobID,
 	})
