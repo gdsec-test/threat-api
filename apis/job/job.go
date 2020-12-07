@@ -81,6 +81,12 @@ func getJobStatus(ctx context.Context, jobID string) (events.APIGatewayProxyResp
 	}, nil
 }
 
+// queueStructure is the structure inserted in to the queue to queue a job
+type queueStructure struct {
+	JobID           string                        `json:"jobID"`
+	OriginalRequest events.APIGatewayProxyRequest `json:"original_request"`
+}
+
 // createJob creates a new job ID in dynamo DB and enqueue it in the queue
 func createJob(ctx context.Context, request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "CreateJob")
@@ -112,7 +118,10 @@ func createJob(ctx context.Context, request events.APIGatewayProxyRequest) (even
 	span, ctx = opentracing.StartSpanFromContext(ctx, "SQSJob")
 
 	// Marshal body
-	requestMarshalled, err := json.Marshal(request)
+	requestMarshalled, err := json.Marshal(queueStructure{
+		OriginalRequest: request,
+		JobID:           jobID,
+	})
 	if err != nil {
 		span.LogKV("error", err)
 		span.Finish()
@@ -135,7 +144,7 @@ func createJob(ctx context.Context, request events.APIGatewayProxyRequest) (even
 	}
 	queueNameString := queueName.String()
 
-	// Send the entire request marshalled
+	// Send the entire request marshalled along with the jobID
 	sqsClient := sqs.New(t.AWSSession)
 	_, err = sqsClient.SendMessage(&sqs.SendMessageInput{
 		MessageBody: &requestMarshalledString,
