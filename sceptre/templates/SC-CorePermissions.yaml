@@ -7,12 +7,12 @@ Parameters:
     Description: API Gateway Identifier
 
 Resources:
-  SwaggerRootPermission:
+  SwaggerPermission:
     Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
     Properties:
       ProductName: LambdaPermission
       ProvisioningArtifactName: 1.0.1
-      ProvisionedProductName: SwaggerRootPermission
+      ProvisionedProductName: SwaggerPermission
       ProvisioningParameters:
         - Key: Action
           Value: lambda:InvokeFunction
@@ -21,26 +21,7 @@ Resources:
         - Key: Principal
           Value: apigateway.amazonaws.com
         - Key: SourceArn
-          Value: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ApiId}/*/GET/swagger
-      Tags:
-        - Key: doNotShutDown
-          Value: true
-
-  SwaggerPathPermission:
-    Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
-    Properties:
-      ProductName: LambdaPermission
-      ProvisioningArtifactName: 1.0.1
-      ProvisionedProductName: SwaggerPathPermission
-      ProvisioningParameters:
-        - Key: Action
-          Value: lambda:InvokeFunction
-        - Key: FunctionName
-          Value: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:SwaggerUI
-        - Key: Principal
-          Value: apigateway.amazonaws.com
-        - Key: SourceArn
-          Value: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ApiId}/*/GET/swagger/*
+          Value: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ApiId}/gddeploy/*/*
       Tags:
         - Key: doNotShutDown
           Value: true
