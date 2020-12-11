@@ -9,7 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
-	"github.com/aws/aws-sdk-go/service/sqs"
+	"github.com/aws/aws-sdk-go/service/sns"
 	"github.com/gdcorp-infosec/threat-api/apis/common"
 	"github.com/opentracing/opentracing-go"
 	"github.secureserver.net/threat/util/lambda/toolbox"
@@ -17,8 +17,8 @@ import (
 )
 
 const (
-	resourceName                  = "geoip"
-	asherahQueueNameParameterName = "/ThreatTools/JobsQueue"
+	resourceName             = "geoip"
+	snsTopicARNParameterName = "/ThreatTools/JobRequests"
 )
 
 // Normall I wouldn't use global variables like this, but in such a small
@@ -82,7 +82,7 @@ func getJobStatus(ctx context.Context, jobID string) (events.APIGatewayProxyResp
 	}, nil
 }
 
-// createJob creates a new job ID in dynamo DB and enqueue it in the queue
+// createJob creates a new job ID in dynamo DB and sends it to the appropriate SNS topics
 func createJob(ctx context.Context, request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "CreateJob")
 	defer span.Finish()
@@ -109,11 +109,11 @@ func createJob(ctx context.Context, request events.APIGatewayProxyRequest) (even
 	}
 	span.Finish()
 
-	// Add to queue
-	span, ctx = opentracing.StartSpanFromContext(ctx, "SQSJob")
+	// Send to SNS
+	span, ctx = opentracing.StartSpanFromContext(ctx, "SendSNS")
 
 	// Marshal body
-	requestMarshalled, err := json.Marshal(common.QueuedJob{
+	requestMarshalled, err := json.Marshal(common.JobMessage{
 		OriginalRequest: request,
 		JobID:           jobID,
 	})
@@ -127,30 +127,26 @@ func createJob(ctx context.Context, request events.APIGatewayProxyRequest) (even
 	}
 	requestMarshalledString := string(requestMarshalled)
 
-	// Get the name of the SQS queue
-	queueName, err := t.GetFromParameterStore(ctx, asherahQueueNameParameterName, false)
+	// Get the SNS topic ARN
+	topicARN, err := t.GetFromParameterStore(ctx, snsTopicARNParameterName, false)
 	if err != nil {
 		span.LogKV("error", err)
 		span.Finish()
-		return events.APIGatewayProxyResponse{
-			StatusCode: 500,
-			Body:       "error finding queue name",
-		}, nil
+		return events.APIGatewayProxyResponse{StatusCode: 500, Body: "error finding sns topic arn"}, nil
 	}
-	queueNameString := queueName.String()
 
 	// Send the entire request marshalled along with the jobID
-	sqsClient := sqs.New(t.AWSSession)
-	_, err = sqsClient.SendMessage(&sqs.SendMessageInput{
-		MessageBody: &requestMarshalledString,
-		QueueUrl:    &queueNameString,
+	snsClient := sns.New(t.AWSSession)
+	_, err = snsClient.Publish(&sns.PublishInput{
+		Message:  &requestMarshalledString,
+		TopicArn: aws.String(topicARN.String()),
 	})
 	if err != nil {
 		span.LogKV("error", err)
 		span.Finish()
 		return events.APIGatewayProxyResponse{
 			StatusCode: 500,
-			Body:       "error queueing job",
+			Body:       "error sending job to topic",
 		}, nil
 	}
 	span.Finish()
