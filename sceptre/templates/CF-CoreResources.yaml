@@ -104,16 +104,17 @@ Resources:
               - dynamodb:UpdateItem
             Resource: "*"
 
-  ThreatPolicyLambda:
+  ThreatPolicySNS:
     Type: AWS::IAM::ManagedPolicy
     Properties:
-      ManagedPolicyName: threattools-custom-ThreatPolicyLambda
+      ManagedPolicyName: threattools-custom-ThreatPolicySNS
       PolicyDocument:
         Version: 2012-10-17
         Statement:
           - Effect: Allow
-            Action: lambda:InvokeFunction
-            Resource: "*"
+            Action:
+              - sns:Publish
+            Resource: !Ref ThreatJobRequestsTopic
 
   ThreatPolicySQS:
     Type: AWS::IAM::ManagedPolicy
@@ -135,6 +136,7 @@ Resources:
         - arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess
         - arn:aws:iam::aws:policy/AmazonSSMReadOnlyAccess
         - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+        - !Ref ThreatPolicySQS
       AssumeRolePolicyDocument:
         Version: 2012-10-17
         Statement:
@@ -153,7 +155,7 @@ Resources:
         - arn:aws:iam::aws:policy/AmazonSSMReadOnlyAccess
         - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
         - !Ref ThreatPolicyDynamoDB
-        - !Ref ThreatPolicySQS
+        - !Ref ThreatPolicySNS
       AssumeRolePolicyDocument:
         Version: 2012-10-17
         Statement:
@@ -163,17 +165,16 @@ Resources:
             Action:
               - sts:AssumeRole
 
-  ThreatRouterRole:
+  ThreatResponseProcessorRole:
     Type: AWS::IAM::Role
     Properties:
-      RoleName: threattools-custom-ThreatRouterRole
+      RoleName: threattools-custom-ThreatResponseProcessorRole
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess
         - arn:aws:iam::aws:policy/AmazonSSMReadOnlyAccess
         - arn:aws:iam::aws:policy/service-role/AWSLambdaSQSQueueExecutionRole
         - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
         - !Ref ThreatPolicyDynamoDB
-        - !Ref ThreatPolicyLambda
       AssumeRolePolicyDocument:
         Version: 2012-10-17
         Statement:
@@ -183,18 +184,30 @@ Resources:
             Action:
               - sts:AssumeRole
 
-  ThreatJobsQueue:
-    Type: AWS::SQS::Queue
+  ThreatJobRequestsTopic:
+    Type: AWS::SNS::Topic
     Properties:
-      QueueName: JobsQueue
-      VisibilityTimeout: 5400
+      TopicName: JobRequests
 
-  ThreatJobsQueueParameter:
+  ThreatJobRequestsTopicParameter:
     Type: AWS::SSM::Parameter
     Properties:
-      Name: /ThreatTools/JobsQueue
+      Name: /ThreatTools/JobRequests
       Type: String
-      Value: !Ref ThreatJobsQueue
+      Value: !Ref ThreatJobRequestsTopic
+
+  ThreatJobResponsesQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: JobResponses
+      VisibilityTimeout: 5400
+
+  ThreatJobResponsesQueueParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: /ThreatTools/JobResponses
+      Type: String
+      Value: !Ref ThreatJobResponsesQueue
 
   ThreatEncryptionKeyTable:
     Type: AWS::DynamoDB::Table
@@ -223,11 +236,11 @@ Resources:
     Properties:
       AttributeDefinitions:
         -
-          AttributeName: jobId
+          AttributeName: job_id
           AttributeType: S
       KeySchema:
         -
-          AttributeName: jobId
+          AttributeName: job_id
           KeyType: HASH
       TimeToLiveSpecification:
         AttributeName: ttl
@@ -273,21 +286,13 @@ Resources:
       RestApiId: !Ref ThreatAPI
       StageName: gddeploy
 
-  SwaggerRootPermission:
+  SwaggerPermission:
     Type: AWS::Lambda::Permission
     Properties:
       Action: lambda:InvokeFunction
       FunctionName: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:SwaggerUI
       Principal: apigateway.amazonaws.com
-      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ThreatAPI}/gddeploy/GET/swagger"
-
-  SwaggerPathPermission:
-    Type: AWS::Lambda::Permission
-    Properties:
-      Action: lambda:InvokeFunction
-      FunctionName: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:SwaggerUI
-      Principal: apigateway.amazonaws.com
-      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ThreatAPI}/gddeploy/GET/swagger/*"
+      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ThreatAPI}/gddeploy/*/*"
 
   AuthorizerPermission:
     Type: AWS::Lambda::Permission
