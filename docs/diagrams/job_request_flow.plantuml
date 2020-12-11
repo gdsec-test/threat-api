@@ -1,0 +1,61 @@
+@startuml "job_request_flow"
+skinparam BoxPadding 10
+actor User
+
+box "AWS" #LightBlue
+
+participant WAF
+participant "API\nGateway" as API_Gateway
+participant "JWT\nAuthorizer" as JWT_Authorizer
+
+== User makes new job request ==
+
+User -> WAF : POST request
+WAF -> API_Gateway : POST request
+API_Gateway -> JWT_Authorizer: Check JWT
+JWT_Authorizer -> API_Gateway: JWT valid
+API_Gateway -> Manager : Request
+activate Manager
+Manager -> DynamoDB : Store job_id
+Manager -> SNS : Publish request
+Manager -> User : job_id
+deactivate Manager
+note over User : At this point the \n request is done and the user \n must poll for the result
+collections "Job Lambda\n(ServiceNow)" as Job_Lambda
+SNS -> Job_Lambda : invokes
+activate Job_Lambda
+participant SQS
+participant "Response\nProcessor" as ResponseProcessor
+database DynamoDB
+
+end box
+
+box "Internet" #LightGrey
+
+Job_Lambda -> ServiceNow : Request
+ServiceNow -> Job_Lambda : Response
+Job_Lambda -> SQS : Enqueue output
+note over Job_Lambda : Job done
+deactivate Job_Lambda
+
+SQS -> ResponseProcessor : invokes
+activate ResponseProcessor
+ResponseProcessor -> DynamoDB : Store output
+deactivate ResponseProcessor
+
+end box
+
+== User retrieves job status and output ==
+
+User -> WAF : GET status
+WAF -> API_Gateway : GET status
+API_Gateway -> JWT_Authorizer: Check JWT
+JWT_Authorizer -> API_Gateway: JWT valid
+API_Gateway -> Manager : Request
+activate Manager
+Manager -> DynamoDB : Get job_id
+DynamoDB -> Manager : Job output
+Manager -> User : Job output
+deactivate Manager
+
+@enduml
