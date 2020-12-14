@@ -10,7 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/aws/aws-sdk-go/service/sns"
-	"github.com/gdcorp-infosec/threat-api/apis/common"
+	"github.com/gdcorp-infosec/threat-api/lambdas/common"
 	"github.com/opentracing/opentracing-go"
 	"github.secureserver.net/threat/util/lambda/toolbox"
 	_ "go.elastic.co/apm/module/apmlambda"
