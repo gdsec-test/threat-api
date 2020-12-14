@@ -22,6 +22,10 @@ Parameters:
     Type: String
     Description: ID of the ACM Certificate to use for the Custom Domain Name.
     Default: ""
+  APIHash:
+    Type: String
+    Description: SHA1 hash of the API Gateway specification
+    Default: ""
 
 Resources:
   SwaggerUIRole:
@@ -415,7 +419,7 @@ Resources:
         - Key: ApiEndpoint
           Value: UNUSED
         - Key: ApiDescription
-          Value: ThreatTools API Gateway
+          Value: !Sub ThreatTools API (${APIHash})
         - Key: EndpointType
           Value: REGIONAL
         - Key: ApiSpecS3Key

@@ -1,0 +1,54 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "description": "Available APIs provided by the InfoSec TI team",
+    "version": "2.0",
+    "title": "ThreatAPI"
+  },
+  "schemes": [
+    "https"
+  ],
+  "paths": {
+    "/job": {
+      "post": {
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "200 response"
+          }
+        }
+      }
+    },
+    "/job/{jobId}": {
+      "get": {
+        "parameters": [
+          {
+            "name": "jobId",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "200 response"
+          }
+        }
+      }
+    },
+    "/jobs": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "200 response"
+          }
+        }
+      }
+    }
+  }
+}
