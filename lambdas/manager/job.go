@@ -3,12 +3,13 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
+	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
 	"github.com/aws/aws-sdk-go/service/sns"
 	"github.com/gdcorp-infosec/threat-api/lambdas/common"
 	"github.com/opentracing/opentracing-go"
@@ -53,7 +54,6 @@ func getJobStatus(ctx context.Context, jobID string) (events.APIGatewayProxyResp
 	defer span.Finish()
 
 	// Fetch job from database
-	t.LoadAWSSession(ctx, credentials.NewEnvCredentials(), "us-west-2")
 	item, err := dynamoDBClient.GetItem(&dynamodb.GetItemInput{
 		Key: map[string]*dynamodb.AttributeValue{
 			"job_id": {S: aws.String(jobID)},
@@ -61,25 +61,28 @@ func getJobStatus(ctx context.Context, jobID string) (events.APIGatewayProxyResp
 		TableName: &t.JobDBTableName,
 	})
 	if err != nil {
+		span.LogKV("error", err)
 		return events.APIGatewayProxyResponse{
-			StatusCode: 400,
-			Body:       "job_id not found, or an error encountered",
+			StatusCode: 500,
+			Body:       ErrorResponse("error getting job from database").Marshal(),
+		}, nil
+	}
+
+	if item.Item == nil {
+		return events.APIGatewayProxyResponse{
+			StatusCode: 404,
+			Body:       ErrorResponse("no job with that job_id in database").Marshal(),
 		}, nil
 	}
 
 	// For now just dump the raw item back to the user
-	itemMarshalled, err := json.Marshal(item.Item)
+	response := &Response{JobID: jobID}
+	err = dynamodbattribute.UnmarshalMap(item.Item, &response.Data)
 	if err != nil {
-		return events.APIGatewayProxyResponse{
-			StatusCode: 500,
-			Body:       "error marshalling the item",
-		}, nil
+		span.LogKV("error", err)
+		return events.APIGatewayProxyResponse{StatusCode: 500, Body: ErrorResponse("error marshalling response data").Marshal()}, nil
 	}
-
-	return events.APIGatewayProxyResponse{
-		StatusCode: 200,
-		Body:       string(itemMarshalled),
-	}, nil
+	return events.APIGatewayProxyResponse{StatusCode: 200, Body: response.Marshal()}, nil
 }
 
 // createJob creates a new job ID in dynamo DB and sends it to the appropriate SNS topics
@@ -104,7 +107,7 @@ func createJob(ctx context.Context, request events.APIGatewayProxyRequest) (even
 		span.Finish()
 		return events.APIGatewayProxyResponse{
 			StatusCode: 500,
-			Body:       "Error creating job",
+			Body:       ErrorResponse("Error creating job").Marshal(),
 		}, nil
 	}
 	span.Finish()
@@ -122,15 +125,15 @@ func createJob(ctx context.Context, request events.APIGatewayProxyRequest) (even
 		span.Finish()
 		return events.APIGatewayProxyResponse{
 			StatusCode: 500,
-			Body:       "error marshalling request",
+			Body:       ErrorResponse("error marshalling request").Marshal(),
 		}, nil
 	}
 	requestMarshalledString := string(requestMarshalled)
 
 	// Get the SNS topic ARN
 	topicARN, err := t.GetFromParameterStore(ctx, snsTopicARNParameterName, false)
-	if err != nil {
-		span.LogKV("error", err)
+	if err != nil || topicARN.Value == nil {
+		span.LogKV("error", fmt.Errorf("error getting topicARN: %w", err))
 		span.Finish()
 		return events.APIGatewayProxyResponse{StatusCode: 500, Body: "error finding sns topic arn"}, nil
 	}
@@ -139,27 +142,22 @@ func createJob(ctx context.Context, request events.APIGatewayProxyRequest) (even
 	snsClient := sns.New(t.AWSSession)
 	_, err = snsClient.Publish(&sns.PublishInput{
 		Message:  &requestMarshalledString,
-		TopicArn: aws.String(topicARN.String()),
+		TopicArn: aws.String(*topicARN.Value),
 	})
 	if err != nil {
 		span.LogKV("error", err)
 		span.Finish()
 		return events.APIGatewayProxyResponse{
 			StatusCode: 500,
-			Body:       "error sending job to topic",
+			Body:       ErrorResponse("error sending job to topic").Marshal(),
 		}, nil
 	}
 	span.Finish()
 
-	response := struct {
-		JobID string `json:"job_id"`
-	}{
-		JobID: jobID,
-	}
-	responseBytes, _ := json.Marshal(response)
+	response := &Response{JobID: jobID}
 	return events.APIGatewayProxyResponse{
 		StatusCode: 200,
-		Body:       string(responseBytes),
+		Body:       response.Marshal(),
 	}, nil
 }
 
