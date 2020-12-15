@@ -4,12 +4,14 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
+	"github.com/aws/aws-sdk-go/service/dynamodb/expression"
 	"github.com/aws/aws-sdk-go/service/sns"
 	"github.com/gdcorp-infosec/threat-api/lambdas/common"
 	"github.com/opentracing/opentracing-go"
@@ -20,6 +22,7 @@ import (
 const (
 	resourceName             = "geoip"
 	snsTopicARNParameterName = "/ThreatTools/JobRequests"
+	jobIDKey                 = "job_id"
 )
 
 // Normall I wouldn't use global variables like this, but in such a small
@@ -38,10 +41,15 @@ func handler(ctx context.Context, request events.APIGatewayProxyRequest) (events
 	dynamoDBClient = dynamodb.New(t.AWSSession)
 
 	// Check for jobID
-	jobID, ok := request.PathParameters["job_id"]
+	jobID, ok := request.PathParameters[jobIDKey]
 	if ok {
 		// Assume they are checking on the status of this job
 		return getJobStatus(ctx, jobID)
+	}
+
+	// Check if they are requesting their user's jobs
+	if strings.HasSuffix(strings.TrimRight(request.Path, "/"), "/jobs") {
+		return getJobs(ctx, request)
 	}
 
 	// Assume they want to create a new job
@@ -51,12 +59,17 @@ func handler(ctx context.Context, request events.APIGatewayProxyRequest) (events
 // getJobStatus gets the job status from dynamoDB and send it as a response
 func getJobStatus(ctx context.Context, jobID string) (events.APIGatewayProxyResponse, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "GetJobStatus")
+	span.LogKV("job_id", jobID)
 	defer span.Finish()
+
+	if jobID == "" {
+		return events.APIGatewayProxyResponse{StatusCode: 400, Body: ErrorResponse("Bad job_id").Marshal()}, nil
+	}
 
 	// Fetch job from database
 	item, err := dynamoDBClient.GetItem(&dynamodb.GetItemInput{
 		Key: map[string]*dynamodb.AttributeValue{
-			"job_id": {S: aws.String(jobID)},
+			jobIDKey: {S: aws.String(jobID)},
 		},
 		TableName: &t.JobDBTableName,
 	})
@@ -65,18 +78,18 @@ func getJobStatus(ctx context.Context, jobID string) (events.APIGatewayProxyResp
 		return events.APIGatewayProxyResponse{
 			StatusCode: 500,
 			Body:       ErrorResponse("error getting job from database").Marshal(),
-		}, nil
+		}, err
 	}
 
 	if item.Item == nil {
 		return events.APIGatewayProxyResponse{
 			StatusCode: 404,
-			Body:       ErrorResponse("no job with that job_id in database").Marshal(),
+			Body:       ErrorResponse("no job with that job id in database").Marshal(),
 		}, nil
 	}
 
 	// For now just dump the raw item back to the user
-	response := &Response{JobID: jobID}
+	response := &Response{JobIDs: []string{jobID}}
 	err = dynamodbattribute.UnmarshalMap(item.Item, &response.Data)
 	if err != nil {
 		span.LogKV("error", err)
@@ -98,7 +111,7 @@ func createJob(ctx context.Context, request events.APIGatewayProxyRequest) (even
 	span.LogKV("job_id", jobID)
 	_, err := dynamoDBClient.PutItem(&dynamodb.PutItemInput{
 		Item: map[string]*dynamodb.AttributeValue{
-			"job_id": {S: &jobID},
+			jobIDKey: {S: &jobID},
 		},
 		TableName: &t.JobDBTableName,
 	})
@@ -154,11 +167,52 @@ func createJob(ctx context.Context, request events.APIGatewayProxyRequest) (even
 	}
 	span.Finish()
 
-	response := &Response{JobID: jobID}
+	response := &Response{JobIDs: []string{jobID}}
 	return events.APIGatewayProxyResponse{
 		StatusCode: 200,
 		Body:       response.Marshal(),
 	}, nil
+}
+
+func getJobs(ctx context.Context, request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "GetUserJobs")
+	defer span.Finish()
+
+	// TODO: Extract username from request
+	filter := expression.Name("username").Equal(expression.Value("test"))
+	expr, err := expression.NewBuilder().WithFilter(filter).Build()
+	if err != nil {
+		span.LogKV("error", err)
+		return events.APIGatewayProxyResponse{StatusCode: 500, Body: ErrorResponse("error searching database").Marshal()}, err
+	}
+	jobIDs := []string{}
+	err = dynamoDBClient.ScanPages(&dynamodb.ScanInput{
+		ExpressionAttributeNames:  expr.Names(),
+		ExpressionAttributeValues: expr.Values(),
+		FilterExpression:          expr.Filter(),
+		ProjectionExpression:      expr.Projection(),
+		TableName:                 &t.JobDBTableName,
+	}, func(page *dynamodb.ScanOutput, lastPage bool) bool {
+		for _, entry := range page.Items {
+			if jobID, ok := entry[jobIDKey]; ok {
+				jobIDs = append(jobIDs, *jobID.S)
+			}
+		}
+		// Always get the next page
+		return true
+	})
+
+	if err != nil {
+		err = fmt.Errorf("error getting jobs from database: %w", err)
+		span.LogKV("error", err)
+		return events.APIGatewayProxyResponse{StatusCode: 500, Body: ErrorResponse("error getting jobs from database").Marshal()}, err
+	}
+
+	response := &Response{JobIDs: jobIDs}
+	return events.APIGatewayProxyResponse{
+		StatusCode: 200,
+		Body:       response.Marshal(),
+	}, err
 }
 
 func main() {

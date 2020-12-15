@@ -16,7 +16,7 @@ func TestCreateJob(t *testing.T) {
 		// Create an empty job
 		resp, err := handler(context.Background(), events.APIGatewayProxyRequest{})
 		if err != nil {
-			t.Error(err)
+			t.Fatal(err)
 			return
 		}
 
@@ -24,15 +24,19 @@ func TestCreateJob(t *testing.T) {
 		response := Response{}
 		err = json.Unmarshal([]byte(resp.Body), &response)
 		if err != nil {
-			t.Error(err)
+			t.Fatal(err)
 			return
 		}
 		if response.Error != "" {
-			t.Error(err)
+			t.Fatal(err)
 			return
 		}
-		jobID = response.JobID
-		fmt.Printf("Got job ID: %s\n", response.JobID)
+		if len(response.JobIDs) == 0 {
+			t.Fatal("no job IDs returned")
+			return
+		}
+		jobID = response.JobIDs[0]
+		fmt.Printf("Created job ID: %v\n", response.JobIDs)
 	})
 
 	t.Run("GetJob", func(t *testing.T) {
@@ -53,9 +57,38 @@ func TestCreateJob(t *testing.T) {
 			return
 		}
 		if response.Error != "" {
-			t.Error(err)
+			t.Error(response.Error)
 			return
 		}
 		fmt.Printf("Found job data: %v\n", response.Data)
+	})
+
+	t.Run("GetJobs", func(t *testing.T) {
+		// Get the jobs of this user
+		resp, err := handler(context.Background(), events.APIGatewayProxyRequest{
+			Path: "/jobs/",
+		})
+		if err != nil {
+			t.Error(err)
+			return
+		}
+
+		// Check to make sure we got our JobID
+		response := Response{}
+		err = json.Unmarshal([]byte(resp.Body), &response)
+		if err != nil {
+			t.Error(err)
+			return
+		}
+		if response.Error != "" {
+			t.Error(err)
+			return
+		}
+		if len(response.JobIDs) != 1 || response.JobIDs[0] != jobID {
+			t.Errorf("Did not get expected job ids for user, we got %v but expected %s", response.JobIDs, jobID)
+		}
+
+		// TODO: Make sure we only go the job we just created
+		fmt.Printf("Found user's jobs: %v\n", response.JobIDs)
 	})
 }
