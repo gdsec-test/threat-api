@@ -1,13 +1,91 @@
 {
   "swagger": "2.0",
   "info": {
-    "title": "ThreatTools API",
-    "version": "2.0"
+    "description": "Available APIs provided by the InfoSec TI team",
+    "version": "2.0",
+    "title": "ThreatAPI"
   },
   "schemes": [
     "https"
   ],
   "paths": {
+    "/job": {
+      "post": {
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "200 response"
+          }
+        },
+        "security": [
+          {
+            "JWTAuthorizer": []
+          }
+        ],
+        "x-amazon-apigateway-integration": {
+          "type": "aws_proxy",
+          "uri": "arn:aws:apigateway:us-west-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-west-2:___AWS_ACCOUNT___:function:manager/invocations",
+          "passthroughBehavior": "when_no_match",
+          "httpMethod": "POST",
+          "contentHandling": "CONVERT_TO_TEXT"
+        }
+      }
+    },
+    "/job/{jobId}": {
+      "get": {
+        "parameters": [
+          {
+            "name": "jobId",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "200 response"
+          }
+        },
+        "security": [
+          {
+            "JWTAuthorizer": []
+          }
+        ],
+        "x-amazon-apigateway-integration": {
+          "type": "aws_proxy",
+          "uri": "arn:aws:apigateway:us-west-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-west-2:___AWS_ACCOUNT___:function:manager/invocations",
+          "passthroughBehavior": "when_no_match",
+          "httpMethod": "POST",
+          "contentHandling": "CONVERT_TO_TEXT"
+        }
+      }
+    },
+    "/jobs": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "200 response"
+          }
+        },
+        "security": [
+          {
+            "JWTAuthorizer": []
+          }
+        ],
+        "x-amazon-apigateway-integration": {
+          "type": "aws_proxy",
+          "uri": "arn:aws:apigateway:us-west-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-west-2:___AWS_ACCOUNT___:function:manager/invocations",
+          "passthroughBehavior": "when_no_match",
+          "httpMethod": "POST",
+          "contentHandling": "CONVERT_TO_TEXT"
+        }
+      }
+    },
     "/swagger": {
       "get": {
         "produces": [
@@ -15,20 +93,17 @@
         ],
         "responses": {
           "200": {
-            "description": "200 response",
-            "schema": {
-              "$ref": "#/definitions/Empty"
-            }
+            "description": "200 response"
           }
         },
+        "security": [
+          {
+            "JWTAuthorizer": []
+          }
+        ],
         "x-amazon-apigateway-integration": {
           "type": "aws_proxy",
           "uri": "arn:aws:apigateway:us-west-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-west-2:___AWS_ACCOUNT___:function:SwaggerUI/invocations",
-          "responses": {
-            "default": {
-              "statusCode": "200"
-            }
-          },
           "passthroughBehavior": "when_no_match",
           "httpMethod": "POST",
           "contentHandling": "CONVERT_TO_TEXT"
@@ -50,20 +125,17 @@
         ],
         "responses": {
           "200": {
-            "description": "200 response",
-            "schema": {
-              "$ref": "#/definitions/Empty"
-            }
+            "description": "200 response"
           }
         },
+        "security": [
+          {
+            "JWTAuthorizer": []
+          }
+        ],
         "x-amazon-apigateway-integration": {
           "type": "aws_proxy",
           "uri": "arn:aws:apigateway:us-west-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-west-2:___AWS_ACCOUNT___:function:SwaggerUI/invocations",
-          "responses": {
-            "default": {
-              "statusCode": "200"
-            }
-          },
           "passthroughBehavior": "when_no_match",
           "httpMethod": "POST",
           "contentHandling": "CONVERT_TO_TEXT"
@@ -71,10 +143,17 @@
       }
     }
   },
-  "definitions": {
-    "Empty": {
-      "type": "object",
-      "title": "Empty Schema"
+  "securityDefinitions": {
+    "JWTAuthorizer": {
+      "type": "apiKey",
+      "name": "Unused",
+      "in": "header",
+      "x-amazon-apigateway-authtype": "custom",
+      "x-amazon-apigateway-authorizer": {
+        "type": "request",
+        "authorizerUri": "arn:aws:apigateway:us-west-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-west-2:___AWS_ACCOUNT___:function:authorizer/invocations",
+        "authorizerResultTtlInSeconds": 0
+      }
     }
   }
 }

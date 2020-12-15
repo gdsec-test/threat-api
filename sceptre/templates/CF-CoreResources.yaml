@@ -1,6 +1,12 @@
 AWSTemplateFormatVersion: 2010-09-09
 Description: ThreatTools API Core Resources
 
+Parameters:
+  APIHash:
+    Type: String
+    Description: SHA1 hash of the API Gateway specification
+    Default: ""
+
 Resources:
   SwaggerUIRole:
     Type: AWS::IAM::Role
@@ -255,7 +261,7 @@ Resources:
     Type: AWS::ApiGateway::RestApi
     Properties:
       Name: ThreatAPI
-      Description: ThreatTools API Gateway
+      Description: !Sub ThreatTools API (${APIHash})
       EndpointConfiguration:
         Types:
           - REGIONAL

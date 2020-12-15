@@ -4,13 +4,16 @@ dependencies:
 parameters:
   CustomDomainName: {{threatapi_domain_name}}
   CustomDomainAcmCertificateId: {{threatapi_certificate_arn}}
+  APIHash: !file_contents resources/api.sha1
 hooks:
   before_create:
-    - !cmd "echo 'Uploading API gateway swagger specification'"
-    - !cmd "(AWS_ACCOUNT=$(aws sts get-caller-identity --query Account --output text);
-             PROJECT_CODE={{project_code}};
-             sed -e \"s:___AWS_ACCOUNT___:$AWS_ACCOUNT:g\" resources/api-setup.json | aws s3 cp - s3://gd-${PROJECT_CODE,,}-{{environment}}-code-bucket/api-setup.json)"
+    - !cmd resources/upload-api-spec.sh
   after_create:
+    - !cmd rm -f resources/api.sha1
     - !cmd resources/swagger-ui-bucket-create.sh
+  before_update:
+    - !cmd resources/upload-api-spec.sh
+  after_update:
+    - !cmd rm -f resources/api.sha1
   before_delete:
     - !cmd resources/swagger-ui-bucket-delete.py
