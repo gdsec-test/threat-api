@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"strings"
 
 	"github.com/aws/aws-lambda-go/events"
@@ -106,6 +107,9 @@ func createJob(ctx context.Context, request events.APIGatewayProxyRequest) (even
 	// Generate job_id
 	jobID := t.GenerateJobID(ctx)
 
+	// TODO: Get username
+	// TODO: Asherah
+
 	// Store in database
 	span, ctx = opentracing.StartSpanFromContext(ctx, "StoreJob")
 	span.LogKV("job_id", jobID)
@@ -121,7 +125,7 @@ func createJob(ctx context.Context, request events.APIGatewayProxyRequest) (even
 		return events.APIGatewayProxyResponse{
 			StatusCode: 500,
 			Body:       ErrorResponse("Error creating job").Marshal(),
-		}, nil
+		}, err
 	}
 	span.Finish()
 
@@ -139,7 +143,7 @@ func createJob(ctx context.Context, request events.APIGatewayProxyRequest) (even
 		return events.APIGatewayProxyResponse{
 			StatusCode: 500,
 			Body:       ErrorResponse("error marshalling request").Marshal(),
-		}, nil
+		}, err
 	}
 	requestMarshalledString := string(requestMarshalled)
 
@@ -163,7 +167,7 @@ func createJob(ctx context.Context, request events.APIGatewayProxyRequest) (even
 		return events.APIGatewayProxyResponse{
 			StatusCode: 500,
 			Body:       ErrorResponse("error sending job to topic").Marshal(),
-		}, nil
+		}, err
 	}
 	span.Finish()
 
@@ -178,8 +182,15 @@ func getJobs(ctx context.Context, request events.APIGatewayProxyRequest) (events
 	span, ctx := opentracing.StartSpanFromContext(ctx, "GetUserJobs")
 	defer span.Finish()
 
+	token, err := t.ValidateJWT(ctx, t.GetJWTFromRequest(request))
+	if err != nil {
+		err = fmt.Errorf("error validating jwt: %w", err)
+		span.LogKV("error", err)
+		return events.APIGatewayProxyResponse{StatusCode: http.StatusUnauthorized, Body: ErrorResponse("bad JWT").Marshal()}, err
+	}
+
 	// TODO: Extract username from request
-	filter := expression.Name("username").Equal(expression.Value("test"))
+	filter := expression.Name("username").Equal(expression.Value(token.BaseToken.UserName))
 	expr, err := expression.NewBuilder().WithFilter(filter).Build()
 	if err != nil {
 		span.LogKV("error", err)

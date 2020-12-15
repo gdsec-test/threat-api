@@ -28,7 +28,7 @@ func TestCreateJob(t *testing.T) {
 			return
 		}
 		if response.Error != "" {
-			t.Fatal(err)
+			t.Fatal(response.Error)
 			return
 		}
 		if len(response.JobIDs) == 0 {
