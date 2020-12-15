@@ -33,11 +33,11 @@
         }
       }
     },
-    "/job/{jobId}": {
+    "/job/{job_id}": {
       "get": {
         "parameters": [
           {
-            "name": "jobId",
+            "name": "job_id",
             "in": "path",
             "required": true,
             "type": "string"
