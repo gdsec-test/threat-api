@@ -24,6 +24,7 @@ const (
 	resourceName             = "geoip"
 	snsTopicARNParameterName = "/ThreatTools/JobRequests"
 	jobIDKey                 = "job_id"
+	usernameKey              = "username"
 )
 
 // Normall I wouldn't use global variables like this, but in such a small
@@ -82,6 +83,8 @@ func getJobStatus(ctx context.Context, jobID string) (events.APIGatewayProxyResp
 		}, err
 	}
 
+	// TODO: Asherah decrypt
+
 	if item.Item == nil {
 		return events.APIGatewayProxyResponse{
 			StatusCode: 404,
@@ -107,15 +110,19 @@ func createJob(ctx context.Context, request events.APIGatewayProxyRequest) (even
 	// Generate job_id
 	jobID := t.GenerateJobID(ctx)
 
-	// TODO: Get username
-	// TODO: Asherah
+	jwt, err := t.ValidateJWT(ctx, t.GetJWTFromRequest(request))
+	if err != nil {
+		return events.APIGatewayProxyResponse{StatusCode: 401, Body: ErrorResponse("bad jwt").Marshal()}, err
+	}
+	span.LogKV("username", jwt.BaseToken.UserName)
 
 	// Store in database
 	span, ctx = opentracing.StartSpanFromContext(ctx, "StoreJob")
 	span.LogKV("job_id", jobID)
-	_, err := dynamoDBClient.PutItem(&dynamodb.PutItemInput{
+	_, err = dynamoDBClient.PutItem(&dynamodb.PutItemInput{
 		Item: map[string]*dynamodb.AttributeValue{
-			jobIDKey: {S: &jobID},
+			jobIDKey:    {S: &jobID},
+			usernameKey: {S: &jwt.BaseToken.UserName},
 		},
 		TableName: &t.JobDBTableName,
 	})

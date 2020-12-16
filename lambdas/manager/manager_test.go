@@ -17,7 +17,6 @@ func TestCreateJob(t *testing.T) {
 		resp, err := handler(context.Background(), events.APIGatewayProxyRequest{})
 		if err != nil {
 			t.Fatal(err)
-			return
 		}
 
 		// Check to make sure we got our JobID
@@ -25,19 +24,20 @@ func TestCreateJob(t *testing.T) {
 		err = json.Unmarshal([]byte(resp.Body), &response)
 		if err != nil {
 			t.Fatal(err)
-			return
 		}
 		if response.Error != "" {
 			t.Fatal(response.Error)
-			return
 		}
 		if len(response.JobIDs) == 0 {
 			t.Fatal("no job IDs returned")
-			return
 		}
 		jobID = response.JobIDs[0]
 		fmt.Printf("Created job ID: %v\n", response.JobIDs)
 	})
+
+	if jobID == "" {
+		t.FailNow()
+	}
 
 	t.Run("GetJob", func(t *testing.T) {
 		// Get the job status
@@ -45,20 +45,17 @@ func TestCreateJob(t *testing.T) {
 			PathParameters: map[string]string{"job_id": jobID},
 		})
 		if err != nil {
-			t.Error(err)
-			return
+			t.Fatal(err)
 		}
 
 		// Check to make sure we got our JobID
 		response := Response{}
 		err = json.Unmarshal([]byte(resp.Body), &response)
 		if err != nil {
-			t.Error(err)
-			return
+			t.Fatal(err)
 		}
 		if response.Error != "" {
-			t.Error(response.Error)
-			return
+			t.Fatal(response.Error)
 		}
 		fmt.Printf("Found job data: %v\n", response.Data)
 	})
@@ -69,20 +66,17 @@ func TestCreateJob(t *testing.T) {
 			Path: "/jobs/",
 		})
 		if err != nil {
-			t.Error(err)
-			return
+			t.Fatal(err)
 		}
 
 		// Check to make sure we got our JobID
 		response := Response{}
 		err = json.Unmarshal([]byte(resp.Body), &response)
 		if err != nil {
-			t.Error(err)
-			return
+			t.Fatal(err)
 		}
 		if response.Error != "" {
-			t.Error(err)
-			return
+			t.Fatal(err)
 		}
 		if len(response.JobIDs) != 1 || response.JobIDs[0] != jobID {
 			t.Errorf("Did not get expected job ids for user, we got %v but expected %s", response.JobIDs, jobID)
