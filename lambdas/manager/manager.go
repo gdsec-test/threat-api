@@ -114,7 +114,7 @@ func createJob(ctx context.Context, request events.APIGatewayProxyRequest) (even
 	if err != nil {
 		return events.APIGatewayProxyResponse{StatusCode: 401, Body: ErrorResponse("bad jwt").Marshal()}, err
 	}
-	span.LogKV("username", jwt.BaseToken.UserName)
+	span.LogKV("username", jwt.BaseToken.AccountName)
 
 	// Store in database
 	span, ctx = opentracing.StartSpanFromContext(ctx, "StoreJob")
@@ -122,7 +122,7 @@ func createJob(ctx context.Context, request events.APIGatewayProxyRequest) (even
 	_, err = dynamoDBClient.PutItem(&dynamodb.PutItemInput{
 		Item: map[string]*dynamodb.AttributeValue{
 			jobIDKey:    {S: &jobID},
-			usernameKey: {S: &jwt.BaseToken.UserName},
+			usernameKey: {S: &jwt.BaseToken.AccountName},
 		},
 		TableName: &t.JobDBTableName,
 	})
@@ -189,7 +189,7 @@ func getJobs(ctx context.Context, request events.APIGatewayProxyRequest) (events
 	span, ctx := opentracing.StartSpanFromContext(ctx, "GetUserJobs")
 	defer span.Finish()
 
-	token, err := t.ValidateJWT(ctx, t.GetJWTFromRequest(request))
+	jwt, err := t.ValidateJWT(ctx, t.GetJWTFromRequest(request))
 	if err != nil {
 		err = fmt.Errorf("error validating jwt: %w", err)
 		span.LogKV("error", err)
@@ -197,7 +197,8 @@ func getJobs(ctx context.Context, request events.APIGatewayProxyRequest) (events
 	}
 
 	// TODO: Extract username from request
-	filter := expression.Name("username").Equal(expression.Value(token.BaseToken.UserName))
+	span.LogKV("username", jwt.BaseToken.AccountName)
+	filter := expression.Name(usernameKey).Equal(expression.Value(jwt.BaseToken.AccountName))
 	expr, err := expression.NewBuilder().WithFilter(filter).Build()
 	if err != nil {
 		span.LogKV("error", err)

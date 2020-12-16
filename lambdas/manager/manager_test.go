@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"os"
 	"testing"
 
 	"github.com/aws/aws-lambda-go/events"
@@ -11,10 +12,15 @@ import (
 
 // Test creating a job in the DB
 func TestCreateJob(t *testing.T) {
+	testingJWT := os.Getenv("TESTING_JWT")
+	headers := map[string]string{"cookie": fmt.Sprintf("auth_jomax=%s", testingJWT)}
+
 	var jobID string
 	t.Run("CreateJob", func(t *testing.T) {
 		// Create an empty job
-		resp, err := handler(context.Background(), events.APIGatewayProxyRequest{})
+		resp, err := handler(context.Background(), events.APIGatewayProxyRequest{
+			Headers: headers,
+		})
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -63,7 +69,8 @@ func TestCreateJob(t *testing.T) {
 	t.Run("GetJobs", func(t *testing.T) {
 		// Get the jobs of this user
 		resp, err := handler(context.Background(), events.APIGatewayProxyRequest{
-			Path: "/jobs/",
+			Path:    "/jobs/",
+			Headers: headers,
 		})
 		if err != nil {
 			t.Fatal(err)
@@ -82,7 +89,6 @@ func TestCreateJob(t *testing.T) {
 			t.Errorf("Did not get expected job ids for user, we got %v but expected %s", response.JobIDs, jobID)
 		}
 
-		// TODO: Make sure we only go the job we just created
 		fmt.Printf("Found user's jobs: %v\n", response.JobIDs)
 	})
 }
