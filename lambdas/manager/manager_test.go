@@ -11,7 +11,7 @@ import (
 )
 
 // Test creating a job in the DB
-func TestCreateJob(t *testing.T) {
+func TestJobWork(t *testing.T) {
 	testingJWT := os.Getenv("TESTING_JWT")
 	headers := map[string]string{"cookie": fmt.Sprintf("auth_jomax=%s", testingJWT)}
 

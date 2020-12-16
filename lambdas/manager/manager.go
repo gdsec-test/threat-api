@@ -15,6 +15,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/dynamodb/expression"
 	"github.com/aws/aws-sdk-go/service/sns"
 	"github.com/gdcorp-infosec/threat-api/lambdas/common"
+	"github.com/godaddy/asherah/go/appencryption"
 	"github.com/opentracing/opentracing-go"
 	"github.secureserver.net/threat/util/lambda/toolbox"
 	_ "go.elastic.co/apm/module/apmlambda"
@@ -83,8 +84,6 @@ func getJobStatus(ctx context.Context, jobID string) (events.APIGatewayProxyResp
 		}, err
 	}
 
-	// TODO: Asherah decrypt
-
 	if item.Item == nil {
 		return events.APIGatewayProxyResponse{
 			StatusCode: 404,
@@ -92,8 +91,22 @@ func getJobStatus(ctx context.Context, jobID string) (events.APIGatewayProxyResp
 		}, nil
 	}
 
+	// Asherah decrypt
+	span, ctx = opentracing.StartSpanFromContext(ctx, "AsherahDecrypt")
+	asherahItem := appencryption.DataRowRecord{}
+	dynamodbattribute.Unmarshal(item.Item["data"], &asherahItem)
+	// TODO: Encrypt each item in map instead of data as a whole because each
+	// lambda will be adding data to the map
+	decryptedData, err := t.Dencrypt(ctx, jobID, asherahItem)
+	if err != nil {
+		span.LogKV("error", err)
+		span.Finish()
+		return events.APIGatewayProxyResponse{StatusCode: 500, Body: ErrorResponse("error decrypting data").Marshal()}, nil
+	}
+	span.Finish()
+
 	// For now just dump the raw item back to the user
-	response := &Response{JobIDs: []string{jobID}}
+	response := &Response{JobIDs: []string{jobID}, Data: decryptedData}
 	err = dynamodbattribute.UnmarshalMap(item.Item, &response.Data)
 	if err != nil {
 		span.LogKV("error", err)
