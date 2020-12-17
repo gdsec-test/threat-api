@@ -13,6 +13,7 @@ and API implementations for the ThreatTools API hosted on AWS.
 
 ### Documentation
 
+* [API Usage](docs/USAGE.md)
 * [Development Guidelines](docs/DEVELOPMENT.md)
 * [Repository Organization](docs/ORGANIZATION.md)
 * [Sceptre Configuration](sceptre/README.md)
