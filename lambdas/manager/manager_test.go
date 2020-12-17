@@ -26,13 +26,12 @@ func TestJobWork(t *testing.T) {
 		}
 
 		// Check to make sure we got our JobID
-		response := Response{}
+		response := struct {
+			JobIDs []string `json:"job_ids"`
+		}{}
 		err = json.Unmarshal([]byte(resp.Body), &response)
 		if err != nil {
 			t.Fatal(err)
-		}
-		if response.Error != "" {
-			t.Fatal(response.Error)
 		}
 		if len(response.JobIDs) == 0 {
 			t.Fatal("no job IDs returned")
@@ -55,15 +54,12 @@ func TestJobWork(t *testing.T) {
 		}
 
 		// Check to make sure we got our JobID
-		response := Response{}
+		var response interface{}
 		err = json.Unmarshal([]byte(resp.Body), &response)
 		if err != nil {
 			t.Fatal(err)
 		}
-		if response.Error != "" {
-			t.Fatal(response.Error)
-		}
-		fmt.Printf("Found job data: %v\n", response.Data)
+		fmt.Printf("Found job data: %v\n", response)
 	})
 
 	t.Run("GetJobs", func(t *testing.T) {
@@ -77,18 +73,23 @@ func TestJobWork(t *testing.T) {
 		}
 
 		// Check to make sure we got our JobID
-		response := Response{}
+		response := []string{}
 		err = json.Unmarshal([]byte(resp.Body), &response)
 		if err != nil {
 			t.Fatal(err)
 		}
-		if response.Error != "" {
-			t.Fatal(err)
+		foundOurJob := func() bool {
+			for _, jID := range response {
+				if jID == jobID {
+					return true
+				}
+			}
+			return false
 		}
-		if len(response.JobIDs) != 1 || response.JobIDs[0] != jobID {
-			t.Errorf("Did not get expected job ids for user, we got %v but expected %s", response.JobIDs, jobID)
+		if !foundOurJob() {
+			t.Errorf("did not find our jobID %s in returned jobIDs %v", jobID, response)
 		}
 
-		fmt.Printf("Found user's jobs: %v\n", response.JobIDs)
+		fmt.Printf("Found user's jobs: %v\n", response)
 	})
 }

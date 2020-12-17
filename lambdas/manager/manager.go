@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
@@ -59,6 +60,90 @@ func handler(ctx context.Context, request events.APIGatewayProxyRequest) (events
 	return createJob(ctx, request)
 }
 
+// createJob creates a new job ID in dynamo DB and sends it to the appropriate SNS topics
+func createJob(ctx context.Context, request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "CreateJob")
+	defer span.Finish()
+
+	// Generate job_id
+	jobID := t.GenerateJobID(ctx)
+
+	// Get username
+	jwt, err := t.ValidateJWT(ctx, t.GetJWTFromRequest(request))
+	if err != nil {
+		return events.APIGatewayProxyResponse{StatusCode: 401, Body: ErrorResponse("bad jwt").Marshal()}, err
+	}
+	span.LogKV("username", jwt.BaseToken.AccountName)
+
+	// Store in database
+	span, ctx = opentracing.StartSpanFromContext(ctx, "StoreJob")
+	span.LogKV("job_id", jobID)
+	_, err = dynamoDBClient.PutItem(&dynamodb.PutItemInput{
+		Item: map[string]*dynamodb.AttributeValue{
+			jobIDKey:    {S: &jobID},
+			usernameKey: {S: &jwt.BaseToken.AccountName},
+			"startTime": {N: aws.String(fmt.Sprintf("%d", time.Now().Unix()))},
+			"ttl":       {N: aws.String(fmt.Sprintf("%d", time.Now().Add(time.Hour*24*30).Unix()))},
+			"request":   {S: aws.String(request.Body)},
+			"data":      {S: aws.String("")},
+		},
+		TableName: &t.JobDBTableName,
+	})
+	if err != nil {
+		span.LogKV("error", err)
+		span.Finish()
+		return events.APIGatewayProxyResponse{
+			StatusCode: 500,
+			Body:       ErrorResponse("Error creating job").Marshal(),
+		}, err
+	}
+	span.Finish()
+
+	// Send to SNS
+	span, ctx = opentracing.StartSpanFromContext(ctx, "SendSNS")
+
+	// Marshal body
+	requestMarshalled, err := json.Marshal(common.JobMessage{OriginalRequest: request, JobID: jobID})
+	if err != nil {
+		span.LogKV("error", err)
+		span.Finish()
+		return events.APIGatewayProxyResponse{StatusCode: 500}, err
+	}
+	requestMarshalledString := string(requestMarshalled)
+
+	// Get the SNS topic ARN
+	topicARN, err := t.GetFromParameterStore(ctx, snsTopicARNParameterName, false)
+	if err != nil || topicARN.Value == nil {
+		span.LogKV("error", fmt.Errorf("error getting topicARN: %w", err))
+		span.Finish()
+		return events.APIGatewayProxyResponse{StatusCode: 500}, nil
+	}
+
+	// Send the entire request marshalled along with the jobID
+	snsClient := sns.New(t.AWSSession)
+	_, err = snsClient.Publish(&sns.PublishInput{
+		Message:  &requestMarshalledString,
+		TopicArn: aws.String(*topicARN.Value),
+	})
+	if err != nil {
+		span.LogKV("error", err)
+		span.Finish()
+		return events.APIGatewayProxyResponse{StatusCode: 500}, err
+	}
+	span.Finish()
+
+	response := struct {
+		JobIDs []string `json:"job_ids"`
+	}{
+		JobIDs: []string{jobID},
+	}
+	responseBytes, _ := json.Marshal(response)
+	return events.APIGatewayProxyResponse{
+		StatusCode: 200,
+		Body:       string(responseBytes),
+	}, nil
+}
+
 // getJobStatus gets the job status from dynamoDB and send it as a response
 func getJobStatus(ctx context.Context, jobID string) (events.APIGatewayProxyResponse, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "GetJobStatus")
@@ -78,127 +163,40 @@ func getJobStatus(ctx context.Context, jobID string) (events.APIGatewayProxyResp
 	})
 	if err != nil {
 		span.LogKV("error", err)
-		return events.APIGatewayProxyResponse{
-			StatusCode: 500,
-			Body:       ErrorResponse("error getting job from database").Marshal(),
-		}, err
+		return events.APIGatewayProxyResponse{StatusCode: 500}, err
 	}
 
 	if item.Item == nil {
-		return events.APIGatewayProxyResponse{
-			StatusCode: 404,
-			Body:       ErrorResponse("no job with that job id in database").Marshal(),
-		}, nil
+		return events.APIGatewayProxyResponse{StatusCode: 404}, nil
 	}
 
-	response := &Response{JobIDs: []string{jobID}}
+	response := struct {
+		Request   interface{} `dynamodbav:"request"`
+		Data      interface{} `dynamodbav:"data"`
+		StartTime interface{} `dynamodbav:"startTime"`
+	}{}
+	dynamodbattribute.UnmarshalMap(item.Item, &response)
 
 	// Asherah decrypt
 	span, ctx = opentracing.StartSpanFromContext(ctx, "AsherahDecrypt")
-	asherahItem := appencryption.DataRowRecord{}
-	itemData, ok := item.Item["data"]
-	if ok {
+	if itemData, ok := item.Item["data"]; ok {
+		asherahItem := appencryption.DataRowRecord{}
 		dynamodbattribute.Unmarshal(itemData, &asherahItem)
 		// TODO: Encrypt each item in map instead of data as a whole because each
 		// lambda will be adding data to the map
 		decryptedData, err := t.Dencrypt(ctx, jobID, asherahItem)
-		if err != nil {
-			// If encryption fails, send the raw data to the user
-			err = dynamodbattribute.Unmarshal(itemData, &response.Data)
-		} else {
+		if err == nil {
 			response.Data = decryptedData
 		}
 	}
 	span.Finish()
 
+	responseData, _ := json.Marshal(response)
 	if err != nil {
 		span.LogKV("error", err)
-		return events.APIGatewayProxyResponse{StatusCode: 500, Body: ErrorResponse("error marshalling response data").Marshal()}, nil
+		return events.APIGatewayProxyResponse{StatusCode: 500}, nil
 	}
-	return events.APIGatewayProxyResponse{StatusCode: 200, Body: response.Marshal()}, nil
-}
-
-// createJob creates a new job ID in dynamo DB and sends it to the appropriate SNS topics
-func createJob(ctx context.Context, request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "CreateJob")
-	defer span.Finish()
-
-	// Generate job_id
-	jobID := t.GenerateJobID(ctx)
-
-	jwt, err := t.ValidateJWT(ctx, t.GetJWTFromRequest(request))
-	if err != nil {
-		return events.APIGatewayProxyResponse{StatusCode: 401, Body: ErrorResponse("bad jwt").Marshal()}, err
-	}
-	span.LogKV("username", jwt.BaseToken.AccountName)
-
-	// Store in database
-	span, ctx = opentracing.StartSpanFromContext(ctx, "StoreJob")
-	span.LogKV("job_id", jobID)
-	_, err = dynamoDBClient.PutItem(&dynamodb.PutItemInput{
-		Item: map[string]*dynamodb.AttributeValue{
-			jobIDKey:    {S: &jobID},
-			usernameKey: {S: &jwt.BaseToken.AccountName},
-		},
-		TableName: &t.JobDBTableName,
-	})
-	if err != nil {
-		span.LogKV("error", err)
-		span.Finish()
-		return events.APIGatewayProxyResponse{
-			StatusCode: 500,
-			Body:       ErrorResponse("Error creating job").Marshal(),
-		}, err
-	}
-	span.Finish()
-
-	// Send to SNS
-	span, ctx = opentracing.StartSpanFromContext(ctx, "SendSNS")
-
-	// Marshal body
-	requestMarshalled, err := json.Marshal(common.JobMessage{
-		OriginalRequest: request,
-		JobID:           jobID,
-	})
-	if err != nil {
-		span.LogKV("error", err)
-		span.Finish()
-		return events.APIGatewayProxyResponse{
-			StatusCode: 500,
-			Body:       ErrorResponse("error marshalling request").Marshal(),
-		}, err
-	}
-	requestMarshalledString := string(requestMarshalled)
-
-	// Get the SNS topic ARN
-	topicARN, err := t.GetFromParameterStore(ctx, snsTopicARNParameterName, false)
-	if err != nil || topicARN.Value == nil {
-		span.LogKV("error", fmt.Errorf("error getting topicARN: %w", err))
-		span.Finish()
-		return events.APIGatewayProxyResponse{StatusCode: 500, Body: "error finding sns topic arn"}, nil
-	}
-
-	// Send the entire request marshalled along with the jobID
-	snsClient := sns.New(t.AWSSession)
-	_, err = snsClient.Publish(&sns.PublishInput{
-		Message:  &requestMarshalledString,
-		TopicArn: aws.String(*topicARN.Value),
-	})
-	if err != nil {
-		span.LogKV("error", err)
-		span.Finish()
-		return events.APIGatewayProxyResponse{
-			StatusCode: 500,
-			Body:       ErrorResponse("error sending job to topic").Marshal(),
-		}, err
-	}
-	span.Finish()
-
-	response := &Response{JobIDs: []string{jobID}}
-	return events.APIGatewayProxyResponse{
-		StatusCode: 200,
-		Body:       response.Marshal(),
-	}, nil
+	return events.APIGatewayProxyResponse{StatusCode: 200, Body: string(responseData)}, nil
 }
 
 func getJobs(ctx context.Context, request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
@@ -209,7 +207,7 @@ func getJobs(ctx context.Context, request events.APIGatewayProxyRequest) (events
 	if err != nil {
 		err = fmt.Errorf("error validating jwt: %w", err)
 		span.LogKV("error", err)
-		return events.APIGatewayProxyResponse{StatusCode: http.StatusUnauthorized, Body: ErrorResponse("bad JWT").Marshal()}, err
+		return events.APIGatewayProxyResponse{StatusCode: http.StatusUnauthorized}, err
 	}
 
 	// TODO: Extract username from request
@@ -218,7 +216,7 @@ func getJobs(ctx context.Context, request events.APIGatewayProxyRequest) (events
 	expr, err := expression.NewBuilder().WithFilter(filter).Build()
 	if err != nil {
 		span.LogKV("error", err)
-		return events.APIGatewayProxyResponse{StatusCode: 500, Body: ErrorResponse("error searching database").Marshal()}, err
+		return events.APIGatewayProxyResponse{StatusCode: 500}, err
 	}
 	jobIDs := []string{}
 	err = dynamoDBClient.ScanPages(&dynamodb.ScanInput{
@@ -240,13 +238,13 @@ func getJobs(ctx context.Context, request events.APIGatewayProxyRequest) (events
 	if err != nil {
 		err = fmt.Errorf("error getting jobs from database: %w", err)
 		span.LogKV("error", err)
-		return events.APIGatewayProxyResponse{StatusCode: 500, Body: ErrorResponse("error getting jobs from database").Marshal()}, err
+		return events.APIGatewayProxyResponse{StatusCode: 500}, err
 	}
 
-	response := &Response{JobIDs: jobIDs}
+	response, _ := json.Marshal(jobIDs)
 	return events.APIGatewayProxyResponse{
 		StatusCode: 200,
-		Body:       response.Marshal(),
+		Body:       string(response),
 	}, err
 }
 
