@@ -133,10 +133,8 @@ func createJob(ctx context.Context, request events.APIGatewayProxyRequest) (even
 	span.Finish()
 
 	response := struct {
-		JobIDs []string `json:"job_ids"`
-	}{
-		JobIDs: []string{jobID},
-	}
+		JobID string `json:"job_id"`
+	}{JobID: jobID}
 	responseBytes, _ := json.Marshal(response)
 	return events.APIGatewayProxyResponse{
 		StatusCode: 200,

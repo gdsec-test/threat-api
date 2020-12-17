@@ -27,17 +27,14 @@ func TestJobWork(t *testing.T) {
 
 		// Check to make sure we got our JobID
 		response := struct {
-			JobIDs []string `json:"job_ids"`
+			JobID string `json:"job_id"`
 		}{}
 		err = json.Unmarshal([]byte(resp.Body), &response)
 		if err != nil {
 			t.Fatal(err)
 		}
-		if len(response.JobIDs) == 0 {
-			t.Fatal("no job IDs returned")
-		}
-		jobID = response.JobIDs[0]
-		fmt.Printf("Created job ID: %v\n", response.JobIDs)
+		fmt.Printf("Created job ID: %v\n", response.JobID)
+		jobID = response.JobID
 	})
 
 	if jobID == "" {
