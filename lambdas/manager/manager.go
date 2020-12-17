@@ -103,16 +103,14 @@ func getJobStatus(ctx context.Context, jobID string) (events.APIGatewayProxyResp
 		// lambda will be adding data to the map
 		decryptedData, err := t.Dencrypt(ctx, jobID, asherahItem)
 		if err != nil {
-			// If decryption failed, just send back the raw data
-			response.Data = itemData
+			// If encryption fails, send the raw data to the user
+			err = dynamodbattribute.Unmarshal(itemData, &response.Data)
 		} else {
 			response.Data = decryptedData
 		}
 	}
 	span.Finish()
 
-	// For now just dump the raw item back to the user
-	err = dynamodbattribute.UnmarshalMap(item.Item, &response.Data)
 	if err != nil {
 		span.LogKV("error", err)
 		return events.APIGatewayProxyResponse{StatusCode: 500, Body: ErrorResponse("error marshalling response data").Marshal()}, nil
