@@ -24,6 +24,9 @@ func TestJobWork(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
+		if resp.StatusCode != 200 {
+			t.Fatalf("bad response code: %d", resp.StatusCode)
+		}
 
 		// Check to make sure we got our JobID
 		response := struct {
@@ -49,6 +52,9 @@ func TestJobWork(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
+		if resp.StatusCode != 200 {
+			t.Fatalf("bad response code: %d", resp.StatusCode)
+		}
 
 		// Check to make sure we got our JobID
 		var response interface{}
@@ -67,6 +73,9 @@ func TestJobWork(t *testing.T) {
 		})
 		if err != nil {
 			t.Fatal(err)
+		}
+		if resp.StatusCode != 200 {
+			t.Fatalf("bad response code: %d", resp.StatusCode)
 		}
 
 		// Check to make sure we got our JobID

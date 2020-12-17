@@ -85,7 +85,7 @@ func createJob(ctx context.Context, request events.APIGatewayProxyRequest) (even
 			"startTime": {N: aws.String(fmt.Sprintf("%d", time.Now().Unix()))},
 			"ttl":       {N: aws.String(fmt.Sprintf("%d", time.Now().Add(time.Hour*24*30).Unix()))},
 			"request":   {S: aws.String(request.Body)},
-			"data":      {S: aws.String("")},
+			"responses": {S: aws.String("")},
 		},
 		TableName: &t.JobDBTableName,
 	})
@@ -170,21 +170,21 @@ func getJobStatus(ctx context.Context, jobID string) (events.APIGatewayProxyResp
 
 	response := struct {
 		Request   interface{} `dynamodbav:"request"`
-		Data      interface{} `dynamodbav:"data"`
+		Responses interface{} `dynamodbav:"responses"`
 		StartTime interface{} `dynamodbav:"startTime"`
 	}{}
 	dynamodbattribute.UnmarshalMap(item.Item, &response)
 
 	// Asherah decrypt
 	span, ctx = opentracing.StartSpanFromContext(ctx, "AsherahDecrypt")
-	if itemData, ok := item.Item["data"]; ok {
-		asherahItem := appencryption.DataRowRecord{}
-		dynamodbattribute.Unmarshal(itemData, &asherahItem)
+	if itemResponses, ok := item.Item["responses"]; ok {
 		// TODO: Encrypt each item in map instead of data as a whole because each
 		// lambda will be adding data to the map
+		asherahItem := appencryption.DataRowRecord{}
+		dynamodbattribute.Unmarshal(itemResponses, &asherahItem)
 		decryptedData, err := t.Dencrypt(ctx, jobID, asherahItem)
 		if err == nil {
-			response.Data = decryptedData
+			response.Responses = decryptedData
 		}
 	}
 	span.Finish()
