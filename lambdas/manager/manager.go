@@ -91,22 +91,27 @@ func getJobStatus(ctx context.Context, jobID string) (events.APIGatewayProxyResp
 		}, nil
 	}
 
+	response := &Response{JobIDs: []string{jobID}}
+
 	// Asherah decrypt
 	span, ctx = opentracing.StartSpanFromContext(ctx, "AsherahDecrypt")
 	asherahItem := appencryption.DataRowRecord{}
-	dynamodbattribute.Unmarshal(item.Item["data"], &asherahItem)
-	// TODO: Encrypt each item in map instead of data as a whole because each
-	// lambda will be adding data to the map
-	decryptedData, err := t.Dencrypt(ctx, jobID, asherahItem)
-	if err != nil {
-		span.LogKV("error", err)
-		span.Finish()
-		return events.APIGatewayProxyResponse{StatusCode: 500, Body: ErrorResponse("error decrypting data").Marshal()}, nil
+	itemData, ok := item.Item["data"]
+	if ok {
+		dynamodbattribute.Unmarshal(itemData, &asherahItem)
+		// TODO: Encrypt each item in map instead of data as a whole because each
+		// lambda will be adding data to the map
+		decryptedData, err := t.Dencrypt(ctx, jobID, asherahItem)
+		if err != nil {
+			// If decryption failed, just send back the raw data
+			response.Data = itemData
+		} else {
+			response.Data = decryptedData
+		}
 	}
 	span.Finish()
 
 	// For now just dump the raw item back to the user
-	response := &Response{JobIDs: []string{jobID}, Data: decryptedData}
 	err = dynamodbattribute.UnmarshalMap(item.Item, &response.Data)
 	if err != nil {
 		span.LogKV("error", err)
