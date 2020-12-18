@@ -84,7 +84,7 @@ func createJob(ctx context.Context, request events.APIGatewayProxyRequest) (even
 			usernameKey: {S: &jwt.BaseToken.AccountName},
 			"startTime": {N: aws.String(fmt.Sprintf("%d", time.Now().Unix()))},
 			"ttl":       {N: aws.String(fmt.Sprintf("%d", time.Now().Add(time.Hour*24*30).Unix()))},
-			"request":   {S: aws.String(request.Body)},
+			"request":   {S: aws.String(request.Body)}, // TODO: insert marshalled value?
 			"responses": {S: aws.String("")},
 		},
 		TableName: &t.JobDBTableName,
