@@ -71,7 +71,7 @@ func createJob(ctx context.Context, request events.APIGatewayProxyRequest) (even
 	// Get username
 	jwt, err := t.ValidateJWT(ctx, t.GetJWTFromRequest(request))
 	if err != nil {
-		return events.APIGatewayProxyResponse{StatusCode: 401, Body: ErrorResponse("bad jwt").Marshal()}, err
+		return events.APIGatewayProxyResponse{StatusCode: 401}, err
 	}
 	span.LogKV("username", jwt.BaseToken.AccountName)
 
@@ -92,10 +92,7 @@ func createJob(ctx context.Context, request events.APIGatewayProxyRequest) (even
 	if err != nil {
 		span.LogKV("error", err)
 		span.Finish()
-		return events.APIGatewayProxyResponse{
-			StatusCode: 500,
-			Body:       ErrorResponse("Error creating job").Marshal(),
-		}, err
+		return events.APIGatewayProxyResponse{StatusCode: 500}, err
 	}
 	span.Finish()
 
@@ -149,7 +146,7 @@ func getJobStatus(ctx context.Context, jobID string) (events.APIGatewayProxyResp
 	defer span.Finish()
 
 	if jobID == "" {
-		return events.APIGatewayProxyResponse{StatusCode: 400, Body: ErrorResponse("Bad job_id").Marshal()}, nil
+		return events.APIGatewayProxyResponse{StatusCode: 400}, nil
 	}
 
 	// Fetch job from database
