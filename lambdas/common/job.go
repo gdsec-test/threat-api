@@ -8,3 +8,10 @@ type JobMessage struct {
 	JobID           string                        `json:"jobID"`
 	OriginalRequest events.APIGatewayProxyRequest `json:"original_request"`
 }
+
+// CompletedJobData is a set of completed data from a job
+type CompletedJobData struct {
+	JobID      string `json:"job_id" dynamodbav:"job_id"`
+	ModuleName string `json:"module_name" dynamodbav:"module_name"`
+	Response   string `json:"response" dynamodbav:"response"`
+}
