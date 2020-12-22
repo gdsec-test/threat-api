@@ -26,6 +26,14 @@ Parameters:
     Type: String
     Description: SHA1 hash of the API Gateway specification
     Default: ""
+  ManagerHash:
+    Type: String
+    Description: SHA1 hash of the manager lambda source
+    Default: ""
+  ResponseProcessorHash:
+    Type: String
+    Description: SHA1 hash of the responseprocessor lambda source
+    Default: ""
 
 Resources:
   SwaggerUIRole:
@@ -454,6 +462,88 @@ Resources:
           Value: !Ref CustomDomainName
         - Key: CustomDomainAcmCertificateId
           Value: !Ref CustomDomainAcmCertificateId
+      Tags:
+        - Key: doNotShutDown
+          Value: true
+
+  ThreatManagerLambda:
+    DependsOn: ThreatManagerRole
+    Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
+    Properties:
+      ProductName: Lambda
+      ProvisioningArtifactName: 2.3.0
+      ProvisionedProductName: ThreatManagerLambda
+      ProvisioningParameters:
+        - Key: S3Bucket
+          Value: !Sub gd-${DevelopmentTeam}-${DevelopmentEnvironment}-code-bucket
+        - Key: S3Key
+          Value: !Sub manager/${ManagerHash}
+        - Key: Handler
+          Value: manager
+        - Key: LambdaName
+          Value: manager
+        - Key: LambdaDescription
+          Value: !Sub manager lambda (${ManagerHash})
+        - Key: MemorySize
+          Value: 256
+        - Key: Runtime
+          Value: go1.x
+        - Key: Timeout
+          Value: 15
+        - Key: CustomIAMRoleNameSuffix
+          Value: ThreatManagerRole
+      Tags:
+        - Key: doNotShutDown
+          Value: true
+
+  ThreatResponseProcessorLambda:
+    DependsOn: ThreatResponseProcessorRole
+    Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
+    Properties:
+      ProductName: Lambda
+      ProvisioningArtifactName: 2.3.0
+      ProvisionedProductName: ThreatResponseProcessorLambda
+      ProvisioningParameters:
+        - Key: S3Bucket
+          Value: !Sub gd-${DevelopmentTeam}-${DevelopmentEnvironment}-code-bucket
+        - Key: S3Key
+          Value: !Sub responseprocessor/${ResponseProcessorHash}
+        - Key: Handler
+          Value: responseprocessor
+        - Key: LambdaName
+          Value: responseprocessor
+        - Key: LambdaDescription
+          Value: !Sub responseprocessor lambda (${ResponseProcessorHash})
+        - Key: MemorySize
+          Value: 256
+        - Key: Runtime
+          Value: go1.x
+        - Key: Timeout
+          Value: 15
+        - Key: CustomIAMRoleNameSuffix
+          Value: ThreatResponseProcessorRole
+      Tags:
+        - Key: doNotShutDown
+          Value: true
+
+  ThreatResponseProcessorLambdaSQSEventSource:
+    DependsOn:
+      - ThreatJobResponsesQueue
+      - ThreatResponseProcessorLambda
+    Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
+    Properties:
+      ProductName: LambdaEventSourceMapping
+      ProvisioningArtifactName: 1.0.1
+      ProvisionedProductName: ThreatResponseProcessorLambdaSQSEventSource
+      ProvisioningParameters:
+        - Key: SourceArn
+          Value: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobResponses
+        - Key: SourceType
+          Value: SQS
+        - Key: FunctionName
+          Value: responseprocessor
+        - Key: BatchSize
+          Value: 1
       Tags:
         - Key: doNotShutDown
           Value: true
