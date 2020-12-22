@@ -1,0 +1,6 @@
+{
+  "handler": "tester1.handler",
+  "memory-size": "128",
+  "runtime": "python3.7",
+  "timeout": "15"
+}
