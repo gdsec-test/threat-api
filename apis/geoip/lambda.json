@@ -1,6 +1,6 @@
 {
-  "runtime": "go1.x",
-  "timeout": "15",
+  "handler": "geoip",
   "memory-size": "256",
-  "handler": "main"
+  "runtime": "go1.x",
+  "timeout": "15"
 }
