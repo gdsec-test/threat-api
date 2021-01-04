@@ -33,6 +33,7 @@ func handler(ctx context.Context, request common.CompletedJobData) (string, erro
 	encryptedData, err := t.Encrypt(ctx, request.JobID, []byte(request.Response))
 	if err != nil {
 		span.LogKV("error", err)
+		span.Finish()
 		return "", fmt.Errorf("error encrypting data: %w", err)
 	}
 	span.Finish()
