@@ -44,9 +44,8 @@ func handler(ctx context.Context, request events.APIGatewayProxyRequest) (events
 	// Load dynamoDB
 	dynamoDBClient = dynamodb.New(t.AWSSession)
 
-	// Check for jobID
-	jobID, ok := request.PathParameters[jobIDKey]
-	if ok {
+	// Check for jobID to check status of job
+	if jobID, ok := request.PathParameters[jobIDKey]; ok {
 		// Assume they are checking on the status of this job
 		return getJobStatus(ctx, jobID)
 	}
