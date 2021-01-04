@@ -27,7 +27,7 @@ func handler(ctx context.Context, request common.CompletedJobData) (string, erro
 
 	dynamodbClient := dynamodb.New(t.AWSSession)
 
-	// TODO: Encrypt results with asherah
+	// Encrypt results with asherah
 	var span opentracing.Span
 	span, ctx = opentracing.StartSpanFromContext(ctx, "AsherahEncrypt")
 	encryptedData, err := t.Encrypt(ctx, request.JobID, []byte(request.Response))
@@ -37,7 +37,7 @@ func handler(ctx context.Context, request common.CompletedJobData) (string, erro
 	}
 	span.Finish()
 
-	// Update the "results" entry to contain a new map
+	// Update the "responses" entry to contain a new map
 	update := expression.
 		Set(expression.Name(fmt.Sprintf("responses.%s", request.ModuleName)), expression.Value(encryptedData.Data))
 	expr, err := expression.NewBuilder().WithUpdate(update).Build()
