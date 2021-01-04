@@ -75,6 +75,22 @@ func createJob(ctx context.Context, request events.APIGatewayProxyRequest) (even
 	}
 	span.LogKV("username", jwt.BaseToken.AccountName)
 
+	// Encrypt request
+	span, ctx = opentracing.StartSpanFromContext(ctx, "EncryptRequest")
+	encryptedData, err := t.Encrypt(ctx, jobID, []byte(request.Body))
+	if err != nil {
+		span.LogKV("error", err)
+		span.Finish()
+		return events.APIGatewayProxyResponse{StatusCode: 500}, fmt.Errorf("error encrypting request: %w", err)
+	}
+	encryptedDataMarshalled, err := dynamodbattribute.Marshal(encryptedData)
+	if err != nil {
+		span.LogKV("error", err)
+		span.Finish()
+		return events.APIGatewayProxyResponse{StatusCode: 500}, fmt.Errorf("error marshalling encrypted data: %w", err)
+	}
+	span.Finish()
+
 	// Store in database
 	span, ctx = opentracing.StartSpanFromContext(ctx, "StoreJob")
 	span.LogKV("job_id", jobID)
@@ -84,7 +100,7 @@ func createJob(ctx context.Context, request events.APIGatewayProxyRequest) (even
 			usernameKey: {S: &jwt.BaseToken.AccountName},
 			"startTime": {N: aws.String(fmt.Sprintf("%d", time.Now().Unix()))},
 			"ttl":       {N: aws.String(fmt.Sprintf("%d", time.Now().Add(time.Hour*24*30).Unix()))},
-			"request":   {S: aws.String(request.Body)}, // TODO: insert marshalled value?
+			"request":   encryptedDataMarshalled,
 			"responses": {S: aws.String("")},
 		},
 		TableName: &t.JobDBTableName,
@@ -166,27 +182,39 @@ func getJobStatus(ctx context.Context, jobID string) (events.APIGatewayProxyResp
 	}
 
 	response := struct {
-		Request   interface{} `dynamodbav:"request"`
-		Responses interface{} `dynamodbav:"responses"`
-		StartTime interface{} `dynamodbav:"startTime"`
+		Request            appencryption.DataRowRecord `dynamodbav:"request"`
+		decryptedRequest   string
+		Responses          interface{} `dynamodbav:"responses"`
+		decryptedResponses map[string]interface{}
+		StartTime          interface{} `dynamodbav:"startTime"`
 	}{}
 	dynamodbattribute.UnmarshalMap(item.Item, &response)
 
 	// Asherah decrypt
-	span, ctx = opentracing.StartSpanFromContext(ctx, "AsherahDecrypt")
-	if itemResponses, ok := item.Item["responses"]; ok {
-		// TODO: Encrypt each item in map instead of data as a whole because each
-		// lambda will be adding data to the map
-		asherahItem := appencryption.DataRowRecord{}
-		dynamodbattribute.Unmarshal(itemResponses, &asherahItem)
-		decryptedData, err := t.Dencrypt(ctx, jobID, asherahItem)
-		if err == nil {
-			response.Responses = decryptedData
-		}
-	}
-	span.Finish()
+	// TODO: Decrypt responses
+	// span, ctx = opentracing.StartSpanFromContext(ctx, "DecryptResponses")
+	// decryptedData, err := t.Dencrypt(ctx, jobID, response.Request)
+	// if err == nil {
+	// 	fmt.Println(decryptedData)
+	// }
+	// span.Finish()
 
-	responseData, _ := json.Marshal(response)
+	span, ctx = opentracing.StartSpanFromContext(ctx, "DecryptRequest")
+	decryptedData, err := t.Dencrypt(ctx, jobID, response.Request)
+	if err == nil {
+		response.decryptedRequest = string(decryptedData)
+	}
+
+	// Marshal and reply
+	responseData, _ := json.Marshal(struct {
+		Request   string
+		Responses map[string]interface{}
+		StartTime interface{}
+	}{
+		Request:   response.decryptedRequest,
+		Responses: response.decryptedResponses,
+		StartTime: response.StartTime,
+	})
 	if err != nil {
 		span.LogKV("error", err)
 		return events.APIGatewayProxyResponse{StatusCode: 500}, nil

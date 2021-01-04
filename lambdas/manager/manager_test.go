@@ -10,6 +10,10 @@ import (
 	"github.com/aws/aws-lambda-go/events"
 )
 
+const (
+	testBody = `{"test":"test"}`
+)
+
 // Test creating a job in the DB
 func TestJobWork(t *testing.T) {
 	testingJWT := os.Getenv("TESTING_JWT")
@@ -20,6 +24,7 @@ func TestJobWork(t *testing.T) {
 		// Create an empty job
 		resp, err := handler(context.Background(), events.APIGatewayProxyRequest{
 			Headers: headers,
+			Body:    testBody,
 		})
 		if err != nil {
 			t.Fatal(err)
@@ -57,11 +62,17 @@ func TestJobWork(t *testing.T) {
 		}
 
 		// Check to make sure we got our JobID
-		var response interface{}
+		var response map[string]interface{}
 		err = json.Unmarshal([]byte(resp.Body), &response)
 		if err != nil {
 			t.Fatal(err)
 		}
+
+		// Make sure we got back our original request
+		if response["request"] != testBody {
+			t.Errorf("did not get original request we made (must not have been decrypted correctly). Expected %s got %s", testBody, response["request"])
+		}
+
 		fmt.Printf("Found job data: %v\n", response)
 	})
 
