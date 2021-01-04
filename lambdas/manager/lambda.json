@@ -1,6 +1,0 @@
-{
-  "runtime": "python3.7",
-  "timeout": "15",
-  "memory-size": "128",
-  "handler": "job.handler"
-}

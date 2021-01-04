@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -eu
+
 if [ ! -f GeoLite2-City.mmdb ]; then
     # Pull last free version of GeoLite2 DB from Fedora archives
 
@@ -16,45 +18,6 @@ if [ ! -f GeoLite2-City.mmdb ]; then
     rmdir GeoLite2-City_20191217
 fi
 
-env GOPRIVATE=github.secureserver.net GOOS=linux GOARCH=amd64 go build main.go
-
-zip -9r function.zip main GeoLite2-City.mmdb
-
-# The following section will be replaced by generic code that iterates through
-# all of the lambda functions; for now, the following code will create or
-# update the lambda as appropriate.
-
-aws lambda get-function --function-name geoip > /dev/null 2>&1
-RC="$?"
-
-if [ "${RC}" != "0" ]; then
-    ROLE_ARN=$(aws iam get-role --output=text --role-name threattools-custom-ThreatRole --query 'Role.Arn')
-
-    aws lambda create-function \
-        --function-name geoip \
-        --runtime go1.x \
-        --role ${ROLE_ARN} \
-        --region us-west-2 \
-        --timeout 15 \
-        --memory-size 256 \
-        --handler main \
-        --zip-file fileb://function.zip
-
-    # Add the permission so that the API Gateway can invoke the lambda function
-
-    AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
-    API_GATEWAY_ID=$(aws apigateway get-rest-apis --query 'items[?name==`ThreatAPI`].id' --output text)
-
-    aws lambda add-permission \
-        --function-name geoip \
-        --action lambda:InvokeFunction \
-        --statement-id apigateway \
-        --principal apigateway.amazonaws.com \
-        --source-arn "arn:aws:execute-api:us-west-2:${AWS_ACCOUNT_ID}:${API_GATEWAY_ID}/gddeploy/*/*"
-
-else
-    aws lambda update-function-code \
-        --function-name geoip \
-        --zip-file fileb://function.zip
-
-fi
+env GOPRIVATE=github.secureserver.net GOOS=linux GOARCH=amd64 go build
+rm -f function.zip
+zip -9 function.zip geoip GeoLite2-City.mmdb
