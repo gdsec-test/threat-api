@@ -40,7 +40,7 @@ func handler(ctx context.Context, request common.CompletedJobData) (string, erro
 
 	// Update the "responses" entry to contain a new map
 	update := expression.
-		Set(expression.Name(fmt.Sprintf("responses.%s", request.ModuleName)), expression.Value(encryptedData.Data))
+		Set(expression.Name(fmt.Sprintf("responses.%s", request.ModuleName)), expression.Value(*encryptedData))
 	expr, err := expression.NewBuilder().WithUpdate(update).Build()
 	if err != nil {
 		return "", err
