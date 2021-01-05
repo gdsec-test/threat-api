@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 
 	"github.com/aws/aws-lambda-go/lambda"
@@ -9,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/dynamodb/expression"
 	"github.com/gdcorp-infosec/threat-api/lambdas/common"
 	"github.com/opentracing/opentracing-go"
+	"github.com/sirupsen/logrus"
 	"github.secureserver.net/threat/util/lambda/toolbox"
 	_ "go.elastic.co/apm/module/apmlambda"
 )
@@ -17,13 +19,38 @@ const (
 	snsTopicARNParameterName = "/ThreatTools/JobRequests"
 )
 
+var t *toolbox.Toolbox
+
 // Lambda function to take a completed job data and insert it in to the database
-func handler(ctx context.Context, request common.CompletedJobData) (string, error) {
+func handler(ctx context.Context, request common.SQSCompletedJob) (string, error) {
+	t = toolbox.GetToolbox()
+
+	for _, sqsRecord := range request.Records {
+		// Try to unmarshal body
+		completedJobData := common.CompletedJobData{}
+		err := json.Unmarshal([]byte(sqsRecord.Body), &completedJobData)
+		if err != nil {
+			t.Logger.WithFields(logrus.Fields{
+				"error": err,
+				"body":  string(sqsRecord.Body),
+			}).Error("Error unmarshaling completed job data")
+			continue
+		}
+		t.Logger.WithField("moduleName", completedJobData.ModuleName).Info("Processing module response")
+
+		_, err = processCompletedJob(ctx, completedJobData)
+		if err != nil {
+			t.Logger.WithError(err).Error("Error processing response")
+		}
+	}
+	return "", nil
+}
+
+func processCompletedJob(ctx context.Context, job common.CompletedJobData) (string, error) {
+	request := common.CompletedJobData{}
 	if request.JobID == "" || request.ModuleName == "" {
 		return "", fmt.Errorf("missing jobID or module name")
 	}
-
-	t := toolbox.GetToolbox()
 
 	dynamodbClient := dynamodb.New(t.AWSSession)
 

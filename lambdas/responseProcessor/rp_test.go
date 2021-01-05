@@ -10,7 +10,7 @@ import (
 
 func TestRP(t *testing.T) {
 	ctx := context.Background()
-	_, err := handler(ctx, common.CompletedJobData{
+	_, err := processCompletedJob(ctx, common.CompletedJobData{
 		JobID:      "testJobID",
 		Response:   "Response data!",
 		ModuleName: "testModule",
