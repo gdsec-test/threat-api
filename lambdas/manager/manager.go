@@ -16,7 +16,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/dynamodb/expression"
 	"github.com/aws/aws-sdk-go/service/sns"
 	"github.com/gdcorp-infosec/threat-api/lambdas/common"
-	"github.com/godaddy/asherah/go/appencryption"
 	"github.com/opentracing/opentracing-go"
 	"github.secureserver.net/threat/util/lambda/toolbox"
 	_ "go.elastic.co/apm/module/apmlambda"
@@ -180,39 +179,22 @@ func getJobStatus(ctx context.Context, jobID string) (events.APIGatewayProxyResp
 		return events.APIGatewayProxyResponse{StatusCode: 404}, nil
 	}
 
-	response := struct {
-		Request            appencryption.DataRowRecord `dynamodbav:"request"`
-		decryptedRequest   string
-		Responses          interface{} `dynamodbav:"responses"`
-		decryptedResponses map[string]interface{}
-		StartTime          interface{} `dynamodbav:"startTime"`
-	}{}
-	dynamodbattribute.UnmarshalMap(item.Item, &response)
+	// Unmarshal the job
+	jobDB := &common.JobDBEntry{}
+	dynamodbattribute.UnmarshalMap(item.Item, jobDB)
 
 	// Asherah decrypt
-	// TODO: Decrypt responses
-	// span, ctx = opentracing.StartSpanFromContext(ctx, "DecryptResponses")
-	// decryptedData, err := t.Dencrypt(ctx, jobID, response.Request)
-	// if err == nil {
-	// 	fmt.Println(decryptedData)
-	// }
-	// span.Finish()
-
-	span, ctx = opentracing.StartSpanFromContext(ctx, "DecryptRequest")
-	decryptedData, err := t.Dencrypt(ctx, jobID, response.Request)
-	if err == nil {
-		response.decryptedRequest = string(decryptedData)
-	}
+	jobDB.Decrypt(ctx, t)
 
 	// Marshal and reply
 	responseData, _ := json.Marshal(struct {
 		Request   string
-		Responses map[string]interface{}
+		Responses map[string]string
 		StartTime interface{}
 	}{
-		Request:   response.decryptedRequest,
-		Responses: response.decryptedResponses,
-		StartTime: response.StartTime,
+		Request:   jobDB.DecryptedRequest,
+		Responses: jobDB.DecryptedResponses,
+		StartTime: jobDB.StartTime,
 	})
 	if err != nil {
 		span.LogKV("error", err)
