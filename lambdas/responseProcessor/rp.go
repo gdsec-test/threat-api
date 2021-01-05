@@ -46,8 +46,7 @@ func handler(ctx context.Context, request common.SQSCompletedJob) (string, error
 	return "", nil
 }
 
-func processCompletedJob(ctx context.Context, job common.CompletedJobData) (string, error) {
-	request := common.CompletedJobData{}
+func processCompletedJob(ctx context.Context, request common.CompletedJobData) (string, error) {
 	if request.JobID == "" || request.ModuleName == "" {
 		return "", fmt.Errorf("missing jobID or module name")
 	}
