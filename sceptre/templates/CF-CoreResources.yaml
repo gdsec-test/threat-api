@@ -118,6 +118,26 @@ Resources:
               - dynamodb:UpdateItem
             Resource: "*"
 
+  ThreatPolicyKMS:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      ManagedPolicyName: GD-AWS-KMS-USER
+      Description: Allows KMS usage
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action:
+              - kms:Encrypt
+              - kms:Decrypt
+              - kms:ReEncrypt*
+              - kms:GenerateDataKey*
+              - kms:DescribeKey
+              - kms:CreateGrant
+              - kms:ListGrants
+              - kms:RevokeGrant
+            Resource: "*"
+
   ThreatPolicySNS:
     Type: AWS::IAM::ManagedPolicy
     Properties:
@@ -169,6 +189,7 @@ Resources:
         - arn:aws:iam::aws:policy/AmazonSSMReadOnlyAccess
         - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
         - !Ref ThreatPolicyDynamoDB
+        - !Ref ThreatPolicyKMS
         - !Ref ThreatPolicySNS
       AssumeRolePolicyDocument:
         Version: 2012-10-17
@@ -189,6 +210,7 @@ Resources:
         - arn:aws:iam::aws:policy/service-role/AWSLambdaSQSQueueExecutionRole
         - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
         - !Ref ThreatPolicyDynamoDB
+        - !Ref ThreatPolicyKMS
       AssumeRolePolicyDocument:
         Version: 2012-10-17
         Statement:
