@@ -2,6 +2,8 @@ package main
 
 import (
 	"context"
+	"encoding/json"
+	"os"
 	"testing"
 
 	"github.com/gdcorp-infosec/threat-api/lambdas/common"
@@ -12,11 +14,13 @@ import (
 func TestRP(te *testing.T) {
 	ctx := context.Background()
 	t = toolbox.GetToolbox()
-	_, err := processCompletedJob(ctx, common.CompletedJobData{
+	message := common.CompletedJobData{
 		JobID:      "testJobID",
 		Response:   "Response data!",
 		ModuleName: "testModule",
-	})
+	}
+	json.NewEncoder(os.Stdout).Encode(message)
+	_, err := processCompletedJob(ctx, message)
 	if err != nil {
 		te.Fatal(err)
 	}
