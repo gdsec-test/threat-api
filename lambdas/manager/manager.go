@@ -114,7 +114,7 @@ func createJob(ctx context.Context, request events.APIGatewayProxyRequest) (even
 	span, ctx = opentracing.StartSpanFromContext(ctx, "SendSNS")
 
 	// Marshal body
-	requestMarshalled, err := json.Marshal(common.JobMessage{OriginalRequest: request, JobID: jobID})
+	requestMarshalled, err := json.Marshal(common.JobSNSMessage{OriginalRequest: request, JobID: jobID})
 	if err != nil {
 		span.LogKV("error", err)
 		span.Finish()
