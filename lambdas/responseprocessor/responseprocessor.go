@@ -3,17 +3,89 @@ package main
 import (
 	"context"
 	"encoding/json"
-	"github.com/aws/aws-lambda-go/events"
+	"fmt"
+
 	"github.com/aws/aws-lambda-go/lambda"
-	"net/http"
+	"github.com/aws/aws-sdk-go/service/dynamodb"
+	"github.com/aws/aws-sdk-go/service/dynamodb/expression"
+	"github.com/gdcorp-infosec/threat-api/lambdas/common"
+	"github.com/opentracing/opentracing-go"
+	"github.com/sirupsen/logrus"
+	"github.secureserver.net/threat/util/lambda/toolbox"
+	_ "go.elastic.co/apm/module/apmlambda"
 )
 
-func handler(ctx context.Context, request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
-	js, _ := json.Marshal("OK")
-	return events.APIGatewayProxyResponse{
-		StatusCode: http.StatusOK,
-		Body:       string(js),
-	}, nil
+const (
+	snsTopicARNParameterName = "/ThreatTools/JobRequests"
+)
+
+var t *toolbox.Toolbox
+
+// Lambda function to take a completed job data and insert it in to the database
+func handler(ctx context.Context, request common.SQSCompletedJob) (string, error) {
+	t = toolbox.GetToolbox()
+
+	// TODO: Add tracing
+	for _, sqsRecord := range request.Records {
+		// Try to unmarshal body
+		completedJobData := common.CompletedJobData{}
+		err := json.Unmarshal([]byte(sqsRecord.Body), &completedJobData)
+		if err != nil {
+			t.Logger.WithFields(logrus.Fields{
+				"error": err,
+				"body":  string(sqsRecord.Body),
+			}).Error("Error unmarshaling completed job data")
+			continue
+		}
+		t.Logger.WithField("moduleName", completedJobData.ModuleName).Info("Processing module response")
+
+		_, err = processCompletedJob(ctx, completedJobData)
+		if err != nil {
+			t.Logger.WithError(err).Error("Error processing response")
+		}
+	}
+	return "", nil
+}
+
+func processCompletedJob(ctx context.Context, request common.CompletedJobData) (string, error) {
+	if request.JobID == "" || request.ModuleName == "" {
+		return "", fmt.Errorf("missing jobID or module name")
+	}
+
+	dynamodbClient := dynamodb.New(t.AWSSession)
+
+	// Encrypt results with asherah
+	var span opentracing.Span
+	span, ctx = opentracing.StartSpanFromContext(ctx, "AsherahEncrypt")
+	encryptedData, err := t.Encrypt(ctx, request.JobID, []byte(request.Response))
+	if err != nil {
+		span.LogKV("error", err)
+		span.Finish()
+		return "", fmt.Errorf("error encrypting data: %w", err)
+	}
+	span.Finish()
+
+	// Update the "responses" entry to contain a new map
+	update := expression.
+		Set(expression.Name(fmt.Sprintf("responses.%s", request.ModuleName)), expression.Value(*encryptedData))
+	expr, err := expression.NewBuilder().WithUpdate(update).Build()
+	if err != nil {
+		return "", err
+	}
+	_, err = dynamodbClient.UpdateItem(&dynamodb.UpdateItemInput{
+		Key: map[string]*dynamodb.AttributeValue{
+			"job_id": {S: &request.JobID},
+		},
+		ExpressionAttributeNames:  expr.Names(),
+		ExpressionAttributeValues: expr.Values(),
+		UpdateExpression:          expr.Update(),
+		TableName:                 &t.JobDBTableName,
+	})
+	if err != nil {
+		return "", err
+	}
+
+	return "", nil
 }
 
 func main() {
