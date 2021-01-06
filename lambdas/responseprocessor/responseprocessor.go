@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/aws/aws-sdk-go/service/dynamodb/expression"
@@ -22,8 +23,9 @@ const (
 var t *toolbox.Toolbox
 
 // Lambda function to take a completed job data and insert it in to the database
-func handler(ctx context.Context, request common.SQSCompletedJob) (string, error) {
+func handler(ctx context.Context, request events.SQSEvent) (string, error) {
 	t = toolbox.GetToolbox()
+	t.Logger.SetFormatter(&logrus.JSONFormatter{})
 
 	// TODO: Add tracing
 	for _, sqsRecord := range request.Records {
@@ -37,7 +39,7 @@ func handler(ctx context.Context, request common.SQSCompletedJob) (string, error
 			}).Error("Error unmarshaling completed job data")
 			continue
 		}
-		t.Logger.WithField("moduleName", completedJobData.ModuleName).Info("Processing module response")
+		t.Logger.WithFields(logrus.Fields{"moduleName": completedJobData.ModuleName, "rawRequest": request}).Info("Processing module response")
 
 		_, err = processCompletedJob(ctx, completedJobData)
 		if err != nil {
