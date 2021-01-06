@@ -181,7 +181,10 @@ func getJobStatus(ctx context.Context, jobID string) (events.APIGatewayProxyResp
 
 	// Unmarshal the job
 	jobDB := &common.JobDBEntry{}
-	dynamodbattribute.UnmarshalMap(item.Item, jobDB)
+	err = dynamodbattribute.UnmarshalMap(item.Item, jobDB)
+	if err != nil {
+		t.Logger.WithError(err).Error("error unmarshaling dynamodb item")
+	}
 
 	// Asherah decrypt
 	jobDB.Decrypt(ctx, t)
