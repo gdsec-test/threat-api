@@ -25,6 +25,7 @@ var t *toolbox.Toolbox
 func handler(ctx context.Context, request common.SQSCompletedJob) (string, error) {
 	t = toolbox.GetToolbox()
 
+	// TODO: Add tracing
 	for _, sqsRecord := range request.Records {
 		// Try to unmarshal body
 		completedJobData := common.CompletedJobData{}
