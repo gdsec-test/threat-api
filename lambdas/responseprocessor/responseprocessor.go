@@ -39,7 +39,7 @@ func handler(ctx context.Context, request events.SQSEvent) (string, error) {
 			}).Error("Error unmarshaling completed job data")
 			continue
 		}
-		t.Logger.WithFields(logrus.Fields{"moduleName": completedLambdaData.ResponsePayload.ModuleName, "rawRequest": request}).Info("Processing module response")
+		t.Logger.WithFields(logrus.Fields{"moduleName": completedLambdaData.ResponsePayload.ModuleName, "requestBody": sqsRecord.Body}).Info("Processing module response")
 
 		_, err = processCompletedJob(ctx, completedLambdaData.ResponsePayload)
 		if err != nil {
