@@ -99,7 +99,7 @@ func createJob(ctx context.Context, request events.APIGatewayProxyRequest) (even
 			"startTime": {N: aws.String(fmt.Sprintf("%d", time.Now().Unix()))},
 			"ttl":       {N: aws.String(fmt.Sprintf("%d", time.Now().Add(time.Hour*24*30).Unix()))},
 			"request":   encryptedDataMarshalled,
-			"responses": {S: aws.String("")},
+			"responses": {M: map[string]*dynamodb.AttributeValue{}},
 		},
 		TableName: &t.JobDBTableName,
 	})
