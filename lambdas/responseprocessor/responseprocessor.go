@@ -30,8 +30,8 @@ func handler(ctx context.Context, request events.SQSEvent) (string, error) {
 	// TODO: Add tracing
 	for _, sqsRecord := range request.Records {
 		// Try to unmarshal body
-		completedJobData := common.CompletedJobData{}
-		err := json.Unmarshal([]byte(sqsRecord.Body), &completedJobData)
+		completedLambdaData := LambdaDestination{}
+		err := json.Unmarshal([]byte(sqsRecord.Body), &completedLambdaData)
 		if err != nil {
 			t.Logger.WithFields(logrus.Fields{
 				"error": err,
@@ -39,9 +39,9 @@ func handler(ctx context.Context, request events.SQSEvent) (string, error) {
 			}).Error("Error unmarshaling completed job data")
 			continue
 		}
-		t.Logger.WithFields(logrus.Fields{"moduleName": completedJobData.ModuleName, "rawRequest": request}).Info("Processing module response")
+		t.Logger.WithFields(logrus.Fields{"moduleName": completedLambdaData.ResponsePayload.ModuleName, "rawRequest": request}).Info("Processing module response")
 
-		_, err = processCompletedJob(ctx, completedJobData)
+		_, err = processCompletedJob(ctx, completedLambdaData.ResponsePayload)
 		if err != nil {
 			t.Logger.WithError(err).Error("Error processing response")
 		}
@@ -49,6 +49,7 @@ func handler(ctx context.Context, request events.SQSEvent) (string, error) {
 	return "", nil
 }
 
+// processCompleteJob takes the completed job data, encrypts the response, and adds it to the appropriate dynamoDB entry
 func processCompletedJob(ctx context.Context, request common.CompletedJobData) (string, error) {
 	if request.JobID == "" || request.ModuleName == "" {
 		return "", fmt.Errorf("missing jobID or module name")
