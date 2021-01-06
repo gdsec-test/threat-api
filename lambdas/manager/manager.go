@@ -16,7 +16,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/dynamodb/expression"
 	"github.com/aws/aws-sdk-go/service/sns"
 	"github.com/gdcorp-infosec/threat-api/lambdas/common"
-	"github.com/godaddy/asherah/go/appencryption"
 	"github.com/opentracing/opentracing-go"
 	"github.secureserver.net/threat/util/lambda/toolbox"
 	_ "go.elastic.co/apm/module/apmlambda"
@@ -44,9 +43,8 @@ func handler(ctx context.Context, request events.APIGatewayProxyRequest) (events
 	// Load dynamoDB
 	dynamoDBClient = dynamodb.New(t.AWSSession)
 
-	// Check for jobID
-	jobID, ok := request.PathParameters[jobIDKey]
-	if ok {
+	// Check for jobID to check status of job
+	if jobID, ok := request.PathParameters[jobIDKey]; ok {
 		// Assume they are checking on the status of this job
 		return getJobStatus(ctx, jobID)
 	}
@@ -75,6 +73,22 @@ func createJob(ctx context.Context, request events.APIGatewayProxyRequest) (even
 	}
 	span.LogKV("username", jwt.BaseToken.AccountName)
 
+	// Encrypt request
+	span, ctx = opentracing.StartSpanFromContext(ctx, "EncryptRequest")
+	encryptedData, err := t.Encrypt(ctx, jobID, []byte(request.Body))
+	if err != nil {
+		span.LogKV("error", err)
+		span.Finish()
+		return events.APIGatewayProxyResponse{StatusCode: 500}, fmt.Errorf("error encrypting request: %w", err)
+	}
+	encryptedDataMarshalled, err := dynamodbattribute.Marshal(encryptedData)
+	if err != nil {
+		span.LogKV("error", err)
+		span.Finish()
+		return events.APIGatewayProxyResponse{StatusCode: 500}, fmt.Errorf("error marshalling encrypted data: %w", err)
+	}
+	span.Finish()
+
 	// Store in database
 	span, ctx = opentracing.StartSpanFromContext(ctx, "StoreJob")
 	span.LogKV("job_id", jobID)
@@ -84,7 +98,7 @@ func createJob(ctx context.Context, request events.APIGatewayProxyRequest) (even
 			usernameKey: {S: &jwt.BaseToken.AccountName},
 			"startTime": {N: aws.String(fmt.Sprintf("%d", time.Now().Unix()))},
 			"ttl":       {N: aws.String(fmt.Sprintf("%d", time.Now().Add(time.Hour*24*30).Unix()))},
-			"request":   {S: aws.String(request.Body)}, // TODO: insert marshalled value?
+			"request":   encryptedDataMarshalled,
 			"responses": {M: map[string]*dynamodb.AttributeValue{}},
 		},
 		TableName: &t.JobDBTableName,
@@ -165,28 +179,26 @@ func getJobStatus(ctx context.Context, jobID string) (events.APIGatewayProxyResp
 		return events.APIGatewayProxyResponse{StatusCode: 404}, nil
 	}
 
-	response := struct {
-		Request   interface{} `dynamodbav:"request"`
-		Responses interface{} `dynamodbav:"responses"`
-		StartTime interface{} `dynamodbav:"startTime"`
-	}{}
-	dynamodbattribute.UnmarshalMap(item.Item, &response)
+	// Unmarshal the job
+	jobDB := &common.JobDBEntry{}
+	err = dynamodbattribute.UnmarshalMap(item.Item, jobDB)
+	if err != nil {
+		t.Logger.WithError(err).Error("error unmarshaling dynamodb item")
+	}
 
 	// Asherah decrypt
-	span, ctx = opentracing.StartSpanFromContext(ctx, "AsherahDecrypt")
-	if itemResponses, ok := item.Item["responses"]; ok {
-		// TODO: Encrypt each item in map instead of data as a whole because each
-		// lambda will be adding data to the map
-		asherahItem := appencryption.DataRowRecord{}
-		dynamodbattribute.Unmarshal(itemResponses, &asherahItem)
-		decryptedData, err := t.Dencrypt(ctx, jobID, asherahItem)
-		if err == nil {
-			response.Responses = decryptedData
-		}
-	}
-	span.Finish()
+	jobDB.Decrypt(ctx, t)
 
-	responseData, _ := json.Marshal(response)
+	// Marshal and reply
+	responseData, _ := json.Marshal(struct {
+		Request   string            `json:"request"`
+		Responses map[string]string `json:"responses"`
+		StartTime interface{}       `json:"start_time"`
+	}{
+		Request:   jobDB.DecryptedRequest,
+		Responses: jobDB.DecryptedResponses,
+		StartTime: jobDB.StartTime,
+	})
 	if err != nil {
 		span.LogKV("error", err)
 		return events.APIGatewayProxyResponse{StatusCode: 500}, nil
