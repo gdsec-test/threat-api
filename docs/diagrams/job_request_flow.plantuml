@@ -16,7 +16,8 @@ API_Gateway -> JWT_Authorizer: Check JWT
 JWT_Authorizer -> API_Gateway: JWT valid
 API_Gateway -> Manager : Request
 activate Manager
-Manager -> DynamoDB : Store job_id
+Manager -> Manager : Encrypt request
+Manager -> DynamoDB : Store job_id and encrypted request
 Manager -> SNS : Publish request
 Manager -> User : job_id
 deactivate Manager
@@ -40,6 +41,7 @@ deactivate Job_Lambda
 
 SQS -> ResponseProcessor : invokes
 activate ResponseProcessor
+ResponseProcessor -> ResponseProcessor : Encrypt results
 ResponseProcessor -> DynamoDB : Store output
 deactivate ResponseProcessor
 
@@ -55,6 +57,7 @@ API_Gateway -> Manager : Request
 activate Manager
 Manager -> DynamoDB : Get job_id
 DynamoDB -> Manager : Job output
+Manager -> Manager : Decrypt original request\nand each response
 Manager -> User : Job output
 deactivate Manager
 
