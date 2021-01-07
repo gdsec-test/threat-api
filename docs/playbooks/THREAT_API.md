@@ -40,6 +40,6 @@ If your lambda is definitely running (it runs and sends logs to cloudwatch), but
 The problem is most likely directly between your lambda and Dynamodb.  Check out the [architecture](../ARCHITECTURE.md) docs to see the elements in between.
 
 1. First check to make sure the response processor is picking up on your result.  Your lambda should be sending the results to the SQS queue that then is processed by the response processor.  Check to make sure your lambda has this destination set up.
-2. Next check the logs of the response processor, this is the most likely place of error.  If your results are sent in the wrong format, the response processor will log it.
-3. Next check if the result is being populated to DynamoDB.  If it is, great, it's likely just the manager lambda not properly decrypting and returning the results via the API. If not, it's worth doing deeper debugging in the response processor to check for code bugs or other errors.  See APM Instructions.
-4. If you check all these spots, but none show an indication of failure, it's probably worth doing deeper debugging in the code of the response processor, and manager lambda, depending on what is not working.
+1. Next check the logs of the response processor, this is the most likely place of error.  If your results are sent in the wrong format, the response processor will log it.
+1. Next check if the result is being populated to DynamoDB.  If it is, great, it's likely just the manager lambda not properly decrypting and returning the results via the API. If not, it's worth doing deeper debugging in the response processor to check for code bugs or other errors.  See APM Instructions.
+1. If you check all these spots, but none show an indication of failure, it's probably worth doing deeper debugging in the code of the response processor, and manager lambda, depending on what is not working.
