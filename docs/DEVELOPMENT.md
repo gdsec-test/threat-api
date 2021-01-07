@@ -134,6 +134,8 @@ The input to the lambda will be a structure like the following
 }
 ```
 
+To see the body of a requested job, reference the [API Usage](USAGE.md#Requests) docs.
+
 ### Output
 
 The output you must return after completing your lambda will be the following
