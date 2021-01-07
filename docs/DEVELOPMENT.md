@@ -130,11 +130,15 @@ The input to the lambda will be a structure like the following
 ```json
 {
   "job_id": "string", // Job id you are processing
-  "original_request": events.APIGatewayProxyRequest // The original API Gateway request for the job.  The body of the original API request will be in original_request.body as a string
+  "original_request": events.APIGatewayProxyRequest // The original API Gateway request for the job.
 }
 ```
 
-To see the body of a requested job, reference the [API Usage](USAGE.md#Requests) docs.
+A few notes about the original request:
+
+* The body of the original API request will be in original_request.body as a string
+  * For the schema of a requested job, reference the [API Usage](USAGE.md#Requests) docs.
+* The JWT will either be passed in via a cookie or authorization header.  This means you must not log out the full `original_request` as it will contain the sensitive and private JWT.  You can use the `toolbox` library to pull out the JWT if you are writing your lambda in go.  You can then call the standard function `Authorize` (in the go toolbox or language equivalent) to check for permissions.
 
 ### Output
 
