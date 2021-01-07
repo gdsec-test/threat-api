@@ -83,8 +83,9 @@ func (j *JobDBEntry) Decrypt(ctx context.Context, t *toolbox.Toolbox) {
 
 // JobRequest contains information to request a job to be performed
 type JobRequest struct {
-	Modules []string // List of modules to run
-	IOCs    []string // List of IOCs
+	Modules []string `json:"modules"`  // List of modules to run
+	IOCs    []string `json:"iocs"`     // List of IOCs
+	IOCType string   `json:"ioc_type"` // List of IOCs
 }
 
 // GetJobRequest Pulls out the job request from a AWS proxy event
