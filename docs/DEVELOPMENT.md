@@ -130,7 +130,7 @@ The input to the lambda will be a structure like the following
 ```json
 {
   "job_id": "string", // Job id you are processing
-  "original_request": events.APIGatewayProxyRequest // The original API Gateway request for the job
+  "original_request": events.APIGatewayProxyRequest // The original API Gateway request for the job.  The body of the original API request will be in original_request.body as a string
 }
 ```
 
