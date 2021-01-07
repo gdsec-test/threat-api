@@ -9,11 +9,11 @@ import (
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
+	"github.com/gdcorp-infosec/threat-util/lambda/toolbox"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/oschwald/geoip2-golang"
 	"github.com/sirupsen/logrus"
-	"github.secureserver.net/threat/util/lambda/toolbox"
 
 	// This line adds apm tracing to this lambda
 	// Yep, it's that simple!

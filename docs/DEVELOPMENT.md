@@ -34,7 +34,7 @@ should be `sso-jwt` followed by the JWT, separated by a space character.
 
 ### Authorization
 
-* You can use the [util lambda](https://github.secureserver.net/threat/util/tree/master/lambda) tools to check authorization in individual lambdas (using a specified list of JOMAX AD groups).
+* You can use the [util lambda](https://github.com/gdcorp-infosec/threat-util/tree/master/lambda) tools to check authorization in individual lambdas (using a specified list of JOMAX AD groups).
 
 ### Standards / Best Practices
 
@@ -97,7 +97,7 @@ pre-commit run -a
 
 ### Go Env setup
 
-Because we rely on internal (non public) libraries like the [util](https://github.secureserver.net/threat/util) library, you need to configure go to be able to authenticate and download those libraries.
+Because we rely on internal (non public) libraries like the [util](https://github.com/gdcorp-infosec/threat-util) library, you need to configure go to be able to authenticate and download those libraries.
 
 First we need to have git use ssh instead of prompt for user/pass for private repos:
 

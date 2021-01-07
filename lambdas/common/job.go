@@ -6,9 +6,9 @@ import (
 	"encoding/json"
 
 	"github.com/aws/aws-lambda-go/events"
+	"github.com/gdcorp-infosec/threat-util/lambda/toolbox"
 	"github.com/godaddy/asherah/go/appencryption"
 	"github.com/opentracing/opentracing-go"
-	"github.secureserver.net/threat/util/lambda/toolbox"
 )
 
 // JobSNSMessage is the structure sent via the SNS topic to represent a job ready for processing
