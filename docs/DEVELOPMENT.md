@@ -118,3 +118,30 @@ Then set this env var whenever you run `go get`.  You may even need to run it mu
 ```sh
 export GOPRIVATE=github.secureserver.net
 ```
+
+## Writing a lambda
+
+Your lambda can be written in whatever language as long as it follows these input/output guidelines.
+
+### Input
+
+The input to the lambda will be a structure like the following
+
+```json
+{
+  "job_id": "string", // Job id you are processing
+  "original_request": events.APIGatewayProxyRequest // The original API Gateway request for the job
+}
+```
+
+### Output
+
+The output you must return after completing your lambda will be the following
+
+```json
+{
+  "job_id": "string", // The job ID that this data should be added to
+  "module_name": "string", // The name of this module
+  "response": "string", // Marshalled response data
+}
+```
