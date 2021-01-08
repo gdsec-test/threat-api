@@ -30,13 +30,16 @@ func handler(ctx context.Context, request events.SQSEvent) (string, error) {
 	t = toolbox.GetToolbox()
 	t.Logger.SetFormatter(&logrus.JSONFormatter{})
 
-	// TODO: Add tracing
+	var span opentracing.Span
 	for _, sqsRecord := range request.Records {
+		span, ctx = opentracing.StartSpanFromContext(ctx, "ProcessSQSEvent")
 		// Try to unmarshal body
 		completedLambdaData := LambdaDestination{}
 		err := json.Unmarshal([]byte(sqsRecord.Body), &completedLambdaData)
 		if err != nil {
-			t.Logger.WithFields(logrus.Fields{"error": err, "body": string(sqsRecord.Body)}).Error("Error unmarshaling completed job data")
+			t.Logger.WithFields(logrus.Fields{"error": err, "body": sqsRecord.Body}).Error("Error unmarshaling completed job data")
+			span.LogKV("error", err)
+			span.Finish()
 			continue
 		}
 
@@ -48,18 +51,23 @@ func handler(ctx context.Context, request events.SQSEvent) (string, error) {
 
 		// Process every completed job from the passed in data
 		for i, completedJob := range completedLambdaData.ResponsePayload {
+			span, ctx = opentracing.StartSpanFromContext(ctx, "ProcessCompletedJob")
 			// Set module name to be the lambda name if this job doesn't have a module name
 			if completedJob.ModuleName == "" {
 				// Get module name from ARN
 				completedLambdaData.ResponsePayload[i].ModuleName = lambdaName
 			}
+			span.LogKV("moduleName", completedJob.ModuleName)
+			span.LogKV("jobID", completedJob.JobID)
 
-			t.Logger.WithFields(logrus.Fields{"moduleName": completedJob.ModuleName, "requestBody": sqsRecord.Body}).Info("Processing module response")
+			t.Logger.WithFields(logrus.Fields{"moduleName": completedJob.ModuleName, "jobData": completedJob}).Info("Processing module response")
 			_, err = processCompletedJob(ctx, completedJob)
 			if err != nil {
 				t.Logger.WithError(err).Error("Error processing response")
 			}
+			span.Finish()
 		}
+		span.Finish()
 	}
 	return "", nil
 }
