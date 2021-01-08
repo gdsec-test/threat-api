@@ -14,7 +14,22 @@ import (
 // This make it easy to call old triage modules with minimal code changes.
 // To do this, this function converts an AWS SNS event to the legacy triage interface, then
 // converts the response to what we expect for the response processor.
-func AWSToTriage(ctx context.Context, module triage.Module, request events.SNSEventRecord) (*common.CompletedJobData, error) {
+func AWSToTriage(ctx context.Context, module triage.Module, request events.SNSEvent) ([]*common.CompletedJobData, error) {
+	ret := []*common.CompletedJobData{}
+
+	for _, event := range request.Records {
+		completedJobData, err := triageSNSEvent(ctx, module, event)
+		if err != nil {
+			return nil, fmt.Errorf("error processing event: %w", err)
+		}
+		ret = append(ret, completedJobData)
+	}
+
+	return ret, nil
+}
+
+// triageSNSEvent converts the aws to legacy interface for a single job
+func triageSNSEvent(ctx context.Context, module triage.Module, request events.SNSEventRecord) (*common.CompletedJobData, error) {
 	// Unmarshal the SNS job message
 	jobMessage := common.JobSNSMessage{}
 	err := json.Unmarshal([]byte(request.SNS.Message), &jobMessage)
