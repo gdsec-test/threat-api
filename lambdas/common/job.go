@@ -18,9 +18,13 @@ type JobMessage struct {
 
 // CompletedJobData is a set of completed data from a job
 type CompletedJobData struct {
-	JobID      string `json:"job_id" dynamodbav:"job_id"`
 	ModuleName string `json:"module_name" dynamodbav:"module_name"`
-	Response   string `json:"response" dynamodbav:"response"`
+	// Note that a completed job can contain data for multiple jobs, that is
+	// why this is an array
+	JobData []struct {
+		JobID    string `json:"job_id" dynamodbav:"job_id"`
+		Response string `json:"response" dynamodbav:"response"`
+	}
 }
 
 // JobDBEntry is a job entry stored in the database

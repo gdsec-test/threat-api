@@ -9,6 +9,7 @@ require (
 	github.com/opentracing/opentracing-go v1.1.0
 	github.com/oschwald/geoip2-golang v1.4.0
 	github.com/sirupsen/logrus v1.7.0
+	github.com/vertoforce/regexgrouphelp v0.1.1
 	github.secureserver.net/threat/util v0.0.0-20201219221312-4d637474fc3d
 	go.elastic.co/apm v1.9.0
 	go.elastic.co/apm/module/apmlambda v1.8.0
