@@ -16,10 +16,6 @@ import (
 	_ "go.elastic.co/apm/module/apmlambda"
 )
 
-const (
-	snsTopicARNParameterName = "/ThreatTools/JobRequests"
-)
-
 var t *toolbox.Toolbox
 
 // Lambda function to take a completed job data and insert it in to the database
