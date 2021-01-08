@@ -93,6 +93,16 @@ Resources:
         - Key: doNotShutDown
           Value: true
 
+  geoipLambdaEventInvokeConfig:
+    DependsOn: geoipLambdaFunction
+    Type: AWS::Lambda::EventInvokeConfig
+    Properties:
+      DestinationConfig:
+        OnSuccess:
+          Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobResponses
+      FunctionName: geoip
+      Qualifier: $LATEST
+
   tester1LambdaFunction:
     Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
     Properties:
@@ -161,3 +171,13 @@ Resources:
       Tags:
         - Key: doNotShutDown
           Value: true
+
+  tester1LambdaEventInvokeConfig:
+    DependsOn: tester1LambdaFunction
+    Type: AWS::Lambda::EventInvokeConfig
+    Properties:
+      DestinationConfig:
+        OnSuccess:
+          Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobResponses
+      FunctionName: tester1
+      Qualifier: $LATEST

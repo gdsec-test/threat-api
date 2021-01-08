@@ -43,6 +43,16 @@ Resources:
       Protocol: lambda
       TopicArn: !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:JobRequests
 
+  geoipLambdaEventInvokeConfig:
+    DependsOn: geoipLambdaFunction
+    Type: AWS::Lambda::EventInvokeConfig
+    Properties:
+      DestinationConfig:
+        OnSuccess:
+          Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobResponses
+      FunctionName: geoip
+      Qualifier: $LATEST
+
   tester1LambdaFunction:
     Type: AWS::Lambda::Function
     Properties:
@@ -73,3 +83,13 @@ Resources:
       Endpoint: !GetAtt tester1LambdaFunction.Arn
       Protocol: lambda
       TopicArn: !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:JobRequests
+
+  tester1LambdaEventInvokeConfig:
+    DependsOn: tester1LambdaFunction
+    Type: AWS::Lambda::EventInvokeConfig
+    Properties:
+      DestinationConfig:
+        OnSuccess:
+          Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobResponses
+      FunctionName: tester1
+      Qualifier: $LATEST
