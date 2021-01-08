@@ -20,5 +20,7 @@ type LambdaDestination struct {
 		StatusCode      int64  `json:"statusCode"`
 		ExecutedVersion string `json:"executedVersion"`
 	} `json:"responseContext"`
-	ResponsePayload common.CompletedJobData `json:"responsePayload"`
+	// Note that a completed job can contain data for multiple jobs, that is
+	// why this is an array
+	ResponsePayload []common.CompletedJobData `json:"responsePayload"`
 }

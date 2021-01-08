@@ -24,7 +24,8 @@ var (
 	lambdaNameRegex = regexp.MustCompile(`\w+:\w+:\w+:.*?:.*?:.*?:(?P<lambdaName>.*?):`)
 )
 
-// Lambda function to take a completed job data and insert it in to the database
+// handle is a lambda function that takes an array of SQS events, and processes every CompletedJob within that SQS event.
+// So each event in is an array of SQS events, and each SQS event has an array of completed job data.
 func handler(ctx context.Context, request events.SQSEvent) (string, error) {
 	t = toolbox.GetToolbox()
 	t.Logger.SetFormatter(&logrus.JSONFormatter{})
@@ -35,23 +36,29 @@ func handler(ctx context.Context, request events.SQSEvent) (string, error) {
 		completedLambdaData := LambdaDestination{}
 		err := json.Unmarshal([]byte(sqsRecord.Body), &completedLambdaData)
 		if err != nil {
-			t.Logger.WithFields(logrus.Fields{
-				"error": err,
-				"body":  string(sqsRecord.Body),
-			}).Error("Error unmarshaling completed job data")
+			t.Logger.WithFields(logrus.Fields{"error": err, "body": string(sqsRecord.Body)}).Error("Error unmarshaling completed job data")
 			continue
 		}
-		if completedLambdaData.ResponsePayload.ModuleName == "" {
-			// Get module name from ARN
-			if groups, ok := regexgrouphelp.FindRegexGroups(lambdaNameRegex, sqsRecord.EventSourceARN)["lambdaName"]; ok && len(groups) > 0 {
-				completedLambdaData.ResponsePayload.ModuleName = groups[0]
-			}
-		}
-		t.Logger.WithFields(logrus.Fields{"moduleName": completedLambdaData.ResponsePayload.ModuleName, "requestBody": sqsRecord.Body}).Info("Processing module response")
 
-		_, err = processCompletedJob(ctx, completedLambdaData.ResponsePayload)
-		if err != nil {
-			t.Logger.WithError(err).Error("Error processing response")
+		// Get lambda name from the event source ARN
+		lambdaName := ""
+		if groups, ok := regexgrouphelp.FindRegexGroups(lambdaNameRegex, sqsRecord.EventSourceARN)["lambdaName"]; ok && len(groups) > 0 {
+			lambdaName = groups[0]
+		}
+
+		// Process every completed job from the passed in data
+		for i, completedJob := range completedLambdaData.ResponsePayload {
+			// Set module name to be the lambda name if this job doesn't have a module name
+			if completedJob.ModuleName == "" {
+				// Get module name from ARN
+				completedLambdaData.ResponsePayload[i].ModuleName = lambdaName
+			}
+
+			t.Logger.WithFields(logrus.Fields{"moduleName": completedJob.ModuleName, "requestBody": sqsRecord.Body}).Info("Processing module response")
+			_, err = processCompletedJob(ctx, completedJob)
+			if err != nil {
+				t.Logger.WithError(err).Error("Error processing response")
+			}
 		}
 	}
 	return "", nil
