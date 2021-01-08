@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/gdcorp-infosec/threat-api/apis/triagec/triage"
@@ -48,7 +49,7 @@ func triageSNSEvent(ctx context.Context, module triage.Module, request events.SN
 	jobRequest := common.GetJobRequest(jobMessage.OriginalRequest)
 
 	// Check if our module should be run
-	shouldRun := func() bool {
+	ourModuleMentioned := func() bool {
 		for _, moduleName := range jobRequest.Modules {
 			if moduleName == response.ModuleName {
 				return true
@@ -56,7 +57,16 @@ func triageSNSEvent(ctx context.Context, module triage.Module, request events.SN
 		}
 		return false
 	}
-	if !shouldRun() {
+	// Check if our module supports the IOC type
+	weSupportThisIOCType := func() bool {
+		for _, supportedType := range module.Supports() {
+			if supportedType == triage.IOCType(strings.ToLower(jobRequest.IOCType)) {
+				return true
+			}
+		}
+		return false
+	}
+	if !ourModuleMentioned() || !weSupportThisIOCType() {
 		// TODO: Change this to something else?
 		// For now just return nothing
 		return response, nil
