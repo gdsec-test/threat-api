@@ -61,6 +61,13 @@ func handler(ctx context.Context, request events.SQSEvent) (string, error) {
 			span.LogKV("jobID", completedJob.JobID)
 
 			t.Logger.WithFields(logrus.Fields{"moduleName": completedJob.ModuleName, "jobData": completedJob}).Info("Processing module response")
+
+			if completedJob.Response == "" {
+				// Skip blank response
+				span.Finish()
+				continue
+			}
+
 			_, err = processCompletedJob(ctx, completedJob)
 			if err != nil {
 				t.Logger.WithError(err).Error("Error processing response")
