@@ -89,9 +89,12 @@ type JobRequest struct {
 }
 
 // GetJobRequest Pulls out the job request from a AWS proxy event
-func GetJobRequest(event events.APIGatewayProxyRequest) JobRequest {
+func GetJobRequest(event events.APIGatewayProxyRequest) (JobRequest, error) {
 	jobRequest := JobRequest{}
-	json.Unmarshal([]byte(event.Body), &jobRequest)
+	err := json.Unmarshal([]byte(event.Body), &jobRequest)
+	if err != nil {
+		return JobRequest{}, err
+	}
 
-	return jobRequest
+	return jobRequest, nil
 }
