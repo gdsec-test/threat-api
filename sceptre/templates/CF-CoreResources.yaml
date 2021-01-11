@@ -69,6 +69,70 @@ Resources:
       Runtime: python3.7
       Timeout: 15
 
+  TeamKMSKey:
+    Type: AWS::KMS::Key
+    Properties:
+      Enabled: true
+      EnableKeyRotation: false
+      PendingWindowInDays: 7
+      KeyPolicy:
+        Version: 2012-10-17
+        Statement:
+          - Sid: Enable IAM Administrator Permissions
+            Effect: Allow
+            Principal:
+              AWS:
+                - !Sub arn:aws:iam::${AWS::AccountId}:root
+            Action:
+              - "kms:Create*"
+              - "kms:Describe*"
+              - "kms:Enable*"
+              - "kms:List*"
+              - "kms:Put*"
+              - "kms:Update*"
+              - "kms:Revoke*"
+              - "kms:Disable*"
+              - "kms:Get*"
+              - "kms:Delete*"
+              - "kms:TagResource"
+              - "kms:UntagResource"
+              - "kms:ScheduleKeyDeletion"
+              - "kms:CancelKeyDeletion"
+            Resource: '*'
+          - Sid: Enable Use of the key from LOB account
+            Effect: Allow
+            Principal:
+              AWS:
+                - !Sub arn:aws:iam::${AWS::AccountId}:root
+            Action:
+              - "kms:Encrypt"
+              - "kms:Decrypt"
+              - "kms:ReEncrypt*"
+              - "kms:GenerateDataKey*"
+              - "kms:DescribeKey"
+              - "kms:CreateGrant"
+              - "kms:ListGrants"
+              - "kms:RevokeGrant"
+            Resource: '*'
+          - Sid: Enable use of the key from SNS
+            Effect: Allow
+            Principal:
+              Service: sns.amazonaws.com
+            Action:
+              - "kms:Encrypt"
+              - "kms:Decrypt"
+              - "kms:ReEncrypt*"
+              - "kms:GenerateDataKey*"
+              - "kms:DescribeKey"
+            Resource: '*'
+
+  TeamKMSKeyParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: /AdminParams/Team/KMSKey
+      Type: String
+      Value: !GetAtt TeamKMSKey.Arn
+
   AuthorizerRole:
     Type: AWS::IAM::Role
     Properties:
@@ -116,6 +180,26 @@ Resources:
               - dynamodb:DeleteItem
               - dynamodb:PutItem
               - dynamodb:UpdateItem
+            Resource: "*"
+
+  ThreatPolicyKMS:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      ManagedPolicyName: GD-AWS-KMS-USER
+      Description: Allows KMS usage
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action:
+              - kms:Encrypt
+              - kms:Decrypt
+              - kms:ReEncrypt*
+              - kms:GenerateDataKey*
+              - kms:DescribeKey
+              - kms:CreateGrant
+              - kms:ListGrants
+              - kms:RevokeGrant
             Resource: "*"
 
   ThreatPolicySNS:
@@ -169,6 +253,7 @@ Resources:
         - arn:aws:iam::aws:policy/AmazonSSMReadOnlyAccess
         - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
         - !Ref ThreatPolicyDynamoDB
+        - !Ref ThreatPolicyKMS
         - !Ref ThreatPolicySNS
       AssumeRolePolicyDocument:
         Version: 2012-10-17
@@ -189,6 +274,7 @@ Resources:
         - arn:aws:iam::aws:policy/service-role/AWSLambdaSQSQueueExecutionRole
         - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
         - !Ref ThreatPolicyDynamoDB
+        - !Ref ThreatPolicyKMS
       AssumeRolePolicyDocument:
         Version: 2012-10-17
         Statement:

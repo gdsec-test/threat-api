@@ -118,3 +118,36 @@ Then set this env var whenever you run `go get`.  You may even need to run it mu
 ```sh
 export GOPRIVATE=github.secureserver.net
 ```
+
+## Writing a lambda
+
+Your lambda can be written in whatever language as long as it follows these input/output guidelines.
+
+### Input
+
+The input to the lambda will be a structure like the following
+
+```json
+{
+  "job_id": "string", // Job id you are processing
+  "original_request": events.APIGatewayProxyRequest // The original API Gateway request for the job.
+}
+```
+
+A few notes about the original request:
+
+* The body of the original API request will be in original_request.body as a string
+  * For the schema of a requested job, reference the [API Usage](USAGE.md#Requests) docs.
+* The JWT will either be passed in via a cookie or authorization header.  This means you must not log out the full `original_request` as it will contain the sensitive and private JWT.  You can use the `toolbox` library to pull out the JWT if you are writing your lambda in go.  You can then call the standard function `Authorize` (in the go toolbox or language equivalent) to check for permissions.
+
+### Output
+
+The output you must return after completing your lambda will be the following
+
+```json
+{
+  "job_id": "string", // The job ID that this data should be added to
+  "module_name": "string", // The name of this module
+  "response": "string", // Marshalled response data
+}
+```

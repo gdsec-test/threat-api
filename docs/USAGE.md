@@ -39,7 +39,10 @@ Requests to the Threat API are specified using the following request format:
     "gbailey",
     "dcomes",
     "jmwhite"
-  ]
+  ],
+  "modules": [
+    "whois",
+  ],
 }
 ```
 

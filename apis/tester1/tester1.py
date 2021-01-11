@@ -20,22 +20,38 @@ except Exception:
     JOB_RESPONSES_QUEUE = "UNKNOWN"
 
 
-def process(job):
+def process(job_request):
     """Process an individual record"""
 
-    log.info("Job (request): %s", json.dumps(job))
+    # job_request has JWT; don't log
+    # log.info("Job (request): %s", json.dumps(job_request))
 
-    job["response"] = {}
-    job["response"]["tester1"] = {
-        "ts": str(time.time()),
-        "output": "Hello from tester1!",
-    }
+    try:
+        job_id = job_request["jobID"]
+        job_request_body = json.loads(job_request["original_request"]["body"])
+    except Exception:
+        job_id = "UNKNOWN"
+        job_request_body = {}
 
-    log.info("Job (response): %s", json.dumps(job))
+    log.info("Job (request body): %s", json.dumps(job_request_body))
+
+    job_response = {}
+
+    job_response["job_id"] = job_id
+    job_response["module_name"] = "tester1"
+    job_response["response"] = json.dumps(
+        {
+            "ts": str(time.time()),
+            "output": "Hello from tester1!",
+            "job_request_body": job_request_body,
+        }
+    )
+
+    log.info("Job (response): %s", json.dumps(job_response))
 
     try:
         boto3.client("sqs").send_message(
-            QueueUrl=JOB_RESPONSES_QUEUE, MessageBody=json.dumps(job)
+            QueueUrl=JOB_RESPONSES_QUEUE, MessageBody=json.dumps(job_response)
         )
     except Exception:
         log.exception("SQS exception:")
@@ -45,7 +61,8 @@ def process(job):
 def handler(event, context):
     """Route the request to the right function for processing"""
 
-    log.info("Event: %s", json.dumps(event))
+    # event has JWT; don't log
+    # log.info("Event: %s", json.dumps(event))
 
     try:
         for record in event["Records"]:
