@@ -128,3 +128,13 @@ Resources:
       Endpoint: !GetAtt whoisLambdaFunction.Arn
       Protocol: lambda
       TopicArn: !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:JobRequests
+
+  whoisLambdaEventInvokeConfig:
+    DependsOn: whoisLambdaFunction
+    Type: AWS::Lambda::EventInvokeConfig
+    Properties:
+      DestinationConfig:
+        OnSuccess:
+          Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobResponses
+      FunctionName: whois
+      Qualifier: $LATEST

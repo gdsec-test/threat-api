@@ -254,3 +254,13 @@ Resources:
       Tags:
         - Key: doNotShutDown
           Value: true
+
+  whoisLambdaEventInvokeConfig:
+    DependsOn: whoisLambdaFunction
+    Type: AWS::Lambda::EventInvokeConfig
+    Properties:
+      DestinationConfig:
+        OnSuccess:
+          Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobResponses
+      FunctionName: whois
+      Qualifier: $LATEST
