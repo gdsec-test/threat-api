@@ -1,4 +1,5 @@
-package triagec
+// Package triagelegacyconnector provides an adapter interface for the legacy triage interface to the new AWS interface
+package triagelegacyconnector
 
 import (
 	"context"
@@ -7,8 +8,8 @@ import (
 	"strings"
 
 	"github.com/aws/aws-lambda-go/events"
-	"github.com/gdcorp-infosec/threat-api/apis/triagec/triage"
 	"github.com/gdcorp-infosec/threat-api/lambdas/common"
+	"github.com/gdcorp-infosec/threat-api/lambdas/common/triagelegacyconnector/triage"
 )
 
 // AWSToTriage acts as an interface from our new interface to the old threat api triage interface.
