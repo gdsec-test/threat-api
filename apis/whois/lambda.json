@@ -1,0 +1,6 @@
+{
+  "handler": "whois",
+  "memory-size": "256",
+  "runtime": "go1.x",
+  "timeout": "15"
+}

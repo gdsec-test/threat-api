@@ -3,6 +3,7 @@ package common
 
 import (
 	"context"
+	"encoding/json"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/godaddy/asherah/go/appencryption"
@@ -10,8 +11,8 @@ import (
 	"github.secureserver.net/threat/util/lambda/toolbox"
 )
 
-// JobMessage is the structure sent via the SNS topic to represent a job ready for processing
-type JobMessage struct {
+// JobSNSMessage is the structure sent via the SNS topic to represent a job ready for processing
+type JobSNSMessage struct {
 	JobID           string                        `json:"jobID"`
 	OriginalRequest events.APIGatewayProxyRequest `json:"original_request"`
 }
@@ -55,4 +56,22 @@ func (j *JobDBEntry) Decrypt(ctx context.Context, t *toolbox.Toolbox) {
 			j.DecryptedResponses[moduleName] = string(decryptedData)
 		}
 	}
+}
+
+// JobRequest contains information to request a job to be performed
+type JobRequest struct {
+	Modules []string `json:"modules"`  // List of modules to run
+	IOCs    []string `json:"iocs"`     // List of IOCs
+	IOCType string   `json:"ioc_type"` // List of IOCs
+}
+
+// GetJobRequest Pulls out the job request from a AWS proxy event
+func GetJobRequest(event events.APIGatewayProxyRequest) (JobRequest, error) {
+	jobRequest := JobRequest{}
+	err := json.Unmarshal([]byte(event.Body), &jobRequest)
+	if err != nil {
+		return JobRequest{}, err
+	}
+
+	return jobRequest, nil
 }
