@@ -4,49 +4,82 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"regexp"
 
+	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/aws/aws-sdk-go/service/dynamodb/expression"
 	"github.com/gdcorp-infosec/threat-api/lambdas/common"
 	"github.com/opentracing/opentracing-go"
 	"github.com/sirupsen/logrus"
+	"github.com/vertoforce/regexgrouphelp"
 	"github.secureserver.net/threat/util/lambda/toolbox"
 	_ "go.elastic.co/apm/module/apmlambda"
 )
 
-const (
-	snsTopicARNParameterName = "/ThreatTools/JobRequests"
-)
-
 var t *toolbox.Toolbox
 
-// Lambda function to take a completed job data and insert it in to the database
-func handler(ctx context.Context, request common.SQSCompletedJob) (string, error) {
-	t = toolbox.GetToolbox()
+var (
+	lambdaNameRegex = regexp.MustCompile(`\w+:\w+:\w+:.*?:.*?:.*?:(?P<lambdaName>.*?):`)
+)
 
-	// TODO: Add tracing
+// handle is a lambda function that takes an array of SQS events, and processes every CompletedJob within that SQS event.
+// So each event in is an array of SQS events, and each SQS event has an array of completed job data.
+func handler(ctx context.Context, request events.SQSEvent) (string, error) {
+	t = toolbox.GetToolbox()
+	t.Logger.SetFormatter(&logrus.JSONFormatter{})
+
+	var span opentracing.Span
 	for _, sqsRecord := range request.Records {
+		span, ctx = opentracing.StartSpanFromContext(ctx, "ProcessSQSEvent")
 		// Try to unmarshal body
-		completedJobData := common.CompletedJobData{}
-		err := json.Unmarshal([]byte(sqsRecord.Body), &completedJobData)
+		completedLambdaData := LambdaDestination{}
+		err := json.Unmarshal([]byte(sqsRecord.Body), &completedLambdaData)
 		if err != nil {
-			t.Logger.WithFields(logrus.Fields{
-				"error": err,
-				"body":  string(sqsRecord.Body),
-			}).Error("Error unmarshaling completed job data")
+			t.Logger.WithFields(logrus.Fields{"error": err, "body": sqsRecord.Body}).Error("Error unmarshaling completed job data")
+			span.LogKV("error", err)
+			span.Finish()
 			continue
 		}
-		t.Logger.WithField("moduleName", completedJobData.ModuleName).Info("Processing module response")
 
-		_, err = processCompletedJob(ctx, completedJobData)
-		if err != nil {
-			t.Logger.WithError(err).Error("Error processing response")
+		// Get lambda name from the event source ARN
+		lambdaName := ""
+		if groups, ok := regexgrouphelp.FindRegexGroups(lambdaNameRegex, sqsRecord.EventSourceARN)["lambdaName"]; ok && len(groups) > 0 {
+			lambdaName = groups[0]
 		}
+
+		// Process every completed job from the passed in data
+		for i, completedJob := range completedLambdaData.ResponsePayload {
+			span, ctx = opentracing.StartSpanFromContext(ctx, "ProcessCompletedJob")
+			// Set module name to be the lambda name if this job doesn't have a module name
+			if completedJob.ModuleName == "" {
+				// Get module name from ARN
+				completedLambdaData.ResponsePayload[i].ModuleName = lambdaName
+			}
+			span.LogKV("moduleName", completedJob.ModuleName)
+			span.LogKV("jobID", completedJob.JobID)
+
+			t.Logger.WithFields(logrus.Fields{"moduleName": completedJob.ModuleName, "jobData": completedJob}).Info("Processing module response")
+
+			if completedJob.Response == "" {
+				// Skip blank response
+				span.Finish()
+				continue
+			}
+
+			_, err = processCompletedJob(ctx, completedJob)
+			if err != nil {
+				t.Logger.WithError(err).Error("Error processing response")
+			}
+			span.Finish()
+		}
+		span.Finish()
 	}
 	return "", nil
 }
 
+// processCompleteJob takes the completed job data, encrypts the response, and adds it to the appropriate dynamoDB entry
 func processCompletedJob(ctx context.Context, request common.CompletedJobData) (string, error) {
 	if request.JobID == "" || request.ModuleName == "" {
 		return "", fmt.Errorf("missing jobID or module name")

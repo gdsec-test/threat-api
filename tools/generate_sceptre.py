@@ -100,6 +100,16 @@ CF_RESOURCES_BLOCK = dedent(
         Endpoint: !GetAtt __NAME__LambdaFunction.Arn
         Protocol: lambda
         TopicArn: !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:JobRequests
+
+    __NAME__LambdaEventInvokeConfig:
+      DependsOn: __NAME__LambdaFunction
+      Type: AWS::Lambda::EventInvokeConfig
+      Properties:
+        DestinationConfig:
+          OnSuccess:
+            Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobResponses
+        FunctionName: __NAME__
+        Qualifier: $LATEST
     """
 )
 
@@ -200,6 +210,16 @@ SC_RESOURCES_BLOCK = dedent(
         Tags:
           - Key: doNotShutDown
             Value: true
+
+    __NAME__LambdaEventInvokeConfig:
+      DependsOn: __NAME__LambdaFunction
+      Type: AWS::Lambda::EventInvokeConfig
+      Properties:
+        DestinationConfig:
+          OnSuccess:
+            Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobResponses
+        FunctionName: __NAME__
+        Qualifier: $LATEST
     """
 )
 

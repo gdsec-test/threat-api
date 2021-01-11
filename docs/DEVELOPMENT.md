@@ -142,12 +142,17 @@ A few notes about the original request:
 
 ### Output
 
-The output you must return after completing your lambda will be the following
+The output you must return after completing your lambda will be the following.
+This is denoted as a `CompletedJob`.  Note that you pass an array of completed jobs because
+each lambda can technically accept and array of jobs to handle.
 
 ```json
-{
+[
+  {
   "job_id": "string", // The job ID that this data should be added to
   "module_name": "string", // The name of this module
   "response": "string", // Marshalled response data
-}
+  },
+  ...
+]
 ```

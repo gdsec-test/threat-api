@@ -7,17 +7,8 @@ import logging
 import sys
 import time
 
-import boto3
-
 log = logging.getLogger()
 log.setLevel(logging.INFO)
-
-try:
-    JOB_RESPONSES_QUEUE = boto3.client("ssm").get_parameter(
-        Name="/ThreatTools/JobResponses"
-    )["Parameter"]["Value"]
-except Exception:
-    JOB_RESPONSES_QUEUE = "UNKNOWN"
 
 
 def process(job_request):
@@ -49,12 +40,7 @@ def process(job_request):
 
     log.info("Job (response): %s", json.dumps(job_response))
 
-    try:
-        boto3.client("sqs").send_message(
-            QueueUrl=JOB_RESPONSES_QUEUE, MessageBody=json.dumps(job_response)
-        )
-    except Exception:
-        log.exception("SQS exception:")
+    return job_response
 
 
 # pylint: disable=unused-argument
@@ -64,9 +50,13 @@ def handler(event, context):
     # event has JWT; don't log
     # log.info("Event: %s", json.dumps(event))
 
+    # The input event from SNS contains a list of records, so call process()
+    # for each one and return a list of the results.
+
     try:
-        for record in event["Records"]:
-            process(json.loads(record["Sns"]["Message"]))
+        return [
+            process(json.loads(record["Sns"]["Message"])) for record in event["Records"]
+        ]
     except Exception:
         log.exception("Unable to parse event body:")
 
