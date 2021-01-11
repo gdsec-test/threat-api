@@ -22,6 +22,10 @@ Parameters:
     Type: String
     Description: SHA1 hash of the tester1 lambda source
     Default: ""
+  whoisSHA1:
+    Type: String
+    Description: SHA1 hash of the whois lambda source
+    Default: ""
 
 Resources:
   geoipLambdaFunction:
@@ -156,6 +160,75 @@ Resources:
           Value: !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:JobRequests
         - Key: Endpoint
           Value: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:tester1
+        - Key: Region
+          Value: !Sub ${AWS::Region}
+      Tags:
+        - Key: doNotShutDown
+          Value: true
+
+  whoisLambdaFunction:
+    Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
+    Properties:
+      ProductName: Lambda
+      ProvisioningArtifactName: 2.3.0
+      ProvisionedProductName: whoisLambdaFunction
+      ProvisioningParameters:
+        - Key: S3Bucket
+          Value: !Sub gd-${DevelopmentTeam}-${DevelopmentEnvironment}-code-bucket
+        - Key: S3Key
+          Value: !Sub whois/${whoisSHA1}
+        - Key: Handler
+          Value: whois
+        - Key: LambdaName
+          Value: whois
+        - Key: LambdaDescription
+          Value: !Sub whois lambda (${whoisSHA1})
+        - Key: MemorySize
+          Value: 256
+        - Key: Runtime
+          Value: go1.x
+        - Key: Timeout
+          Value: 15
+        - Key: CustomIAMRoleNameSuffix
+          Value: ThreatRole
+      Tags:
+        - Key: doNotShutDown
+          Value: true
+
+  whoisLambdaPermission:
+    DependsOn: whoisLambdaFunction
+    Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
+    Properties:
+      ProductName: LambdaPermission
+      ProvisioningArtifactName: 1.0.1
+      ProvisionedProductName: whoisLambdaPermission
+      ProvisioningParameters:
+        - Key: Action
+          Value: lambda:InvokeFunction
+        - Key: FunctionName
+          Value: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:whois
+        - Key: Principal
+          Value: sns.amazonaws.com
+        - Key: SourceArn
+          Value: !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:JobRequests
+      Tags:
+        - Key: doNotShutDown
+          Value: true
+
+  whoisSNSSubscription:
+    DependsOn: whoisLambdaFunction
+    Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
+    Properties:
+      ProductName: SNSSubscription
+      ProvisioningArtifactName: 1.0.1
+      ProvisionedProductName: whoisSNSSubscription
+      ProvisioningParameters:
+        - Key: Protocol
+          Value: lambda
+        - Key: TopicArn
+          Value: !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:JobRequests
+        - Key: Endpoint
+          Value: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:whois
         - Key: Region
           Value: !Sub ${AWS::Region}
       Tags:

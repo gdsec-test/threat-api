@@ -10,6 +10,10 @@ Parameters:
     Type: String
     Description: SHA1 hash of the tester1 lambda source
     Default: ""
+  whoisSHA1:
+    Type: String
+    Description: SHA1 hash of the whois lambda source
+    Default: ""
 
 Resources:
   geoipLambdaFunction:
@@ -71,5 +75,36 @@ Resources:
     Type: AWS::SNS::Subscription
     Properties:
       Endpoint: !GetAtt tester1LambdaFunction.Arn
+      Protocol: lambda
+      TopicArn: !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:JobRequests
+
+  whoisLambdaFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      Code:
+        S3Bucket: !Sub gd-threattools-${AWS::AccountId}-code-bucket
+        S3Key: !Sub whois/${whoisSHA1}
+      Description: !Sub whois lambda (${whoisSHA1})
+      FunctionName: whois
+      Handler: whois
+      MemorySize: 256
+      Role: !Sub arn:aws:iam::${AWS::AccountId}:role/threattools-custom-ThreatRole
+      Runtime: go1.x
+      Timeout: 15
+
+  whoisLambdaPermission:
+    DependsOn: whoisLambdaFunction
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:whois
+      Principal: sns.amazonaws.com
+      SourceArn: !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:JobRequests
+
+  whoisSNSSubscription:
+    DependsOn: whoisLambdaFunction
+    Type: AWS::SNS::Subscription
+    Properties:
+      Endpoint: !GetAtt whoisLambdaFunction.Arn
       Protocol: lambda
       TopicArn: !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:JobRequests
