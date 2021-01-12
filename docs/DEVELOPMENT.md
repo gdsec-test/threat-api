@@ -116,7 +116,7 @@ Then if you run `cat ~/.gitconfig` you should see this addition
 Then set this env var whenever you run `go get`.  You may even need to run it multiple times if you haven't run it recently.  A good rule of thumb is whenever you are getting a `410 GONE` error, run this command again
 
 ```sh
-export GOPRIVATE=github.secureserver.net
+export GOPRIVATE=github.secureserver.net,github.com
 ```
 
 ## Writing a lambda

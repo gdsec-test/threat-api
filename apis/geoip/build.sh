@@ -18,6 +18,6 @@ if [ ! -f GeoLite2-City.mmdb ]; then
     rmdir GeoLite2-City_20191217
 fi
 
-env GOPRIVATE=github.secureserver.net GOOS=linux GOARCH=amd64 go build
+env GOPRIVATE=github.secureserver.net,github.com GOOS=linux GOARCH=amd64 go build
 rm -f function.zip
 zip -9 function.zip geoip GeoLite2-City.mmdb
