@@ -26,7 +26,7 @@ do
     SHA1HASH=$(sha1sum "${LAMBDA}.go" | cut -d' ' -f1)
     echo ${SHA1HASH} > ${RESOURCES_DIR}/${LAMBDA}.sha1
 
-    env GOPRIVATE=github.secureserver.net,github.com GOOS=linux GOARCH=amd64 go build
+    env GOPRIVATE=github.secureserver.net,github.com/gdcorp-* GOOS=linux GOARCH=amd64 go build
 
     # Create ZIP file and upload to S3
     rm -f function.zip
