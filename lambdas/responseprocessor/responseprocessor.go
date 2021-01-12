@@ -15,7 +15,6 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"github.com/sirupsen/logrus"
 	"github.com/vertoforce/regexgrouphelp"
-	"github.secureserver.net/threat/util/lambda/toolbox"
 	_ "go.elastic.co/apm/module/apmlambda"
 )
 

@@ -160,8 +160,6 @@ github.secureserver.net/auth-contrib/go-auth v1.2.1/go.mod h1:AzLUi56S3nSh/vK+IG
 github.secureserver.net/threat/go-ldap v0.0.0-20201017001259-d06e7b5f7252 h1:bIUX4Cw94igHxeSu6Yl44a/9VRO1BKfUuBv8JtbadO0=
 github.secureserver.net/threat/go-ldap v0.0.0-20201017001259-d06e7b5f7252/go.mod h1:k7kUhrR6aWUC86oL8hc7yDnu4Lwr0mTYdOahKFmeW0g=
 github.secureserver.net/threat/hashtype v0.0.0-20190719164940-596969fc3cf6/go.mod h1:2D4idLZ4OSmyV6lm/WmZV2FRlvio6cCWYxYLfk8Lb3A=
-github.secureserver.net/threat/util v0.0.0-20201219221312-4d637474fc3d h1:KA143+JsNUTzGdEG7yRG2bqEEPP2SQh9oY3+jol/IZk=
-github.secureserver.net/threat/util v0.0.0-20201219221312-4d637474fc3d/go.mod h1:406ipyj1qO/+NQ25EY6uRYYhHSQCdssoxrXi/p0z194=
 go.elastic.co/apm v1.8.0 h1:AWEKpHwRal0yCMd4K8Oxy1HAa7xid+xq1yy+XjgoVU0=
 go.elastic.co/apm v1.8.0/go.mod h1:tCw6CkOJgkWnzEthFN9HUP1uL3Gjc/Ur6m7gRPLaoH0=
 go.elastic.co/apm v1.9.0 h1:uLOZniTuJ2rU2fFGiNI0ZswzKr9fryHDkNMV8iVDDDI=
