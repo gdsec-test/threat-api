@@ -103,6 +103,7 @@ First we need to have git use ssh instead of prompt for user/pass for private re
 
 ```sh
 git config --global url.git@github.secureserver.net:.insteadOf https://github.secureserver.net/
+git config --global url.git@github.com:gdcorp-.insteadOf https://github.com/gdcorp-
 ```
 
 Then if you run `cat ~/.gitconfig` you should see this addition
@@ -111,12 +112,14 @@ Then if you run `cat ~/.gitconfig` you should see this addition
 > cat ~/.gitconfig
 [url "git@github.secureserver.net:"]
         insteadOf = https://github.secureserver.net/
+[url "git@github.com:gdcorp-"]
+        insteadOf = https://github.com/gdcorp-
 ```
 
 Then set this env var whenever you run `go get`.  You may even need to run it multiple times if you haven't run it recently.  A good rule of thumb is whenever you are getting a `410 GONE` error, run this command again
 
 ```sh
-export GOPRIVATE=github.secureserver.net
+export GOPRIVATE=github.secureserver.net,github.com/gdcorp-*
 ```
 
 ## Writing a lambda
