@@ -305,11 +305,13 @@ for fn in sorted(lambdas.keys()):
     sc_config += expand_template(CONFIG_ENTRY, lambdas[fn], 2)
 sc_config += CONFIG_END
 
-open(
-    join(SCEPTRE_PATH, "config", "dev-private", "us-west-2", "SC-ServiceLambdas.yaml"),
-    "w",
-).write(sc_config.strip() + "\n")
-
+for environment in ["dev-private", "dev"]:
+    open(
+        join(
+            SCEPTRE_PATH, "config", environment, "us-west-2", "SC-ServiceLambdas.yaml"
+        ),
+        "w",
+    ).write(sc_config.strip() + "\n")
 
 sc_template = TEMPLATE_HEADER
 
