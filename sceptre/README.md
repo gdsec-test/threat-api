@@ -70,7 +70,7 @@
 
 1. Use [Cloud UI](https://cloud.int.godaddy.com/security/certs) to request a
    certificate for the FQDN to be used, such as
-   `api-private.threat.int.gdcorp.tools`.
+   `api-private.threat.int.dev-gdcorp.tools`.
 
 1. Download the certificate, private key, and certificate chain from Cloud UI
    to your local workstation.
@@ -78,11 +78,22 @@
 1. Run the following using the deployment role, such as
    `GD-AWS-USA-GD-ThreatTools-Dev-Private-Deploy`:
 
+   * DEV-PRIVATE
+
    ```
    aws acm import-certificate \
-       --certificate file://api-private.threat.int.gdcorp.tools.crt \
-       --private-key file://api-private.threat.int.gdcorp.tools.key \
-       --certificate-chain file://api-private.threat.int.gdcorp.tools_intermediate_chain.crt
+       --certificate file://api-private.threat.int.dev-gdcorp.tools.crt \
+       --private-key file://api-private.threat.int.dev-gdcorp.tools.key \
+       --certificate-chain file://api-private.threat.int.dev-gdcorp.tools_intermediate_chain.crt
+   ```
+
+   * DEV
+
+   ```
+   aws acm import-certificate \
+       --certificate file://api.threat.int.dev-gdcorp.tools.crt \
+       --private-key file://api.threat.int.dev-gdcorp.tools.key \
+       --certificate-chain file://api.threat.int.dev-gdcorp.tools_intermediate_chain.crt
    ```
 
 1. Delete the downloaded copies of the certificate, private key, and
@@ -91,13 +102,7 @@
 1. Note the UUID contained in the `CertificateArn` that is displayed when the
    certificate is imported.  This value should match that specified by
    `certificate_id` in the Sceptre configuration file for the current
-   environment:
-
-   ```
-   {
-       "CertificateArn": "arn:aws:acm:us-west-2:345790377847:certificate/785950b7-7585-483f-aba4-c052ff515e43"
-   }
-   ```
+   environment.
 
 ### Sceptre / CloudFormation / Service Catalog
 
@@ -117,7 +122,7 @@ sceptre launch dev-private/us-west-2
 
    ```
    aws apigateway get-domain-name \
-       --domain-name api-private.threat.int.gdcorp.tools \
+       --domain-name api-private.threat.int.dev-gdcorp.tools \
        --query regionalDomainName \
        --output text
    ```
