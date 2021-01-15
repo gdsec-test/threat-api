@@ -4,6 +4,7 @@ dependencies:
 parameters:
   CustomDomainName: {{threatapi_domain_name}}
   CustomDomainAcmCertificateId: {{threatapi_certificate_arn}}
+  SSOHost: {{sso_host}}
   APIHash: !file_contents resources/api.sha1
   ManagerHash: !file_contents resources/manager.sha1
   ResponseProcessorHash: !file_contents resources/responseprocessor.sha1

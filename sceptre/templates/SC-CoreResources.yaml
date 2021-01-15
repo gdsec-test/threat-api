@@ -22,6 +22,22 @@ Parameters:
     Type: String
     Description: ID of the ACM Certificate to use for the Custom Domain Name.
     Default: ""
+  SSOHost:
+    Type: String
+    Description: SSO endpoint used by the Authorizer lambda
+    Default: "sso.gdcorp.tools"
+  DXVpcSecurityGroups:
+    Type: AWS::SSM::Parameter::Value<String>
+    Description: SSM Parameter for private dx app security group id
+    Default: /AdminParams/VPC/PrivateDXAPPSG
+    AllowedValues:
+      - /AdminParams/VPC/PrivateDXAPPSG
+  DXVpcSubnetIds:
+    Type: AWS::SSM::Parameter::Value<List<String>>
+    Description: SSM Parameter for private dx app subnet ids
+    Default: /AdminParams/VPC/DXAPPSubnets
+    AllowedValues:
+      - /AdminParams/VPC/DXAPPSubnets
   APIHash:
     Type: String
     Description: SHA1 hash of the API Gateway specification
@@ -36,6 +52,13 @@ Parameters:
     Default: ""
 
 Resources:
+  SSOHostParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: /ThreatTools/SSOHost
+      Type: String
+      Value: !Ref SSOHost
+
   SwaggerUIRole:
     Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
     Properties:
@@ -134,6 +157,7 @@ Resources:
             - ","
             -
               - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+              - arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole
         - Key: AssumingServices
           Value: lambda.amazonaws.com
       Tags:
@@ -167,6 +191,12 @@ Resources:
           Value: 5
         - Key: CustomIAMRoleNameSuffix
           Value: AuthorizerRole
+        - Key: EnvironmentVariablesJson
+          Value: !Sub '{"SSO_HOST": "${SSOHost}"}'
+        - Key: VpcSecurityGroups
+          Value: !Ref DXVpcSecurityGroups
+        - Key: VpcSubnetIds
+          Value: !Join [ ",", !Ref DXVpcSubnetIds ]
       Tags:
         - Key: doNotShutDown
           Value: true
@@ -296,6 +326,7 @@ Resources:
               - arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess
               - arn:aws:iam::aws:policy/AmazonSSMReadOnlyAccess
               - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+              - arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole
               - !Sub arn:aws:iam::${AWS::AccountId}:policy/GD-AWS-KMS-USER
               - !Sub arn:aws:iam::${AWS::AccountId}:policy/${DevelopmentTeam}-custom-ThreatPolicyDynamoDB
               - !Sub arn:aws:iam::${AWS::AccountId}:policy/${DevelopmentTeam}-custom-ThreatPolicySNS
@@ -494,6 +525,12 @@ Resources:
           Value: 15
         - Key: CustomIAMRoleNameSuffix
           Value: ThreatManagerRole
+        - Key: EnvironmentVariablesJson
+          Value: !Sub '{"SSO_HOST": "${SSOHost}"}'
+        - Key: VpcSecurityGroups
+          Value: !Ref DXVpcSecurityGroups
+        - Key: VpcSubnetIds
+          Value: !Join [ ",", !Ref DXVpcSubnetIds ]
       Tags:
         - Key: doNotShutDown
           Value: true
