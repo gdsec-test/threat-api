@@ -1,0 +1,87 @@
+name: ThreatAPI Deployment (DEV)
+
+# Deploys the ThreatAPI main branch to the AWS DEV environment using sceptre.
+
+# This workflow needs to run on a self-hosted runner for the time being,
+# because "go get" can't access modules on github.secureserver.net correctly
+# when running on a GitHub hosted runner, even when the typical workarounds are
+# in place to rewrite URLs from https://github.secureserver.net to
+# git@github.secureserver.net and the GOPRIVATE environment variable has been
+# set.
+
+# It may be possible to avoid this restriction by reading:
+# https://tip.golang.org/cmd/go/#hdr-Remote_import_paths
+# and modifying modules that exist on github.secureserver.net by specifying
+# ".git" in the import list, since the golang tools don't know that the vcs
+# type of github.secureserver.net is "git".
+
+# See: https://github.com/golang/go/issues/38964
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ] # Trigger workflow on all pushes to main branch
+
+jobs:
+  deploy_to_dev:
+    runs-on: self-hosted
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@5a4ac90
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@fc852a1
+        with:
+          aws-access-key-id: ${{ secrets.DEV_AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.DEV_AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-west-2
+          role-to-assume: arn:aws:iam::786677461057:role/GD-AWS-USA-GD-ThreatTools-Dev-Deploy
+          role-duration-seconds: 3600
+
+      - name: Setup python environment
+        run: |
+          python3 -m venv venv
+          source venv/bin/activate
+          pip install -U pip
+
+      - name: Install python dependencies
+        env:
+          GIT_SSH_COMMAND: "ssh -o StrictHostKeyChecking=no"
+          SECURESERVER_ACCESS_KEY_GHC_SA: ${{ secrets.SECURESERVER_ACCESS_KEY_GHC_SA }}
+        run: |
+          eval "$(ssh-agent -s)"
+          ssh-add - <<< "${SECURESERVER_ACCESS_KEY_GHC_SA}"
+
+          source venv/bin/activate
+          pip install -U -r requirements.txt -r requirements-test.txt
+
+          ssh-agent -k
+
+      - name: Setup golang environment
+        uses: actions/setup-go@v2
+        with:
+          go-version: '1.15.6'
+
+      - name: Install golang dependencies
+        env:
+          GIT_SSH_COMMAND: "ssh -o StrictHostKeyChecking=no"
+          SECURESERVER_ACCESS_KEY_GHC_SA: ${{ secrets.SECURESERVER_ACCESS_KEY_GHC_SA }}
+          GITHUBCLOUD_SSH_PRIVATE_KEY: ${{ secrets.GITHUBCLOUD_SSH_PRIVATE_KEY }}
+          GOPRIVATE: "github.secureserver.net,github.com/gdcorp-*"
+        run: |
+          eval "$(ssh-agent -s)"
+          ssh-add - <<< "${SECURESERVER_ACCESS_KEY_GHC_SA}"
+          ssh-add - <<< "${GITHUBCLOUD_SSH_PRIVATE_KEY}"
+
+          git config --global url.git@github.secureserver.net:.insteadOf https://github.secureserver.net/
+          git config --global url.git@github.com:gdcorp-.insteadOf https://github.com/gdcorp-
+          go mod tidy
+
+          ssh-agent -k
+
+      - name: Run sceptre
+        run: |
+          source venv/bin/activate
+          cd sceptre
+          sceptre launch -y dev/us-west-2
