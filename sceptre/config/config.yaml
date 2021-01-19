@@ -1,3 +1,4 @@
 project_code: ThreatTools
 threatapi_domain_name: ""
 threatapi_certificate_arn: ""
+sso_host: sso.gdcorp.tools

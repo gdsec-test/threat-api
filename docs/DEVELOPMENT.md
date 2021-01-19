@@ -6,21 +6,21 @@ All AWS accounts are in the us-west-2 (Oregon) region.
 
 | AWS Account | API Endpoint | Environment | Description
 | --- | --- | --- | ---
-| 345790377847 | https://api-private.threat.int.gdcorp.tools | dev-private | Account for active development (non-CICD)
-| 786677461057 | https://api-dev.threat.int.gdcorp.tools | dev | Account for active development (CICD)
+| 345790377847 | https://api-private.threat.int.dev-gdcorp.tools | dev-private | Account for active development (non-CICD)
+| 786677461057 | https://api.threat.int.dev-gdcorp.tools | dev | Account for active development (CICD)
 | TBD | https://api.threat.int.gdcorp.tools | prod | Production account (CICD)
 
 ### Authentication
 
-* All endoints behind the API gateway require a valid JWT (although this
-  validation currently does not include verifying the age of the JWT, or the
-  authorization decision)
+* All endoints behind the API gateway require a valid JWT
 
-* [THREAT-487](https://jira.godaddy.com/browse/THREAT-487) will enforce a
-  maximum JWT age of 60 days by replacing the default JWTAuthorizer
+* [THREAT-487](https://jira.godaddy.com/browse/THREAT-487) replaces the default
+  JWTAuthorizer and enforces a [medium impact (non
+  delegation)](https://confluence.godaddy.com/display/AUTH/Security+Tokens)
+  token strength
 
-* [THREAT-486](https://jira.godaddy.com/browse/THREAT-486) will provide a
-  library which individual APIs can use to verify JWT age
+* [THREAT-486](https://jira.godaddy.com/browse/THREAT-486) provides a library
+  which individual APIs can use to verify JWT age
 
 ### JWTs
 
