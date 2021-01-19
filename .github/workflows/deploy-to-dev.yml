@@ -59,7 +59,7 @@ jobs:
           ssh-agent -k
 
       - name: Setup golang environment
-        uses: actions/setup-go@v2
+        uses: actions/setup-go@3b4dc6c
         with:
           go-version: '1.15.6'
 
