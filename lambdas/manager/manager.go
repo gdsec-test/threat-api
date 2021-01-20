@@ -39,7 +39,7 @@ type JobStatus string
 // Job statuses
 const (
 	JobInProgress JobStatus = "InProgress"
-	JobTimedOut   JobStatus = "TimedOut"
+	JobIncomplete JobStatus = "Incomplete"
 	JobCompleted  JobStatus = "Completed"
 )
 
@@ -278,6 +278,9 @@ func main() {
 	lambda.Start(handler)
 }
 
+// getJobProgress takes a job entry and finds out it's completion state.  It will find out if the job is complete,
+// or we are still waiting on modules to finish.  It will also compute the percentage complete of the job
+// as len(responses) / len(modules subscribed to SNS topic)
 func getJobProgress(ctx context.Context, jobEntry *common.JobDBEntry) (JobStatus, float64, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "GetJobProgress")
 	defer span.Finish()
@@ -290,6 +293,7 @@ func getJobProgress(ctx context.Context, jobEntry *common.JobDBEntry) (JobStatus
 	}
 
 	// Count total subscriptions to the SNS topic
+	// Note this may only work up to 100 subscriptions
 	jobStatus := JobInProgress
 	snsClient := sns.New(t.AWSSession)
 	subscriptionsOutput, err := snsClient.ListSubscriptionsByTopic(&sns.ListSubscriptionsByTopicInput{
@@ -299,8 +303,6 @@ func getJobProgress(ctx context.Context, jobEntry *common.JobDBEntry) (JobStatus
 		span.LogKV("error", fmt.Errorf("error getting SNS topic subscriptions: %w", err))
 		return "", 0, err
 	}
-
-	// Note this may only work up to 100 subscriptions
 	totalModuleCount := len(subscriptionsOutput.Subscriptions)
 
 	switch {
@@ -309,7 +311,7 @@ func getJobProgress(ctx context.Context, jobEntry *common.JobDBEntry) (JobStatus
 		jobStatus = JobCompleted
 	case time.Unix(int64(jobEntry.StartTime), 0).Before(time.Now().Add(-time.Minute * 15)):
 		// Jobs have timed out at this point, job is timed out
-		jobStatus = JobTimedOut
+		jobStatus = JobIncomplete
 	}
 
 	jobPercentage := float64(float64(len(jobEntry.DecryptedResponses)) / float64(totalModuleCount))
