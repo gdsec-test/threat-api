@@ -27,6 +27,10 @@ jobs:
     runs-on: self-hosted
 
     steps:
+      - name: Reset gitconfig
+        run: |
+          rm -f $HOME/.gitconfig
+
       - name: Checkout
         uses: actions/checkout@5a4ac90
 
