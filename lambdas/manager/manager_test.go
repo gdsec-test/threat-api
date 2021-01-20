@@ -94,7 +94,7 @@ func TestJobWork(t *testing.T) {
 			t.Fatal(err)
 		}
 		if response["job_status"].(string) != string(JobCompleted) {
-			t.Errorf("job did not completed, it is in state %s", response["job_status"])
+			t.Errorf("job did not complete, it is in state %s", response["job_status"])
 		}
 
 		fmt.Printf("Found job data after waiting: %v\n", response)
