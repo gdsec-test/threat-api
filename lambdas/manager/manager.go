@@ -216,7 +216,7 @@ func getJobStatus(ctx context.Context, jobID string) (events.APIGatewayProxyResp
 		Responses:     jobDB.DecryptedResponses,
 		StartTime:     jobDB.StartTime,
 		JobStatus:     jobStatus,
-		JobPercentage: jobPercentage,
+		JobPercentage: jobPercentage * 100,
 	})
 	if err != nil {
 		span.LogKV("error", err)
