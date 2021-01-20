@@ -33,6 +33,16 @@ const (
 var t *toolbox.Toolbox
 var dynamoDBClient *dynamodb.DynamoDB
 
+// JobStatus is the statuses a job can have
+type JobStatus string
+
+// Job statuses
+const (
+	JobInProgress JobStatus = "InProgress"
+	JobTimedOut   JobStatus = "TimedOut"
+	JobCompleted  JobStatus = "Completed"
+)
+
 // Lambda function to retrieve job status and output for ThreatTools API
 func handler(ctx context.Context, request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
 	// Get the toolbox
@@ -125,7 +135,7 @@ func createJob(ctx context.Context, request events.APIGatewayProxyRequest) (even
 	// Get the SNS topic ARN
 	topicARN, err := t.GetFromParameterStore(ctx, snsTopicARNParameterName, false)
 	if err != nil || topicARN.Value == nil {
-		span.LogKV("error", fmt.Errorf("error getting topicARN: %w", err))
+		span.LogKV("error", fmt.Errorf("error getting SNS topic ARN: %w", err))
 		span.Finish()
 		return events.APIGatewayProxyResponse{StatusCode: 500}, nil
 	}
@@ -134,7 +144,7 @@ func createJob(ctx context.Context, request events.APIGatewayProxyRequest) (even
 	snsClient := sns.New(t.AWSSession)
 	_, err = snsClient.Publish(&sns.PublishInput{
 		Message:  &requestMarshalledString,
-		TopicArn: aws.String(*topicARN.Value),
+		TopicArn: topicARN.Value,
 	})
 	if err != nil {
 		span.LogKV("error", err)
@@ -189,15 +199,24 @@ func getJobStatus(ctx context.Context, jobID string) (events.APIGatewayProxyResp
 	// Asherah decrypt
 	jobDB.Decrypt(ctx, t)
 
+	jobStatus, jobPercentage, err := getJobProgress(ctx, jobDB)
+	if err != nil {
+		t.Logger.WithError(err).Error("error getting job status")
+	}
+
 	// Marshal and reply
 	responseData, _ := json.Marshal(struct {
-		Request   string            `json:"request"`
-		Responses map[string]string `json:"responses"`
-		StartTime interface{}       `json:"start_time"`
+		Request       string            `json:"request"`
+		Responses     map[string]string `json:"responses"`
+		StartTime     interface{}       `json:"start_time"`
+		JobStatus     JobStatus         `json:"job_status"`
+		JobPercentage float64           `json:"job_percentage"`
 	}{
-		Request:   jobDB.DecryptedRequest,
-		Responses: jobDB.DecryptedResponses,
-		StartTime: jobDB.StartTime,
+		Request:       jobDB.DecryptedRequest,
+		Responses:     jobDB.DecryptedResponses,
+		StartTime:     jobDB.StartTime,
+		JobStatus:     jobStatus,
+		JobPercentage: jobPercentage,
 	})
 	if err != nil {
 		span.LogKV("error", err)
@@ -257,4 +276,43 @@ func getJobs(ctx context.Context, request events.APIGatewayProxyRequest) (events
 
 func main() {
 	lambda.Start(handler)
+}
+
+func getJobProgress(ctx context.Context, jobEntry *common.JobDBEntry) (JobStatus, float64, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "GetJobProgress")
+	defer span.Finish()
+
+	// Get the SNS topic ARN
+	topicARN, err := t.GetFromParameterStore(ctx, snsTopicARNParameterName, false)
+	if err != nil || topicARN.Value == nil {
+		span.LogKV("error", fmt.Errorf("error getting SNS topic ARN: %w", err))
+		return "", 0, err
+	}
+
+	// Count total subscriptions to the SNS topic
+	jobStatus := JobInProgress
+	snsClient := sns.New(t.AWSSession)
+	subscriptionsOutput, err := snsClient.ListSubscriptionsByTopic(&sns.ListSubscriptionsByTopicInput{
+		TopicArn: topicARN.Value,
+	})
+	if err != nil {
+		span.LogKV("error", fmt.Errorf("error getting SNS topic subscriptions: %w", err))
+		return "", 0, err
+	}
+
+	// Note this may only work up to 100 subscriptions
+	totalModuleCount := len(subscriptionsOutput.Subscriptions)
+
+	switch {
+	case len(jobEntry.DecryptedResponses) == totalModuleCount:
+		// Job has finished all modules
+		jobStatus = JobCompleted
+	}
+
+	jobPercentage := float64(float64(len(jobEntry.DecryptedResponses)) / float64(totalModuleCount))
+
+	span.LogKV("JobStatus", jobStatus)
+	span.LogKV("JobPercentage", jobPercentage)
+
+	return jobStatus, jobPercentage, nil
 }

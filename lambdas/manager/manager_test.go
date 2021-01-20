@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/aws/aws-lambda-go/events"
 )
@@ -71,6 +72,25 @@ func TestJobWork(t *testing.T) {
 		// Make sure we got back our original request
 		if response["request"] != testBody {
 			t.Errorf("did not get original request we made (must not have been decrypted correctly). Expected %s got %s", testBody, response["request"])
+		}
+
+		// Wait a bit and check if the job completed
+		time.Sleep(time.Second)
+		resp, err = handler(context.Background(), events.APIGatewayProxyRequest{
+			PathParameters: map[string]string{"job_id": jobID},
+		})
+		if err != nil {
+			t.Fatal(err)
+		}
+		if resp.StatusCode != 200 {
+			t.Fatalf("bad response code: %d", resp.StatusCode)
+		}
+		err = json.Unmarshal([]byte(resp.Body), &response)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if response["job_status"].(string) != "Completed" {
+			t.Errorf("job did not completed, it is in state %s", response["job_status"])
 		}
 
 		fmt.Printf("Found job data: %v\n", response)
