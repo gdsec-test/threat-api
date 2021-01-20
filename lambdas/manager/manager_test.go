@@ -68,6 +68,9 @@ func TestJobWork(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
+		if response["job_status"].(string) == string(JobCompleted) {
+			t.Logf("Job is already completed, that was quick")
+		}
 
 		// Make sure we got back our original request
 		if response["request"] != testBody {
