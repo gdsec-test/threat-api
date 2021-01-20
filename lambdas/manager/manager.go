@@ -307,6 +307,9 @@ func getJobProgress(ctx context.Context, jobEntry *common.JobDBEntry) (JobStatus
 	case len(jobEntry.DecryptedResponses) == totalModuleCount:
 		// Job has finished all modules
 		jobStatus = JobCompleted
+	case time.Unix(int64(jobEntry.StartTime), 0).Before(time.Now().Add(-time.Minute * 15)):
+		// Jobs have timed out at this point, job is timed out
+		jobStatus = JobTimedOut
 	}
 
 	jobPercentage := float64(float64(len(jobEntry.DecryptedResponses)) / float64(totalModuleCount))
