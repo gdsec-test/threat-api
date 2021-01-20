@@ -6,23 +6,23 @@ on:
 
 jobs:
   tartufo:
-      runs-on: ubuntu-latest
-      steps: 
-      - name: Checkout Repository
-        uses: actions/checkout@5a4ac90 # Checkout this repository
+    runs-on: ubuntu-latest
+    steps: 
+    - name: Checkout Repository
+      uses: actions/checkout@5a4ac90 # Checkout this repository
 
-      - name: Checkout GoDaddy Actions repo # Checkout shared actions repository gd-actions 
-        uses: actions/checkout@5a4ac90 
-        with: 
-          repository: gdcorp-cp/gd-actions
-          token: ${{ secrets.REPO_CLONE_TOKEN_SA_PAT }} # PAT with read access to gdcorp-cp/gd-actions
-          path: gd-actions # Relative to github working directory
-          persist-credentials: false
+    - name: Checkout GoDaddy Actions repo # Checkout shared actions repository gd-actions 
+      uses: actions/checkout@5a4ac90 
+      with: 
+        repository: gdcorp-cp/gd-actions
+        token: ${{ secrets.REPO_CLONE_TOKEN_SA_PAT }} # PAT with read access to gdcorp-cp/gd-actions
+        path: gd-actions # Relative to github working directory
+        persist-credentials: false
 
-      - name: Run Tartufo
-        uses: ./gd-actions/tartufo # Relative reference to action in gd-actions repository
-        with:
-          github_token: ${{ secrets.REPO_CLONE_TOKEN_SA_PAT }}
+    - name: Run Tartufo
+      uses: ./gd-actions/tartufo # Relative reference to action in gd-actions repository
+      with:
+        github_token: ${{ secrets.REPO_CLONE_TOKEN_SA_PAT }}
 
   python-code-check:
     needs: tartufo # Start this job after tartufo succeeds
