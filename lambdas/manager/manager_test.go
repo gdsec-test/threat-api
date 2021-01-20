@@ -68,8 +68,9 @@ func TestJobWork(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
+		fmt.Printf("Found job data: %v\n", response)
 		if response["job_status"].(string) == string(JobCompleted) {
-			t.Logf("Job is already completed, that was quick")
+			fmt.Println("Job is already completed, that was quick")
 		}
 
 		// Make sure we got back our original request
@@ -92,11 +93,11 @@ func TestJobWork(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		if response["job_status"].(string) != "Completed" {
+		if response["job_status"].(string) != string(JobCompleted) {
 			t.Errorf("job did not completed, it is in state %s", response["job_status"])
 		}
 
-		fmt.Printf("Found job data: %v\n", response)
+		fmt.Printf("Found job data after waiting: %v\n", response)
 	})
 
 	t.Run("GetJobs", func(t *testing.T) {
