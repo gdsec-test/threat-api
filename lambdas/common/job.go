@@ -32,6 +32,8 @@ type JobDBEntry struct {
 	Request   appencryption.DataRowRecord            `dynamodbav:"request"`
 	// Epoch start time
 	StartTime float64 `dynamodbav:"startTime"`
+	// Count of total modules that should be run from this request
+	TotalModules int `dynamodbav:"totalModules"`
 
 	// Decrypted data
 	DecryptedRequest   string

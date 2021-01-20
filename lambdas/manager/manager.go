@@ -99,17 +99,42 @@ func createJob(ctx context.Context, request events.APIGatewayProxyRequest) (even
 	}
 	span.Finish()
 
+	// Get the SNS topic ARN
+	span, ctx = opentracing.StartSpanFromContext(ctx, "GetSNSTopicInfo")
+	topicARN, err := t.GetFromParameterStore(ctx, snsTopicARNParameterName, false)
+	if err != nil || topicARN.Value == nil {
+		span.LogKV("error", fmt.Errorf("error getting SNS topic ARN: %w", err))
+		span.Finish()
+		return events.APIGatewayProxyResponse{StatusCode: 500}, nil
+	}
+
+	// Count total subscriptions to the SNS topic
+	// Note this may only work up to 100 subscriptions
+	snsClient := sns.New(t.AWSSession)
+	subscriptionsOutput, err := snsClient.ListSubscriptionsByTopic(&sns.ListSubscriptionsByTopicInput{
+		TopicArn: topicARN.Value,
+	})
+	if err != nil {
+		span.LogKV("error", fmt.Errorf("error getting SNS topic subscriptions: %w", err))
+		span.Finish()
+		return events.APIGatewayProxyResponse{StatusCode: 500}, nil
+	}
+	totalModuleCount := len(subscriptionsOutput.Subscriptions)
+	span.LogKV("SNSSubscriptionSize", totalModuleCount)
+	span.Finish()
+
 	// Store in database
 	span, ctx = opentracing.StartSpanFromContext(ctx, "StoreJob")
 	span.LogKV("job_id", jobID)
 	_, err = dynamoDBClient.PutItem(&dynamodb.PutItemInput{
 		Item: map[string]*dynamodb.AttributeValue{
-			jobIDKey:    {S: &jobID},
-			usernameKey: {S: &jwt.BaseToken.AccountName},
-			"startTime": {N: aws.String(fmt.Sprintf("%d", time.Now().Unix()))},
-			"ttl":       {N: aws.String(fmt.Sprintf("%d", time.Now().Add(time.Hour*24*30).Unix()))},
-			"request":   encryptedDataMarshalled,
-			"responses": {M: map[string]*dynamodb.AttributeValue{}},
+			jobIDKey:       {S: &jobID},
+			usernameKey:    {S: &jwt.BaseToken.AccountName},
+			"startTime":    {N: aws.String(fmt.Sprintf("%d", time.Now().Unix()))},
+			"ttl":          {N: aws.String(fmt.Sprintf("%d", time.Now().Add(time.Hour*24*30).Unix()))},
+			"request":      encryptedDataMarshalled,
+			"responses":    {M: map[string]*dynamodb.AttributeValue{}},
+			"totalModules": {N: aws.String(fmt.Sprintf("%d", totalModuleCount))},
 		},
 		TableName: &t.JobDBTableName,
 	})
@@ -132,16 +157,7 @@ func createJob(ctx context.Context, request events.APIGatewayProxyRequest) (even
 	}
 	requestMarshalledString := string(requestMarshalled)
 
-	// Get the SNS topic ARN
-	topicARN, err := t.GetFromParameterStore(ctx, snsTopicARNParameterName, false)
-	if err != nil || topicARN.Value == nil {
-		span.LogKV("error", fmt.Errorf("error getting SNS topic ARN: %w", err))
-		span.Finish()
-		return events.APIGatewayProxyResponse{StatusCode: 500}, nil
-	}
-
 	// Send the entire request marshalled along with the jobID
-	snsClient := sns.New(t.AWSSession)
 	_, err = snsClient.Publish(&sns.PublishInput{
 		Message:  &requestMarshalledString,
 		TopicArn: topicARN.Value,
@@ -285,28 +301,9 @@ func getJobProgress(ctx context.Context, jobEntry *common.JobDBEntry) (JobStatus
 	span, ctx := opentracing.StartSpanFromContext(ctx, "GetJobProgress")
 	defer span.Finish()
 
-	// Get the SNS topic ARN
-	topicARN, err := t.GetFromParameterStore(ctx, snsTopicARNParameterName, false)
-	if err != nil || topicARN.Value == nil {
-		span.LogKV("error", fmt.Errorf("error getting SNS topic ARN: %w", err))
-		return "", 0, err
-	}
-
-	// Count total subscriptions to the SNS topic
-	// Note this may only work up to 100 subscriptions
 	jobStatus := JobInProgress
-	snsClient := sns.New(t.AWSSession)
-	subscriptionsOutput, err := snsClient.ListSubscriptionsByTopic(&sns.ListSubscriptionsByTopicInput{
-		TopicArn: topicARN.Value,
-	})
-	if err != nil {
-		span.LogKV("error", fmt.Errorf("error getting SNS topic subscriptions: %w", err))
-		return "", 0, err
-	}
-	totalModuleCount := len(subscriptionsOutput.Subscriptions)
-
 	switch {
-	case len(jobEntry.DecryptedResponses) == totalModuleCount:
+	case len(jobEntry.DecryptedResponses) == jobEntry.TotalModules:
 		// Job has finished all modules
 		jobStatus = JobCompleted
 	case time.Unix(int64(jobEntry.StartTime), 0).Before(time.Now().Add(-time.Minute * 15)):
@@ -314,7 +311,7 @@ func getJobProgress(ctx context.Context, jobEntry *common.JobDBEntry) (JobStatus
 		jobStatus = JobIncomplete
 	}
 
-	jobPercentage := float64(float64(len(jobEntry.DecryptedResponses)) / float64(totalModuleCount))
+	jobPercentage := float64(float64(len(jobEntry.DecryptedResponses)) / float64(jobEntry.TotalModules))
 
 	span.LogKV("JobStatus", jobStatus)
 	span.LogKV("JobPercentage", jobPercentage)

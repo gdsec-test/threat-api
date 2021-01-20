@@ -70,7 +70,7 @@ func TestJobWork(t *testing.T) {
 		}
 		fmt.Printf("Found job data: %v\n", response)
 		if response["job_status"].(string) == string(JobCompleted) {
-			fmt.Println("Job is already completed, that was quick")
+			fmt.Println("WARN: Job is already completed, that was quick")
 		}
 
 		// Make sure we got back our original request
@@ -95,6 +95,9 @@ func TestJobWork(t *testing.T) {
 		}
 		if response["job_status"].(string) != string(JobCompleted) {
 			t.Errorf("job did not complete, it is in state %s", response["job_status"])
+		}
+		if response["job_percentage"].(float64) == 0 {
+			t.Error("Job percentage stuck at 0%, there's probably a problem generating the percentage.")
 		}
 
 		fmt.Printf("Found job data after waiting: %v\n", response)
