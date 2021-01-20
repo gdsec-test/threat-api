@@ -221,7 +221,7 @@ func getJobStatus(ctx context.Context, jobID string) (events.APIGatewayProxyResp
 	}
 
 	// Marshal and reply
-	responseData, _ := json.Marshal(struct {
+	responseData, err := json.Marshal(struct {
 		Request       string            `json:"request"`
 		Responses     map[string]string `json:"responses"`
 		StartTime     interface{}       `json:"start_time"`
