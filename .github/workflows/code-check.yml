@@ -32,7 +32,7 @@ jobs:
       uses: actions/checkout@5a4ac90
 
     - name: Set up Python 3.9.0
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@a112144
       with:
         python-version: 3.9.0
         architecture: 'x64'
