@@ -30,7 +30,10 @@ type JobDBEntry struct {
 	// Map of module name to the encrypted data
 	Responses map[string]appencryption.DataRowRecord `dynamodbav:"responses"`
 	Request   appencryption.DataRowRecord            `dynamodbav:"request"`
-	StartTime interface{}                            `dynamodbav:"startTime"`
+	// Epoch start time
+	StartTime float64 `dynamodbav:"startTime"`
+	// Count of total modules that should be run from this request
+	TotalModules int `dynamodbav:"totalModules"`
 
 	// Decrypted data
 	DecryptedRequest   string

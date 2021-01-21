@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/aws/aws-lambda-go/events"
 )
@@ -67,13 +68,39 @@ func TestJobWork(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
+		fmt.Printf("Found job data: %v\n", response)
+		if response["job_status"].(string) == string(JobCompleted) {
+			fmt.Println("WARN: Job is already completed, that was quick")
+		}
 
 		// Make sure we got back our original request
 		if response["request"] != testBody {
 			t.Errorf("did not get original request we made (must not have been decrypted correctly). Expected %s got %s", testBody, response["request"])
 		}
 
-		fmt.Printf("Found job data: %v\n", response)
+		// Wait a bit and check if the job completed
+		time.Sleep(time.Second)
+		resp, err = handler(context.Background(), events.APIGatewayProxyRequest{
+			PathParameters: map[string]string{"job_id": jobID},
+		})
+		if err != nil {
+			t.Fatal(err)
+		}
+		if resp.StatusCode != 200 {
+			t.Fatalf("bad response code: %d", resp.StatusCode)
+		}
+		err = json.Unmarshal([]byte(resp.Body), &response)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if response["job_status"].(string) != string(JobCompleted) {
+			t.Errorf("job did not complete, it is in state %s", response["job_status"])
+		}
+		if response["job_percentage"].(float64) == 0 {
+			t.Error("Job percentage stuck at 0%, there's probably a problem generating the percentage.")
+		}
+
+		fmt.Printf("Found job data after waiting: %v\n", response)
 	})
 
 	t.Run("GetJobs", func(t *testing.T) {
