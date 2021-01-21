@@ -2,18 +2,18 @@ name: Code quality check
 
 on:
   pull_request:
-    branches: [ main ] 
+    branches: [ main ]
 
 jobs:
   tartufo:
     runs-on: ubuntu-latest
-    steps: 
+    steps:
     - name: Checkout Repository
       uses: actions/checkout@5a4ac9002d0be2fb38bd78e4b4dbde5606d7042f # Checkout this repository
 
-    - name: Checkout GoDaddy Actions repo # Checkout shared actions repository gd-actions 
-      uses: actions/checkout@5a4ac9002d0be2fb38bd78e4b4dbde5606d7042f 
-      with: 
+    - name: Checkout GoDaddy Actions repo # Checkout shared actions repository gd-actions
+      uses: actions/checkout@5a4ac9002d0be2fb38bd78e4b4dbde5606d7042f
+      with:
         repository: gdcorp-cp/gd-actions
         token: ${{ secrets.REPO_CLONE_TOKEN_SA_PAT }} # PAT with read access to gdcorp-cp/gd-actions
         path: gd-actions # Relative to github working directory
@@ -27,7 +27,7 @@ jobs:
   python-code-check:
     needs: tartufo # Start this job after tartufo succeeds
     runs-on: ubuntu-latest # Using github hosted runner after it clears tartufo scan
-    steps: 
+    steps:
     - name: Checkout Repository
       uses: actions/checkout@5a4ac9002d0be2fb38bd78e4b4dbde5606d7042f
 
@@ -42,7 +42,7 @@ jobs:
         python3 -m venv venv
         source venv/bin/activate
         pip install -U pip
-        
+
     - name: Install Python dependencies
       env:
         SECURESERVER_ACCESS_KEY_GHC_SA: ${{ secrets.SECURESERVER_ACCESS_KEY_GHC_SA }}
@@ -50,7 +50,7 @@ jobs:
       run: |
         eval "$(ssh-agent -s)"
         ssh-add - <<< "${SECURESERVER_ACCESS_KEY_GHC_SA}"
-        
+
         source venv/bin/activate
         python -m pip install --upgrade pip
         pip install -U -r requirements.txt -r requirements-test.txt
@@ -63,7 +63,7 @@ jobs:
         flake8 ./apis  ./tools ./sceptre/resources/authorizer
 
     # Pylint is failing on lot of files, switching off temporarily
-    # - name: Lint with pylint    
+    # - name: Lint with pylint
     #   run: |
     #     source venv/bin/activate
     #     pylint ./apis ./sceptre/resources/authorizer ./tools
@@ -71,7 +71,7 @@ jobs:
     - name: Static security analysis with Bandit
       run: |
         source venv/bin/activate
-        bandit -r  ./apis ./sceptre/resources/authorizer ./tools 
+        bandit -r  ./apis ./sceptre/resources/authorizer ./tools
 
     - name: Python Tests
       run: |
@@ -88,7 +88,7 @@ jobs:
 
     steps:
     - name: Reset gitconfig
-      run: | 
+      run: |
         rm -f $HOME/.gitconfig
 
     - name: Checkout this repository
@@ -121,7 +121,7 @@ jobs:
     - name: Running apis/${{ matrix.go-apis }}
       run: |
         cd ./apis/${{ matrix.go-apis }}
-        go mod tidy 
+        go mod tidy
         go get
         go fmt
         go build
@@ -131,13 +131,13 @@ jobs:
         cd ./apis/${{ matrix.go-apis }}
         go test
 
-      
-    # TODO: 
-    #   Run the same for matrix go-lambdas: [manager, responseprocessor] 
+
+    # TODO:
+    #   Run the same for matrix go-lambdas: [manager, responseprocessor]
     # - name: Running lambdas/${{ matrix.go-lambdas }}
     #   run: |
     #     cd ./lambdas/${{ matrix.go-lambdas }}
-    #     go mod tidy 
+    #     go mod tidy
     #     go get
     #     go fmt
     #     go build
@@ -147,7 +147,7 @@ jobs:
     #     cd ./lambdas/${{ matrix.go-lambdas }}
     #     go test
 
-    # SPAQ dashboard 
+    # SPAQ dashboard
     # - name: Coverage upload to KPI Dashboard
     #   uses: ./gd-actions/spaq-quality
     #   with:
@@ -155,5 +155,4 @@ jobs:
 
     # White Source integration
 
-    # Cirrus Scans 
-
+    # Cirrus Scans
