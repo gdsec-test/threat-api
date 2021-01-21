@@ -211,6 +211,7 @@ Resources:
         Statement:
           - Effect: Allow
             Action:
+              - sns:ListSubscriptionsByTopic
               - sns:Publish
             Resource: !Ref ThreatJobRequestsTopic
 
