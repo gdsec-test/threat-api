@@ -66,7 +66,7 @@ Example response when querying a `job_id` of `12345`:
 {
   "job_id": "12345",
   "job_status": "Completed",
-  "job_percentage": 1.00,
+  "job_percentage": 100.00,
   "responses": {
     "splunk": {
       "output": "Splunk specific results"
