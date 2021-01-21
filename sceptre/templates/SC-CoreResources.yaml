@@ -247,6 +247,7 @@ Resources:
             "Statement": [
                 {
                     "Action": [
+                        "sns:ListSubscriptionsByTopic",
                         "sns:Publish"
                     ],
                     "Resource": "arn:aws:sns:${AWS::Region}:${AWS::AccountId}:JobRequests",
