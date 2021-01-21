@@ -5,3 +5,4 @@ docs/diagrams/job_request_flow.svg
 docs/diagrams/lambda_architecture.svg
 docs/diagrams/Polling.svg
 docs/diagrams/threat_api_aws.svg
+.github/workflows/(.*)
