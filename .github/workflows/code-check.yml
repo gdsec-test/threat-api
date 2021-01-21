@@ -9,10 +9,10 @@ jobs:
     runs-on: ubuntu-latest
     steps: 
     - name: Checkout Repository
-      uses: actions/checkout@5a4ac90 # Checkout this repository
+      uses: actions/checkout@5a4ac9002d0be2fb38bd78e4b4dbde5606d7042f # Checkout this repository
 
     - name: Checkout GoDaddy Actions repo # Checkout shared actions repository gd-actions 
-      uses: actions/checkout@5a4ac90 
+      uses: actions/checkout@5a4ac9002d0be2fb38bd78e4b4dbde5606d7042f 
       with: 
         repository: gdcorp-cp/gd-actions
         token: ${{ secrets.REPO_CLONE_TOKEN_SA_PAT }} # PAT with read access to gdcorp-cp/gd-actions
@@ -29,10 +29,10 @@ jobs:
     runs-on: ubuntu-latest # Using github hosted runner after it clears tartufo scan
     steps: 
     - name: Checkout Repository
-      uses: actions/checkout@5a4ac90
+      uses: actions/checkout@5a4ac9002d0be2fb38bd78e4b4dbde5606d7042f
 
     - name: Set up Python 3.9.0
-      uses: actions/setup-python@a112144
+      uses: actions/setup-python@a1121449a217580167611672a6c61b4cf314e0f2
       with:
         python-version: 3.9.0
         architecture: 'x64'
@@ -92,10 +92,10 @@ jobs:
         rm -f $HOME/.gitconfig
 
     - name: Checkout this repository
-      uses: actions/checkout@5a4ac90
+      uses: actions/checkout@5a4ac9002d0be2fb38bd78e4b4dbde5606d7042f
 
     - name: Set up Go
-      uses: actions/setup-go@3b4dc6c
+      uses: actions/setup-go@3b4dc6cbed1779f759b9c638cb83696acea809d1
       with:
         go-version: '1.15.6'
 
