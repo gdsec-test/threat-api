@@ -1,7 +1,7 @@
-# Dependabot for github-actions to take care of the latest version of dependencies 
+# Dependabot for github-actions to take care of the latest version of dependencies
 version: 2
 updates:
   - package-ecosystem: "github-actions" # See documentation for possible values
     directory: "/" # Location of package manifests
     schedule:
-      interval: "daily" 
+      interval: "daily"
