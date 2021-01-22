@@ -13,7 +13,7 @@ import (
 	"github.com/gdcorp-infosec/threat-util/lambda/toolbox"
 )
 
-// GetModules response to a API gateway request to list the available modules and their metadata
+// GetModules responds to a API gateway request to list the available modules and their metadata
 func GetModules(ctx context.Context, request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
 	modulesAndSupportedTypes, err := getModules(ctx, t)
 	if err != nil {
