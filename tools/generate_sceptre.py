@@ -110,6 +110,13 @@ CF_RESOURCES_BLOCK = dedent(
             Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobResponses
         FunctionName: __NAME__
         Qualifier: $LATEST
+
+    __NAME__LambdaMetadata:
+      Type: AWS::SSM::Parameter
+      Properties:
+        Name: /ThreatTools/Modules/__NAME__
+        Type: String
+        Value: '__METADATA__'
     """
 )
 
@@ -220,6 +227,13 @@ SC_RESOURCES_BLOCK = dedent(
             Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobResponses
         FunctionName: __NAME__
         Qualifier: $LATEST
+
+    __NAME__LambdaMetadata:
+      Type: AWS::SSM::Parameter
+      Properties:
+        Name: /ThreatTools/Modules/__NAME__
+        Type: String
+        Value: '__METADATA__'
     """
 )
 
@@ -247,6 +261,7 @@ def get_lambda_configs():
                     "__MEMORYSIZE__": lambda_json["memory-size"],
                     "__RUNTIME__": lambda_json["runtime"],
                     "__TIMEOUT__": lambda_json["timeout"],
+                    "__METADATA__": json.dumps(lambda_json.get("metadata", {})),
                 }
 
         except Exception:
