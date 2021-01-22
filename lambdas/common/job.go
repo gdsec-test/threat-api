@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 
 	"github.com/aws/aws-lambda-go/events"
+	"github.com/gdcorp-infosec/threat-api/lambdas/common/triagelegacyconnector/triage"
 	"github.com/gdcorp-infosec/threat-util/lambda/toolbox"
 	"github.com/godaddy/asherah/go/appencryption"
 	"github.com/opentracing/opentracing-go"
@@ -86,4 +87,9 @@ func GetJobRequest(event events.APIGatewayProxyRequest) (JobRequest, error) {
 	}
 
 	return jobRequest, nil
+}
+
+// LambdaMetadata is data stored in the parameter store about a specific lambda
+type LambdaMetadata struct {
+	SupportedIOCTypes []triage.IOCType `json:"supported_ioc_types"`
 }
