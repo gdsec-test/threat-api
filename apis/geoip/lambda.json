@@ -2,5 +2,10 @@
   "handler": "geoip",
   "memory-size": "256",
   "runtime": "go1.x",
-  "timeout": "15"
+  "timeout": "15",
+  "metadata": {
+    "supported_ioc_types": [
+      "ip"
+    ]
+  }
 }

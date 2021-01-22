@@ -57,6 +57,13 @@ Resources:
       FunctionName: geoip
       Qualifier: $LATEST
 
+  geoipLambdaMetadata:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: /ThreatTools/Modules/geoip
+      Type: String
+      Value: '{"supported_ioc_types": ["ip"]}'
+
   tester1LambdaFunction:
     Type: AWS::Lambda::Function
     Properties:
@@ -98,6 +105,13 @@ Resources:
       FunctionName: tester1
       Qualifier: $LATEST
 
+  tester1LambdaMetadata:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: /ThreatTools/Modules/tester1
+      Type: String
+      Value: '{"supported_ioc_types": ["domain", "ip", "unknown"]}'
+
   whoisLambdaFunction:
     Type: AWS::Lambda::Function
     Properties:
@@ -138,3 +152,10 @@ Resources:
           Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobResponses
       FunctionName: whois
       Qualifier: $LATEST
+
+  whoisLambdaMetadata:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: /ThreatTools/Modules/whois
+      Type: String
+      Value: '{"supported_ioc_types": ["domain"]}'
