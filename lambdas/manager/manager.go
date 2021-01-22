@@ -60,8 +60,12 @@ func handler(ctx context.Context, request events.APIGatewayProxyRequest) (events
 	}
 
 	// Check if they are requesting their user's jobs
-	if strings.HasSuffix(strings.TrimRight(request.Path, "/"), "/jobs") {
+	path := strings.TrimRight(request.Path, "/")
+	switch {
+	case strings.HasSuffix(path, "/jobs"):
 		return getJobs(ctx, request)
+	case strings.HasSuffix(path, "/classify"):
+		return classifyIOCs(ctx, request)
 	}
 
 	// Assume they want to create a new job
