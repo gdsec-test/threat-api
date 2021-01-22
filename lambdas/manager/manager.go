@@ -222,11 +222,11 @@ func getJobStatus(ctx context.Context, jobID string) (events.APIGatewayProxyResp
 
 	// Marshal and reply
 	responseData, err := json.Marshal(struct {
-		Request       string            `json:"request"`
-		Responses     map[string]string `json:"responses"`
-		StartTime     interface{}       `json:"start_time"`
-		JobStatus     JobStatus         `json:"job_status"`
-		JobPercentage float64           `json:"job_percentage"`
+		Request       string                 `json:"request"`
+		Responses     map[string]interface{} `json:"responses"`
+		StartTime     interface{}            `json:"start_time"`
+		JobStatus     JobStatus              `json:"job_status"`
+		JobPercentage float64                `json:"job_percentage"`
 	}{
 		Request:       jobDB.DecryptedRequest,
 		Responses:     jobDB.DecryptedResponses,
