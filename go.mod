@@ -14,6 +14,7 @@ require (
 	github.com/opentracing/opentracing-go v1.1.0
 	github.com/oschwald/geoip2-golang v1.4.0
 	github.com/sirupsen/logrus v1.7.0
+	github.com/vertoforce/go-ioc v0.0.0-20201028230052-ad588a5f691d
 	github.com/vertoforce/regexgrouphelp v0.1.1
 	go.elastic.co/apm v1.9.0
 	go.elastic.co/apm/module/apmlambda v1.8.0

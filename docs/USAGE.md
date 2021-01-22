@@ -27,6 +27,25 @@ The following IOC types are supported:
 | `mitre_subtechnique` | Mitre Subtechnique
 | `mitre_mitigation` | Mitre Mitigation
 
+#### Classifying IOC types
+
+To classify an IOC type you can call the endpoint `/classify` with the following body
+
+```json
+{
+  "iocs": ["1.1.1.1", "domain.com"] // String list of IOCs
+}
+```
+
+It will respond with a response similar to the following
+
+```json
+{
+  "domain": ["domain.com"],
+  "ip": ["1.1.1."]
+}
+```
+
 ### Requests
 
 Requests to the Threat API are specified using the following request format:

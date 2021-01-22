@@ -5,10 +5,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"reflect"
 	"testing"
 	"time"
 
 	"github.com/aws/aws-lambda-go/events"
+	"github.com/gdcorp-infosec/threat-api/lambdas/common/triagelegacyconnector/triage"
 )
 
 const (
@@ -136,4 +138,30 @@ func TestJobWork(t *testing.T) {
 
 		fmt.Printf("Found user's jobs: %v\n", response)
 	})
+}
+
+func TestClassifyIOCs(t *testing.T) {
+	resp, err := handler(context.Background(), events.APIGatewayProxyRequest{
+		Path: "/classify",
+		Body: `{"iocs":["1.1.1.1","domain.com","email@email.com"]}`,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Check if the response is what we expect
+	expectedResponse := map[triage.IOCType][]string{
+		triage.DomainType: {"domain.com"},
+		triage.EmailType:  {"email@email.com"},
+		triage.IPType:     {"1.1.1.1"},
+	}
+	actualResponse := map[triage.IOCType][]string{}
+
+	err = json.Unmarshal([]byte(resp.Body), &actualResponse)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !reflect.DeepEqual(expectedResponse, actualResponse) {
+		t.Errorf("Did not get expected result")
+	}
 }

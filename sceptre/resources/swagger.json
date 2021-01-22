@@ -56,6 +56,25 @@
           }
         }
       }
+    },
+    "/classify": {
+      "post": {
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true
+          }
+        ],
+        "responses":{
+          "200":{
+            "description": "200 response"
+          }
+        }
+      }
     }
   }
 }
