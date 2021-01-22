@@ -1,6 +1,6 @@
 # Threat API Usage
 
-### IOC Types
+## IOC Types
 
 The following IOC types are supported:
 
@@ -27,7 +27,7 @@ The following IOC types are supported:
 | `mitre_subtechnique` | Mitre Subtechnique
 | `mitre_mitigation` | Mitre Mitigation
 
-#### Classifying IOC types
+### Classifying IOC types
 
 To classify an IOC type you can call the endpoint `/classify` with the following body
 
@@ -46,7 +46,8 @@ It will respond with a response similar to the following
 }
 ```
 
-### Requests
+## Jobs
+### Job Requests
 
 Requests to the Threat API are specified using the following request format:
 
@@ -71,7 +72,7 @@ IOCs of that type.
 A single `job_id` is returned in response to a `POST` request to the `/job`
 endpoint.
 
-### Responses
+### Job Responses
 
 The status and any available output for a given `job_id` can be obtained from
 the `/job/{job_id}` endpoint.
@@ -93,6 +94,27 @@ Example response when querying a `job_id` of `12345`:
     "servicenow": {
       "output": "ServiceNow specific results"
     }
+  }
+}
+```
+
+## Modules
+
+To get the available modules and the IOC types they support, run the following request
+
+```txt
+GET /modules
+```
+
+It will respond with something similar to
+
+```json
+{
+  "geoip": {
+    "supported_ioc_types": ["ip"]
+  },
+  "whois": {
+    "supported_ioc_types": ["domain"]
   }
 }
 ```
