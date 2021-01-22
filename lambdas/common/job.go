@@ -37,7 +37,7 @@ type JobDBEntry struct {
 
 	// Decrypted data
 	DecryptedRequest   string
-	DecryptedResponses map[string]string
+	DecryptedResponses map[string]interface{}
 }
 
 // Decrypt will use asherah to decrypt the Responses and Request
@@ -52,12 +52,21 @@ func (j *JobDBEntry) Decrypt(ctx context.Context, t *toolbox.Toolbox) {
 	}
 
 	// Decrypt responses
-	j.DecryptedResponses = map[string]string{}
+	j.DecryptedResponses = map[string]interface{}{}
 	for moduleName, response := range j.Responses {
 		decryptedData, err := t.Dencrypt(ctx, j.JobID, response)
-		if err == nil {
-			j.DecryptedResponses[moduleName] = string(decryptedData)
+		if err != nil {
+			continue
 		}
+		// Try to unmarshal the response data
+		var unmarshalledDecryptedData interface{}
+		err = json.Unmarshal(decryptedData, &unmarshalledDecryptedData)
+		if err != nil {
+			// Just put the string version if we cannot unmarshal it
+			j.DecryptedResponses[moduleName] = string(decryptedData)
+			continue
+		}
+		j.DecryptedResponses[moduleName] = unmarshalledDecryptedData
 	}
 }
 
