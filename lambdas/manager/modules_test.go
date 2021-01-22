@@ -23,8 +23,8 @@ func TestGetModules(t *testing.T) {
 	// This isn't a true test, and you should really check what results is in the debugger,
 	// but it's a good sanity check
 	t.Run("CheckForIPType", func(t *testing.T) {
-		for _, iocTypes := range results {
-			for _, iocType := range iocTypes {
+		for _, metadata := range results {
+			for _, iocType := range metadata.SupportedIOCTypes {
 				if iocType == triage.IPType {
 					return
 				}

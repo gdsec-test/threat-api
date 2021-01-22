@@ -56,6 +56,8 @@ func handler(ctx context.Context, request events.APIGatewayProxyRequest) (events
 		return getJobs(ctx, request)
 	case strings.HasSuffix(path, "/classify"):
 		return classifyIOCs(ctx, request)
+	case strings.HasSuffix(path, "/modules"):
+		return GetModules(ctx, request)
 	}
 
 	// Assume they want to create a new job
