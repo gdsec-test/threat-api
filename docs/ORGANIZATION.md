@@ -15,16 +15,15 @@ This git repository contains resources grouped by the following functions:
 
   `apis/`
 
-  This directory contains sub-directories, one per service.  The following
-  example shows the layout for the `geoip` service:
+  This directory contains sub-directories, one per threat module.  The following
+  example shows the layout for the `geoip` threat module:
 
 
   | File path | Description
   | --- | ---
-  | `apis/geoip/` | This sub-directory contains the definition, configuration, and implementation of the `geoip` service.
+  | `apis/geoip/` | This sub-directory contains the definition, configuration, and implementation of the `geoip` threat module.
   | `apis/geoip/.gitignore` | The `.gitignore` file should reference any transient build artifacts, such as `function.zip`.
-  | `apis/geoip/docs/` | Development documentation related to the `geoip` service.  This documentation should include sensitivity, privacy, and security considerations of any data consumed or produced by this API.
-  | `apis/geoip/swagger.json` | The Swagger specification for this specific API (Swagger 2.0 format)
+  | `apis/geoip/docs/` | Development documentation related to the `geoip` threat module.  This documentation should include sensitivity, privacy, and security considerations of any data consumed or produced by this API.
   | `apis/geoip/build.sh` | A script that builds the lambda package as `function.zip`.  **NOTE:** this script must run successfully in a Linux environment (for CICD), and may optionally support alternative environments (MacOS or WSL).
   | `apis/geoip/lambda.json` | Parameters that describe the lambda function to be created.
 
@@ -38,36 +37,37 @@ This git repository contains resources grouped by the following functions:
     "runtime": "go1.x",
     "timeout": "15",
     "memory-size": "256",
-    "handler": "main"
+    "handler": "main",
+    "metadata": {
+      "supported_ioc_types": [
+        "domain"
+      ]
+    }
   }
   ```
 
+  Any data contained in the "metadata" attribute will be serialized and
+  populated in a SSM parameter store entry as
+  `/ThreatTools/Modules/<THREAT_MODULE_NAME>`.
+
 * Swagger Spec
 
-  `swagger.json`
+  `sceptre/resources/swagger.json`
 
   This file contains the Swagger specification that's used by Swagger UI
   (Swagger 2.0 format).
 
-  **NOTE:** this file is originally created and maintained as a static file,
-  but will be replaced by a process that generates it automatically by
-  combining the Swagger information contained within each API.
-
 * OpenAPI Spec (API Gateway)
 
-  `api.json`
+  `sceptre/resources/api-setup.json`
 
   This file contains the OpenAPI specification that's used by the API Gateway
   Service Catalog product.  It contains a superset of the data in the
   `swagger.json` file above, with additional information specifying which
   lambda functions are integrated with the various endpoints.
 
-  **NOTE:** this file is originally created and maintained as a static file,
-  but will be replaced by a process that generates it automatically by
-  combining the Swagger information contained within each API.
+* GitHub Actions Scripts (CI/CD)
 
-* CI/CD Scripts
+  `.github/`
 
-  `cicd/` (TBD)
-
-  TBD
+  See [CICD using Github Actions](DEPLOYMENTS.md) for more information.
