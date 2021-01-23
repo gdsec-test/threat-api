@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-lambda-go/events"
+	"github.com/gdcorp-infosec/threat-api/lambdas/common"
 	"github.com/gdcorp-infosec/threat-api/lambdas/common/triagelegacyconnector/triage"
 )
 
@@ -163,5 +164,25 @@ func TestClassifyIOCs(t *testing.T) {
 	}
 	if !reflect.DeepEqual(expectedResponse, actualResponse) {
 		t.Errorf("Did not get expected result")
+	}
+}
+
+func TestGetModulesRequest(t *testing.T) {
+	resp, err := handler(context.Background(), events.APIGatewayProxyRequest{
+		Path:       "/modules",
+		HTTPMethod: "GET",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	ret := map[string]common.LambdaMetadata{}
+	err = json.Unmarshal([]byte(resp.Body), &ret)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if len(ret) == 0 {
+		t.Fatalf("no results returned")
 	}
 }

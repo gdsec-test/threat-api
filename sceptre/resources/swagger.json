@@ -69,8 +69,20 @@
             "required": true
           }
         ],
-        "responses":{
-          "200":{
+        "responses": {
+          "200": {
+            "description": "200 response"
+          }
+        }
+      }
+    },
+    "/modules": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
             "description": "200 response"
           }
         }
