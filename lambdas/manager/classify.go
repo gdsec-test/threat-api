@@ -115,6 +115,10 @@ func getIOCsTypes(iocs []string) map[triage.IOCType][]string {
 			triageType = triage.HostnameType
 			triageContent = iocInput
 		}
+		if triageType == triage.UnknownType {
+			iocsMap[triageType] = append(iocsMap[triageType], iocInput)
+			continue
+		}
 		iocsMap[triageType] = append(iocsMap[triageType], triageContent)
 	}
 
