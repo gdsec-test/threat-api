@@ -2,7 +2,7 @@
 
 BUCKET=$(aws s3api list-buckets --output text --query 'Buckets[?ends_with(Name, `swagger-ui-bucket`)].Name')
 
-SWAGGER_UI_VERSION="3.38.0"
+SWAGGER_UI_VERSION="3.40.0"
 
 mkdir -p swagger-ui-bucket
 pushd swagger-ui-bucket
