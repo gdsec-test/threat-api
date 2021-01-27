@@ -120,7 +120,7 @@
           "Miscellaneous"
         ],
         "summary": "Identify IOC types for a provided list of IOCs",
-        "description": "This API accepts a list of IOCs, and returns a dictionary indexed by supported modules, where each dictionary value contains IOCs of the corresponding module.",
+        "description": "This API accepts a list of IOCs, and returns a dictionary indexed by supported IOC type, where each dictionary value contains IOCs of the corresponding IOC type.",
         "produces": [
           "application/json"
         ],
@@ -150,7 +150,7 @@
           "Miscellaneous"
         ],
         "summary": "List modules and their associated IOC types",
-        "description": "This API returns a dictionary of supported modules, each of which contains information about supported IOC types per module.",
+        "description": "This API returns a dictionary of supported modules, each of which contains metadata about the module (supported IOC types, etc.).",
         "produces": [
           "application/json"
         ],
