@@ -10,8 +10,6 @@ import (
 )
 
 func handler(ctx context.Context, request events.SNSEvent) ([]*common.CompletedJobData, error) {
-	// Super simple code to convert our interface to the legacy one
-	// and return the results
 	geoIPTriageModule := TriageModule{}
 	return triagelegacyconnector.AWSToTriage(ctx, &geoIPTriageModule, request)
 }

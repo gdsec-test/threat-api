@@ -24,7 +24,7 @@ func (m *TriageModule) Supports() []triage.IOCType {
 	return []triage.IOCType{triage.IPType}
 }
 
-// Triage Finds whois information from a list of domains
+// Triage Finds geoip information given IPs
 func (m *TriageModule) Triage(ctx context.Context, triageRequest *triage.Request) ([]*triage.Data, error) {
 	geoIPResults := Lookup(ctx, triageRequest.IOCs)
 
@@ -33,8 +33,6 @@ func (m *TriageModule) Triage(ctx context.Context, triageRequest *triage.Request
 		Metadata: []string{},
 	}
 
-	// Add some metadata if we found something interesting in the whois stats
-	// Dump full data if we are doing full dump
 	if triageRequest.Verbose {
 		result, err := json.Marshal(geoIPResults)
 		if err != nil {
@@ -60,7 +58,6 @@ func (m *TriageModule) Triage(ctx context.Context, triageRequest *triage.Request
 		"Long",
 	})
 
-	// Write each domain whois info
 	for _, result := range geoIPResults {
 		csv.Write([]string{
 			result.IP,
