@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"github.com/opentracing/opentracing-go"
 	"github.com/oschwald/geoip2-golang"
 	"net"
 )
@@ -44,12 +45,15 @@ func Lookup(ctx context.Context, ips []string) []*GeoIPInfo {
 		default:
 		}
 
+		span, ctx := opentracing.StartSpanFromContext(ctx, "GeoIPLookup")
 		addErrRow := func(err error) {
 			geoipResults = append(geoipResults, &GeoIPInfo{
 				IP:             ip,
 				EnglishCity:    fmt.Sprintf("ERROR: %s", err),
 				EnglishCountry: fmt.Sprintf("ERROR: %s", err),
 			})
+			span.Finish()
+
 		}
 
 		record, err := db.City(net.ParseIP(ip))
