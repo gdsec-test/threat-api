@@ -62,6 +62,11 @@ func handler(ctx context.Context, request events.SQSEvent) (string, error) {
 
 			t.Logger.WithFields(logrus.Fields{"moduleName": completedJob.ModuleName, "jobData": completedJob}).Info("Processing module response")
 
+			// Convert blank responses to blank lists
+			if completedJob.Response == "" {
+				completedJob.Response = "[]"
+			}
+
 			_, err = processCompletedJob(ctx, completedJob)
 			if err != nil {
 				t.Logger.WithError(err).Error("Error processing response")
