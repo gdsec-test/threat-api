@@ -165,14 +165,19 @@ each lambda can technically accept and array of jobs to handle.
 Tracing helps us understand what's going on inside each lambda.  We use ELK APM as our tracing server.
 
 In order to add tracing to your lambda, start by making sure your lambda creates the toolbox, and closes it after it's done executing.  This creates the default tracer.  It uses ENV vars to point to the right server.
-You can make sure you are setting these env vars correctly by viewing another lambda, or the go APM setup instructions in our APM server.
 
-Ex:
+EX:
 
 ```go
 t := toolbox.GetToolbox()
 defer t.Close(ctx)
 ```
+
+You can make sure you are setting these env vars correctly by viewing another lambda, or the go APM setup instructions in our APM server.  The env vars are
+
+* ELASTIC_APM_SERVICE_NAME
+* ELASTIC_APM_SERVER_URL
+* ELASTIC_APM_SECRET_TOKEN
 
 To create a trace, follow the below pattern
 
