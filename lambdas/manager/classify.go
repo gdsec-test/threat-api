@@ -8,8 +8,8 @@ import (
 	"strings"
 
 	"github.com/aws/aws-lambda-go/events"
+	"github.com/gdcorp-infosec/go-ioc/ioc"
 	"github.com/gdcorp-infosec/threat-api/lambdas/common/triagelegacyconnector/triage"
-	"github.com/vertoforce/go-ioc/ioc"
 )
 
 // Regexes

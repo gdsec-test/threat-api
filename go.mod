@@ -5,6 +5,7 @@ go 1.15
 require (
 	github.com/aws/aws-lambda-go v1.19.1
 	github.com/aws/aws-sdk-go v1.35.27
+	github.com/gdcorp-infosec/go-ioc v0.0.0-20210129204151-a422e971dec3
 	github.com/gdcorp-infosec/threat-util v0.0.0-20210119215543-bf06888df5ab
 	github.com/godaddy/asherah/go/appencryption v0.1.5
 	github.com/gorilla/mux v1.7.4 // indirect
@@ -14,7 +15,6 @@ require (
 	github.com/opentracing/opentracing-go v1.1.0
 	github.com/oschwald/geoip2-golang v1.4.0
 	github.com/sirupsen/logrus v1.7.0
-	github.com/vertoforce/go-ioc v0.0.0-20201028230052-ad588a5f691d
 	github.com/vertoforce/regexgrouphelp v0.1.1
 	go.elastic.co/apm v1.9.0
 	go.elastic.co/apm/module/apmlambda v1.8.0

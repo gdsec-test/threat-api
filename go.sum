@@ -60,6 +60,8 @@ github.com/elastic/go-windows v1.0.0/go.mod h1:TsU0Nrp7/y3+VwE82FoZF8gC/XFg/Elz6
 github.com/elastic/go-windows v1.0.1 h1:AlYZOldA+UJ0/2nBuqWdo90GFCgG9xuyw9SYzGUtJm0=
 github.com/elastic/go-windows v1.0.1/go.mod h1:FoVvqWSun28vaDQPbj2Elfc0JahhPB7WQEGa3c814Ss=
 github.com/fsnotify/fsnotify v1.4.7/go.mod h1:jwhsz4b93w/PPRr/qN1Yymfu8t87LnFCMoQvtojpjFo=
+github.com/gdcorp-infosec/go-ioc v0.0.0-20210129204151-a422e971dec3 h1:HkrE8GYw1BDjuKAWiQVV9byjAstlh2S9GH7Mcf0A93A=
+github.com/gdcorp-infosec/go-ioc v0.0.0-20210129204151-a422e971dec3/go.mod h1:fi8vnUB1K/g97dG5NsnwV/aRFb8LA10Cg7Nr81PFIVI=
 github.com/gdcorp-infosec/threat-util v0.0.0-20210119215543-bf06888df5ab h1:ekBb9scn7ulFh7jPH+HoZbGGfJfkSTIRIOR4u6hQn1o=
 github.com/gdcorp-infosec/threat-util v0.0.0-20210119215543-bf06888df5ab/go.mod h1:8EVt+1ey/bt1tYrYKYgULFyLWBnLtzyc+dNzXUsz564=
 github.com/ghodss/yaml v1.0.0/go.mod h1:4dBDuWmgqj2HViK6kFavaiC9ZROes6MMH2rRYeMEF04=
@@ -221,8 +223,6 @@ github.com/ugorji/go v1.1.4/go.mod h1:uQMGLiO92mf5W77hV/PUCpI3pbzQx3CRekS0kk+RGr
 github.com/ugorji/go v1.1.7/go.mod h1:kZn38zHttfInRq0xu/PH0az30d+z6vm202qpg1oXVMw=
 github.com/ugorji/go/codec v1.1.7/go.mod h1:Ax+UKWsSmolVDwsd+7N3ZtXu+yMGCf907BLYF3GoBXY=
 github.com/urfave/cli/v2 v2.2.0/go.mod h1:SE9GqnLQmjVa0iPEY0f1w3ygNIYcIJ0OKPMoW2caLfQ=
-github.com/vertoforce/go-ioc v0.0.0-20201028230052-ad588a5f691d h1:yzkl0u8MP+WT2BfFMMpj4hUvn7N2DaxykEJYNMcphhQ=
-github.com/vertoforce/go-ioc v0.0.0-20201028230052-ad588a5f691d/go.mod h1:xktmFMyfLk6SmI5m1XBCztax57uId0sCGiIXYtirtFw=
 github.com/vertoforce/multiregex v0.0.0-20200305221808-10dce2b47221/go.mod h1:HuLba3nJXU4Y8nso+oIWEIUjO+3Cz6Y/I9LTXymsQDw=
 github.com/vertoforce/regexgrouphelp v0.1.1/go.mod h1:gmKg9fm+WTWA0+rPFFrvbxFSXUJU89woW7j5J5ArQkQ=
 github.com/vertoforce/streamregex v0.0.0-20200126210557-5b6afd4f6723/go.mod h1:iCqagidmqS8asUBG0F6WCy0VqQfAbDUccs5X0y0BS6M=
