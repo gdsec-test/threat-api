@@ -5,7 +5,7 @@ This playbook briefs how to handle errors related to third party vendors. Eg, Re
   - Check if the key is changed
 -	Validate if anyone changed production code to cause the error
 - Check with the Recorded Future API with their monitoring, if the API is available
--	Reach out to Recorded Future contacts – [Jathan](jathan.anandham@recordedfuture.com)
+-	Reach out to Recorded Future contacts – [Jathan](mailto:jathan.anandham@recordedfuture.com)
 
 ### Shodan
 ### Tanium 
