@@ -25,6 +25,10 @@ type GeoIPInfo struct {
 // Lookup performs a geoIP search on passed IPs
 func Lookup(ctx context.Context, ips []string) []*GeoIPInfo {
 
+	var span opentracing.Span
+	span, ctx = opentracing.StartSpanFromContext(ctx, "GeoIPDBSession")
+	defer span.Finish()
+
 	geoipResults := []*GeoIPInfo{}
 	// load geoip Database
 	db, err := geoip2.Open("GeoLite2-City.mmdb")
@@ -45,7 +49,7 @@ func Lookup(ctx context.Context, ips []string) []*GeoIPInfo {
 		default:
 		}
 
-		span, ctx := opentracing.StartSpanFromContext(ctx, "GeoIPLookup")
+		span, ctx = opentracing.StartSpanFromContext(ctx, "GeoIPLookup")
 		addErrRow := func(err error) {
 			geoipResults = append(geoipResults, &GeoIPInfo{
 				IP:             ip,
@@ -53,7 +57,6 @@ func Lookup(ctx context.Context, ips []string) []*GeoIPInfo {
 				EnglishCountry: fmt.Sprintf("ERROR: %s", err),
 			})
 			span.Finish()
-
 		}
 
 		record, err := db.City(net.ParseIP(ip))
@@ -70,6 +73,7 @@ func Lookup(ctx context.Context, ips []string) []*GeoIPInfo {
 			Lat:            record.Location.Latitude,
 			Long:           record.Location.Longitude,
 		})
+		span.Finish()
 	}
 
 	return geoipResults
