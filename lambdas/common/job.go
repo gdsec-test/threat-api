@@ -47,12 +47,15 @@ func (j *JobDBEntry) Decrypt(ctx context.Context, t *toolbox.Toolbox) {
 	defer span.Finish()
 
 	// Decrypt request
+	span, ctx = opentracing.StartSpanFromContext(ctx, "DecryptRequest")
 	decryptedData, err := t.Dencrypt(ctx, j.JobID, *j.Request)
 	if err == nil {
 		j.DecryptedRequest = string(decryptedData)
 	}
+	span.Finish()
 
 	// Decrypt responses
+	span, ctx = opentracing.StartSpanFromContext(ctx, "DecryptResponses")
 	j.DecryptedResponses = map[string]interface{}{}
 	for moduleName, response := range j.Responses {
 		decryptedData, err := t.Dencrypt(ctx, j.JobID, response)
@@ -69,6 +72,7 @@ func (j *JobDBEntry) Decrypt(ctx context.Context, t *toolbox.Toolbox) {
 		}
 		j.DecryptedResponses[moduleName] = unmarshalledDecryptedData
 	}
+	span.Finish()
 }
 
 // JobRequest contains information to request a job to be performed
