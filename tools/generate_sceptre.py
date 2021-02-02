@@ -108,6 +108,8 @@ CF_RESOURCES_BLOCK = dedent(
         DestinationConfig:
           OnSuccess:
             Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobResponses
+          OnFailure:
+            Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobFailures
         FunctionName: __NAME__
         Qualifier: $LATEST
 
@@ -225,6 +227,8 @@ SC_RESOURCES_BLOCK = dedent(
         DestinationConfig:
           OnSuccess:
             Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobResponses
+          OnFailure:
+            Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobFailures
         FunctionName: __NAME__
         Qualifier: $LATEST
 

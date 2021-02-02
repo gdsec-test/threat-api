@@ -406,6 +406,28 @@ Resources:
       Type: String
       Value: !Sub https://sqs.${AWS::Region}.amazonaws.com/${AWS::AccountId}/JobResponses
 
+  ThreatJobFailuresQueue:
+    Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
+    Properties:
+      ProductName: SQS
+      ProvisioningArtifactName: 1.0.8
+      ProvisionedProductName: ThreatJobFailuresQueue
+      ProvisioningParameters:
+        - Key: QueueName
+          Value: JobFailures
+        - Key: VisibilityTimeout
+          Value: 5400
+      Tags:
+        - Key: doNotShutDown
+          Value: true
+
+  ThreatJobFailuresQueueParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: /ThreatTools/JobFailures
+      Type: String
+      Value: !Sub https://sqs.${AWS::Region}.amazonaws.com/${AWS::AccountId}/JobFailures
+
   ThreatEncryptionKeyTable:
     Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
     Properties:
