@@ -209,7 +209,8 @@ func getJobs(ctx context.Context, request events.APIGatewayProxyRequest) (events
 		span.LogKV("error", err)
 		return events.APIGatewayProxyResponse{StatusCode: 500}, err
 	}
-	jobIDs := []string{}
+
+	response := []*common.JobDBEntry{}
 	err = dynamoDBClient.ScanPages(&dynamodb.ScanInput{
 		ExpressionAttributeNames:  expr.Names(),
 		ExpressionAttributeValues: expr.Values(),
@@ -218,24 +219,39 @@ func getJobs(ctx context.Context, request events.APIGatewayProxyRequest) (events
 		TableName:                 &t.JobDBTableName,
 	}, func(page *dynamodb.ScanOutput, lastPage bool) bool {
 		for _, entry := range page.Items {
-			if jobID, ok := entry[jobIDKey]; ok {
-				jobIDs = append(jobIDs, *jobID.S)
+			// This is a job is owned by this user
+			jobDB := &common.JobDBEntry{}
+			err = dynamodbattribute.UnmarshalMap(entry, jobDB)
+			if err != nil {
+				// TODO: Log?
+				continue
 			}
+			jobDB.Decrypt(ctx, t)
+
+			// Remove request data
+			jobDB.Request = nil
+			jobDB.DecryptedRequest = ""
+			// Remove actual response data
+			jobDB.Responses = nil
+			for moduleName := range jobDB.DecryptedResponses {
+				jobDB.DecryptedResponses[moduleName] = nil
+			}
+
+			response = append(response, jobDB)
 		}
 		// Always get the next page
 		return true
 	})
-
 	if err != nil {
 		err = fmt.Errorf("error getting jobs from database: %w", err)
 		span.LogKV("error", err)
 		return events.APIGatewayProxyResponse{StatusCode: 500}, err
 	}
 
-	response, _ := json.Marshal(jobIDs)
+	responseBytes, _ := json.Marshal(response)
 	return events.APIGatewayProxyResponse{
 		StatusCode: 200,
-		Body:       string(response),
+		Body:       string(responseBytes),
 	}, err
 }
 

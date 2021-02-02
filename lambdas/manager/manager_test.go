@@ -120,14 +120,14 @@ func TestJobWork(t *testing.T) {
 		}
 
 		// Check to make sure we got our JobID
-		response := []string{}
+		response := []common.JobDBEntry{}
 		err = json.Unmarshal([]byte(resp.Body), &response)
 		if err != nil {
 			t.Fatal(err)
 		}
 		foundOurJob := func() bool {
-			for _, jID := range response {
-				if jID == jobID {
+			for _, job := range response {
+				if job.JobID == jobID {
 					return true
 				}
 			}

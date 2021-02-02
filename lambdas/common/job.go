@@ -29,16 +29,16 @@ type CompletedJobData struct {
 type JobDBEntry struct {
 	JobID string `dynamodbav:"job_id"`
 	// Map of module name to the encrypted data
-	Responses map[string]appencryption.DataRowRecord `dynamodbav:"responses"`
-	Request   appencryption.DataRowRecord            `dynamodbav:"request"`
+	Responses map[string]appencryption.DataRowRecord `dynamodbav:"responses" json:",omitempty"`
+	Request   *appencryption.DataRowRecord           `dynamodbav:"request" json:",omitempty"`
 	// Epoch start time
 	StartTime float64 `dynamodbav:"startTime"`
 	// Count of total modules that should be run from this request
 	TotalModules int `dynamodbav:"totalModules"`
 
 	// Decrypted data
-	DecryptedRequest   string
-	DecryptedResponses map[string]interface{}
+	DecryptedRequest   string                 `json:",omitempty"`
+	DecryptedResponses map[string]interface{} `json:",omitempty"`
 }
 
 // Decrypt will use asherah to decrypt the Responses and Request
@@ -47,7 +47,7 @@ func (j *JobDBEntry) Decrypt(ctx context.Context, t *toolbox.Toolbox) {
 	defer span.Finish()
 
 	// Decrypt request
-	decryptedData, err := t.Dencrypt(ctx, j.JobID, j.Request)
+	decryptedData, err := t.Dencrypt(ctx, j.JobID, *j.Request)
 	if err == nil {
 		j.DecryptedRequest = string(decryptedData)
 	}
