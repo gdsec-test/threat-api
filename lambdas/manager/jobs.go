@@ -23,10 +23,10 @@ func createJob(ctx context.Context, request events.APIGatewayProxyRequest) (even
 	defer span.Finish()
 
 	// Generate job_id
-	jobID := t.GenerateJobID(ctx)
+	jobID := to.GenerateJobID(ctx)
 
 	// Get username
-	jwt, err := t.ValidateJWT(ctx, t.GetJWTFromRequest(request))
+	jwt, err := to.ValidateJWT(ctx, to.GetJWTFromRequest(request))
 	if err != nil {
 		return events.APIGatewayProxyResponse{StatusCode: 401}, err
 	}
@@ -34,7 +34,7 @@ func createJob(ctx context.Context, request events.APIGatewayProxyRequest) (even
 
 	// Encrypt request
 	span, ctx = opentracing.StartSpanFromContext(ctx, "EncryptRequest")
-	encryptedData, err := t.Encrypt(ctx, jobID, []byte(request.Body))
+	encryptedData, err := to.Encrypt(ctx, jobID, []byte(request.Body))
 	if err != nil {
 		span.LogKV("error", err)
 		span.Finish()
@@ -50,7 +50,7 @@ func createJob(ctx context.Context, request events.APIGatewayProxyRequest) (even
 
 	// Get the SNS topic ARN
 	span, ctx = opentracing.StartSpanFromContext(ctx, "GetSNSTopicInfo")
-	topicARN, err := t.GetFromParameterStore(ctx, snsTopicARNParameterName, false)
+	topicARN, err := to.GetFromParameterStore(ctx, snsTopicARNParameterName, false)
 	if err != nil || topicARN.Value == nil {
 		span.LogKV("error", fmt.Errorf("error getting SNS topic ARN: %w", err))
 		span.Finish()
@@ -59,7 +59,7 @@ func createJob(ctx context.Context, request events.APIGatewayProxyRequest) (even
 
 	// Count total subscriptions to the SNS topic
 	// Note this may only work up to 100 subscriptions
-	snsClient := sns.New(t.AWSSession)
+	snsClient := sns.New(to.AWSSession)
 	subscriptionsOutput, err := snsClient.ListSubscriptionsByTopic(&sns.ListSubscriptionsByTopicInput{
 		TopicArn: topicARN.Value,
 	})
@@ -85,7 +85,7 @@ func createJob(ctx context.Context, request events.APIGatewayProxyRequest) (even
 			"responses":    {M: map[string]*dynamodb.AttributeValue{}},
 			"totalModules": {N: aws.String(fmt.Sprintf("%d", totalModuleCount))},
 		},
-		TableName: &t.JobDBTableName,
+		TableName: &to.JobDBTableName,
 	})
 	if err != nil {
 		span.LogKV("error", err)
@@ -143,7 +143,7 @@ func getJobStatus(ctx context.Context, jobID string) (events.APIGatewayProxyResp
 		Key: map[string]*dynamodb.AttributeValue{
 			jobIDKey: {S: aws.String(jobID)},
 		},
-		TableName: &t.JobDBTableName,
+		TableName: &to.JobDBTableName,
 	})
 	if err != nil {
 		span.LogKV("error", err)
@@ -158,15 +158,15 @@ func getJobStatus(ctx context.Context, jobID string) (events.APIGatewayProxyResp
 	jobDB := &common.JobDBEntry{}
 	err = dynamodbattribute.UnmarshalMap(item.Item, jobDB)
 	if err != nil {
-		t.Logger.WithError(err).Error("error unmarshaling dynamodb item")
+		to.Logger.WithError(err).Error("error unmarshaling dynamodb item")
 	}
 
 	// Asherah decrypt
-	jobDB.Decrypt(ctx, t)
+	jobDB.Decrypt(ctx, to)
 
 	jobStatus, jobPercentage, err := getJobProgress(ctx, jobDB)
 	if err != nil {
-		t.Logger.WithError(err).Error("error getting job status")
+		to.Logger.WithError(err).Error("error getting job status")
 	}
 
 	// Marshal and reply
@@ -194,7 +194,7 @@ func getJobs(ctx context.Context, request events.APIGatewayProxyRequest) (events
 	span, ctx := opentracing.StartSpanFromContext(ctx, "GetUserJobs")
 	defer span.Finish()
 
-	jwt, err := t.ValidateJWT(ctx, t.GetJWTFromRequest(request))
+	jwt, err := to.ValidateJWT(ctx, to.GetJWTFromRequest(request))
 	if err != nil {
 		err = fmt.Errorf("error validating jwt: %w", err)
 		span.LogKV("error", err)
@@ -216,7 +216,7 @@ func getJobs(ctx context.Context, request events.APIGatewayProxyRequest) (events
 		ExpressionAttributeValues: expr.Values(),
 		FilterExpression:          expr.Filter(),
 		ProjectionExpression:      expr.Projection(),
-		TableName:                 &t.JobDBTableName,
+		TableName:                 &to.JobDBTableName,
 	}, func(page *dynamodb.ScanOutput, lastPage bool) bool {
 		for _, entry := range page.Items {
 			// This is a job is owned by this user
@@ -226,7 +226,7 @@ func getJobs(ctx context.Context, request events.APIGatewayProxyRequest) (events
 				// TODO: Log?
 				continue
 			}
-			jobDB.Decrypt(ctx, t)
+			jobDB.Decrypt(ctx, to)
 
 			// Remove request data
 			jobDB.Request = nil

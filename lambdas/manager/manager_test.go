@@ -139,6 +139,7 @@ func TestJobWork(t *testing.T) {
 
 		fmt.Printf("Found user's jobs: %v\n", response)
 	})
+	to.Close(context.Background())
 }
 
 func TestClassifyIOCs(t *testing.T) {

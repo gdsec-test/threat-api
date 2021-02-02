@@ -15,7 +15,7 @@ import (
 
 // GetModules responds to a API gateway request to list the available modules and their metadata
 func GetModules(ctx context.Context, request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
-	modulesAndSupportedTypes, err := getModules(ctx, t)
+	modulesAndSupportedTypes, err := getModules(ctx, to)
 	if err != nil {
 		return events.APIGatewayProxyResponse{StatusCode: 500}, fmt.Errorf("error getting modules: %w", err)
 	}
