@@ -10,6 +10,30 @@ The Threat API and UI are both supported by the same business service (Threat To
 
 You can edit the Business Service details by going to this link - https://godaddy.service-now.com/nav_to.do?uri=cmdb_ci_service.do?sys_id=947c98561bb52010ddbe21be6e4bcb6a
 
+Our Service is a Tier 3 service and complies with the availability and monitoring standards at - https://github.secureserver.net/CTO/guidelines/blob/master/Standards-Best-Practices/Monitoring/Monitoring%20Standard.md
+https://github.secureserver.net/CTO/guidelines/blob/master/Standards-Best-Practices/Monitoring/Availability%20Standard.md
+
+Uptime Requirement - Our service shall comply with the targets assigned in the availability standard for greater than 99.0% uptime. In reality, I expect our service will be greater than 99.5% given we are utilizing serverless and fargate AWS services.
+
+## Troubleshooting Overview
+
+Our Architecture is made up of both API and UI components. We will monitor the following aspects of each in compliance with availability and monitoring standards:
+* API
+  * Dead Letter Queue for Lambda Jobs to monitor end-user experience
+  * APM metrics to trace all API requests
+  * API Gateway cloudwatch alarms with Moogsoft integration
+  * DynamoDB job results troubleshooting (jobs not listed in DynamoDB)
+  * Cloudwatch & Cloudtrail logs for other errors that show up: including Lambda failures
+* UI
+  * Site24x7 for UI health status - https://ui.threat.int.gdcorp.tools/healthcheck
+  * Fargate container failure Cloudwatch alarm with Moogsoft integration
+  * ALB cloudwatch alarms with Moogsoft integration
+* General Logging
+  * Application Logs will be sent to ESSP stack - https://threattools-non-prod.kibana.int.gdcorp.tools/app/home#/
+  * Application Security Event Logs will be sent to security logging pipeline per the application logging standard at x.co/appseclog.
+    * Events going to the application security logging stream will include AuthZ events, and Job submission metadata
+
+
 ## General Troubleshooting
 
 For most app level errors and problems, check the [ELK Stack APM Server](https://threattools-non-prod.kibana.int.gdcorp.tools/app/apm) (sign in via okta).  It will most likely have errors that would provide the best trail to follow.
@@ -28,6 +52,10 @@ Find the APM selection in the sidebar
 From there you can click in to an individual service and view traces (example TODO).
 
 </details>
+
+## Threat UI Tenet Troubleshooting
+
+Please review additional troubleshooting steps at - https://github.com/gdcorp-infosec/threat-ui-tenet/blob/main/TROUBLESHOOT.md
 
 ## Gateway is not calling a lambda
 
