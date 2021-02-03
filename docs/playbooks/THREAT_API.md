@@ -6,14 +6,14 @@ This document will be more and more populated as we encounter and document commo
 
 ## Business Service and Support Group Information
 
-The Threat API and UI are both supported by the same business service (Threat Tools) and support group (ENG-Threat Research). ENG-Threat Research has an oncall group setup that can be found at https://godaddy.service-now.com/oncall and searching for ENG-Threat Research. 
+The Threat API and UI are both supported by the same business service (Threat Tools) and support group (ENG-Threat Research). ENG-Threat Research has an oncall group setup that can be found at https://godaddy.service-now.com/oncall and searching for ENG-Threat Research.
 
 You can edit the Business Service details by going to this link - https://godaddy.service-now.com/nav_to.do?uri=cmdb_ci_service.do?sys_id=947c98561bb52010ddbe21be6e4bcb6a
 
 Our Service is a Tier 3 service and complies with the availability and monitoring standards at - https://github.secureserver.net/CTO/guidelines/blob/master/Standards-Best-Practices/Monitoring/Monitoring%20Standard.md
 https://github.secureserver.net/CTO/guidelines/blob/master/Standards-Best-Practices/Monitoring/Availability%20Standard.md
 
-Uptime Requirement - Our service shall comply with the targets assigned in the availability standard for greater than 99.0% uptime. In reality, I expect our service will be greater than 99.5% given we are utilizing serverless and fargate AWS services. Site24x7 will be used to measure uptime availability and will be monitoring both Web UI - https://ui.threat.int.gdcorp.tools/ and REST API - https://api.threat.int.gdcorp.tools/. 
+Uptime Requirement - Our service shall comply with the targets assigned in the availability standard for greater than 99.0% uptime. In reality, I expect our service will be greater than 99.5% given we are utilizing serverless and fargate AWS services. Site24x7 will be used to measure uptime availability and will be monitoring both Web UI - https://ui.threat.int.gdcorp.tools/ and REST API - https://api.threat.int.gdcorp.tools/.
 
 ## Troubleshooting Overview
 
@@ -65,7 +65,7 @@ Check the connection and permissions from the gateway to the lambda.  This will 
 
 If you notice that your lambda is not being run, it is most likely a problem with the connection to the SNS topic.  Currently, on every job triggering, each lambda should trigger.  And it's up to the lambda to determine if it should run and generate results.  So if you lambda is not running, it is not listening to the SNS topic properly.
 
-Make sure the lambda is set up to be triggered from the proper SNS topic, and review the sceptre files for this.  
+Make sure the lambda is set up to be triggered from the proper SNS topic, and review the sceptre files for this.
 ![sns JobRequests](../diagrams/sns_lambdas.png)
 
 If your lambda is still not running, check it's execution role, it should use the threat lambda execution role.
@@ -79,7 +79,7 @@ The problem is most likely directly between your lambda and Dynamodb.  Check out
 1. First check to make sure the response processor is picking up on your result.  Your lambda should be sending the results to the SQS queue that then is processed by the response processor.  Check to make sure your lambda has this destination set up as shown below.
 ![lambda SQS connections](../diagrams/lambda_sqs.png)
 1. Next check the logs of the response processor, this is the most likely place of error.  If your results are sent in the wrong format, the response processor will log it. Check input format for response processor [here](../DEVELOPMENT.md#output)
-1. Next check if the result is being populated to DynamoDB. 
+1. Next check if the result is being populated to DynamoDB.
 ![dynamoDB_joblists](../diagrams/dynamodb_joblists.png)
 If it is, great, it's likely just the manager lambda not properly decrypting and returning the results via the API. If not, it's worth doing deeper debugging in the response processor to check for code bugs or other errors.  See APM Instructions.
 1. If you check all these spots, but none show an indication of failure, it's probably worth doing deeper debugging in the code of the [response processor](../../lambdas/responseprocessor), and [manager lambda](../../lambdas/manager), depending on what is not working.
