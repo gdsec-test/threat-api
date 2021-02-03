@@ -21,9 +21,9 @@ Our Architecture is made up of both API and UI components. We will monitor the f
 * API
   * Dead Letter Queue for Lambda Jobs to monitor end-user experience - Jira story to complete (https://jira.godaddy.com/browse/THREAT-672)
   * APM metrics to trace all API requests. Instructions below in this page.
-  * API Gateway cloudwatch alarms with Moogsoft integration
-  * DynamoDB job results troubleshooting (jobs not listed in DynamoDB)
-  * Cloudwatch & Cloudtrail logs for other errors that show up: including Lambda failures
+  * API Gateway cloudwatch alarms with Moogsoft integration - Jira story to complete (https://jira.godaddy.com/browse/THREAT-721)
+  * DynamoDB job results troubleshooting (jobs not listed in DynamoDB) - Jira story to complete (https://jira.godaddy.com/browse/THREAT-722)
+  * Cloudwatch & Cloudtrail logs for other errors that show up: including Lambda failures - Jira story to complete ((https://jira.godaddy.com/browse/THREAT-645)
 * UI
   * Site24x7 for UI health status - https://ui.threat.int.gdcorp.tools/healthcheck - Prod Jira story to complete (https://jira.godaddy.com/browse/PRODUCTSEC-1301)
   * Fargate container failure Cloudwatch alarm with Moogsoft integration - Prod Jira story to complete https://jira.godaddy.com/browse/PRODUCTSEC-1304)
