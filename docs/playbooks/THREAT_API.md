@@ -13,24 +13,24 @@ You can edit the Business Service details by going to this link - https://godadd
 Our Service is a Tier 3 service and complies with the availability and monitoring standards at - https://github.secureserver.net/CTO/guidelines/blob/master/Standards-Best-Practices/Monitoring/Monitoring%20Standard.md
 https://github.secureserver.net/CTO/guidelines/blob/master/Standards-Best-Practices/Monitoring/Availability%20Standard.md
 
-Uptime Requirement - Our service shall comply with the targets assigned in the availability standard for greater than 99.0% uptime. In reality, I expect our service will be greater than 99.5% given we are utilizing serverless and fargate AWS services.
+Uptime Requirement - Our service shall comply with the targets assigned in the availability standard for greater than 99.0% uptime. In reality, I expect our service will be greater than 99.5% given we are utilizing serverless and fargate AWS services. Site24x7 will be used to measure uptime availability and will be monitoring both Web UI - https://ui.threat.int.gdcorp.tools/ and REST API - https://api.threat.int.gdcorp.tools/. 
 
 ## Troubleshooting Overview
 
 Our Architecture is made up of both API and UI components. We will monitor the following aspects of each in compliance with availability and monitoring standards:
 * API
-  * Dead Letter Queue for Lambda Jobs to monitor end-user experience
-  * APM metrics to trace all API requests
+  * Dead Letter Queue for Lambda Jobs to monitor end-user experience - Jira story to complete (https://jira.godaddy.com/browse/THREAT-672)
+  * APM metrics to trace all API requests. Instructions below in this page.
   * API Gateway cloudwatch alarms with Moogsoft integration
   * DynamoDB job results troubleshooting (jobs not listed in DynamoDB)
   * Cloudwatch & Cloudtrail logs for other errors that show up: including Lambda failures
 * UI
-  * Site24x7 for UI health status - https://ui.threat.int.gdcorp.tools/healthcheck
-  * Fargate container failure Cloudwatch alarm with Moogsoft integration
-  * ALB cloudwatch alarms with Moogsoft integration
+  * Site24x7 for UI health status - https://ui.threat.int.gdcorp.tools/healthcheck - Prod Jira story to complete (https://jira.godaddy.com/browse/PRODUCTSEC-1301)
+  * Fargate container failure Cloudwatch alarm with Moogsoft integration - Prod Jira story to complete https://jira.godaddy.com/browse/PRODUCTSEC-1304)
+  * ALB cloudwatch alarms with Moogsoft integration - Prod Jira story t complete https://jira.godaddy.com/browse/PRODUCTSEC-1304)
 * General Logging
   * Application Logs will be sent to ESSP stack - https://threattools-non-prod.kibana.int.gdcorp.tools/app/home#/
-  * Application Security Event Logs will be sent to security logging pipeline per the application logging standard at x.co/appseclog.
+  * Application Security Event Logs will be sent to security logging pipeline per the application logging standard at x.co/appseclog. - Jira story to complete (https://jira.godaddy.com/browse/THREAT-444)
     * Events going to the application security logging stream will include AuthZ events, and Job submission metadata
 
 
