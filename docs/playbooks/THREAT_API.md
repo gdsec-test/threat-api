@@ -65,7 +65,9 @@ Check the connection and permissions from the gateway to the lambda.  This will 
 
 If you notice that your lambda is not being run, it is most likely a problem with the connection to the SNS topic.  Currently, on every job triggering, each lambda should trigger.  And it's up to the lambda to determine if it should run and generate results.  So if you lambda is not running, it is not listening to the SNS topic properly.
 
-Make sure the lambda is set up to be triggered from the proper SNS topic, and review the sceptre files for this.  If your lambda is still not running, check it's execution role, it should use the threat lambda execution role.
+Make sure the lambda is set up to be triggered from the proper SNS topic, and review the sceptre files for this.  
+[!image](threat-api/docs/diagrams/sns_lambdas)
+If your lambda is still not running, check it's execution role, it should use the threat lambda execution role.
 
 ## Lambda results are not loading in to DynamoDB
 
