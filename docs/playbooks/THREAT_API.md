@@ -4,7 +4,13 @@ Threat API is deployed and managed on AWS.  You can see the full architecture on
 
 This document will be more and more populated as we encounter and document common problems.
 
-## General
+## Business Service and Support Group Information
+
+The Threat API and UI are both supported by the same business service (Threat Tools) and support group (ENG-Threat Research). ENG-Threat Research has an oncall group setup that can be found at https://godaddy.service-now.com/oncall and searching for ENG-Threat Research. 
+
+You can edit the Business Service details by going to this link - https://godaddy.service-now.com/nav_to.do?uri=cmdb_ci_service.do?sys_id=947c98561bb52010ddbe21be6e4bcb6a
+
+## General Troubleshooting
 
 For most app level errors and problems, check the [ELK Stack APM Server](https://threattools-non-prod.kibana.int.gdcorp.tools/app/apm) (sign in via okta).  It will most likely have errors that would provide the best trail to follow.
 
