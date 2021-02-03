@@ -65,7 +65,10 @@ Check the connection and permissions from the gateway to the lambda.  This will 
 
 If you notice that your lambda is not being run, it is most likely a problem with the connection to the SNS topic.  Currently, on every job triggering, each lambda should trigger.  And it's up to the lambda to determine if it should run and generate results.  So if you lambda is not running, it is not listening to the SNS topic properly.
 
-Make sure the lambda is set up to be triggered from the proper SNS topic, and review the sceptre files for this.  If your lambda is still not running, check it's execution role, it should use the threat lambda execution role.
+Make sure the lambda is set up to be triggered from the proper SNS topic, and review the sceptre files for this.  
+![sns JobRequests](../diagrams/sns_lambdas.png)
+
+If your lambda is still not running, check it's execution role, it should use the threat lambda execution role.
 
 ## Lambda results are not loading in to DynamoDB
 
@@ -73,7 +76,10 @@ If your lambda is definitely running (it runs and sends logs to cloudwatch), but
 
 The problem is most likely directly between your lambda and Dynamodb.  Check out the [architecture](../ARCHITECTURE.md) docs to see the elements in between.
 
-1. First check to make sure the response processor is picking up on your result.  Your lambda should be sending the results to the SQS queue that then is processed by the response processor.  Check to make sure your lambda has this destination set up.
-1. Next check the logs of the response processor, this is the most likely place of error.  If your results are sent in the wrong format, the response processor will log it.
-1. Next check if the result is being populated to DynamoDB.  If it is, great, it's likely just the manager lambda not properly decrypting and returning the results via the API. If not, it's worth doing deeper debugging in the response processor to check for code bugs or other errors.  See APM Instructions.
-1. If you check all these spots, but none show an indication of failure, it's probably worth doing deeper debugging in the code of the response processor, and manager lambda, depending on what is not working.
+1. First check to make sure the response processor is picking up on your result.  Your lambda should be sending the results to the SQS queue that then is processed by the response processor.  Check to make sure your lambda has this destination set up as shown below.
+![lambda SQS connections](../diagrams/lambda_sqs.png)
+1. Next check the logs of the response processor, this is the most likely place of error.  If your results are sent in the wrong format, the response processor will log it. Check input format for response processor [here](../DEVELOPMENT.md#output)
+1. Next check if the result is being populated to DynamoDB. 
+![dynamoDB_joblists](../diagrams/dynamodb_joblists.png)
+If it is, great, it's likely just the manager lambda not properly decrypting and returning the results via the API. If not, it's worth doing deeper debugging in the response processor to check for code bugs or other errors.  See APM Instructions.
+1. If you check all these spots, but none show an indication of failure, it's probably worth doing deeper debugging in the code of the [response processor](../../lambdas/responseprocessor), and [manager lambda](../../lambdas/manager), depending on what is not working.
