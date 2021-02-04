@@ -88,7 +88,7 @@ func TestJobWork(t *testing.T) {
 		}
 
 		// Wait a bit and check if the job completed
-		time.Sleep(time.Second)
+		time.Sleep(time.Second * 3)
 		resp, err = handler(context.Background(), events.APIGatewayProxyRequest{
 			PathParameters: map[string]string{"job_id": jobID},
 		})
@@ -145,7 +145,7 @@ func TestJobWork(t *testing.T) {
 			t.Errorf("did not find our jobID %s in returned jobIDs %v", jobID, response)
 		}
 		if _, ok := ourJob.DecryptedRequest["metadata"]; !ok {
-			t.Errorf("metadata not returned in jobs list for our job")
+			t.Errorf("metadata not returned for our job in the jobs list")
 		}
 
 		// Make sure request and responses (unencrypted) are not populated
