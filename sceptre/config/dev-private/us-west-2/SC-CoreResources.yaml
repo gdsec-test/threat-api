@@ -1,6 +1,7 @@
 template_path: SC-CoreResources.yaml
 dependencies:
   - {{environment}}/{{region}}/SC-CodeBucket.yaml
+  - {{environment}}/{{region}}/SC-WAFv2Regional.yaml
 parameters:
   CustomDomainName: {{threatapi_domain_name}}
   CustomDomainAcmCertificateId: {{threatapi_certificate_arn}}
