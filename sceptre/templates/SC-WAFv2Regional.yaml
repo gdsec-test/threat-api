@@ -1,0 +1,71 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: ThreatTools API WAFv2 Regional ACL
+
+Parameters:
+  NatGatewayEIPAZA:
+    Type: AWS::SSM::Parameter::Value<String>
+    Description: SSM Parameter to store NatGatewayEIPAZA
+    Default: /AdminParams/VPC/NatGatewayEIPAZA
+    AllowedValues:
+      - /AdminParams/VPC/NatGatewayEIPAZA
+
+  NatGatewayEIPAZB:
+    Type: AWS::SSM::Parameter::Value<String>
+    Description: SSM Parameter to store NatGatewayEIPAZB
+    Default: /AdminParams/VPC/NatGatewayEIPAZB
+    AllowedValues:
+      - /AdminParams/VPC/NatGatewayEIPAZB
+
+Resources:
+  # Use GoDaddy IP blocks defined in the "SecurityGroupIngressGD" service
+  # catalog product and the NAT elastic IP addresses to allow connections from
+  # the UI ECS tasks.  We also need to exclude the "GenericRFI_BODY" common
+  # rule because we have to pass URLs to the API and they would otherwise be
+  # blocked by the WAF.
+
+  # IP subnets reference:
+  # https://github.secureserver.net/appservices/service-catalog-products/blob/master/SecurityGroupIngressGD/product.yaml
+
+  ThreatWAFv2Regional:
+    Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
+    Properties:
+      ProductName: WAFv2Regional
+      ProvisioningArtifactName: 3.1.0
+      ProvisionedProductName: ThreatWAFv2Regional
+      ProvisioningParameters:
+        - Key: ACLPrefix
+          Value: Threat
+        - Key: AllowListIPv4
+          Value: !Join
+            - ","
+            -
+              - !Sub ${NatGatewayEIPAZA}/32
+              - !Sub ${NatGatewayEIPAZB}/32
+              - 10.0.0.0/8
+              - 64.202.160.0/23
+              - 172.16.0.0/12
+              - 216.69.191.0/24
+              - 67.74.34.122/32
+              - 4.53.28.226/32
+              - 97.74.252.169/32
+              - 64.208.5.30/32
+              - 64.208.5.46/32
+              - 199.180.209.10/32
+              - 67.75.3.58/32
+              - 67.75.2.66/32
+              - 132.148.54.224/32
+              - 132.148.92.224/32
+              - 67.74.34.130/32
+              - 67.74.34.154/32
+              - 67.75.1.242/32
+              - 67.74.34.114/32
+              - 67.74.34.210/32
+              - 198.12.128.2/32
+              - 198.12.128.3/32
+        - Key: IPRateLimit
+          Value: 2000
+        - Key: CommonRuleExcludesJson
+          Value: '["GenericRFI_BODY"]'
+      Tags:
+        - Key: doNotShutDown
+          Value: true

@@ -38,6 +38,12 @@ Parameters:
     Default: /AdminParams/VPC/DXAPPSubnets
     AllowedValues:
       - /AdminParams/VPC/DXAPPSubnets
+  ThreatWebACLArn:
+    Type: AWS::SSM::Parameter::Value<String>
+    Description: SSM Parameter for Threat WAFv2 Web ACL Arn
+    Default: /Team/WAFv2/Regional/Threat/WebACLArn
+    AllowedValues:
+      - /Team/WAFv2/Regional/Threat/WebACLArn
   APIHash:
     Type: String
     Description: SHA1 hash of the API Gateway specification
@@ -518,6 +524,8 @@ Resources:
           Value: !Ref CustomDomainName
         - Key: CustomDomainAcmCertificateId
           Value: !Ref CustomDomainAcmCertificateId
+        - Key: CustomWafAclArn
+          Value: !Sub ${ThreatWebACLArn}
       Tags:
         - Key: doNotShutDown
           Value: true
