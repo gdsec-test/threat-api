@@ -171,15 +171,11 @@ func getJobStatus(ctx context.Context, jobID string) (events.APIGatewayProxyResp
 
 	// Marshal and reply
 	responseData, err := json.Marshal(struct {
-		Request       string                 `json:"request"`
-		Responses     map[string]interface{} `json:"responses"`
-		StartTime     interface{}            `json:"start_time"`
-		JobStatus     JobStatus              `json:"job_status"`
-		JobPercentage float64                `json:"job_percentage"`
+		common.JobDBEntry
+		JobStatus     JobStatus `json:"job_status"`
+		JobPercentage float64   `json:"job_percentage"`
 	}{
-		Request:       jobDB.DecryptedRequest,
-		Responses:     jobDB.DecryptedResponses,
-		StartTime:     jobDB.StartTime,
+		JobDBEntry:    *jobDB,
 		JobStatus:     jobStatus,
 		JobPercentage: jobPercentage * 100,
 	})
@@ -210,7 +206,7 @@ func getJobs(ctx context.Context, request events.APIGatewayProxyRequest) (events
 		return events.APIGatewayProxyResponse{StatusCode: 500}, err
 	}
 
-	response := []*common.JobDBEntry{}
+	response := []common.JobDBEntry{}
 	err = dynamoDBClient.ScanPages(&dynamodb.ScanInput{
 		ExpressionAttributeNames:  expr.Names(),
 		ExpressionAttributeValues: expr.Values(),
@@ -220,19 +216,26 @@ func getJobs(ctx context.Context, request events.APIGatewayProxyRequest) (events
 	}, func(page *dynamodb.ScanOutput, lastPage bool) bool {
 		for _, entry := range page.Items {
 			// This is a job is owned by this user
-			jobDB := &common.JobDBEntry{}
-			err = dynamodbattribute.UnmarshalMap(entry, jobDB)
+			jobDB := common.JobDBEntry{}
+			err = dynamodbattribute.UnmarshalMap(entry, &jobDB)
 			if err != nil {
 				// TODO: Log?
 				continue
 			}
+			// Decrypt because we need the original request
 			jobDB.Decrypt(ctx, to)
 
-			// Remove request data
-			jobDB.Request = nil
-			jobDB.DecryptedRequest = ""
+			// Remove request data except metadata
+			for key := range jobDB.DecryptedRequest {
+				switch key {
+				case "metadata":
+					continue
+				}
+
+				delete(jobDB.DecryptedRequest, key)
+			}
+
 			// Remove actual response data
-			jobDB.Responses = nil
 			for moduleName := range jobDB.DecryptedResponses {
 				jobDB.DecryptedResponses[moduleName] = nil
 			}

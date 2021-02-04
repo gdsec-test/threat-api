@@ -16,9 +16,6 @@ const (
 	snsTopicARNParameterName = "/ThreatTools/JobRequests"
 	jobIDKey                 = "job_id"
 	usernameKey              = "username"
-	startTimeKey             = "startTime"
-	jobStatusKey             = "job_status"
-	jobPercentageKey         = "job_percentage"
 )
 
 // Normall I wouldn't use global variables like this, but in such a small
