@@ -206,6 +206,7 @@ func getJobs(ctx context.Context, request events.APIGatewayProxyRequest) (events
 		return events.APIGatewayProxyResponse{StatusCode: 500}, err
 	}
 
+	// Build modified / simplified JobDBEntry for each job
 	response := []common.JobDBEntry{}
 	err = dynamoDBClient.ScanPages(&dynamodb.ScanInput{
 		ExpressionAttributeNames:  expr.Names(),
@@ -222,7 +223,7 @@ func getJobs(ctx context.Context, request events.APIGatewayProxyRequest) (events
 				// TODO: Log?
 				continue
 			}
-			// Decrypt because we need the original request
+			// Decrypt because we need the original request to pull out metadata if it's there
 			jobDB.Decrypt(ctx, to)
 
 			// Remove request data except metadata
