@@ -20,7 +20,7 @@ const (
 
 // Normall I wouldn't use global variables like this, but in such a small
 // lambda function, this is simpler than passing in paramaters, and/or using closures
-var t *toolbox.Toolbox
+var to *toolbox.Toolbox
 var dynamoDBClient *dynamodb.DynamoDB
 
 // JobStatus is the statuses a job can have
@@ -37,11 +37,11 @@ const (
 func handler(ctx context.Context, request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
 	// Get the toolbox
 	// This helps standardize things accross services
-	t = toolbox.GetToolbox()
-	defer t.Close(ctx)
+	to = toolbox.GetToolbox()
+	defer to.Close(ctx)
 
 	// Load dynamoDB
-	dynamoDBClient = dynamodb.New(t.AWSSession)
+	dynamoDBClient = dynamodb.New(to.AWSSession)
 
 	// Check for jobID to check status of job
 	if jobID, ok := request.PathParameters[jobIDKey]; ok {
