@@ -63,6 +63,9 @@ Requests to the Threat API are specified using the following request format:
   "modules": [
     "whois",
   ],
+  "metadata": {
+    // ...
+  }
 }
 ```
 
@@ -71,6 +74,8 @@ IOCs of that type.
 
 A single `job_id` is returned in response to a `POST` request to the `/job`
 endpoint.
+
+Note that anything you specify in `metadata` will be returned explicitly when requesting a user's jobs through `/jobs`.
 
 ### Job Responses
 
@@ -87,6 +92,9 @@ Example response when querying a `job_id` of `12345`:
   "job_id": "12345",
   "job_status": "Completed",
   "job_percentage": 100.00,
+  "request": {
+    // Your original request
+  },
   "responses": {
     "splunk": {
       "output": "Splunk specific results"
