@@ -95,6 +95,11 @@ the pre-commit hooks, use the following command:
 pre-commit run -a
 ```
 
+To exclude particular exceptions within a file rather than the entire file:
+- Get the signature from failure
+  ![tartufo-signature](diagrams/tartufo_signature.png)
+- Add the signature to file pyproject.toml within exclude-signatures
+
 ### Go Env setup
 
 Because we rely on internal (non public) libraries like the [util](https://github.com/gdcorp-infosec/threat-util) library, you need to configure go to be able to authenticate and download those libraries.

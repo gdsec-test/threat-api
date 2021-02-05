@@ -2,6 +2,7 @@
 exclude-paths = ".tartufo-excludes"
 exclude-signatures = [
 "0d87be6673203617696bcbbc34b465cb1e3b4c14d79b9cf180628c1be6a9acca",
+"6fe4c4cfb73bc9fbaa56916cdf056921f7d5f8a94b15cc803bbbd0436a17eb2b",
 ]
 json = false
 regex = true
