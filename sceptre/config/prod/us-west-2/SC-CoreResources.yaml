@@ -1,0 +1,25 @@
+template_path: SC-CoreResources.yaml
+dependencies:
+  - {{environment}}/{{region}}/SC-CodeBucket.yaml
+  - {{environment}}/{{region}}/SC-WAFv2Regional.yaml
+parameters:
+  CustomDomainName: {{threatapi_domain_name}}
+  CustomDomainAcmCertificateId: {{threatapi_certificate_arn}}
+  SSOHost: {{sso_host}}
+  APIHash: !file_contents resources/api.sha1
+  ManagerHash: !file_contents resources/manager.sha1
+  ResponseProcessorHash: !file_contents resources/responseprocessor.sha1
+hooks:
+  before_create:
+    - !cmd resources/upload-api-spec.sh
+    - !cmd resources/build-system-lambdas.sh
+  after_create:
+    - !cmd rm -f resources/*.sha1
+    - !cmd resources/swagger-ui-bucket-create.sh
+  before_update:
+    - !cmd resources/upload-api-spec.sh
+    - !cmd resources/build-system-lambdas.sh
+  after_update:
+    - !cmd rm -f resources/*.sha1
+  before_delete:
+    - !cmd resources/swagger-ui-bucket-delete.py
