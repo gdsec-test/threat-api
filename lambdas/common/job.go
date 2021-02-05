@@ -51,7 +51,7 @@ func (j *JobDBEntry) Decrypt(ctx context.Context, t *toolbox.Toolbox) {
 
 	// Decrypt request
 	span, ctx = opentracing.StartSpanFromContext(ctx, "DecryptRequest")
-	decryptedData, err := t.Dencrypt(ctx, j.JobID, j.Request)
+	decryptedData, err := t.Decrypt(ctx, j.JobID, j.Request)
 	if err == nil {
 		json.Unmarshal(decryptedData, &j.DecryptedRequest)
 	}
@@ -61,7 +61,7 @@ func (j *JobDBEntry) Decrypt(ctx context.Context, t *toolbox.Toolbox) {
 	span, ctx = opentracing.StartSpanFromContext(ctx, "DecryptResponses")
 	j.DecryptedResponses = map[string]interface{}{}
 	for moduleName, response := range j.Responses {
-		decryptedData, err := t.Dencrypt(ctx, j.JobID, response)
+		decryptedData, err := t.Decrypt(ctx, j.JobID, response)
 		if err != nil {
 			continue
 		}
