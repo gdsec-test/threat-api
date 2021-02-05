@@ -5,7 +5,7 @@ go 1.15
 require (
 	github.com/aws/aws-lambda-go v1.19.1
 	github.com/aws/aws-sdk-go v1.35.27
-	github.com/gdcorp-infosec/threat-util v0.0.0-20210119215543-bf06888df5ab
+	github.com/gdcorp-infosec/threat-util v0.0.0-20210205202616-6b92bfae4a25
 	github.com/godaddy/asherah/go/appencryption v0.1.5
 	github.com/gorilla/mux v1.7.4 // indirect
 	github.com/kr/pretty v0.2.0 // indirect
