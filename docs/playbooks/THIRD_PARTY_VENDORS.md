@@ -8,4 +8,4 @@ This playbook briefs how to handle errors related to third party vendors. Eg, Re
 -	Reach out to Recorded Future contacts – [Jathan](mailto:jathan.anandham@recordedfuture.com)
 
 ### Shodan
-### Tanium 
+### Tanium
