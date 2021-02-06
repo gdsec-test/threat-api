@@ -99,6 +99,7 @@ To exclude particular exceptions within a file rather than the entire file:
 - Get the signature from failure
   ![tartufo-signature](diagrams/tartufo_signature.png)
 - Add the signature to file pyproject.toml within exclude-signatures
+- Include the reason on why the signature was excluded as a comment next to the signature
 
 ### Go Env setup
 

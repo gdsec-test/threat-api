@@ -27,6 +27,15 @@
 - Triggers on every Pull Request made to `main` branch
 - Runs Tartufo as the first check
 - On success of Tartufo triggers jobs `python-code-check`,  `go-code-check`, `go-code-check-lambdas`
-- `go-code-check` triggers for every module in `/apis`	- `go-code-check` triggers for every go module in `/apis`
+- `go-code-check` triggers for every module in `/apis`
 - `go-code-check-lambdas` triggers for every infrastructure lambdas mentioned in the strategy matrix as shown below.
-  ![infrastructure_lambdas_test](diagrams/infrastructure_lambdas_test.png)
+
+```yaml
+go-code-check-lambdas:
+    needs: tartufo
+    runs-on: self-hosted
+
+    strategy:
+      matrix:
+        go-lambdas: [manager] # Add golang infrastructure lambdas here
+```
