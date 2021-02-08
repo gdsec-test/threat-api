@@ -1,7 +1,9 @@
 # ThreatTools API
 
-![Code quality check](https://github.com/gdcorp-infosec/threat-api/workflows/Code%20quality%20check/badge.svg)
+![ThreatAPI Deployment (PROD)](https://github.com/gdcorp-infosec/threat-api/workflows/ThreatAPI%20Deployment%20(PROD)/badge.svg)
 ![ThreatAPI Deployment (DEV)](https://github.com/gdcorp-infosec/threat-api/workflows/ThreatAPI%20Deployment%20(DEV)/badge.svg)
+![Code quality check](https://github.com/gdcorp-infosec/threat-api/workflows/Code%20quality%20check/badge.svg)
+
 
 This repository contains documentation, infrastructure configuration scripts,
 and API implementations for the ThreatTools API hosted on AWS.
@@ -9,6 +11,7 @@ and API implementations for the ThreatTools API hosted on AWS.
 ### Environments
 
 To access the links below, make sure you are added to `jomax\PaloAlto-DefaultRoute AD Security Group`. [Corporate Networking Documentation](https://confluence.godaddy.com/pages/viewpage.action?spaceKey=CORPNET&title=Palo+Alto+VPN+Help+Information)
+
 
 | Environment | URL (Swagger Link)                                                                                                                  | Description                               |
 | ----------- | ----------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------- |
