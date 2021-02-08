@@ -8,7 +8,7 @@ All AWS accounts are in the us-west-2 (Oregon) region.
 | --- | --- | --- | ---
 | 345790377847 | https://api-private.threat.int.dev-gdcorp.tools | dev-private | Account for active development (non-CICD)
 | 786677461057 | https://api.threat.int.dev-gdcorp.tools | dev | Account for active development (CICD)
-| TBD | https://api.threat.int.gdcorp.tools | prod | Production account (CICD)
+| 338932590174 | https://api.threat.int.gdcorp.tools | prod | Production account (CICD)
 
 ### Authentication
 
@@ -95,6 +95,12 @@ the pre-commit hooks, use the following command:
 pre-commit run -a
 ```
 
+To exclude particular exceptions within a file rather than the entire file:
+- Get the signature from failure
+  ![tartufo-signature](diagrams/tartufo_signature.png)
+- Add the signature to file pyproject.toml within exclude-signatures
+- Include the reason on why the signature was excluded as a comment next to the signature
+
 ### Go Env setup
 
 Because we rely on internal (non public) libraries like the [util](https://github.com/gdcorp-infosec/threat-util) library, you need to configure go to be able to authenticate and download those libraries.
@@ -159,3 +165,33 @@ each lambda can technically accept and array of jobs to handle.
   ...
 ]
 ```
+
+### Tracing
+
+Tracing helps us understand what's going on inside each lambda.  We use ELK APM as our tracing server.
+
+In order to add tracing to your lambda, start by making sure your lambda creates the toolbox, and closes it after it's done executing.  This creates the default tracer.  It uses ENV vars to point to the right server.
+
+EX:
+
+```go
+t := toolbox.GetToolbox()
+defer t.Close(ctx)
+```
+
+You can make sure you are setting these env vars correctly by viewing another lambda, or the go APM setup instructions in our APM server.  The env vars are
+
+* ELASTIC_APM_SERVICE_NAME
+* ELASTIC_APM_SERVER_URL
+* ELASTIC_APM_SECRET_TOKEN
+
+To create a trace, follow the below pattern
+
+```go
+var span opentracing.Span
+span, ctx = opentracing.StartSpanFromContext(ctx, "NameOfYourTrace")
+```
+
+Then for any sub spans, you can simply write the same code again using the newly created context.
+
+Note that you must always close your span, so make sure in all logical flows of your code, your spans will always be closed.

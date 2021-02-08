@@ -25,20 +25,23 @@ type CompletedJobData struct {
 	Response   string `json:"response" dynamodbav:"response"`
 }
 
-// JobDBEntry is a job entry stored in the database
+// JobDBEntry is a job entry stored in the database.
+// This is also used as the standard structure to return to API responses
 type JobDBEntry struct {
 	JobID string `dynamodbav:"job_id"`
 	// Map of module name to the encrypted data
-	Responses map[string]appencryption.DataRowRecord `dynamodbav:"responses"`
-	Request   appencryption.DataRowRecord            `dynamodbav:"request"`
+	Responses map[string]appencryption.DataRowRecord `dynamodbav:"responses" json:"-"`
+	Request   appencryption.DataRowRecord            `dynamodbav:"request" json:"-"`
 	// Epoch start time
-	StartTime float64 `dynamodbav:"startTime"`
+	StartTime float64 `dynamodbav:"startTime" json:"StartTime"`
 	// Count of total modules that should be run from this request
-	TotalModules int `dynamodbav:"totalModules"`
+	TotalModules int `dynamodbav:"totalModules" json:"TotalModules"`
 
 	// Decrypted data
-	DecryptedRequest   string
-	DecryptedResponses map[string]interface{}
+	// The ignore tags in dynamodbav are to prevent the json tags
+	// from stealing the elements from Request and Response (unencrypted values)
+	DecryptedRequest   map[string]interface{} `dynamodbav:"-" json:"request"`
+	DecryptedResponses map[string]interface{} `dynamodbav:"-" json:"responses"`
 }
 
 // Decrypt will use asherah to decrypt the Responses and Request
@@ -47,15 +50,18 @@ func (j *JobDBEntry) Decrypt(ctx context.Context, t *toolbox.Toolbox) {
 	defer span.Finish()
 
 	// Decrypt request
-	decryptedData, err := t.Dencrypt(ctx, j.JobID, j.Request)
+	span, ctx = opentracing.StartSpanFromContext(ctx, "DecryptRequest")
+	decryptedData, err := t.Decrypt(ctx, j.JobID, j.Request)
 	if err == nil {
-		j.DecryptedRequest = string(decryptedData)
+		json.Unmarshal(decryptedData, &j.DecryptedRequest)
 	}
+	span.Finish()
 
 	// Decrypt responses
+	span, ctx = opentracing.StartSpanFromContext(ctx, "DecryptResponses")
 	j.DecryptedResponses = map[string]interface{}{}
 	for moduleName, response := range j.Responses {
-		decryptedData, err := t.Dencrypt(ctx, j.JobID, response)
+		decryptedData, err := t.Decrypt(ctx, j.JobID, response)
 		if err != nil {
 			continue
 		}
@@ -69,6 +75,7 @@ func (j *JobDBEntry) Decrypt(ctx context.Context, t *toolbox.Toolbox) {
 		}
 		j.DecryptedResponses[moduleName] = unmarshalledDecryptedData
 	}
+	span.Finish()
 }
 
 // JobRequest contains information to request a job to be performed

@@ -108,6 +108,8 @@ CF_RESOURCES_BLOCK = dedent(
         DestinationConfig:
           OnSuccess:
             Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobResponses
+          OnFailure:
+            Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobFailures
         FunctionName: __NAME__
         Qualifier: $LATEST
 
@@ -225,6 +227,8 @@ SC_RESOURCES_BLOCK = dedent(
         DestinationConfig:
           OnSuccess:
             Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobResponses
+          OnFailure:
+            Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobFailures
         FunctionName: __NAME__
         Qualifier: $LATEST
 
@@ -320,7 +324,7 @@ for fn in sorted(lambdas.keys()):
     sc_config += expand_template(CONFIG_ENTRY, lambdas[fn], 2)
 sc_config += CONFIG_END
 
-for environment in ["dev-private", "dev"]:
+for environment in ["dev-private", "dev", "prod"]:
     open(
         join(
             SCEPTRE_PATH, "config", environment, "us-west-2", "SC-ServiceLambdas.yaml"

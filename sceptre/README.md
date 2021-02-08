@@ -96,6 +96,15 @@
        --certificate-chain file://api.threat.int.dev-gdcorp.tools_intermediate_chain.crt
    ```
 
+   * PROD
+
+   ```
+   aws acm import-certificate \
+       --certificate file://api.threat.int.gdcorp.tools.crt \
+       --private-key file://api.threat.int.gdcorp.tools.key \
+       --certificate-chain file://api.threat.int.gdcorp.tools_intermediate_chain.crt
+   ```
+
 1. Delete the downloaded copies of the certificate, private key, and
    certificate chain from your local workstation.
 

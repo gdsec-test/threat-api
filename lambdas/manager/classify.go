@@ -8,8 +8,8 @@ import (
 	"strings"
 
 	"github.com/aws/aws-lambda-go/events"
+	"github.com/gdcorp-infosec/go-ioc/ioc"
 	"github.com/gdcorp-infosec/threat-api/lambdas/common/triagelegacyconnector/triage"
-	"github.com/vertoforce/go-ioc/ioc"
 )
 
 // Regexes
@@ -114,6 +114,10 @@ func getIOCsTypes(iocs []string) map[triage.IOCType][]string {
 			// TODO: Instead just look up using GoDaddy DNS server
 			triageType = triage.HostnameType
 			triageContent = iocInput
+		}
+		if triageType == triage.UnknownType {
+			iocsMap[triageType] = append(iocsMap[triageType], iocInput)
+			continue
 		}
 		iocsMap[triageType] = append(iocsMap[triageType], triageContent)
 	}

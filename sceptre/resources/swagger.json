@@ -1,16 +1,35 @@
 {
   "swagger": "2.0",
   "info": {
-    "description": "Available APIs provided by the InfoSec TI team",
-    "version": "2.0",
-    "title": "ThreatAPI"
+    "description": "Threat Tools Platform API. See [documentation](https://github.com/gdcorp-infosec/threat-api/blob/main/docs/USAGE.md) available in our [GitHub repository](https://github.com/gdcorp-infosec/threat-api) for more information.",
+    "version": "2.0.0",
+    "title": "ThreatAPI",
+    "contact": {
+      "name": "InfoSec Threat Research Team",
+      "email": "threat@godaddy.com"
+    }
   },
+  "tags": [
+    {
+      "name": "Jobs",
+      "description": "Job creation and status operations"
+    },
+    {
+      "name": "Miscellaneous",
+      "description": "Utility operations"
+    }
+  ],
   "schemes": [
     "https"
   ],
   "paths": {
     "/job": {
       "post": {
+        "tags": [
+          "Jobs"
+        ],
+        "summary": "Create a new job",
+        "description": "This API creates a new job for a given set of IOCs and returns a job ID.",
         "produces": [
           "application/json"
         ],
@@ -18,18 +37,37 @@
           {
             "name": "body",
             "in": "body",
+            "schema": {
+              "$ref": "#/definitions/JobRequest"
+            },
             "required": true
           }
         ],
         "responses": {
           "200": {
-            "description": "200 response"
+            "description": "Successful operation",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "job_id": {
+                  "type": "string"
+                }
+              },
+              "example": {
+                "job_id": "11111"
+              }
+            }
           }
         }
       }
     },
     "/job/{job_id}": {
       "get": {
+        "tags": [
+          "Jobs"
+        ],
+        "summary": "Request information about a job",
+        "description": "This API returns status and any available output for a specified job ID. The `responses` field of the returned JSON data includes responses from each service lambda that contributed output for specified IOCs.",
         "parameters": [
           {
             "name": "job_id",
@@ -40,25 +78,49 @@
         ],
         "responses": {
           "200": {
-            "description": "200 response"
+            "description": "Successful operation",
+            "schema": {
+              "$ref": "#/definitions/JobStatus"
+            }
           }
         }
       }
     },
     "/jobs": {
       "get": {
+        "tags": [
+          "Jobs"
+        ],
+        "summary": "List jobs associated with the current user",
+        "description": "This API returns a list of job IDs that are associated with the currently authenticated user.",
         "produces": [
           "application/json"
         ],
         "responses": {
           "200": {
-            "description": "200 response"
+            "description": "Successful operation",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "example": [
+                "11111",
+                "22222",
+                "33333"
+              ]
+            }
           }
         }
       }
     },
     "/classify": {
       "post": {
+        "tags": [
+          "Miscellaneous"
+        ],
+        "summary": "Identify IOC types for a provided list of IOCs",
+        "description": "This API accepts a list of IOCs, and returns a dictionary indexed by supported IOC type, where each dictionary value contains IOCs of the corresponding IOC type.",
         "produces": [
           "application/json"
         ],
@@ -66,26 +128,202 @@
           {
             "name": "body",
             "in": "body",
+            "schema": {
+              "$ref": "#/definitions/ClassifyRequest"
+            },
             "required": true
           }
         ],
         "responses": {
           "200": {
-            "description": "200 response"
+            "description": "Successful operation",
+            "schema": {
+              "$ref": "#/definitions/ClassifyResponse"
+            }
           }
         }
       }
     },
     "/modules": {
       "get": {
+        "tags": [
+          "Miscellaneous"
+        ],
+        "summary": "List modules and their associated IOC types",
+        "description": "This API returns a dictionary of supported modules, each of which contains metadata about the module (supported IOC types, etc.).",
         "produces": [
           "application/json"
         ],
         "responses": {
           "200": {
-            "description": "200 response"
+            "description": "Successful operation",
+            "schema": {
+              "$ref": "#/definitions/ModuleList"
+            }
           }
         }
+      }
+    }
+  },
+  "definitions": {
+    "ClassifyRequest": {
+      "type": "object",
+      "properties": {
+        "iocs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "example": {
+        "iocs": [
+          "8.8.8.8",
+          "example.com",
+          "user123@example.com",
+          "user456@godaddy.com"
+        ]
+      }
+    },
+    "ClassifyResponse": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "example": {
+        "domain": [
+          "example.com"
+        ],
+        "email": [
+          "user123@example.com",
+          "user456@godaddy.com"
+        ],
+        "godaddy_username": [
+          "user456"
+        ],
+        "ip": [
+          "8.8.8.8"
+        ]
+      }
+    },
+    "IOCType": {
+      "type": "string",
+      "enum": [
+        "unknown",
+        "domain",
+        "email",
+        "cve",
+        "cwe",
+        "capec",
+        "cpe",
+        "url",
+        "md5",
+        "sha1",
+        "sha256",
+        "sha512",
+        "ip",
+        "hostname",
+        "awshostname",
+        "godaddy_username",
+        "mitre_tactic",
+        "mitre_technique",
+        "mitre_subtechnique",
+        "mitre_mitigation"
+      ],
+      "example": "domain"
+    },
+    "JobRequest": {
+      "type": "object",
+      "properties": {
+        "modules": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "iocs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "ioc_type": {
+          "$ref": "#/definitions/IOCType"
+        }
+      },
+      "example": {
+        "modules": [
+          "whois"
+        ],
+        "iocs": [
+          "godaddy.com"
+        ],
+        "ioc_type": "domain"
+      }
+    },
+    "JobStatus": {
+      "type": "object",
+      "properties": {
+        "request": {
+          "type": "string"
+        },
+        "responses": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          }
+        },
+        "start_time": {
+          "type": "number"
+        },
+        "job_status": {
+          "type": "string",
+          "enum": [
+            "InProgress",
+            "Incomplete",
+            "Completed"
+          ]
+        },
+        "job_percentage": {
+          "type": "number"
+        }
+      },
+      "example": {
+        "request": "{\"modules\": [\"whois\"], \"iocs\": [\"godaddy.com\"], \"ioc_type\": \"domain\"}",
+        "responses": {
+          "whois": [
+            {
+              "Data": "domain,createdDate,updatedDate,...",
+              "Title": "Whois lookup data"
+            }
+          ]
+        },
+        "start_time": 1610000000,
+        "job_status": "Completed",
+        "job_percentage": 100
+      }
+    },
+    "ModuleInfo": {
+      "type": "object",
+      "properties": {
+        "supported_ioc_types": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/IOCType"
+          }
+        }
+      }
+    },
+    "ModuleList": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/definitions/ModuleInfo"
       }
     }
   }
