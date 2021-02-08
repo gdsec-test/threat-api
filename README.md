@@ -10,7 +10,7 @@ and API implementations for the ThreatTools API hosted on AWS.
 
 ### Environments
 
-To access the links below, make sure you are added to `jomax\PaloAlto-DefaultRoute AD Security Group`. [Corporate Networking Documentation](https://confluence.godaddy.com/pages/viewpage.action?spaceKey=CORPNET&title=Palo+Alto+VPN+Help+Information)
+To access the links below, you will need to be on the VPN, and be in the `PaloAlto-DefaultRoute` Jomax AD group. See [Palo Alto VPN Help Information](https://confluence.godaddy.com/pages/viewpage.action?spaceKey=CORPNET&title=Palo+Alto+VPN+Help+Information) for additional information.
 
 
 | Environment | URL (Swagger Link)                                                                                                                  | Description                               |
