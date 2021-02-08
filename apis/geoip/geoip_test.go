@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"github.com/gdcorp-infosec/threat-api/lambdas/common/triagelegacyconnector/triage"
 	"github.com/gdcorp-infosec/threat-util/lambda/toolbox"
 	"strings"
@@ -32,6 +33,7 @@ func TestLookup(t *testing.T) {
 	if triageResult[0].Data == "" {
 		t.Fatal("first data element empty ")
 	}
+	fmt.Println(triageResult[0].Data)
 	if !strings.Contains(triageResult[0].Data, testIP) || !strings.Contains(triageResult[0].Data, "Phoenix") {
 		t.Fatal("module didnt return expected test data")
 	}
