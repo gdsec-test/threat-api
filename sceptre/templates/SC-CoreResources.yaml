@@ -38,6 +38,12 @@ Parameters:
     Default: /AdminParams/VPC/DXAPPSubnets
     AllowedValues:
       - /AdminParams/VPC/DXAPPSubnets
+  ThreatWebACLArn:
+    Type: AWS::SSM::Parameter::Value<String>
+    Description: SSM Parameter for Threat WAFv2 Web ACL Arn
+    Default: /Team/WAFv2/Regional/Threat/WebACLArn
+    AllowedValues:
+      - /Team/WAFv2/Regional/Threat/WebACLArn
   APIHash:
     Type: String
     Description: SHA1 hash of the API Gateway specification
@@ -406,6 +412,28 @@ Resources:
       Type: String
       Value: !Sub https://sqs.${AWS::Region}.amazonaws.com/${AWS::AccountId}/JobResponses
 
+  ThreatJobFailuresQueue:
+    Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
+    Properties:
+      ProductName: SQS
+      ProvisioningArtifactName: 1.0.8
+      ProvisionedProductName: ThreatJobFailuresQueue
+      ProvisioningParameters:
+        - Key: QueueName
+          Value: JobFailures
+        - Key: VisibilityTimeout
+          Value: 5400
+      Tags:
+        - Key: doNotShutDown
+          Value: true
+
+  ThreatJobFailuresQueueParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: /ThreatTools/JobFailures
+      Type: String
+      Value: !Sub https://sqs.${AWS::Region}.amazonaws.com/${AWS::AccountId}/JobFailures
+
   ThreatEncryptionKeyTable:
     Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
     Properties:
@@ -496,6 +524,8 @@ Resources:
           Value: !Ref CustomDomainName
         - Key: CustomDomainAcmCertificateId
           Value: !Ref CustomDomainAcmCertificateId
+        - Key: CustomWafAclArn
+          Value: !Sub ${ThreatWebACLArn}
       Tags:
         - Key: doNotShutDown
           Value: true

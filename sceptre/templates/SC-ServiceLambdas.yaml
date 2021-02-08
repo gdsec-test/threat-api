@@ -104,6 +104,8 @@ Resources:
       DestinationConfig:
         OnSuccess:
           Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobResponses
+        OnFailure:
+          Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobFailures
       FunctionName: geoip
       Qualifier: $LATEST
 
@@ -190,6 +192,8 @@ Resources:
       DestinationConfig:
         OnSuccess:
           Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobResponses
+        OnFailure:
+          Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobFailures
       FunctionName: tester1
       Qualifier: $LATEST
 
@@ -276,6 +280,8 @@ Resources:
       DestinationConfig:
         OnSuccess:
           Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobResponses
+        OnFailure:
+          Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobFailures
       FunctionName: whois
       Qualifier: $LATEST
 

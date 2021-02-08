@@ -310,6 +310,19 @@ Resources:
       Type: String
       Value: !Ref ThreatJobResponsesQueue
 
+  ThreatJobFailuresQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: JobFailures
+      VisibilityTimeout: 5400
+
+  ThreatJobFailuresQueueParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: /ThreatTools/JobFailures
+      Type: String
+      Value: !Ref ThreatJobFailuresQueue
+
   ThreatEncryptionKeyTable:
     Type: AWS::DynamoDB::Table
     Properties:
