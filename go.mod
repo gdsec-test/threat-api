@@ -5,7 +5,7 @@ go 1.15
 require (
 	github.com/aws/aws-lambda-go v1.19.1
 	github.com/aws/aws-sdk-go v1.35.27
-	github.com/gdcorp-infosec/go-ioc v0.0.0-20210129204151-a422e971dec3
+	github.com/gdcorp-infosec/go-ioc v0.0.0-20210201161615-55598c0a06df
 	github.com/gdcorp-infosec/threat-util v0.0.0-20210205202616-6b92bfae4a25
 	github.com/godaddy/asherah/go/appencryption v0.1.5
 	github.com/gorilla/mux v1.7.4 // indirect
@@ -16,7 +16,6 @@ require (
 	github.com/oschwald/geoip2-golang v1.4.0
 	github.com/sirupsen/logrus v1.7.0
 	github.com/vertoforce/regexgrouphelp v0.1.1
-	go.elastic.co/apm v1.9.0
 	go.elastic.co/apm/module/apmlambda v1.8.0
 	gopkg.in/check.v1 v1.0.0-20190902080502-41f04d3bba15 // indirect
 )

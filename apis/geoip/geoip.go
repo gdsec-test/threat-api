@@ -2,133 +2,79 @@ package main
 
 import (
 	"context"
-	"encoding/json"
-	"net"
-	"net/http"
-	"strings"
-
-	"github.com/aws/aws-lambda-go/events"
-	"github.com/aws/aws-lambda-go/lambda"
-	"github.com/gdcorp-infosec/threat-util/lambda/toolbox"
+	"fmt"
 	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
 	"github.com/oschwald/geoip2-golang"
-	"github.com/sirupsen/logrus"
-
-	// This line adds apm tracing to this lambda
-	// Yep, it's that simple!
-	// Note that you must have the `ELASTIC_APM_SERVER_URL` and `ELASTIC_APM_API_KEY` env vars set
-	"go.elastic.co/apm"
-	_ "go.elastic.co/apm/module/apmlambda"
+	"net"
 )
 
 const (
-	resourceName = "geoip"
+	triageModuleName = "geoip"
 )
 
-func handler(ctx context.Context, request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
-	// Get the toolbox
-	// This helps standardize things accross services
-	t := toolbox.GetToolbox()
-	// Defer sending of tracing info
-	defer func() {
-		t.Close(ctx)
-	}()
-
-	t.Logger.Info("Starting handling of request")
-
-	// Check permissions
-	// Check for JWT
-	jwt, ok := request.Headers["Authorization"]
-	jwtSplit := strings.Split(jwt, " ")
-	if !ok || len(jwtSplit) != 2 {
-		return events.APIGatewayProxyResponse{
-			StatusCode: http.StatusUnauthorized,
-			Body:       "No JWT supplied",
-		}, nil
-	}
-	// Check permissions
-	authorized, err := t.Authorize(ctx, jwtSplit[1], "read", "geoip")
-	if err != nil {
-		apm.CaptureError(ctx, err)
-		return events.APIGatewayProxyResponse{
-			StatusCode: http.StatusInternalServerError,
-			Body:       "",
-		}, nil
-	}
-	if !authorized {
-		return events.APIGatewayProxyResponse{
-			StatusCode: http.StatusUnauthorized,
-			Body:       "Not authorized",
-		}, nil
-	}
-
-	// Start transaction to process geoip request
-	geoipTx := t.Tracer.StartSpan("GeoIP")
-	defer geoipTx.Finish()
-	ctx = opentracing.ContextWithSpan(ctx, geoipTx)
-
-	// Start a span
-	span, _ := opentracing.StartSpanFromContext(ctx, "OpenDB")
-	// Open DB
-	db, err := geoip2.Open("GeoLite2-City.mmdb")
-	if err != nil {
-		apm.CaptureError(ctx, err).Send()
-		return events.APIGatewayProxyResponse{
-			StatusCode: http.StatusInternalServerError,
-			Body:       err.Error(),
-		}, err
-	}
-	defer db.Close()
-	span.Finish()
-
-	span, _ = opentracing.StartSpanFromContext(ctx, "GetUserIP")
-	ipString := "8.8.8.8" // Default ip
-	ipParam, found := request.QueryStringParameters["ip"]
-	if found {
-		t.Logger.WithField("IP", ipParam).Info("Got supplied IP")
-		ipString = ipParam
-	}
-	span.LogFields(log.String("IP", ipParam))
-	ip := net.ParseIP(ipString)
-	span.Finish()
-
-	// If you are using strings that may be invalid, check that ip is not nil
-	span, _ = opentracing.StartSpanFromContext(ctx, "ProcessUserIP")
-	record, err := db.City(ip)
-	if err != nil {
-		apm.CaptureError(ctx, err).Send()
-		return events.APIGatewayProxyResponse{
-			StatusCode: http.StatusInternalServerError,
-			Body:       err.Error(),
-		}, err
-	}
-	span.Finish()
-
-	t.Logger.WithFields(logrus.Fields{
-		"EnglishCity":    record.City.Names["en"],
-		"EnglishCountry": record.Country.Names["en"],
-		"ISOCountryCode": record.Country.IsoCode,
-		"TimeZone":       record.Location.TimeZone,
-		"Lat":            record.Location.Latitude,
-		"Long":           record.Location.Longitude,
-	}).Info("Found result")
-
-	js, err := json.Marshal(record)
-	if err != nil {
-		apm.CaptureError(ctx, err).Send()
-		return events.APIGatewayProxyResponse{
-			StatusCode: http.StatusInternalServerError,
-			Body:       err.Error(),
-		}, err
-	}
-
-	return events.APIGatewayProxyResponse{
-		StatusCode: http.StatusOK,
-		Body:       string(js),
-	}, nil
+type GeoIPInfo struct {
+	IP             string
+	EnglishCity    string
+	EnglishCountry string
+	ISOCountryCode string
+	TimeZone       string
+	Lat            float64
+	Long           float64
 }
 
-func main() {
-	lambda.Start(handler)
+// Lookup performs a geoIP search on passed IPs
+func Lookup(ctx context.Context, ips []string) []*GeoIPInfo {
+
+	var span opentracing.Span
+	span, ctx = opentracing.StartSpanFromContext(ctx, "GeoIPDBSession")
+	defer span.Finish()
+
+	geoipResults := []*GeoIPInfo{}
+	// load geoip Database
+	db, err := geoip2.Open("GeoLite2-City.mmdb")
+	if err != nil {
+		return append(geoipResults, &GeoIPInfo{
+			IP:             fmt.Sprintf("ERROR: %s", err),
+			EnglishCity:    fmt.Sprintf("ERROR: %s", err),
+			EnglishCountry: fmt.Sprintf("ERROR: %s", err),
+		})
+	}
+	defer db.Close()
+
+	for _, ip := range ips {
+		// Check context
+		select {
+		case <-ctx.Done():
+			break
+		default:
+		}
+
+		span, ctx = opentracing.StartSpanFromContext(ctx, "GeoIPLookup")
+		addErrRow := func(err error) {
+			geoipResults = append(geoipResults, &GeoIPInfo{
+				IP:             ip,
+				EnglishCity:    fmt.Sprintf("ERROR: %s", err),
+				EnglishCountry: fmt.Sprintf("ERROR: %s", err),
+			})
+			span.Finish()
+		}
+
+		record, err := db.City(net.ParseIP(ip))
+		if err != nil {
+			addErrRow(err)
+			continue
+		}
+		geoipResults = append(geoipResults, &GeoIPInfo{
+			IP:             ip,
+			EnglishCity:    record.City.Names["en"],
+			EnglishCountry: record.Country.Names["en"],
+			ISOCountryCode: record.Country.IsoCode,
+			TimeZone:       record.Location.TimeZone,
+			Lat:            record.Location.Latitude,
+			Long:           record.Location.Longitude,
+		})
+		span.Finish()
+	}
+
+	return geoipResults
 }
