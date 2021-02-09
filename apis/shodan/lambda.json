@@ -1,0 +1,12 @@
+{
+  "handler": "shodan",
+  "memory-size": "256",
+  "runtime": "go1.x",
+  "timeout": "15",
+  "metadata": {
+    "supported_ioc_types": [
+      "domain",
+      "ip"
+    ]
+  }
+}
