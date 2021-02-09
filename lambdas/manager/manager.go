@@ -47,9 +47,9 @@ func handler(ctx context.Context, request events.APIGatewayProxyRequest) (events
 	dynamoDBClient = dynamodb.New(to.AWSSession)
 
 	// Check if they are requesting their user's jobs
-	path := strings.TrimRight(request.Path, "/")
+	path := strings.Trim(request.Path, "/")
 	switch {
-	case strings.HasSuffix(path, version+"/jobs"):
+	case strings.HasPrefix(path, version+"/jobs"):
 		switch request.HTTPMethod {
 		case http.MethodPost:
 			// They want to create a new job
