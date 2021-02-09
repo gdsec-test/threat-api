@@ -14,46 +14,47 @@ import (
 
 // JobSNSMessage is the structure sent via the SNS topic to represent a job ready for processing
 type JobSNSMessage struct {
-	JobID           string                        `json:"jobID"`
-	OriginalRequest events.APIGatewayProxyRequest `json:"original_request"`
+	JobID      string                        `json:"jobId"`
+	Submission events.APIGatewayProxyRequest `json:"submission"`
 }
 
-// CompletedJobData is a set of completed data from a job
+// CompletedJobData is a set of completed data from a job.
+// This is the data we expect each lambda to output when it completes.
 type CompletedJobData struct {
 	ModuleName string `json:"module_name" dynamodbav:"module_name"`
-	JobID      string `json:"job_id" dynamodbav:"job_id"`
+	JobID      string `json:"jobId" dynamodbav:"jobId"`
 	Response   string `json:"response" dynamodbav:"response"`
 }
 
 // JobDBEntry is a job entry stored in the database.
 // This is also used as the standard structure to return to API responses
 type JobDBEntry struct {
-	JobID string `dynamodbav:"job_id"`
+	JobID string `dynamodbav:"jobId"`
 	// Map of module name to the encrypted data
-	Responses map[string]appencryption.DataRowRecord `dynamodbav:"responses" json:"-"`
-	Request   appencryption.DataRowRecord            `dynamodbav:"request" json:"-"`
+	Responses  map[string]appencryption.DataRowRecord `dynamodbav:"responses" json:"-"`
+	Submission appencryption.DataRowRecord            `dynamodbav:"submission" json:"-"`
 	// Epoch start time
 	StartTime float64 `dynamodbav:"startTime" json:"StartTime"`
-	// Count of total modules that should be run from this request
+	// Count of total modules that should be run from this submission
 	TotalModules int `dynamodbav:"totalModules" json:"TotalModules"`
 
 	// Decrypted data
 	// The ignore tags in dynamodbav are to prevent the json tags
-	// from stealing the elements from Request and Response (unencrypted values)
-	DecryptedRequest   map[string]interface{} `dynamodbav:"-" json:"request"`
-	DecryptedResponses map[string]interface{} `dynamodbav:"-" json:"responses"`
+	// from stealing the elements from Submission and Response (unencrypted values)
+	DecryptedSubmission map[string]interface{} `dynamodbav:"-" json:"submission"`
+	DecryptedResponses  map[string]interface{} `dynamodbav:"-" json:"responses"`
 }
 
-// Decrypt will use asherah to decrypt the Responses and Request
+// Decrypt will use asherah to decrypt the Responses and Submission
 func (j *JobDBEntry) Decrypt(ctx context.Context, t *toolbox.Toolbox) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "DecryptJobDBEntry")
 	defer span.Finish()
 
-	// Decrypt request
-	span, ctx = opentracing.StartSpanFromContext(ctx, "DecryptRequest")
-	decryptedData, err := t.Decrypt(ctx, j.JobID, j.Request)
+	// Decrypt submission
+	span, ctx = opentracing.StartSpanFromContext(ctx, "DecryptSubmission")
+	decryptedData, err := t.Decrypt(ctx, j.JobID, j.Submission)
 	if err == nil {
-		json.Unmarshal(decryptedData, &j.DecryptedRequest)
+		json.Unmarshal(decryptedData, &j.DecryptedSubmission)
 	}
 	span.Finish()
 
@@ -78,25 +79,25 @@ func (j *JobDBEntry) Decrypt(ctx context.Context, t *toolbox.Toolbox) {
 	span.Finish()
 }
 
-// JobRequest contains information to request a job to be performed
-type JobRequest struct {
-	Modules []string `json:"modules"`  // List of modules to run
-	IOCs    []string `json:"iocs"`     // List of IOCs
-	IOCType string   `json:"ioc_type"` // List of IOCs
+// JobSubmission contains information to request a job to be performed
+type JobSubmission struct {
+	Modules []string `json:"modules"` // List of modules to run
+	IOCs    []string `json:"iocs"`    // List of IOCs
+	IOCType string   `json:"iocType"` // List of IOCs
 }
 
-// GetJobRequest Pulls out the job request from a AWS proxy event
-func GetJobRequest(event events.APIGatewayProxyRequest) (JobRequest, error) {
-	jobRequest := JobRequest{}
-	err := json.Unmarshal([]byte(event.Body), &jobRequest)
+// GetJobSubmission Pulls out the job submission from a AWS proxy event
+func GetJobSubmission(event events.APIGatewayProxyRequest) (JobSubmission, error) {
+	jobSubmission := JobSubmission{}
+	err := json.Unmarshal([]byte(event.Body), &jobSubmission)
 	if err != nil {
-		return JobRequest{}, err
+		return JobSubmission{}, err
 	}
 
-	return jobRequest, nil
+	return jobSubmission, nil
 }
 
 // LambdaMetadata is data stored in the parameter store about a specific lambda
 type LambdaMetadata struct {
-	SupportedIOCTypes []triage.IOCType `json:"supported_ioc_types"`
+	SupportedIOCTypes []triage.IOCType `json:"supportedIOCTypes"`
 }

@@ -58,7 +58,7 @@ func handler(ctx context.Context, request events.SQSEvent) (string, error) {
 				completedLambdaData.ResponsePayload[i].ModuleName = lambdaName
 			}
 			span.LogKV("moduleName", completedJob.ModuleName)
-			span.LogKV("jobID", completedJob.JobID)
+			span.LogKV("jobId", completedJob.JobID)
 
 			t.Logger.WithFields(logrus.Fields{"moduleName": completedJob.ModuleName, "jobData": completedJob}).Info("Processing module response")
 
@@ -81,7 +81,7 @@ func handler(ctx context.Context, request events.SQSEvent) (string, error) {
 // processCompleteJob takes the completed job data, encrypts the response, and adds it to the appropriate dynamoDB entry
 func processCompletedJob(ctx context.Context, request common.CompletedJobData) (string, error) {
 	if request.JobID == "" || request.ModuleName == "" {
-		return "", fmt.Errorf("missing jobID or module name")
+		return "", fmt.Errorf("missing jobId or module name")
 	}
 
 	dynamodbClient := dynamodb.New(t.AWSSession)
@@ -106,7 +106,7 @@ func processCompletedJob(ctx context.Context, request common.CompletedJobData) (
 	}
 	_, err = dynamodbClient.UpdateItem(&dynamodb.UpdateItemInput{
 		Key: map[string]*dynamodb.AttributeValue{
-			"job_id": {S: &request.JobID},
+			"jobId": {S: &request.JobID},
 		},
 		ExpressionAttributeNames:  expr.Names(),
 		ExpressionAttributeValues: expr.Values(),

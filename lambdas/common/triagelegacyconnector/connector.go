@@ -46,16 +46,16 @@ func triageSNSEvent(ctx context.Context, module triage.Module, request events.SN
 		Response:   "",
 	}
 
-	// Pull the job request from the raw request
-	jobRequest, err := common.GetJobRequest(jobMessage.OriginalRequest)
+	// Pull the job submission from the raw request
+	jobSubmission, err := common.GetJobSubmission(jobMessage.Submission)
 	if err != nil {
-		err = fmt.Errorf("failed to unmarshal job request: %w", err)
+		err = fmt.Errorf("failed to unmarshal job submission: %w", err)
 		return nil, err
 	}
 
 	// Check if our module should be run
 	ourModuleMentioned := func() bool {
-		for _, moduleName := range jobRequest.Modules {
+		for _, moduleName := range jobSubmission.Modules {
 			if moduleName == response.ModuleName {
 				return true
 			}
@@ -65,7 +65,7 @@ func triageSNSEvent(ctx context.Context, module triage.Module, request events.SN
 	// Check if our module supports the IOC type
 	weSupportThisIOCType := func() bool {
 		for _, supportedType := range module.Supports() {
-			if string(supportedType) == strings.ToLower(jobRequest.IOCType) {
+			if string(supportedType) == strings.ToLower(jobSubmission.IOCType) {
 				return true
 			}
 		}
@@ -79,7 +79,7 @@ func triageSNSEvent(ctx context.Context, module triage.Module, request events.SN
 
 	// Convert request to triage.TriageRequest
 	triageRequest := &triage.Request{
-		IOCs: jobRequest.IOCs,
+		IOCs: jobSubmission.IOCs,
 	}
 
 	triageDatas, err := module.Triage(ctx, triageRequest)

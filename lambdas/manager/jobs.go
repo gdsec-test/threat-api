@@ -22,7 +22,7 @@ func createJob(ctx context.Context, request events.APIGatewayProxyRequest) (even
 	span, ctx := opentracing.StartSpanFromContext(ctx, "CreateJob")
 	defer span.Finish()
 
-	// Generate job_id
+	// Generate jobId
 	jobID := to.GenerateJobID(ctx)
 
 	// Get username
@@ -32,13 +32,13 @@ func createJob(ctx context.Context, request events.APIGatewayProxyRequest) (even
 	}
 	span.LogKV("username", jwt.BaseToken.AccountName)
 
-	// Encrypt request
-	span, ctx = opentracing.StartSpanFromContext(ctx, "EncryptRequest")
+	// Encrypt submission
+	span, ctx = opentracing.StartSpanFromContext(ctx, "EncryptSubmission")
 	encryptedData, err := to.Encrypt(ctx, jobID, []byte(request.Body))
 	if err != nil {
 		span.LogKV("error", err)
 		span.Finish()
-		return events.APIGatewayProxyResponse{StatusCode: 500}, fmt.Errorf("error encrypting request: %w", err)
+		return events.APIGatewayProxyResponse{StatusCode: 500}, fmt.Errorf("error encrypting submission: %w", err)
 	}
 	encryptedDataMarshalled, err := dynamodbattribute.Marshal(encryptedData)
 	if err != nil {
@@ -74,14 +74,14 @@ func createJob(ctx context.Context, request events.APIGatewayProxyRequest) (even
 
 	// Store in database
 	span, ctx = opentracing.StartSpanFromContext(ctx, "StoreJob")
-	span.LogKV("job_id", jobID)
+	span.LogKV("jobId", jobID)
 	_, err = dynamoDBClient.PutItem(&dynamodb.PutItemInput{
 		Item: map[string]*dynamodb.AttributeValue{
 			jobIDKey:       {S: &jobID},
 			usernameKey:    {S: &jwt.BaseToken.AccountName},
 			"startTime":    {N: aws.String(fmt.Sprintf("%d", time.Now().Unix()))},
 			"ttl":          {N: aws.String(fmt.Sprintf("%d", time.Now().Add(time.Hour*24*30).Unix()))},
-			"request":      encryptedDataMarshalled,
+			"submission":   encryptedDataMarshalled,
 			"responses":    {M: map[string]*dynamodb.AttributeValue{}},
 			"totalModules": {N: aws.String(fmt.Sprintf("%d", totalModuleCount))},
 		},
@@ -98,17 +98,17 @@ func createJob(ctx context.Context, request events.APIGatewayProxyRequest) (even
 	span, ctx = opentracing.StartSpanFromContext(ctx, "SendSNS")
 
 	// Marshal body
-	requestMarshalled, err := json.Marshal(common.JobSNSMessage{OriginalRequest: request, JobID: jobID})
+	submissionMarshalled, err := json.Marshal(common.JobSNSMessage{Submission: request, JobID: jobID})
 	if err != nil {
 		span.LogKV("error", err)
 		span.Finish()
 		return events.APIGatewayProxyResponse{StatusCode: 500}, err
 	}
-	requestMarshalledString := string(requestMarshalled)
+	submissionMarshalledString := string(submissionMarshalled)
 
 	// Send the entire request marshalled along with the jobID
 	_, err = snsClient.Publish(&sns.PublishInput{
-		Message:  &requestMarshalledString,
+		Message:  &submissionMarshalledString,
 		TopicArn: topicARN.Value,
 	})
 	if err != nil {
@@ -119,7 +119,7 @@ func createJob(ctx context.Context, request events.APIGatewayProxyRequest) (even
 	span.Finish()
 
 	response := struct {
-		JobID string `json:"job_id"`
+		JobID string `json:"jobId"`
 	}{JobID: jobID}
 	responseBytes, _ := json.Marshal(response)
 	return events.APIGatewayProxyResponse{
@@ -131,7 +131,7 @@ func createJob(ctx context.Context, request events.APIGatewayProxyRequest) (even
 // getJobStatus gets the job status from dynamoDB and send it as a response
 func getJobStatus(ctx context.Context, jobID string) (events.APIGatewayProxyResponse, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "GetJobStatus")
-	span.LogKV("job_id", jobID)
+	span.LogKV("jobId", jobID)
 	defer span.Finish()
 
 	if jobID == "" {
@@ -172,8 +172,8 @@ func getJobStatus(ctx context.Context, jobID string) (events.APIGatewayProxyResp
 	// Marshal and reply
 	responseData, err := json.Marshal(struct {
 		common.JobDBEntry
-		JobStatus     JobStatus `json:"job_status"`
-		JobPercentage float64   `json:"job_percentage"`
+		JobStatus     JobStatus `json:"jobStatus"`
+		JobPercentage float64   `json:"jobPercentage"`
 	}{
 		JobDBEntry:    *jobDB,
 		JobStatus:     jobStatus,
@@ -226,14 +226,14 @@ func getJobs(ctx context.Context, request events.APIGatewayProxyRequest) (events
 			// Decrypt because we need the original request to pull out metadata if it's there
 			jobDB.Decrypt(ctx, to)
 
-			// Remove request data except metadata
-			for key := range jobDB.DecryptedRequest {
+			// Remove submission data except metadata
+			for key := range jobDB.DecryptedSubmission {
 				switch key {
 				case "metadata":
 					continue
 				}
 
-				delete(jobDB.DecryptedRequest, key)
+				delete(jobDB.DecryptedSubmission, key)
 			}
 
 			// Remove actual response data
