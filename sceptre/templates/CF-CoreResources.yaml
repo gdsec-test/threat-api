@@ -350,11 +350,11 @@ Resources:
     Properties:
       AttributeDefinitions:
         -
-          AttributeName: job_id
+          AttributeName: jobId
           AttributeType: S
       KeySchema:
         -
-          AttributeName: job_id
+          AttributeName: jobId
           KeyType: HASH
       TimeToLiveSpecification:
         AttributeName: ttl

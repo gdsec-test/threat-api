@@ -309,7 +309,7 @@
         }
       },
       "example": {
-        "jobID": "11111",
+        "jobId": "11111",
         "startTime": 1610000000,
         "totalModules": 2,
         "submission": {
