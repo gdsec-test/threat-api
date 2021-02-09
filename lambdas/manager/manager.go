@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"net/http"
 	"strings"
 
 	"github.com/aws/aws-lambda-go/events"
@@ -49,19 +50,27 @@ func handler(ctx context.Context, request events.APIGatewayProxyRequest) (events
 	path := strings.TrimRight(request.Path, "/")
 	switch {
 	case strings.HasSuffix(path, version+"/jobs"):
-		if jobID, ok := request.PathParameters[jobIDKey]; ok {
-			// Assume they are checking on the status of this job
-			return getJobStatus(ctx, jobID)
+		switch request.HTTPMethod {
+		case http.MethodPost:
+			// They want to create a new job
+			return createJob(ctx, request)
+		case http.MethodGet:
+			if jobID, ok := request.PathParameters[jobIDKey]; ok {
+				// They are checking the status of a job
+				return getJobStatus(ctx, jobID)
+			}
+			// They are getting all their jobs
+			return getJobs(ctx, request)
+		default:
+			return events.APIGatewayProxyResponse{StatusCode: http.StatusMethodNotAllowed}, nil
 		}
-		return getJobs(ctx, request)
 	case strings.HasSuffix(path, version+"/classifications"):
 		return classifyIOCs(ctx, request)
 	case strings.HasSuffix(path, version+"/modules"):
 		return GetModules(ctx, request)
+	default:
+		return events.APIGatewayProxyResponse{StatusCode: http.StatusNotFound}, nil
 	}
-
-	// Assume they want to create a new job
-	return createJob(ctx, request)
 }
 
 func main() {
