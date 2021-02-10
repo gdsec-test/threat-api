@@ -51,16 +51,16 @@ const (
 	SHA512Type  IOCType = "SHA512"
 	IPType      IOCType = "IP"
 	// This is for godaddy machine hostnames
-	HostnameType IOCType = "hostname"
+	HostnameType IOCType = "HOSTNAME"
 	// AWS hostname
-	AWSHostnameType IOCType = "awshostname"
+	AWSHostnameType IOCType = "AWSHOSTNAME"
 	// GoDaddy username
-	GoDaddyUsernameType IOCType = "godaddy_username"
+	GoDaddyUsernameType IOCType = "GODADDY_USERNAME"
 	// Mitre IOCs
-	MitreTacticType       IOCType = "mitre_tactic"
-	MitreTechniqueType    IOCType = "mitre_technique"
-	MitreSubTechniqueType IOCType = "mitre_subtechnique"
-	MitreMitigationType   IOCType = "mitre_mitigation"
+	MitreTacticType       IOCType = "MITRE_TACTIC"
+	MitreTechniqueType    IOCType = "MITRE_TECHNIQUE"
+	MitreSubTechniqueType IOCType = "MITRE_SUBTECHNIQUE"
+	MitreMitigationType   IOCType = "MITRE_MITIGATION"
 )
 
 type IOCTypes []IOCType
