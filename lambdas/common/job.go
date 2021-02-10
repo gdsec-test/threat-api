@@ -83,7 +83,7 @@ func (j *JobDBEntry) Decrypt(ctx context.Context, t *toolbox.Toolbox) {
 type JobSubmission struct {
 	Modules []string `json:"modules"` // List of modules to run
 	IOCs    []string `json:"iocs"`    // List of IOCs
-	IOCType string   `json:"iocType"` // List of IOCs
+	IOCType string   `json:"iocType"`
 }
 
 // GetJobSubmission Pulls out the job submission from a AWS proxy event

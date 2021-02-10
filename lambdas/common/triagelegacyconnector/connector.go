@@ -39,6 +39,7 @@ func triageSNSEvent(ctx context.Context, module triage.Module, request events.SN
 		err = fmt.Errorf("error unmarshaling the SNS message to our common JobMessage structure: %w", err)
 		return nil, err
 	}
+	fmt.Printf("Got SNS message: %v\n", jobMessage)
 
 	response := &common.CompletedJobData{
 		ModuleName: module.GetDocs().Name,
@@ -52,6 +53,7 @@ func triageSNSEvent(ctx context.Context, module triage.Module, request events.SN
 		err = fmt.Errorf("failed to unmarshal job submission: %w", err)
 		return nil, err
 	}
+	fmt.Printf("Got job submission: %v\n", jobSubmission)
 
 	// Check if our module should be run
 	ourModuleMentioned := func() bool {
@@ -71,9 +73,12 @@ func triageSNSEvent(ctx context.Context, module triage.Module, request events.SN
 		}
 		return false
 	}
-	if !ourModuleMentioned() || !weSupportThisIOCType() {
+	ourModuleMentionedOut := ourModuleMentioned()
+	weSupportThisIOCTypeOut := weSupportThisIOCType()
+	if !ourModuleMentionedOut || !weSupportThisIOCTypeOut {
 		// TODO: Change this to something else?
 		// For now just return nothing
+		fmt.Printf("Not processing, mentioned %v, support this IOC type: %v\n", ourModuleMentionedOut, weSupportThisIOCTypeOut)
 		return response, nil
 	}
 
