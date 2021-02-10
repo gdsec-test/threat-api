@@ -18,8 +18,8 @@ def process(job_request):
     # log.info("Job (request): %s", json.dumps(job_request))
 
     try:
-        job_id = job_request["jobID"]
-        job_request_body = json.loads(job_request["original_request"]["body"])
+        job_id = job_request["jobId"]
+        job_request_body = json.loads(job_request["submission"]["body"])
     except Exception:
         job_id = "UNKNOWN"
         job_request_body = {}
@@ -28,13 +28,13 @@ def process(job_request):
 
     job_response = {}
 
-    job_response["job_id"] = job_id
+    job_response["jobId"] = job_id
     job_response["module_name"] = "tester1"
     job_response["response"] = json.dumps(
         {
             "ts": str(time.time()),
             "output": "Hello from tester1!",
-            "job_request_body": job_request_body,
+            "jobRequestBody": job_request_body,
         }
     )
 

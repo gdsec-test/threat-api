@@ -4,8 +4,8 @@
   "runtime": "go1.x",
   "timeout": "15",
   "metadata": {
-    "supported_ioc_types": [
-      "ip"
+    "supportedIOCTypes": [
+      "IP"
     ]
   }
 }

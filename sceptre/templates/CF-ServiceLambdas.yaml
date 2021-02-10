@@ -64,7 +64,7 @@ Resources:
     Properties:
       Name: /ThreatTools/Modules/geoip
       Type: String
-      Value: '{"supported_ioc_types": ["ip"]}'
+      Value: '{"supportedIOCTypes": ["IP"]}'
 
   tester1LambdaFunction:
     Type: AWS::Lambda::Function
@@ -114,7 +114,7 @@ Resources:
     Properties:
       Name: /ThreatTools/Modules/tester1
       Type: String
-      Value: '{"supported_ioc_types": ["domain", "ip", "unknown"]}'
+      Value: '{"supportedIOCTypes": ["DOMAIN", "IP", "UNKNOWN"]}'
 
   whoisLambdaFunction:
     Type: AWS::Lambda::Function
@@ -164,4 +164,4 @@ Resources:
     Properties:
       Name: /ThreatTools/Modules/whois
       Type: String
-      Value: '{"supported_ioc_types": ["domain"]}'
+      Value: '{"supportedIOCTypes": ["DOMAIN"]}'
