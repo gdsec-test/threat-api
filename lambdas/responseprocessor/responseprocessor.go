@@ -51,14 +51,15 @@ func handler(ctx context.Context, request events.SQSEvent) (string, error) {
 
 		// Process every completed job from the passed in data
 		for i, completedJob := range completedLambdaData.ResponsePayload {
-			span, ctx = opentracing.StartSpanFromContext(ctx, "ProcessCompletedJob")
+			var span2 opentracing.Span
+			span2, ctx = opentracing.StartSpanFromContext(ctx, "ProcessCompletedJob")
 			// Set module name to be the lambda name if this job doesn't have a module name
 			if completedJob.ModuleName == "" {
 				// Get module name from ARN
 				completedLambdaData.ResponsePayload[i].ModuleName = lambdaName
 			}
-			span.LogKV("moduleName", completedJob.ModuleName)
-			span.LogKV("jobId", completedJob.JobID)
+			span2.LogKV("moduleName", completedJob.ModuleName)
+			span2.LogKV("jobId", completedJob.JobID)
 
 			t.Logger.WithFields(logrus.Fields{"moduleName": completedJob.ModuleName, "jobData": completedJob}).Info("Processing module response")
 
@@ -71,7 +72,7 @@ func handler(ctx context.Context, request events.SQSEvent) (string, error) {
 			if err != nil {
 				t.Logger.WithError(err).Error("Error processing response")
 			}
-			span.Finish()
+			span2.Finish()
 		}
 		span.Finish()
 	}
@@ -102,7 +103,7 @@ func processCompletedJob(ctx context.Context, request common.CompletedJobData) (
 		Set(expression.Name(fmt.Sprintf("responses.%s", request.ModuleName)), expression.Value(*encryptedData))
 	expr, err := expression.NewBuilder().WithUpdate(update).Build()
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("error creating update expression: %w", err)
 	}
 	_, err = dynamodbClient.UpdateItem(&dynamodb.UpdateItemInput{
 		Key: map[string]*dynamodb.AttributeValue{
