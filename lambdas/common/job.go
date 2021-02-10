@@ -29,7 +29,7 @@ type CompletedJobData struct {
 // JobDBEntry is a job entry stored in the database.
 // This is also used as the standard structure to return to API responses
 type JobDBEntry struct {
-	JobID string `dynamodbav:"jobId"`
+	JobID string `dynamodbav:"jobId" json:"jobId"`
 	// Map of module name to the encrypted data
 	Responses  map[string]appencryption.DataRowRecord `dynamodbav:"responses" json:"-"`
 	Submission appencryption.DataRowRecord            `dynamodbav:"submission" json:"-"`
