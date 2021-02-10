@@ -39,7 +39,7 @@ func TestJobWork(t *testing.T) {
 
 		// Check to make sure we got our JobID
 		response := struct {
-			JobID string `json:"job_id"`
+			JobID string `json:"jobId"`
 		}{}
 		err = json.Unmarshal([]byte(resp.Body), &response)
 		if err != nil {
@@ -56,7 +56,7 @@ func TestJobWork(t *testing.T) {
 	t.Run("GetJob", func(t *testing.T) {
 		// Get the job status
 		resp, err := handler(context.Background(), events.APIGatewayProxyRequest{
-			PathParameters: map[string]string{"job_id": jobID},
+			PathParameters: map[string]string{"jobId": jobID},
 		})
 		if err != nil {
 			t.Fatal(err)
@@ -72,14 +72,14 @@ func TestJobWork(t *testing.T) {
 			t.Fatal(err)
 		}
 		fmt.Printf("Found job data: %v\n", response)
-		if response["job_status"].(string) == string(JobCompleted) {
+		if response["jobStatus"].(string) == string(JobCompleted) {
 			fmt.Println("WARN: Job is already completed, that was quick")
 		}
 
 		// Make sure we got back our original request
-		requestBytes, _ := json.Marshal(response["request"])
-		if string(requestBytes) != testBody {
-			t.Errorf("did not get original request we made (was it not decrypted correctly?). Expected %s got %s", testBody, string(requestBytes))
+		submissionBytes, _ := json.Marshal(response["submission"])
+		if string(submissionBytes) != testBody {
+			t.Errorf("did not get original request/submission we made (was it not decrypted correctly?). Expected %s got %s", testBody, string(submissionBytes))
 		}
 
 		// Check to make sure TotalModules > 0
@@ -90,7 +90,7 @@ func TestJobWork(t *testing.T) {
 		// Wait a bit and check if the job completed
 		time.Sleep(time.Second * 3)
 		resp, err = handler(context.Background(), events.APIGatewayProxyRequest{
-			PathParameters: map[string]string{"job_id": jobID},
+			PathParameters: map[string]string{"jobId": jobID},
 		})
 		if err != nil {
 			t.Fatal(err)
@@ -102,10 +102,10 @@ func TestJobWork(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		if response["job_status"].(string) != string(JobCompleted) {
-			t.Errorf("job did not complete, it is in state %s", response["job_status"])
+		if response["jobStatus"].(string) != string(JobCompleted) {
+			t.Errorf("job did not complete, it is in state %s", response["jobStatus"])
 		}
-		if response["job_percentage"].(float64) == 0 {
+		if response["jobPercentage"].(float64) == 0 {
 			t.Error("Job percentage stuck at 0%, there's probably a problem generating the percentage, or no responses were generated.")
 		}
 
@@ -144,16 +144,16 @@ func TestJobWork(t *testing.T) {
 		if ourJob == nil {
 			t.Errorf("did not find our jobID %s in returned jobIDs %v", jobID, response)
 		}
-		if _, ok := ourJob.DecryptedRequest["metadata"]; !ok {
+		if _, ok := ourJob.DecryptedSubmission["metadata"]; !ok {
 			t.Errorf("metadata not returned for our job in the jobs list")
 		}
 
-		// Make sure request and responses (unencrypted) are not populated
+		// Make sure submission and responses (unencrypted) are not populated
 		if ourJob.Responses != nil {
 			t.Errorf("There are unencrypted responses in the returned data for fetching jobs and it shouldn't be")
 		}
-		if len(ourJob.Request.Data) != 0 {
-			t.Errorf("The unencrypted request is in the returned data for fetching jobs and it shouldn't be")
+		if len(ourJob.Submission.Data) != 0 {
+			t.Errorf("The unencrypted request/submission is in the returned data for fetching jobs and it shouldn't be")
 		}
 
 		fmt.Printf("Found user's jobs: %v\n", response)

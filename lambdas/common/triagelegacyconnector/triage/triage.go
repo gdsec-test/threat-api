@@ -37,30 +37,30 @@ type IOCType string
 
 // IOCTypes
 const (
-	UnknownType IOCType = "unknown"
-	DomainType  IOCType = "domain"
-	EmailType   IOCType = "email"
-	CVEType     IOCType = "cve"
-	CWEType     IOCType = "cwe"
-	CAPECType   IOCType = "capec"
-	CPEType     IOCType = "cpe"
-	URLType     IOCType = "url"
-	MD5Type     IOCType = "md5"
-	SHA1Type    IOCType = "sha1"
-	SHA256Type  IOCType = "sha256"
-	SHA512Type  IOCType = "sha512"
-	IPType      IOCType = "ip"
+	UnknownType IOCType = "UNKNOWN"
+	DomainType  IOCType = "DOMAIN"
+	EmailType   IOCType = "EMAIL"
+	CVEType     IOCType = "CVE"
+	CWEType     IOCType = "CWE"
+	CAPECType   IOCType = "CAPEC"
+	CPEType     IOCType = "CPE"
+	URLType     IOCType = "URL"
+	MD5Type     IOCType = "MD5"
+	SHA1Type    IOCType = "SHA1"
+	SHA256Type  IOCType = "SHA256"
+	SHA512Type  IOCType = "SHA512"
+	IPType      IOCType = "IP"
 	// This is for godaddy machine hostnames
-	HostnameType IOCType = "hostname"
+	HostnameType IOCType = "HOSTNAME"
 	// AWS hostname
-	AWSHostnameType IOCType = "awshostname"
+	AWSHostnameType IOCType = "AWSHOSTNAME"
 	// GoDaddy username
-	GoDaddyUsernameType IOCType = "godaddy_username"
+	GoDaddyUsernameType IOCType = "GODADDY_USERNAME"
 	// Mitre IOCs
-	MitreTacticType       IOCType = "mitre_tactic"
-	MitreTechniqueType    IOCType = "mitre_technique"
-	MitreSubTechniqueType IOCType = "mitre_subtechnique"
-	MitreMitigationType   IOCType = "mitre_mitigation"
+	MitreTacticType       IOCType = "MITRE_TACTIC"
+	MitreTechniqueType    IOCType = "MITRE_TECHNIQUE"
+	MitreSubTechniqueType IOCType = "MITRE_SUBTECHNIQUE"
+	MitreMitigationType   IOCType = "MITRE_MITIGATION"
 )
 
 type IOCTypes []IOCType

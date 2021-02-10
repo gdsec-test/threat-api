@@ -53,7 +53,7 @@ Requests to the Threat API are specified using the following request format:
 
 ```json
 {
-  "ioc_type": "godaddy_username",
+  "iocType": "godaddy_username",
   "iocs": [
     "clake1",
     "gbailey",
@@ -72,27 +72,27 @@ Requests to the Threat API are specified using the following request format:
 Each request specifies a single IOC type and includes a list of one or more
 IOCs of that type.
 
-A single `job_id` is returned in response to a `POST` request to the `/job`
+A single `jobId` is returned in response to a `POST` request to the `/jobs`
 endpoint.
 
 Note that anything you specify in `metadata` will be returned explicitly when requesting a user's jobs through `/jobs`.
 
 ### Job Responses
 
-The status and any available output for a given `job_id` can be obtained from
-the `/job/{job_id}` endpoint.
+The status and any available output for a given `jobId` can be obtained from
+the `/job/{jobId}` endpoint.
 
 The `responses` field of the returned JSON data includes responses from each
 service lambda that contributed output for specified IOCs.
 
-Example response when querying a `job_id` of `12345`:
+Example response when querying a `jobId` of `12345`:
 
 ```json
 {
-  "job_id": "12345",
-  "job_status": "Completed",
-  "job_percentage": 100.00,
-  "request": {
+  "jobId": "12345",
+  "jobStatus": "Completed",
+  "jobPercentage": 100.00,
+  "submission": {
     // Your original request
   },
   "responses": {
@@ -119,10 +119,10 @@ It will respond with something similar to
 ```json
 {
   "geoip": {
-    "supported_ioc_types": ["ip"]
+    "supportedIOCTypes": ["ip"]
   },
   "whois": {
-    "supported_ioc_types": ["domain"]
+    "supportedIOCTypes": ["domain"]
   }
 }
 ```
