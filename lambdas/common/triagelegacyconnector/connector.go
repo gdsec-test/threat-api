@@ -65,7 +65,7 @@ func triageSNSEvent(ctx context.Context, module triage.Module, request events.SN
 	// Check if our module supports the IOC type
 	weSupportThisIOCType := func() bool {
 		for _, supportedType := range module.Supports() {
-			if string(supportedType) == strings.ToLower(jobSubmission.IOCType) {
+			if strings.ToLower(string(supportedType)) == strings.ToLower(jobSubmission.IOCType) {
 				return true
 			}
 		}
