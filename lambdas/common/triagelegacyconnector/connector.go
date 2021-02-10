@@ -39,7 +39,6 @@ func triageSNSEvent(ctx context.Context, module triage.Module, request events.SN
 		err = fmt.Errorf("error unmarshaling the SNS message to our common JobMessage structure: %w", err)
 		return nil, err
 	}
-	fmt.Printf("Got SNS message: %v\n", jobMessage)
 
 	response := &common.CompletedJobData{
 		ModuleName: module.GetDocs().Name,
