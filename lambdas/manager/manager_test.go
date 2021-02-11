@@ -163,11 +163,16 @@ func TestJobWork(t *testing.T) {
 
 func TestClassifyIOCs(t *testing.T) {
 	resp, err := handler(context.Background(), events.APIGatewayProxyRequest{
-		Path: "/classify",
-		Body: `{"iocs":["1.1.1.1","domain.com","email@email.com"]}`,
+		Path:       version + "/classifications",
+		HTTPMethod: "POST",
+		Body:       `{"iocs":["1.1.1.1","domain.com","email@email.com"]}`,
 	})
 	if err != nil {
 		t.Fatal(err)
+	}
+
+	if resp.StatusCode != 200 {
+		t.Fatalf("bad error code: %d body: %s", resp.StatusCode, resp.Body)
 	}
 
 	// Check if the response is what we expect
