@@ -51,7 +51,7 @@ func getModules(ctx context.Context, t *toolbox.Toolbox) (map[string]common.Lamb
 		return true
 	})
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error fetching SSM parameters: %w", err)
 	}
 
 	return ret, nil

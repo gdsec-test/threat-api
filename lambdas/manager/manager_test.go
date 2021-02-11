@@ -194,11 +194,15 @@ func TestClassifyIOCs(t *testing.T) {
 
 func TestGetModulesRequest(t *testing.T) {
 	resp, err := handler(context.Background(), events.APIGatewayProxyRequest{
-		Path:       "/modules",
+		Path:       version + "/modules",
 		HTTPMethod: "GET",
 	})
 	if err != nil {
 		t.Fatal(err)
+	}
+
+	if resp.StatusCode != 200 {
+		t.Fatalf("bad error code: %d body: %s", resp.StatusCode, resp.Body)
 	}
 
 	ret := map[string]common.LambdaMetadata{}
