@@ -315,6 +315,7 @@ Resources:
 
   ThreatRole:
     DependsOn:
+      - ThreatPolicySecretsManager
       - ThreatPolicySQS
     Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
     Properties:
