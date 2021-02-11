@@ -3,9 +3,9 @@ dependencies:
   - {{environment}}/{{region}}/CF-CoreResources.yaml
 parameters:
   geoipSHA1: !file_contents resources/geoip.sha1
+  shodanSHA1: !file_contents resources/shodan.sha1
   tester1SHA1: !file_contents resources/tester1.sha1
   whoisSHA1: !file_contents resources/whois.sha1
-  shodanisSHA1: !file_contents resources/shodan.sha1
 hooks:
   before_create:
     - !cmd resources/build-service-lambdas.sh

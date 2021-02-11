@@ -23,7 +23,7 @@ do
     pushd ${THREAT_API_SOURCE}/lambdas/${LAMBDA}
 
     # Store the SHA1 hash of the source code
-    SHA1HASH=$(sha1sum "${LAMBDA}.go" | cut -d' ' -f1)
+    SHA1HASH=$(shasum "${LAMBDA}.go" | cut -d' ' -f1)
     echo ${SHA1HASH} > ${RESOURCES_DIR}/${LAMBDA}.sha1
 
     env GOPRIVATE=github.secureserver.net,github.com/gdcorp-* GOOS=linux GOARCH=amd64 go build
