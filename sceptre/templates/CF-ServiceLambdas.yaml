@@ -118,7 +118,7 @@ Resources:
     Properties:
       Name: /ThreatTools/Modules/shodan
       Type: String
-      Value: '{"supported_ioc_types": ["domain", "ip"]}'
+      Value: '{"supportedIOCTypes": ["DOMAIN", "IP"]}'
 
   tester1LambdaFunction:
     Type: AWS::Lambda::Function
