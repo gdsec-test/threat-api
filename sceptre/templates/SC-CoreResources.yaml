@@ -233,7 +233,31 @@ Resources:
                     "Effect": "Allow"
                 }
             ]
-        }'
+          }'
+      Tags:
+        - Key: doNotShutDown
+          Value: true
+
+  ThreatPolicySecretsManager:
+    Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
+    Properties:
+      ProductName: IAMPolicy
+      ProvisioningArtifactName: 1.0.0
+      ProvisionedProductName: ThreatPolicySecretsManager
+      ProvisioningParameters:
+        - Key: PolicyNameSuffix
+          Value: ThreatPolicySecretsManager
+        - Key: PolicyJSON
+          Value: !Sub '{
+            "Version": "2012-10-17",
+            "Statement": [
+                {
+                    "Action": "secretsmanager:GetSecretValue",
+                    "Resource": "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:/ThreatTools/Integrations/*",
+                    "Effect": "Allow"
+                }
+            ]
+          }'
       Tags:
         - Key: doNotShutDown
           Value: true
@@ -260,7 +284,7 @@ Resources:
                     "Effect": "Allow"
                 }
             ]
-        }'
+          }'
       Tags:
         - Key: doNotShutDown
           Value: true
@@ -284,7 +308,7 @@ Resources:
                     "Effect": "Allow"
                 }
             ]
-        }'
+          }'
       Tags:
         - Key: doNotShutDown
           Value: true
@@ -307,6 +331,7 @@ Resources:
               - arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess
               - arn:aws:iam::aws:policy/AmazonSSMReadOnlyAccess
               - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+              - !Sub arn:aws:iam::${AWS::AccountId}:policy/${DevelopmentTeam}-custom-ThreatPolicySecretsManager
               - !Sub arn:aws:iam::${AWS::AccountId}:policy/${DevelopmentTeam}-custom-ThreatPolicySQS
         - Key: AssumingServices
           Value: lambda.amazonaws.com
