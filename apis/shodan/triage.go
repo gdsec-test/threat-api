@@ -39,7 +39,7 @@ func (m *TriageModule) Triage(ctx context.Context, triageRequest *triage.Request
 	}
 
 	// Retrieve key from Secrets Manager
-	secret, err := m.getSecret("shodan-credentials")
+	secret, err := m.getSecret("/ThreatTools/Integrations/shodan")
 	if err != nil {
 		triageData.Data = fmt.Sprintf("error in retrieving secrets", err)
 		return []*triage.Data{triageData}, nil

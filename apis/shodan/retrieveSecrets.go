@@ -5,7 +5,7 @@ package main
 // https://docs.aws.amazon.com/sdk-for-go/v1/developer-guide/setting-up.html
 
 import (
-	"encoding/base64"
+	"errors"
 	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -63,20 +63,12 @@ func (m *TriageModule) getSecret(secretName string) (string, error) {
 
 	// Decrypts secret using the associated KMS CMK.
 	// Depending on whether the secret is a string or binary, one of these fields will be populated.
-	var secretString, decodedBinarySecret string
+	var secretString string
 	if result.SecretString != nil {
 		secretString = *result.SecretString
 	} else {
-		decodedBinarySecretBytes := make([]byte, base64.StdEncoding.DecodedLen(len(result.SecretBinary)))
-		len, err := base64.StdEncoding.Decode(decodedBinarySecretBytes, result.SecretBinary)
-		if err != nil {
-			return "", err
-		}
-		decodedBinarySecret = string(decodedBinarySecretBytes[:len])
+		return "", errors.New("SecretString is not a string and binaries are not handled")
 	}
 
-	// Your code goes here.
-	//TODO: Check if the secret is a string or binary
-	fmt.Println(decodedBinarySecret)
 	return secretString, err
 }
