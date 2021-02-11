@@ -1,22 +1,62 @@
 {
   "swagger": "2.0",
   "info": {
-    "description": "Available APIs provided by the InfoSec TI team",
-    "version": "2.0",
-    "title": "ThreatAPI"
+    "description": "Threat Tools Platform API. See [documentation](https://github.com/gdcorp-infosec/threat-api/blob/main/docs/USAGE.md) available in our [GitHub repository](https://github.com/gdcorp-infosec/threat-api) for more information.",
+    "version": "2.0.0",
+    "title": "ThreatAPI",
+    "contact": {
+      "name": "InfoSec Threat Research Team",
+      "email": "threat@godaddy.com",
+      "x-slack-channel": "#threat-research",
+      "x-source-code": "https://github.com/gdcorp-infosec/threat-api"
+    }
   },
   "schemes": [
     "https"
   ],
   "paths": {
-    "/job": {
+    "/v1/jobs": {
       "post": {
+        "summary": "Create a new job",
+        "description": "This API creates a new job for a given set of IOCs and returns a job ID.",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "description": "List of IOCs to evaluate. IOCs will only be processed by the modules specified in the request. All of the IOCs provided must be of the same type.",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful operation"
+          }
+        },
+        "security": [
+          {
+            "JWTAuthorizer": []
+          }
+        ],
+        "x-amazon-apigateway-integration": {
+          "type": "aws_proxy",
+          "uri": "arn:aws:apigateway:us-west-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-west-2:___AWS_ACCOUNT___:function:manager/invocations",
+          "passthroughBehavior": "when_no_match",
+          "httpMethod": "POST",
+          "contentHandling": "CONVERT_TO_TEXT"
+        }
+      },
+      "get": {
+        "summary": "List summary data for jobs associated with the current user",
+        "description": "This API returns a list of job IDs that are associated with the currently authenticated user.",
         "produces": [
           "application/json"
         ],
         "responses": {
           "200": {
-            "description": "200 response"
+            "description": "Successful operation"
           }
         },
         "security": [
@@ -33,11 +73,14 @@
         }
       }
     },
-    "/job/{job_id}": {
+    "/v1/jobs/{jobId}": {
       "get": {
+        "summary": "Request information about a job",
+        "description": "This API returns status and any available output for a specified job ID. The `responses` field of the returned JSON data includes responses from each service lambda that contributed output for specified IOCs.",
         "parameters": [
           {
-            "name": "job_id",
+            "name": "jobId",
+            "description": "Job ID",
             "in": "path",
             "required": true,
             "type": "string"
@@ -45,7 +88,7 @@
         ],
         "responses": {
           "200": {
-            "description": "200 response"
+            "description": "Successful operation"
           }
         },
         "security": [
@@ -62,38 +105,24 @@
         }
       }
     },
-    "/jobs": {
-      "get": {
-        "produces": [
-          "application/json"
-        ],
-        "responses": {
-          "200": {
-            "description": "200 response"
-          }
-        },
-        "security": [
-          {
-            "JWTAuthorizer": []
-          }
-        ],
-        "x-amazon-apigateway-integration": {
-          "type": "aws_proxy",
-          "uri": "arn:aws:apigateway:us-west-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-west-2:___AWS_ACCOUNT___:function:manager/invocations",
-          "passthroughBehavior": "when_no_match",
-          "httpMethod": "POST",
-          "contentHandling": "CONVERT_TO_TEXT"
-        }
-      }
-    },
-    "/classify": {
+    "/v1/classifications": {
       "post": {
+        "summary": "Identify IOC types for a provided list of IOCs",
+        "description": "This API accepts a list of IOCs, and returns a dictionary indexed by supported IOC type, where each dictionary value contains IOCs of the corresponding IOC type.",
         "produces": [
           "application/json"
         ],
+        "parameters": [
+          {
+            "name": "body",
+            "description": "List of IOCs",
+            "in": "body",
+            "required": true
+          }
+        ],
         "responses": {
           "200": {
-            "description": "200 response"
+            "description": "Successful operation"
           }
         },
         "security": [
@@ -110,14 +139,16 @@
         }
       }
     },
-    "/modules": {
+    "/v1/modules": {
       "get": {
+        "summary": "List modules and their associated IOC types",
+        "description": "This API returns a dictionary of supported modules, each of which contains metadata about the module (supported IOC types, etc.).",
         "produces": [
           "application/json"
         ],
         "responses": {
           "200": {
-            "description": "200 response"
+            "description": "Successful operation"
           }
         },
         "security": [

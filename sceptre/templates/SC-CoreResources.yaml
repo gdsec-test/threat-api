@@ -465,7 +465,7 @@ Resources:
         - Key: DynamoDBTableName
           Value: jobs
         - Key: PartitionKeyAttributeName
-          Value: job_id
+          Value: jobId
         - Key: PartitionKeyAttributeType
           Value: S
         - Key: TimeToLiveAttributeName

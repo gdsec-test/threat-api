@@ -6,7 +6,9 @@
     "title": "ThreatAPI",
     "contact": {
       "name": "InfoSec Threat Research Team",
-      "email": "threat@godaddy.com"
+      "email": "threat@godaddy.com",
+      "x-slack-channel": "#threat-research",
+      "x-source-code": "https://github.com/gdcorp-infosec/threat-api"
     }
   },
   "tags": [
@@ -19,11 +21,17 @@
       "description": "Utility operations"
     }
   ],
+  "basePath": "/v1",
   "schemes": [
     "https"
   ],
+  "security": [
+    {
+      "sso-jwt-header": []
+    }
+  ],
   "paths": {
-    "/job": {
+    "/jobs": {
       "post": {
         "tags": [
           "Jobs"
@@ -37,8 +45,9 @@
           {
             "name": "body",
             "in": "body",
+            "description": "List of IOCs to evaluate. IOCs will only be processed by the modules specified in the request. All of the IOCs provided must be of the same type.",
             "schema": {
-              "$ref": "#/definitions/JobRequest"
+              "$ref": "#/definitions/JobCreate"
             },
             "required": true
           }
@@ -49,19 +58,37 @@
             "schema": {
               "type": "object",
               "properties": {
-                "job_id": {
+                "jobId": {
                   "type": "string"
                 }
               },
               "example": {
-                "job_id": "11111"
+                "jobId": "11111"
               }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Jobs"
+        ],
+        "summary": "List summary data for jobs associated with the current user",
+        "description": "This API returns a list of job IDs that are associated with the currently authenticated user.",
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "schema": {
+              "$ref": "#/definitions/JobList"
             }
           }
         }
       }
     },
-    "/job/{job_id}": {
+    "/jobs/{jobId}": {
       "get": {
         "tags": [
           "Jobs"
@@ -70,7 +97,8 @@
         "description": "This API returns status and any available output for a specified job ID. The `responses` field of the returned JSON data includes responses from each service lambda that contributed output for specified IOCs.",
         "parameters": [
           {
-            "name": "job_id",
+            "name": "jobId",
+            "description": "Job ID",
             "in": "path",
             "required": true,
             "type": "string"
@@ -80,41 +108,13 @@
           "200": {
             "description": "Successful operation",
             "schema": {
-              "$ref": "#/definitions/JobStatus"
+              "$ref": "#/definitions/Job"
             }
           }
         }
       }
     },
-    "/jobs": {
-      "get": {
-        "tags": [
-          "Jobs"
-        ],
-        "summary": "List jobs associated with the current user",
-        "description": "This API returns a list of job IDs that are associated with the currently authenticated user.",
-        "produces": [
-          "application/json"
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful operation",
-            "schema": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              },
-              "example": [
-                "11111",
-                "22222",
-                "33333"
-              ]
-            }
-          }
-        }
-      }
-    },
-    "/classify": {
+    "/classifications": {
       "post": {
         "tags": [
           "Miscellaneous"
@@ -127,9 +127,10 @@
         "parameters": [
           {
             "name": "body",
+            "description": "List of IOCs",
             "in": "body",
             "schema": {
-              "$ref": "#/definitions/ClassifyRequest"
+              "$ref": "#/definitions/ClassificationCreate"
             },
             "required": true
           }
@@ -138,7 +139,7 @@
           "200": {
             "description": "Successful operation",
             "schema": {
-              "$ref": "#/definitions/ClassifyResponse"
+              "$ref": "#/definitions/Classification"
             }
           }
         }
@@ -166,7 +167,34 @@
     }
   },
   "definitions": {
-    "ClassifyRequest": {
+    "Classification": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "example": {
+        "DOMAIN": [
+          "example.com"
+        ],
+        "EMAIL": [
+          "user123@example.com",
+          "user456@godaddy.com"
+        ],
+        "GODADDY_USERNAME": [
+          "user456"
+        ],
+        "IP": [
+          "8.8.8.8"
+        ],
+        "URL": [
+          "https://google.com"
+        ]
+      }
+    },
+    "ClassificationCreate": {
       "type": "object",
       "properties": {
         "iocs": {
@@ -180,69 +208,43 @@
         "iocs": [
           "8.8.8.8",
           "example.com",
+          "https://google.com",
           "user123@example.com",
           "user456@godaddy.com"
-        ]
-      }
-    },
-    "ClassifyResponse": {
-      "type": "object",
-      "additionalProperties": {
-        "type": "array",
-        "items": {
-          "type": "string"
-        }
-      },
-      "example": {
-        "domain": [
-          "example.com"
-        ],
-        "email": [
-          "user123@example.com",
-          "user456@godaddy.com"
-        ],
-        "godaddy_username": [
-          "user456"
-        ],
-        "ip": [
-          "8.8.8.8"
         ]
       }
     },
     "IOCType": {
       "type": "string",
       "enum": [
-        "unknown",
-        "domain",
-        "email",
-        "cve",
-        "cwe",
-        "capec",
-        "cpe",
-        "url",
-        "md5",
-        "sha1",
-        "sha256",
-        "sha512",
-        "ip",
-        "hostname",
-        "awshostname",
-        "godaddy_username",
-        "mitre_tactic",
-        "mitre_technique",
-        "mitre_subtechnique",
-        "mitre_mitigation"
+        "UNKNOWN",
+        "DOMAIN",
+        "EMAIL",
+        "CVE",
+        "CWE",
+        "CAPEC",
+        "CPE",
+        "URL",
+        "MD5",
+        "SHA1",
+        "SHA256",
+        "SHA512",
+        "IP",
+        "HOSTNAME",
+        "AWSHOSTNAME",
+        "GODADDY_USERNAME",
+        "MITRE_TACTIC",
+        "MITRE_TECHNIQUE",
+        "MITRE_SUBTECHNIQUE",
+        "MITRE_MITIGATION"
       ],
-      "example": "domain"
+      "example": "DOMAIN"
     },
-    "JobRequest": {
+    "JobCreate": {
       "type": "object",
       "properties": {
-        "modules": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
+        "iocType": {
+          "$ref": "#/definitions/IOCType"
         },
         "iocs": {
           "type": "array",
@@ -250,69 +252,132 @@
             "type": "string"
           }
         },
-        "ioc_type": {
-          "$ref": "#/definitions/IOCType"
+        "modules": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         }
       },
       "example": {
-        "modules": [
-          "whois"
-        ],
+        "iocType": "DOMAIN",
         "iocs": [
           "godaddy.com"
         ],
-        "ioc_type": "domain"
+        "modules": [
+          "whois"
+        ]
       }
     },
-    "JobStatus": {
+    "JobDetail": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "array",
+        "items": {
+          "type": "object"
+        }
+      }
+    },
+    "Job": {
       "type": "object",
       "properties": {
-        "request": {
+        "jobId": {
           "type": "string"
         },
-        "responses": {
-          "type": "object",
-          "additionalProperties": {
-            "type": "array",
-            "items": {
-              "type": "object"
-            }
-          }
+        "submission": {
+          "$ref": "#/definitions/JobCreate"
         },
-        "start_time": {
+        "responses": {
+          "$ref": "#/definitions/JobDetail"
+        },
+        "startTime": {
           "type": "number"
         },
-        "job_status": {
+        "totalModules": {
+          "type": "number"
+        },
+        "jobStatus": {
           "type": "string",
           "enum": [
-            "InProgress",
-            "Incomplete",
-            "Completed"
+            "IN_PROGRESS",
+            "INCOMPLETE",
+            "COMPLETED"
           ]
         },
-        "job_percentage": {
+        "jobPercentage": {
           "type": "number"
         }
       },
       "example": {
-        "request": "{\"modules\": [\"whois\"], \"iocs\": [\"godaddy.com\"], \"ioc_type\": \"domain\"}",
+        "jobId": "11111",
+        "startTime": 1610000000,
+        "totalModules": 2,
+        "submission": {
+          "iocType": "DOMAIN",
+          "iocs": [
+            "godaddy.com"
+          ],
+          "modules": [
+            "whois"
+          ]
+        },
         "responses": {
+          "geoip": [],
           "whois": [
             {
-              "Data": "domain,createdDate,updatedDate,...",
+              "Data": "domain,createdDate,updatedDate,expirationDate,...",
+              "DataType": "",
+              "Metadata": [],
               "Title": "Whois lookup data"
             }
           ]
         },
-        "start_time": 1610000000,
-        "job_status": "Completed",
-        "job_percentage": 100
+        "jobStatus": "Completed",
+        "jobPercentage": 100
       }
+    },
+    "JobList": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/Job"
+      },
+      "example": [
+        {
+          "jobId": "11111",
+          "startTime": 1610000000,
+          "totalModules": 2,
+          "submission": {},
+          "responses": {
+            "geoip": null,
+            "whois": null
+          }
+        },
+        {
+          "jobId": "22222",
+          "startTime": 1620000000,
+          "totalModules": 2,
+          "submission": {},
+          "responses": {
+            "geoip": null,
+            "whois": null
+          }
+        },
+        {
+          "jobId": "33333",
+          "startTime": 1630000000,
+          "totalModules": 2,
+          "submission": {},
+          "responses": {
+            "geoip": null,
+            "whois": null
+          }
+        }
+      ]
     },
     "ModuleInfo": {
       "type": "object",
       "properties": {
-        "supported_ioc_types": {
+        "supportedIOCTypes": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/IOCType"
@@ -324,7 +389,27 @@
       "type": "object",
       "additionalProperties": {
         "$ref": "#/definitions/ModuleInfo"
+      },
+      "example": {
+        "geoip": {
+          "supportedIOCTypes": [
+            "IP"
+          ]
+        },
+        "whois": {
+          "supportedIOCTypes": [
+            "DOMAIN"
+          ]
+        }
       }
+    }
+  },
+  "securityDefinitions": {
+    "sso-jwt-header": {
+      "name": "Authorization",
+      "in": "header",
+      "type": "apiKey",
+      "description": "Standard GoDaddy SSO header authorization: <code>sso-jwt (token)</code>"
     }
   }
 }

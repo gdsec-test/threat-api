@@ -8,7 +8,7 @@ import (
 )
 
 const (
-	triageModuleName = "whois"
+	triageModuleName = "shodan"
 )
 
 // Host is a structure to store what we found from shodan along with other information about that host

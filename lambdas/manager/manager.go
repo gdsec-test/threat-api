@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"net/http"
 	"strings"
 
 	"github.com/aws/aws-lambda-go/events"
@@ -14,8 +15,10 @@ import (
 const (
 	resourceName             = "geoip"
 	snsTopicARNParameterName = "/ThreatTools/JobRequests"
-	jobIDKey                 = "job_id"
+	jobIDKey                 = "jobId"
 	usernameKey              = "username"
+	// API Version and API path prefix
+	version = "v1"
 )
 
 // Normall I wouldn't use global variables like this, but in such a small
@@ -43,25 +46,31 @@ func handler(ctx context.Context, request events.APIGatewayProxyRequest) (events
 	// Load dynamoDB
 	dynamoDBClient = dynamodb.New(to.AWSSession)
 
-	// Check for jobID to check status of job
-	if jobID, ok := request.PathParameters[jobIDKey]; ok {
-		// Assume they are checking on the status of this job
-		return getJobStatus(ctx, jobID)
-	}
-
 	// Check if they are requesting their user's jobs
-	path := strings.TrimRight(request.Path, "/")
+	path := strings.Trim(request.Path, "/")
 	switch {
-	case strings.HasSuffix(path, "/jobs"):
-		return getJobs(ctx, request)
-	case strings.HasSuffix(path, "/classify"):
+	case strings.HasPrefix(path, version+"/jobs"):
+		switch request.HTTPMethod {
+		case http.MethodPost:
+			// They want to create a new job
+			return createJob(ctx, request)
+		case http.MethodGet:
+			if jobID, ok := request.PathParameters[jobIDKey]; ok {
+				// They are checking the status of a job
+				return getJobStatus(ctx, jobID)
+			}
+			// They are getting all their jobs
+			return getJobs(ctx, request)
+		default:
+			return events.APIGatewayProxyResponse{StatusCode: http.StatusMethodNotAllowed}, nil
+		}
+	case strings.HasSuffix(path, version+"/classifications"):
 		return classifyIOCs(ctx, request)
-	case strings.HasSuffix(path, "/modules"):
+	case strings.HasSuffix(path, version+"/modules"):
 		return GetModules(ctx, request)
+	default:
+		return events.APIGatewayProxyResponse{StatusCode: http.StatusNotFound}, nil
 	}
-
-	// Assume they want to create a new job
-	return createJob(ctx, request)
 }
 
 func main() {

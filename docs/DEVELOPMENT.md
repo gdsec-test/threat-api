@@ -138,16 +138,16 @@ The input to the lambda will be a structure like the following
 
 ```json
 {
-  "job_id": "string", // Job id you are processing
-  "original_request": events.APIGatewayProxyRequest // The original API Gateway request for the job.
+  "jobId": "string", // Job id you are processing
+  "submission": events.APIGatewayProxyRequest // The original API Gateway request for the job.
 }
 ```
 
-A few notes about the original request:
+A few notes about the original request (`submission`):
 
-* The body of the original API request will be in original_request.body as a string
+* The body of the original API request will be in submission.body as a string
   * For the schema of a requested job, reference the [API Usage](USAGE.md#Requests) docs.
-* The JWT will either be passed in via a cookie or authorization header.  This means you must not log out the full `original_request` as it will contain the sensitive and private JWT.  You can use the `toolbox` library to pull out the JWT if you are writing your lambda in go.  You can then call the standard function `Authorize` (in the go toolbox or language equivalent) to check for permissions.
+* The JWT will either be passed in via a cookie or authorization header.  This means you must not log out the full `submission` as it will contain the sensitive and private JWT.  You can use the `toolbox` library to pull out the JWT if you are writing your lambda in go.  You can then call the standard function `Authorize` (in the go toolbox or language equivalent) to check for permissions.
 
 ### Output
 
@@ -158,7 +158,7 @@ each lambda can technically accept and array of jobs to handle.
 ```json
 [
   {
-  "job_id": "string", // The job ID that this data should be added to
+  "jobId": "string", // The job ID that this data should be added to
   "module_name": "string", // The name of this module
   "response": "string", // Marshalled response data
   },

@@ -39,7 +39,7 @@ This git repository contains resources grouped by the following functions:
     "memory-size": "256",
     "handler": "main",
     "metadata": {
-      "supported_ioc_types": [
+      "supportedIOCTypes": [
         "domain"
       ]
     }

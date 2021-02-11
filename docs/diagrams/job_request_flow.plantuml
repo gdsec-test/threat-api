@@ -16,10 +16,10 @@ API_Gateway -> JWT_Authorizer: Check JWT
 JWT_Authorizer -> API_Gateway: JWT valid
 API_Gateway -> Manager : Request
 activate Manager
-Manager -> Manager : Encrypt request
-Manager -> DynamoDB : Store job_id and encrypted request
-Manager -> SNS : Publish request
-Manager -> User : job_id
+Manager -> Manager : Encrypt submission
+Manager -> DynamoDB : Store jobId and encrypted submission
+Manager -> SNS : Publish job submission
+Manager -> User : jobId
 deactivate Manager
 note over User : At this point the \n request is done and the user \n must poll for the result
 collections "Job Lambda\n(ServiceNow)" as Job_Lambda
@@ -55,9 +55,9 @@ API_Gateway -> JWT_Authorizer: Check JWT
 JWT_Authorizer -> API_Gateway: JWT valid
 API_Gateway -> Manager : Request
 activate Manager
-Manager -> DynamoDB : Get job_id
+Manager -> DynamoDB : Get jobId
 DynamoDB -> Manager : Job output
-Manager -> Manager : Decrypt original request\nand each response
+Manager -> Manager : Decrypt original submission\nand each response
 Manager -> User : Job output
 deactivate Manager
 
