@@ -8,7 +8,7 @@ import (
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
-	"github.com/gdcorp-infosec/threat-util/lambda/toolbox"
+	"github.com/gdcorp-infosec/threat-api/lambdas/common/toolbox"
 	_ "go.elastic.co/apm/module/apmlambda"
 )
 

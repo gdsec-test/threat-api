@@ -2,9 +2,10 @@ package main
 
 import (
 	"context"
-	"github.com/gdcorp-infosec/threat-api/lambdas/common/triagelegacyconnector/triage"
-	"github.com/gdcorp-infosec/threat-util/lambda/toolbox"
 	"testing"
+
+	"github.com/gdcorp-infosec/threat-api/lambdas/common/toolbox"
+	"github.com/gdcorp-infosec/threat-api/lambdas/common/triagelegacyconnector/triage"
 )
 
 func TestLookup(t *testing.T) {

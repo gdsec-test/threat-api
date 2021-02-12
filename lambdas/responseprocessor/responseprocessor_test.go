@@ -7,7 +7,7 @@ import (
 	"testing"
 
 	"github.com/gdcorp-infosec/threat-api/lambdas/common"
-	"github.com/gdcorp-infosec/threat-util/lambda/toolbox"
+	"github.com/gdcorp-infosec/threat-api/lambdas/common/toolbox"
 	_ "go.elastic.co/apm/module/apmlambda"
 )
 
