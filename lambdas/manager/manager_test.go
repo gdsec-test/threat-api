@@ -18,10 +18,18 @@ const (
 	testBody = `{"metadata":{"name":"test"}}`
 )
 
-// Test creating a job in the DB
+// Test creating a job in the DB.
+// This test required a TESTING_JWT and valid AWS credentials.
 func TestJobWork(t *testing.T) {
 	testingJWT := os.Getenv("TESTING_JWT")
 	headers := map[string]string{"cookie": fmt.Sprintf("auth_jomax=%s", testingJWT)}
+
+	// Only perform this test if we are working locally, not in CICD
+	// In the future we can enable this test when we get a testing JWT
+	if os.Getenv("PERFORM_REAL_TESTS") == "" {
+		t.Skip("Not running test")
+		return
+	}
 
 	var jobID string
 	t.Run("CreateJob", func(t *testing.T) {
@@ -163,11 +171,16 @@ func TestJobWork(t *testing.T) {
 
 func TestClassifyIOCs(t *testing.T) {
 	resp, err := handler(context.Background(), events.APIGatewayProxyRequest{
-		Path: "/classify",
-		Body: `{"iocs":["1.1.1.1","domain.com","email@email.com"]}`,
+		Path:       version + "/classifications",
+		HTTPMethod: "POST",
+		Body:       `{"iocs":["1.1.1.1","domain.com","email@email.com"]}`,
 	})
 	if err != nil {
 		t.Fatal(err)
+	}
+
+	if resp.StatusCode != 200 {
+		t.Fatalf("bad error code: %d body: %s", resp.StatusCode, resp.Body)
 	}
 
 	// Check if the response is what we expect
@@ -189,11 +202,15 @@ func TestClassifyIOCs(t *testing.T) {
 
 func TestGetModulesRequest(t *testing.T) {
 	resp, err := handler(context.Background(), events.APIGatewayProxyRequest{
-		Path:       "/modules",
+		Path:       version + "/modules",
 		HTTPMethod: "GET",
 	})
 	if err != nil {
 		t.Fatal(err)
+	}
+
+	if resp.StatusCode != 200 {
+		t.Fatalf("bad error code: %d body: %s", resp.StatusCode, resp.Body)
 	}
 
 	ret := map[string]common.LambdaMetadata{}

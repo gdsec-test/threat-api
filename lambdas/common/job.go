@@ -29,14 +29,14 @@ type CompletedJobData struct {
 // JobDBEntry is a job entry stored in the database.
 // This is also used as the standard structure to return to API responses
 type JobDBEntry struct {
-	JobID string `dynamodbav:"jobId"`
+	JobID string `dynamodbav:"jobId" json:"jobId"`
 	// Map of module name to the encrypted data
 	Responses  map[string]appencryption.DataRowRecord `dynamodbav:"responses" json:"-"`
 	Submission appencryption.DataRowRecord            `dynamodbav:"submission" json:"-"`
 	// Epoch start time
-	StartTime float64 `dynamodbav:"startTime" json:"StartTime"`
+	StartTime float64 `dynamodbav:"startTime" json:"startTime"`
 	// Count of total modules that should be run from this submission
-	TotalModules int `dynamodbav:"totalModules" json:"TotalModules"`
+	TotalModules int `dynamodbav:"totalModules" json:"totalModules"`
 
 	// Decrypted data
 	// The ignore tags in dynamodbav are to prevent the json tags
