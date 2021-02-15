@@ -9,10 +9,15 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ssm"
 	"github.com/gdcorp-infosec/threat-api/lambdas/common/triagelegacyconnector/triage"
+	"github.com/opentracing/opentracing-go"
 )
 
 // GetModules gets the available modules and their supported IOC types
 func (t *Toolbox) GetModules(ctx context.Context) (map[string]LambdaMetadata, error) {
+	var span opentracing.Span
+	span, ctx = opentracing.StartSpanFromContext(ctx, "GetModules")
+	defer span.Finish()
+
 	ssmClient := ssm.New(t.AWSSession)
 
 	ret := map[string]LambdaMetadata{}
@@ -45,4 +50,11 @@ func (t *Toolbox) GetModules(ctx context.Context) (map[string]LambdaMetadata, er
 // LambdaMetadata is data stored in the parameter store about a specific lambda
 type LambdaMetadata struct {
 	SupportedIOCTypes []triage.IOCType `json:"supportedIOCTypes"`
+	// AuthZ Actions that can be performed in this module
+	Actions map[string]ActionSpecification
+}
+
+// ActionSpecification describes an action and what permissions are required to perform it
+type ActionSpecification struct {
+	RequiredADGroups []string
 }

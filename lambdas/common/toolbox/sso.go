@@ -17,17 +17,6 @@ const (
 	ssoADURL = "api/my/ad_membership"
 )
 
-// PermissionsModel is the structure that defines
-type PermissionsModel struct {
-	Resources map[string]struct {
-		// Actions that can be performed in this module
-		Actions map[string]struct {
-			// Required AD groups to perform this action
-			RequiredGroups []string
-		}
-	}
-}
-
 // Authorize Takes a JWT, Action, and resource and determines is the action is permitted or not
 func (t *Toolbox) Authorize(ctx context.Context, jwt, action, resource string) (bool, error) {
 	var span opentracing.Span
@@ -52,20 +41,25 @@ func (t *Toolbox) Authorize(ctx context.Context, jwt, action, resource string) (
 		groupsMap[group] = struct{}{}
 	}
 
-	// Go through the permission structure and make sure all requirements are satisfied
-	span, _ = opentracing.StartSpanFromContext(ctx, "Parse")
-	defer span.Finish()
-	r, ok := t.permissionsModel.Resources[resource]
+	// Find the lambda resource they are referencing
+	lambdas, err := t.GetModules(ctx)
+	if err != nil {
+		return false, fmt.Errorf("error fetching lambda list")
+	}
+	lambda, ok := lambdas[resource]
 	if !ok {
 		return false, fmt.Errorf("resource not found")
 	}
+
 	// Find the action
-	a, ok := r.Actions[action]
+	span, _ = opentracing.StartSpanFromContext(ctx, "Parse")
+	defer span.Finish()
+	actionObj, ok := lambda.Actions[action]
 	if !ok {
-		return false, fmt.Errorf("action not found")
+		return false, fmt.Errorf("action found")
 	}
 	// Check required groups
-	for _, requiredGroup := range a.RequiredGroups {
+	for _, requiredGroup := range actionObj.RequiredADGroups {
 		if _, ok := groupsMap[requiredGroup]; !ok {
 			return false, fmt.Errorf("not in required group %s", requiredGroup)
 		}
