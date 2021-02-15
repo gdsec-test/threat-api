@@ -6,8 +6,8 @@ import (
 	"encoding/json"
 
 	"github.com/aws/aws-lambda-go/events"
+	"github.com/gdcorp-infosec/threat-api/lambdas/common/toolbox"
 	"github.com/gdcorp-infosec/threat-api/lambdas/common/triagelegacyconnector/triage"
-	"github.com/gdcorp-infosec/threat-util/lambda/toolbox"
 	"github.com/godaddy/asherah/go/appencryption"
 	"github.com/opentracing/opentracing-go"
 )

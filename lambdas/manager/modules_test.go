@@ -4,8 +4,8 @@ import (
 	"context"
 	"testing"
 
+	"github.com/gdcorp-infosec/threat-api/lambdas/common/toolbox"
 	"github.com/gdcorp-infosec/threat-api/lambdas/common/triagelegacyconnector/triage"
-	"github.com/gdcorp-infosec/threat-util/lambda/toolbox"
 )
 
 // Test getting modules and all their metadata
