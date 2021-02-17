@@ -52,7 +52,7 @@ func (t *Toolbox) Authorize(ctx context.Context, jwt, action, resource string) (
 	}
 
 	// Find the action
-	span, _ = opentracing.StartSpanFromContext(ctx, "Parse")
+	span, _ = opentracing.StartSpanFromContext(ctx, "ParseAuthZStructure")
 	defer span.Finish()
 	actionObj, ok := lambda.Actions[action]
 	if !ok {
