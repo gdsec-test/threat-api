@@ -10,7 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ssm"
 	"github.com/gdcorp-infosec/threat-api/lambdas/common"
-	"github.com/gdcorp-infosec/threat-util/lambda/toolbox"
+	"github.com/gdcorp-infosec/threat-api/lambdas/common/toolbox"
 )
 
 // GetModules responds to a API gateway request to list the available modules and their metadata
