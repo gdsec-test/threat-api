@@ -46,3 +46,28 @@ func TestParseCookies(t *testing.T) {
 		})
 	}
 }
+
+// TestAuthorize Tests the authorize functionality.
+// The assumption of this test is that the TESTING_JWT CAN perform the
+// `test` action on `geoip` but doesn't have any other permissions.
+func TestAuthorize(t *testing.T) {
+	toolbox := GetToolbox()
+	testingJWT := os.Getenv("TESTING_JWT")
+
+	tests := []struct {
+		Action         string
+		Resource       string
+		ExpectedResult bool
+	}{
+		{"test", "geoip", true},
+		{"test2", "geoip", false},
+		{"test", "lambda", false},
+	}
+
+	for i, test := range tests {
+		result, err := toolbox.Authorize(context.Background(), testingJWT, test.Action, test.Resource)
+		if result != test.ExpectedResult {
+			t.Errorf("Test %d failed. Tried to %s on %s, expected %v but got %v. Err: %s", i, test.Action, test.Resource, test.ExpectedResult, result, err)
+		}
+	}
+}

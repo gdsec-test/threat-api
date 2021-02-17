@@ -51,10 +51,10 @@ func (t *Toolbox) GetModules(ctx context.Context) (map[string]LambdaMetadata, er
 type LambdaMetadata struct {
 	SupportedIOCTypes []triage.IOCType `json:"supportedIOCTypes"`
 	// AuthZ Actions that can be performed in this module
-	Actions map[string]ActionSpecification
+	Actions map[string]ActionSpecification `json:"actions"`
 }
 
 // ActionSpecification describes an action and what permissions are required to perform it
 type ActionSpecification struct {
-	RequiredADGroups []string
+	RequiredADGroups []string `json:"requiredADGroups"`
 }

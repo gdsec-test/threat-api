@@ -56,12 +56,12 @@ func (t *Toolbox) Authorize(ctx context.Context, jwt, action, resource string) (
 	defer span.Finish()
 	actionObj, ok := lambda.Actions[action]
 	if !ok {
-		return false, fmt.Errorf("action found")
+		return false, fmt.Errorf("action not found")
 	}
 	// Check required groups
 	for _, requiredGroup := range actionObj.RequiredADGroups {
 		if _, ok := groupsMap[requiredGroup]; !ok {
-			return false, fmt.Errorf("not in required group %s", requiredGroup)
+			return false, fmt.Errorf("not in required group %s.  user is in groups: %v", requiredGroup, groups)
 		}
 	}
 
