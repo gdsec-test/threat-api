@@ -128,6 +128,62 @@ func createJob(ctx context.Context, request events.APIGatewayProxyRequest) (even
 	}, nil
 }
 
+// deleteJob deletes a job by JobID
+func deleteJob(ctx context.Context, request events.APIGatewayProxyRequest, jobID string) (events.APIGatewayProxyResponse, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "DeleteJob")
+	span.LogKV("job_id", jobID)
+	defer span.Finish()
+
+	// Check to make sure this user owns this job
+
+	// Check JWT
+	jwt, err := to.ValidateJWT(ctx, to.GetJWTFromRequest(request))
+	if err != nil {
+		err = fmt.Errorf("error validating jwt: %w", err)
+		span.LogKV("error", err)
+		return events.APIGatewayProxyResponse{StatusCode: http.StatusUnauthorized}, err
+	}
+
+	// Search for this job under this username in the DB
+	span.LogKV("username", jwt.BaseToken.AccountName)
+	filter := expression.Name(usernameKey).Equal(expression.Value(jwt.BaseToken.AccountName)).And(
+		expression.Name(jobIDKey).Equal(expression.Value(jobID)),
+	)
+	expr, err := expression.NewBuilder().WithFilter(filter).Build()
+	if err != nil {
+		span.LogKV("error", err)
+		return events.APIGatewayProxyResponse{StatusCode: 500}, err
+	}
+
+	// Build modified / simplified JobDBEntry for each job
+	resp, err := dynamoDBClient.Scan(&dynamodb.ScanInput{
+		ExpressionAttributeNames:  expr.Names(),
+		ExpressionAttributeValues: expr.Values(),
+		FilterExpression:          expr.Filter(),
+		ProjectionExpression:      expr.Projection(),
+		TableName:                 &to.JobDBTableName,
+	})
+	if err != nil {
+		return events.APIGatewayProxyResponse{StatusCode: http.StatusInternalServerError}, fmt.Errorf("error searching for job id in db: %w", err)
+	}
+	if resp.Count == nil || *resp.Count == 0 {
+		// This user does not own this job
+		return events.APIGatewayProxyResponse{StatusCode: http.StatusForbidden}, nil
+	}
+
+	// Delete the job
+	_, err = dynamoDBClient.DeleteItem(&dynamodb.DeleteItemInput{
+		Key: map[string]*dynamodb.AttributeValue{
+			jobIDKey: resp.Items[0][jobIDKey],
+		},
+	})
+	if err != nil {
+		return events.APIGatewayProxyResponse{StatusCode: http.StatusInternalServerError}, fmt.Errorf("error deleting job in DB: %w", err)
+	}
+
+	return events.APIGatewayProxyResponse{StatusCode: http.StatusOK}, nil
+}
+
 // getJobStatus gets the job status from dynamoDB and send it as a response
 func getJobStatus(ctx context.Context, jobID string) (events.APIGatewayProxyResponse, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "GetJobStatus")

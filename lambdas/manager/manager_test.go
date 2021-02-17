@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"os"
 	"reflect"
 	"testing"
@@ -64,6 +65,7 @@ func TestJobWork(t *testing.T) {
 	t.Run("GetJob", func(t *testing.T) {
 		// Get the job status
 		resp, err := handler(context.Background(), events.APIGatewayProxyRequest{
+			Path:           "/jobs/",
 			PathParameters: map[string]string{"jobId": jobID},
 		})
 		if err != nil {
@@ -165,6 +167,35 @@ func TestJobWork(t *testing.T) {
 		}
 
 		fmt.Printf("Found user's jobs: %v\n", response)
+	})
+
+	t.Run("DeleteJob", func(t *testing.T) {
+		// Get the created job
+		resp, err := handler(context.Background(), events.APIGatewayProxyRequest{
+			Path:           "/jobs/",
+			PathParameters: map[string]string{"jobId": jobID},
+			Headers:        headers,
+			HTTPMethod:     "DELETE",
+		})
+		if err != nil {
+			t.Fatal(err)
+		}
+		if resp.StatusCode != 200 {
+			t.Fatalf("bad response code: %d", resp.StatusCode)
+		}
+
+		// Check if job is actually deleted
+		resp, err = handler(context.Background(), events.APIGatewayProxyRequest{
+			Path:           "/jobs/",
+			PathParameters: map[string]string{"jobId": jobID},
+		})
+		if err != nil {
+			t.Fatal(err)
+		}
+		if resp.StatusCode != http.StatusNotFound {
+			t.Fatalf("Expected status code 404 but got: %d", resp.StatusCode)
+		}
+
 	})
 	to.Close(context.Background())
 }
