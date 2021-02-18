@@ -1,12 +1,11 @@
 package main
 
 import (
-	"context"
 	"encoding/csv"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"strings"
-	"time"
 )
 
 const (
@@ -26,35 +25,41 @@ type urlHausEntry struct {
 	Country   string
 }
 
-func FetchSingleAsn(asn string) ([]byte, error) {
+func FetchSingleAsn(asn string) (string, error) {
 	resp, err := http.Get(baseUrl + asn)
 	if err != nil {
-		return nil, err
+		fmt.Println("GET fail")
+		return "", err
 	}
 
 	defer resp.Body.Close()
-	body, err := io.ReadAll(resp.Body)
+	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return nil, err
+		fmt.Println("Body read fail")
+		return "", err
 	}
 
-	return body, nil
+	return string(body), nil
 }
 
 func DownloadAsn(ctx context.Context, asns []string) []*urlHausEntry {
 	entries := []*urlHausEntry{}
 
 	for _, asn := range asns {
+		fmt.Println("Looking up ASN: " + asn)
 		data, err := FetchSingleAsn(asn)
 		if err != nil {
+			fmt.Println("Fetch fail")
 			continue
 		}
 
+		// URLhaus returns API queries as a CSV file
 		csvReader := csv.NewReader(strings.NewReader(data))
 		csvReader.Comment = '#'
 		records, err := csvReader.ReadAll()
 
 		for _, field := range records {
+			// filter out the offline domains
 			if field[2] == "online" {
 				entry := &urlHausEntry{
 					Date:      field[0],
