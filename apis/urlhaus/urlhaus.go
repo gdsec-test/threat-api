@@ -11,6 +11,7 @@ import (
 
 const (
 	triageModuleName = "urlhaus"
+	baseUrl          = "https://urlhaus.abuse.ch/feeds/asn/"
 )
 
 type urlHausEntry struct {
@@ -26,20 +27,14 @@ type urlHausEntry struct {
 }
 
 func FetchSingleAsn(asn string) ([]byte, error) {
-	// TODO: this should not be defined in a method body
-	baseUrl := "https://urlhaus.abuse.ch/feeds/asn/"
-	// TODO: info-level logging of the fetch request?
-
 	resp, err := http.Get(baseUrl + asn)
 	if err != nil {
-		// TODO: log error message
 		return nil, err
 	}
 
 	defer resp.Body.Close()
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		// TODO: log error message
 		return nil, err
 	}
 
@@ -55,15 +50,12 @@ func DownloadAsn(ctx context.Context, asns []string) []*urlHausEntry {
 			continue
 		}
 
-		// TODO: body to CSV
 		csvReader := csv.NewReader(strings.NewReader(data))
 		csvReader.Comment = '#'
 		records, err := csvReader.ReadAll()
 
 		for _, field := range records {
 			if field[2] == "online" {
-				// Check that all fields are actually available
-				// timestamp + url + address + status
 				entry := &urlHausEntry{
 					Date:      field[0],
 					URL:       field[1],
@@ -76,9 +68,6 @@ func DownloadAsn(ctx context.Context, asns []string) []*urlHausEntry {
 					Country:   field[8],
 				}
 				entries = append(entries, entry)
-			}
-			else {
-				// TODO: log that it's not online
 			}
 		}
 	}
