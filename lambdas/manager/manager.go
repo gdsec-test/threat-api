@@ -58,7 +58,7 @@ func handler(ctx context.Context, request events.APIGatewayProxyRequest) (events
 		case http.MethodGet:
 			if jobID, ok := request.PathParameters[jobIDKey]; ok {
 				// They are checking the status of a job
-				return getJobStatus(ctx, jobID)
+				return getJob(ctx, jobID)
 			}
 			// They are getting all their jobs
 			return getJobs(ctx, request)

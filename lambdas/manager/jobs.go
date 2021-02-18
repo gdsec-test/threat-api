@@ -176,6 +176,7 @@ func deleteJob(ctx context.Context, request events.APIGatewayProxyRequest, jobID
 		Key: map[string]*dynamodb.AttributeValue{
 			jobIDKey: resp.Items[0][jobIDKey],
 		},
+		TableName: &to.JobDBTableName,
 	})
 	if err != nil {
 		return events.APIGatewayProxyResponse{StatusCode: http.StatusInternalServerError}, fmt.Errorf("error deleting job in DB: %w", err)
@@ -184,8 +185,8 @@ func deleteJob(ctx context.Context, request events.APIGatewayProxyRequest, jobID
 	return events.APIGatewayProxyResponse{StatusCode: http.StatusOK}, nil
 }
 
-// getJobStatus gets the job status from dynamoDB and send it as a response
-func getJobStatus(ctx context.Context, jobID string) (events.APIGatewayProxyResponse, error) {
+// getJob gets the job status from dynamoDB and send it as a response
+func getJob(ctx context.Context, jobID string) (events.APIGatewayProxyResponse, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "GetJobStatus")
 	span.LogKV("jobId", jobID)
 	defer span.Finish()
@@ -203,7 +204,7 @@ func getJobStatus(ctx context.Context, jobID string) (events.APIGatewayProxyResp
 	})
 	if err != nil {
 		span.LogKV("error", err)
-		return events.APIGatewayProxyResponse{StatusCode: 500}, err
+		return events.APIGatewayProxyResponse{StatusCode: http.StatusInternalServerError}, err
 	}
 
 	if item.Item == nil {
