@@ -12,6 +12,7 @@ import (
 
 	"github.com/gdcorp-infosec/threat-api/lambdas/common/triagelegacyconnector/triage"
 	"github.com/ns3777k/go-shodan/v4/shodan"
+	"github.com/opentracing/opentracing-go"
 )
 
 // TODO: Implement tokenbuckets
@@ -38,10 +39,12 @@ func (m *TriageModule) Triage(ctx context.Context, triageRequest *triage.Request
 		Metadata: []string{},
 	}
 
+	var span opentracing.Span
+
 	// Retrieve key from Secrets Manager
 	secret, err := m.getSecret("/ThreatTools/Integrations/shodan")
 	if err != nil {
-		triageData.Data = fmt.Sprintf("error in retrieving secrets", err)
+		triageData.Data = fmt.Sprintf("error in retrieving secrets: %s", err)
 		return []*triage.Data{triageData}, nil
 	}
 	m.ShodanKey = secret
@@ -53,7 +56,7 @@ func (m *TriageModule) Triage(ctx context.Context, triageRequest *triage.Request
 	ips := map[string]*net.IP{}
 	if triageRequest.IOCsType == triage.DomainType {
 		ips = m.resolveDomains(ctx, triageRequest.IOCs)
-	} else if triage.IPType == triage.IPType {
+	} else if triageRequest.IOCsType == triage.IPType {
 		for _, ip := range triageRequest.IOCs {
 			ipParsed := net.ParseIP(ip)
 			if ipParsed != nil {
@@ -62,22 +65,30 @@ func (m *TriageModule) Triage(ctx context.Context, triageRequest *triage.Request
 		}
 	}
 
+	span, ctx = opentracing.StartSpanFromContext(ctx, "ShodanGetServices")
+	defer span.Finish()
 	shodanhosts := m.GetServicesForIPs(ctx, ips)
-	// Check if we got anything
 	if len(shodanhosts) == 0 {
 		return []*triage.Data{triageData}, nil
 	}
 
 	vulnerabilities := 0
+	vulnerableIPs := 0
 	geolocationMap := map[string]struct{}{}
 
 	for _, host := range shodanhosts {
+		if len(host.ShodanHost.Vulnerabilities) > 0 {
+			vulnerableIPs += 1
+		}
 		vulnerabilities += len(host.ShodanHost.Vulnerabilities)
 
 		geolocationMap[host.ShodanHost.Country] = struct{}{}
 	}
+	if vulnerableIPs > 0 {
+		triageData.Metadata = append(triageData.Metadata, fmt.Sprintf("%d/%d %s's have vulnerabilities associated", vulnerableIPs, len(triageRequest.IOCs), triageRequest.IOCsType))
+	}
 	if vulnerabilities > 0 {
-		triageData.Metadata = append(triageData.Metadata, fmt.Sprintf("There are *%d* vulnerabilities on these %ss", vulnerabilities, triageRequest.IOCsType))
+		triageData.Metadata = append(triageData.Metadata, fmt.Sprintf("There are %d vulnerabilities on these %ss", vulnerabilities, triageRequest.IOCsType))
 	}
 
 	var geolocations []string
@@ -115,6 +126,8 @@ func (m *TriageModule) Triage(ctx context.Context, triageRequest *triage.Request
 		"OS",
 		"Hostnames",
 		"Vulnerabilities",
+		"LastUpdate",
+		"Ports",
 	})
 	for _, host := range shodanhosts {
 		cols := []string{
@@ -127,17 +140,14 @@ func (m *TriageModule) Triage(ctx context.Context, triageRequest *triage.Request
 			host.ShodanHost.OS,
 			strings.Join(host.ShodanHost.Hostnames, " "),
 			strings.Join(host.ShodanHost.Vulnerabilities, " "),
-		}
-		if vulnerabilities > 0 {
-			triageData.Metadata = append(triageData.Metadata, fmt.Sprintf("There are *%d* vulnerabilities on these %ss", vulnerabilities, triageRequest.IOCsType))
+			host.ShodanHost.LastUpdate,
+			strings.Trim(strings.Join(strings.Split(fmt.Sprint(host.ShodanHost.Ports), " "), " "), "[]"),
 		}
 
 		csv.Write(cols)
 	}
 	csv.Flush()
+
 	triageData.Data = resp.String()
-
-	// Add metadata
-
 	return []*triage.Data{triageData}, nil
 }
