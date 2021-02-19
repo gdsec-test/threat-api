@@ -55,10 +55,6 @@ func (m *TriageModule) Triage(ctx context.Context, triageRequest *triage.Request
 		m.shodanClient = shodan.NewClient(nil, m.ShodanKey)
 	}
 
-	// TODO: Remove it later, for testing purposes
-	triageData.Metadata = append(triageData.Metadata, fmt.Sprintf(string(triageRequest.IOCsType)))
-	triageRequest.IOCsType = triage.DomainType
-
 	// Map of domain name to IP (if we are working with domains (not ips), we should track the domain name for the output)
 	ips := map[string]*net.IP{}
 	if triageRequest.IOCsType == triage.DomainType {
