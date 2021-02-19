@@ -10,10 +10,13 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/gdcorp-infosec/threat-api/lambdas/common/toolbox"
 	"github.com/gdcorp-infosec/threat-api/lambdas/common/triagelegacyconnector/triage"
 	"github.com/ns3777k/go-shodan/v4/shodan"
 	"github.com/opentracing/opentracing-go"
 )
+
+var toolboxTmp *toolbox.Toolbox
 
 // TODO: Implement tokenbuckets
 // TriageModule triage module
@@ -24,7 +27,7 @@ type TriageModule struct {
 
 // GetDocs of this module
 func (m *TriageModule) GetDocs() *triage.Doc {
-	return &triage.Doc{Name: triageModuleName, Description: "Shodan data"} //TODO: Add exact details what's this returning
+	return &triage.Doc{Name: triageModuleName, Description: "Shodan data on vulnerabilities and ports"}
 }
 
 // Supports returns true of we support this ioc type
@@ -39,18 +42,22 @@ func (m *TriageModule) Triage(ctx context.Context, triageRequest *triage.Request
 		Metadata: []string{},
 	}
 
-	var span opentracing.Span
+	toolboxTmp = toolbox.GetToolbox()
+	defer toolboxTmp.Close(ctx)
 
-	// Retrieve key from Secrets Manager
-	secret, err := m.getSecret("/ThreatTools/Integrations/shodan")
+	secret, err := toolboxTmp.GetFromCredentialsStore(ctx, "/ThreatTools/Integrations/shodan", "AWSCURRENT")
 	if err != nil {
 		triageData.Data = fmt.Sprintf("error in retrieving secrets: %s", err)
 		return []*triage.Data{triageData}, nil
 	}
-	m.ShodanKey = secret
+	m.ShodanKey = *secret.SecretString
 	if m.shodanClient == nil {
 		m.shodanClient = shodan.NewClient(nil, m.ShodanKey)
 	}
+
+	// TODO: Remove it later, for testing purposes
+	triageData.Metadata = append(triageData.Metadata, fmt.Sprintf(string(triageRequest.IOCsType)))
+	triageRequest.IOCsType = triage.DomainType
 
 	// Map of domain name to IP (if we are working with domains (not ips), we should track the domain name for the output)
 	ips := map[string]*net.IP{}
@@ -65,13 +72,14 @@ func (m *TriageModule) Triage(ctx context.Context, triageRequest *triage.Request
 		}
 	}
 
+	var span opentracing.Span
 	span, ctx = opentracing.StartSpanFromContext(ctx, "ShodanGetServices")
 	defer span.Finish()
+
 	shodanhosts := m.GetServicesForIPs(ctx, ips)
 	if len(shodanhosts) == 0 {
 		return []*triage.Data{triageData}, nil
 	}
-
 	vulnerabilities := 0
 	vulnerableIPs := 0
 	geolocationMap := map[string]struct{}{}
@@ -81,8 +89,8 @@ func (m *TriageModule) Triage(ctx context.Context, triageRequest *triage.Request
 			vulnerableIPs += 1
 		}
 		vulnerabilities += len(host.ShodanHost.Vulnerabilities)
-
 		geolocationMap[host.ShodanHost.Country] = struct{}{}
+
 	}
 	if vulnerableIPs > 0 {
 		triageData.Metadata = append(triageData.Metadata, fmt.Sprintf("%d/%d %s's have vulnerabilities associated", vulnerableIPs, len(triageRequest.IOCs), triageRequest.IOCsType))
@@ -143,7 +151,6 @@ func (m *TriageModule) Triage(ctx context.Context, triageRequest *triage.Request
 			host.ShodanHost.LastUpdate,
 			strings.Trim(strings.Join(strings.Split(fmt.Sprint(host.ShodanHost.Ports), " "), " "), "[]"),
 		}
-
 		csv.Write(cols)
 	}
 	csv.Flush()
