@@ -14,11 +14,6 @@ func TestGetServicesForIPs(t *testing.T) {
 	toolboxTmp = toolbox.GetToolbox()
 	defer toolboxTmp.Close(ctx)
 
-	//triageRequest := &triage.Request{
-	//	IOCs:     []string{"72.210.63.111", "164.128.164.119", "93.90.222.20"},
-	//	IOCsType: triage.IPType,
-	//}
-
 	var triageRequests []*triage.Request
 	triageRequests = append(triageRequests, &triage.Request{
 		IOCs:     []string{"72.210.63.111", "164.128.164.119", "93.90.222.20"},
