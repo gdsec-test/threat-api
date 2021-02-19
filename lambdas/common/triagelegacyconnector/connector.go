@@ -83,7 +83,8 @@ func triageSNSEvent(ctx context.Context, module triage.Module, request events.SN
 
 	// Convert request to triage.TriageRequest
 	triageRequest := &triage.Request{
-		IOCs: jobSubmission.IOCs,
+		IOCs:     jobSubmission.IOCs,
+		IOCsType: triage.IOCType(strings.ToUpper(jobSubmission.IOCType)),
 	}
 
 	triageDatas, err := module.Triage(ctx, triageRequest)
