@@ -19,8 +19,6 @@ type Host struct {
 
 // GetServicesForIPs Gets shodan host information for a list of IPs
 func (m *TriageModule) GetServicesForIPs(ctx context.Context, ips map[string]*net.IP) []*Host {
-	//TODO: Add tokenbuckets
-
 	hosts := []*Host{}
 
 	// Enrich all ips

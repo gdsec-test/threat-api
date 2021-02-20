@@ -37,5 +37,6 @@ func TestGetServicesForIPs(t *testing.T) {
 		if triageResult[0].Data == "" {
 			t.Fatal("first data element empty ")
 		}
+
 	}
 }

@@ -18,7 +18,11 @@ import (
 
 var toolboxTmp *toolbox.Toolbox
 
-// TODO: Implement tokenbuckets
+const (
+	secretID     = "/ThreatTools/Integrations/shodan"
+	versionStage = "AWSCURRENT"
+)
+
 // TriageModule triage module
 type TriageModule struct {
 	ShodanKey    string
@@ -45,10 +49,10 @@ func (m *TriageModule) Triage(ctx context.Context, triageRequest *triage.Request
 	toolboxTmp = toolbox.GetToolbox()
 	defer toolboxTmp.Close(ctx)
 
-	secret, err := toolboxTmp.GetFromCredentialsStore(ctx, "/ThreatTools/Integrations/shodan", "AWSCURRENT")
+	secret, err := toolboxTmp.GetFromCredentialsStore(ctx, secretID, versionStage)
 	if err != nil {
 		triageData.Data = fmt.Sprintf("error in retrieving secrets: %s", err)
-		return []*triage.Data{triageData}, nil
+		return []*triage.Data{triageData}, err
 	}
 	m.ShodanKey = *secret.SecretString
 	if m.shodanClient == nil {
@@ -116,6 +120,12 @@ func (m *TriageModule) Triage(ctx context.Context, triageRequest *triage.Request
 		return []*triage.Data{triageData}, nil
 	}
 
+	triageData.Data = dumpCSV(shodanhosts)
+
+	return []*triage.Data{triageData}, nil
+}
+
+func dumpCSV(shodanhosts []*Host) string {
 	//Dump data as csv
 	resp := bytes.Buffer{}
 	csv := csv.NewWriter(&resp)
@@ -151,6 +161,5 @@ func (m *TriageModule) Triage(ctx context.Context, triageRequest *triage.Request
 	}
 	csv.Flush()
 
-	triageData.Data = resp.String()
-	return []*triage.Data{triageData}, nil
+	return resp.String()
 }
