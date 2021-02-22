@@ -12,8 +12,8 @@ import (
 func handler(ctx context.Context, request events.SNSEvent) ([]*common.CompletedJobData, error) {
 	// Super simple code to convert our interface to the legacy one
 	// and return the results
-	whoisTriageModule := TriageModule{}
-	return triagelegacyconnector.AWSToTriage(ctx, &whoisTriageModule, request)
+	urlhausTriageModule := TriageModule{}
+	return triagelegacyconnector.AWSToTriage(ctx, &urlhausTriageModule, request)
 }
 
 func main() {

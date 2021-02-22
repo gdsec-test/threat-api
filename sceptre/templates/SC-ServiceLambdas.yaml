@@ -22,6 +22,10 @@ Parameters:
     Type: String
     Description: SHA1 hash of the tester1 lambda source
     Default: ""
+  urlhausSHA1:
+    Type: String
+    Description: SHA1 hash of the urlhaus lambda source
+    Default: ""
   whoisSHA1:
     Type: String
     Description: SHA1 hash of the whois lambda source
@@ -203,6 +207,56 @@ Resources:
       Name: /ThreatTools/Modules/tester1
       Type: String
       Value: '{"supportedIOCTypes": ["DOMAIN", "IP", "UNKNOWN"]}'
+
+  urlhausLambdaFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      Code:
+        S3Bucket: !Sub gd-threattools-${AWS::AccountId}-code-bucket
+        S3Key: !Sub urlhaus/${urlhausSHA1}
+      Description: !Sub urlhaus lambda (${urlhausSHA1})
+      FunctionName: urlhaus
+      Handler: urlhaus
+      MemorySize: 256
+      Role: !Sub arn:aws:iam::${AWS::AccountId}:role/threattools-custom-ThreatRole
+      Runtime: go1.x
+      Timeout: 15
+
+  urlhausLambdaPermission:
+    DependsOn: urlhausLambdaFunction
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:urlhaus
+      Principal: sns.amazonaws.com
+      SourceArn: !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:JobRequests
+
+  urlhausSNSSubscription:
+    DependsOn: urlhausLambdaFunction
+    Type: AWS::SNS::Subscription
+    Properties:
+      Endpoint: !GetAtt urlhausLambdaFunction.Arn
+      Protocol: lambda
+      TopicArn: !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:JobRequests
+
+  urlhausLambdaEventInvokeConfig:
+    DependsOn: urlhausLambdaFunction
+    Type: AWS::Lambda::EventInvokeConfig
+    Properties:
+      DestinationConfig:
+        OnSuccess:
+          Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobResponses
+        OnFailure:
+          Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobFailures
+      FunctionName: urlhaus
+      Qualifier: $LATEST
+
+  urlhausLambdaMetadata:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: /ThreatTools/Modules/urlhaus
+      Type: String
+      Value: '{"supportedIOCTypes": ["UNKNOWN"]}'
 
   whoisLambdaFunction:
     Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
