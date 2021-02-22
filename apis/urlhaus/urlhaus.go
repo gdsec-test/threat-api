@@ -28,14 +28,12 @@ type urlHausEntry struct {
 func FetchSingleAsn(asn string) (string, error) {
 	resp, err := http.Get(baseUrl + asn)
 	if err != nil {
-		fmt.Println("GET fail")
 		return "", err
 	}
 
 	defer resp.Body.Close()
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		fmt.Println("Body read fail")
 		return "", err
 	}
 
@@ -46,10 +44,8 @@ func DownloadAsn(ctx context.Context, asns []string) []*urlHausEntry {
 	entries := []*urlHausEntry{}
 
 	for _, asn := range asns {
-		fmt.Println("Looking up ASN: " + asn)
 		data, err := FetchSingleAsn(asn)
 		if err != nil {
-			fmt.Println("Fetch fail")
 			continue
 		}
 
