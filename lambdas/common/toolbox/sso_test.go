@@ -50,6 +50,8 @@ func TestParseCookies(t *testing.T) {
 // TestAuthorize Tests the authorize functionality.
 // The assumption of this test is that the TESTING_JWT CAN perform the
 // `test` action on `geoip` but doesn't have any other permissions.
+// To perform that action the JWT should be part of the `Eng-ThreatIntel` group.
+// (As the current lambda metadata for geoip)
 func TestAuthorize(t *testing.T) {
 	toolbox := GetToolbox()
 	testingJWT := os.Getenv("TESTING_JWT")
