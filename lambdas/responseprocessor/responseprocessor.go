@@ -72,6 +72,7 @@ func handler(ctx context.Context, request events.SQSEvent) (string, error) {
 				"functionARN":    completedLambdaData.RequestContext.FunctionArn,
 				"jobID":          jobID,
 				"moduleName":     lambdaName,
+				"Condition":      completedLambdaData.RequestContext.Condition,
 			}).Warn("This lambda response was a failed invocation.  We are replacing the data with error description")
 
 			// Process this job, changing the response to contain the error AWS returned us
