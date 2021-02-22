@@ -1,6 +1,8 @@
 package main
 
 import (
+	"encoding/json"
+
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/gdcorp-infosec/threat-api/lambdas/common"
 )
@@ -22,5 +24,22 @@ type LambdaDestination struct {
 	} `json:"responseContext"`
 	// Note that a completed job can contain data for multiple jobs, that is
 	// why this is an array
-	ResponsePayload []common.CompletedJobData `json:"responsePayload"`
+	ResponsePayload CompletedJobDataList `json:"responsePayload"`
+}
+
+// CompletedJobDataList is a list of completed job datas, we define this extra structure
+// to write our own unmarshaller
+type CompletedJobDataList []common.CompletedJobData
+
+// UnmarshalJSON unmarshals to the CompletedJobDataList, however if there is an error
+// it ignores it.  This is for the case of a failed lambda (an array
+// of completed job data is not returned, but we still want to process it)
+func (l *CompletedJobDataList) UnmarshalJSON(data []byte) error {
+	var completedJobs []common.CompletedJobData
+	err := json.Unmarshal(data, &completedJobs)
+	if err != nil {
+		return nil
+	}
+	*l = CompletedJobDataList(completedJobs)
+	return nil
 }
