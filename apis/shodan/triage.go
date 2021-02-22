@@ -16,7 +16,7 @@ import (
 	"github.com/opentracing/opentracing-go"
 )
 
-var toolboxTmp *toolbox.Toolbox
+var tb *toolbox.Toolbox
 
 const (
 	secretID     = "/ThreatTools/Integrations/shodan"
@@ -46,10 +46,10 @@ func (m *TriageModule) Triage(ctx context.Context, triageRequest *triage.Request
 		Metadata: []string{},
 	}
 
-	toolboxTmp = toolbox.GetToolbox()
-	defer toolboxTmp.Close(ctx)
+	tb = toolbox.GetToolbox()
+	defer tb.Close(ctx)
 
-	secret, err := toolboxTmp.GetFromCredentialsStore(ctx, secretID, versionStage)
+	secret, err := tb.GetFromCredentialsStore(ctx, secretID, versionStage)
 	if err != nil {
 		triageData.Data = fmt.Sprintf("error in retrieving secrets: %s", err)
 		return []*triage.Data{triageData}, err
