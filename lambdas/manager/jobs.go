@@ -226,10 +226,12 @@ func getJobs(ctx context.Context, request events.APIGatewayProxyRequest) (events
 			// Decrypt because we need the original request to pull out metadata if it's there
 			jobDB.Decrypt(ctx, to)
 
-			// Remove submission data except metadata
+			// Remove submission data except metadata and modules list
 			for key := range jobDB.DecryptedSubmission {
 				switch key {
 				case "metadata":
+					continue
+				case "modules":
 					continue
 				}
 
