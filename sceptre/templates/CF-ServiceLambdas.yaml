@@ -6,6 +6,10 @@ Parameters:
     Type: String
     Description: SHA1 hash of the geoip lambda source
     Default: ""
+  shodanSHA1:
+    Type: String
+    Description: SHA1 hash of the shodan lambda source
+    Default: ""
   tester1SHA1:
     Type: String
     Description: SHA1 hash of the tester1 lambda source
@@ -69,6 +73,56 @@ Resources:
       Name: /ThreatTools/Modules/geoip
       Type: String
       Value: '{"supportedIOCTypes": ["IP"]}'
+
+  shodanLambdaFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      Code:
+        S3Bucket: !Sub gd-threattools-${AWS::AccountId}-code-bucket
+        S3Key: !Sub shodan/${shodanSHA1}
+      Description: !Sub shodan lambda (${shodanSHA1})
+      FunctionName: shodan
+      Handler: shodan
+      MemorySize: 256
+      Role: !Sub arn:aws:iam::${AWS::AccountId}:role/threattools-custom-ThreatRole
+      Runtime: go1.x
+      Timeout: 15
+
+  shodanLambdaPermission:
+    DependsOn: shodanLambdaFunction
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:shodan
+      Principal: sns.amazonaws.com
+      SourceArn: !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:JobRequests
+
+  shodanSNSSubscription:
+    DependsOn: shodanLambdaFunction
+    Type: AWS::SNS::Subscription
+    Properties:
+      Endpoint: !GetAtt shodanLambdaFunction.Arn
+      Protocol: lambda
+      TopicArn: !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:JobRequests
+
+  shodanLambdaEventInvokeConfig:
+    DependsOn: shodanLambdaFunction
+    Type: AWS::Lambda::EventInvokeConfig
+    Properties:
+      DestinationConfig:
+        OnSuccess:
+          Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobResponses
+        OnFailure:
+          Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobFailures
+      FunctionName: shodan
+      Qualifier: $LATEST
+
+  shodanLambdaMetadata:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: /ThreatTools/Modules/shodan
+      Type: String
+      Value: '{"supportedIOCTypes": ["DOMAIN", "IP"]}'
 
   tester1LambdaFunction:
     Type: AWS::Lambda::Function
