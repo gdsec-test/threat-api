@@ -10,7 +10,8 @@ import (
 
 // Test getting modules and all their metadata
 func TestGetModules(t *testing.T) {
-	results, err := getModules(context.Background(), toolbox.GetToolbox())
+	toolbox := toolbox.GetToolbox()
+	results, err := toolbox.GetModules(context.Background())
 	if err != nil {
 		t.Fatal(err)
 	}
