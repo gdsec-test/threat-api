@@ -1,8 +1,8 @@
 package main
 
 import (
+	"context"
 	"encoding/csv"
-	"fmt"
 	"io/ioutil"
 	"net/http"
 	"strings"

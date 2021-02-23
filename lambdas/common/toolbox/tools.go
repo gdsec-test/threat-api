@@ -31,9 +31,6 @@ type Toolbox struct {
 	SSOHostURL string `default:"sso.gdcorp.tools"`
 	Tracer     opentracing.Tracer
 
-	// This is the cached permissions structure to check against authorization requests
-	permissionsModel PermissionsModel
-
 	client *http.Client
 
 	// AWS
