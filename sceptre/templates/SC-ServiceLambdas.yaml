@@ -301,35 +301,73 @@ Resources:
       Value: '{"supportedIOCTypes": ["DOMAIN", "IP", "UNKNOWN"]}'
 
   urlhausLambdaFunction:
-    Type: AWS::Lambda::Function
+    Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
     Properties:
-      Code:
-        S3Bucket: !Sub gd-threattools-${AWS::AccountId}-code-bucket
-        S3Key: !Sub urlhaus/${urlhausSHA1}
-      Description: !Sub urlhaus lambda (${urlhausSHA1})
-      FunctionName: urlhaus
-      Handler: urlhaus
-      MemorySize: 256
-      Role: !Sub arn:aws:iam::${AWS::AccountId}:role/threattools-custom-ThreatRole
-      Runtime: go1.x
-      Timeout: 15
+      ProductName: Lambda
+      ProvisioningArtifactName: 2.3.0
+      ProvisionedProductName: urlhausLambdaFunction
+      ProvisioningParameters:
+        - Key: S3Bucket
+          Value: !Sub gd-${DevelopmentTeam}-${DevelopmentEnvironment}-code-bucket
+        - Key: S3Key
+          Value: !Sub urlhaus/${urlhausSHA1}
+        - Key: Handler
+          Value: urlhaus
+        - Key: LambdaName
+          Value: urlhaus
+        - Key: LambdaDescription
+          Value: !Sub urlhaus lambda (${urlhausSHA1})
+        - Key: MemorySize
+          Value: 256
+        - Key: Runtime
+          Value: go1.x
+        - Key: Timeout
+          Value: 15
+        - Key: CustomIAMRoleNameSuffix
+          Value: ThreatRole
+      Tags:
+        - Key: doNotShutDown
+          Value: true
 
   urlhausLambdaPermission:
     DependsOn: urlhausLambdaFunction
-    Type: AWS::Lambda::Permission
+    Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
     Properties:
-      Action: lambda:InvokeFunction
-      FunctionName: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:urlhaus
-      Principal: sns.amazonaws.com
-      SourceArn: !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:JobRequests
+      ProductName: LambdaPermission
+      ProvisioningArtifactName: 1.0.1
+      ProvisionedProductName: urlhausLambdaPermission
+      ProvisioningParameters:
+        - Key: Action
+          Value: lambda:InvokeFunction
+        - Key: FunctionName
+          Value: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:urlhaus
+        - Key: Principal
+          Value: sns.amazonaws.com
+        - Key: SourceArn
+          Value: !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:JobRequests
+      Tags:
+        - Key: doNotShutDown
+          Value: true
 
   urlhausSNSSubscription:
     DependsOn: urlhausLambdaFunction
-    Type: AWS::SNS::Subscription
+    Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
     Properties:
-      Endpoint: !GetAtt urlhausLambdaFunction.Arn
-      Protocol: lambda
-      TopicArn: !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:JobRequests
+      ProductName: SNSSubscription
+      ProvisioningArtifactName: 1.0.1
+      ProvisionedProductName: urlhausSNSSubscription
+      ProvisioningParameters:
+        - Key: Protocol
+          Value: lambda
+        - Key: TopicArn
+          Value: !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:JobRequests
+        - Key: Endpoint
+          Value: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:urlhaus
+        - Key: Region
+          Value: !Sub ${AWS::Region}
+      Tags:
+        - Key: doNotShutDown
+          Value: true
 
   urlhausLambdaEventInvokeConfig:
     DependsOn: urlhausLambdaFunction
