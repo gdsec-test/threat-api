@@ -51,11 +51,7 @@ func (m *TriageModule) Triage(ctx context.Context, triageRequest *triage.Request
 		return []*triage.Data{triageData}, nil
 	}
 	asns := strings.Split(asns_joined.Value, ",")
-	entries, err := DownloadAsns(ctx, asns)
-	if err != nil {
-		triageData.Data = fmt.Sprintf("Error fetching the ASN (%s): %s", asns, err)
-		return []*triage.Data{triageData}, nil
-	}
+	entries := DownloadAsns(ctx, asns)
 
 	result, err := json.Marshal(entries)
 	if err != nil {
