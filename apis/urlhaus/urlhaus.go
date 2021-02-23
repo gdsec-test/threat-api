@@ -40,7 +40,7 @@ func FetchSingleAsn(asn string) (string, error) {
 	return string(body), nil
 }
 
-func DownloadAsn(ctx context.Context, asns []string) []*urlHausEntry {
+func DownloadAsns(ctx context.Context, asns []string) []*urlHausEntry {
 	entries := []*urlHausEntry{}
 
 	for _, asn := range asns {

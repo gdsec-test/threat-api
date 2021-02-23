@@ -1,9 +1,7 @@
 package main
 
 import (
-	"bytes"
 	"context"
-	"encoding/csv"
 	"encoding/json"
 	"fmt"
 	"strings"
@@ -30,10 +28,14 @@ func (m *TriageModule) Supports() []triage.IOCType {
 	return []triage.IOCType{triage.UnknownType}
 }
 
-func (m *TriageModule) GetAsns() ([]string, error) {
+func (m *TriageModule) GetAsns() (string, error) {
 	t := toolbox.GetToolbox()
 	t.LoadSession(context.Background(), credentials.NewEnvCredentials(), "us-west-2")
 	parameter, err := t.GetFromParameterStore(context.Background(), paramUrlhausAsns, false)
+	if err != nil {
+		return "", err
+	}
+	return *parameter.Parameter.Value, nil
 }
 
 // Triage finds malware domains according to URLhaus by ASN
@@ -49,7 +51,11 @@ func (m *TriageModule) Triage(ctx context.Context, triageRequest *triage.Request
 		return []*triage.Data{triageData}, nil
 	}
 	asns := strings.Split(asns_joined.Value, ",")
-	entries := FetchSingleAsn(ctx, asns)
+	entries, err := DownloadAsns(ctx, asns)
+	if err != nil {
+		triageData.Data = fmt.Sprintf("Error fetching the ASN (%s): %s", asns, err)
+		return []*triage.Data{triageData}, nil
+	}
 
 	result, err := json.Marshal(entries)
 	if err != nil {
