@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	paramUrlhausAsns = "URLhaus:ASNs"
+	paramUrlhausAsns = "URLhaus-ASNs"
 )
 
 // Triage module
@@ -28,14 +28,15 @@ func (m *TriageModule) Supports() []triage.IOCType {
 	return []triage.IOCType{triage.UnknownType}
 }
 
-func (m *TriageModule) GetAsns() (string, error) {
+func (m *TriageModule) GetAsns(ctx context.Context) (string, error) {
 	t := toolbox.GetToolbox()
-	t.LoadSession(context.Background(), credentials.NewEnvCredentials(), "us-west-2")
+	defer t.Close(ctx)
+
 	parameter, err := t.GetFromParameterStore(context.Background(), paramUrlhausAsns, false)
 	if err != nil {
 		return "", err
 	}
-	return *parameter.Parameter.Value, nil
+	return *parameter.Value, nil
 }
 
 // Triage finds malware domains according to URLhaus by ASN
@@ -45,12 +46,13 @@ func (m *TriageModule) Triage(ctx context.Context, triageRequest *triage.Request
 		Metadata: []string{},
 	}
 
-	asns_joined, err = GetAsns()
+	// asns is a comma separated string
+	asnsJoined, err := m.GetAsns(ctx)
 	if err != nil {
 		triageData.Data = fmt.Sprintf("Error retrieving the ASNs from Parameter Store: %s", err)
 		return []*triage.Data{triageData}, nil
 	}
-	asns := strings.Split(asns_joined.Value, ",")
+	asns := strings.Split(asnsJoined, ",")
 	entries := DownloadAsns(ctx, asns)
 
 	result, err := json.Marshal(entries)
