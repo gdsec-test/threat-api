@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	paramUrlhausAsns = "URLhaus:ASNs"
+	paramUrlhausAsns = "URLhaus-ASNs"
 )
 
 // Triage module
