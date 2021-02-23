@@ -34,7 +34,17 @@ should be `sso-jwt` followed by the JWT, separated by a space character.
 
 ### Authorization
 
-* You can use the _lambda toolbox_ (`lambdas/common/toolbox`) to check authorization in individual lambdas (using a specified list of JOMAX AD groups).
+Authorization actions and required AD groups can be defined in the metadata for each lambda using the following format:
+
+```json
+actions: {
+  "viewUsers": {
+    "RequiredADGroups": ["ThreatIntel", ...]
+  }
+}
+```
+
+You can then use the _lambda toolbox_ (`lambdas/common/toolbox`) to check authorization in individual lambdas (using a specified list of JOMAX AD groups).  Simply call `Authorize` to see if a particular user can perform an action on a given resource.  Usually (for now) the resource will be the same as the lambda name.
 
 ### Standards / Best Practices
 

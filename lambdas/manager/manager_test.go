@@ -11,6 +11,7 @@ import (
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/gdcorp-infosec/threat-api/lambdas/common"
+	"github.com/gdcorp-infosec/threat-api/lambdas/common/toolbox"
 	"github.com/gdcorp-infosec/threat-api/lambdas/common/triagelegacyconnector/triage"
 )
 
@@ -213,7 +214,7 @@ func TestGetModulesRequest(t *testing.T) {
 		t.Fatalf("bad error code: %d body: %s", resp.StatusCode, resp.Body)
 	}
 
-	ret := map[string]common.LambdaMetadata{}
+	ret := map[string]toolbox.LambdaMetadata{}
 	err = json.Unmarshal([]byte(resp.Body), &ret)
 	if err != nil {
 		t.Fatal(err)
