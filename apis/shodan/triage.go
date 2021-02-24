@@ -120,6 +120,7 @@ func (m *TriageModule) Triage(ctx context.Context, triageRequest *triage.Request
 		return []*triage.Data{triageData}, nil
 	}
 
+	triageData.DataType = triage.CSVType
 	triageData.Data = dumpCSV(shodanhosts)
 
 	return []*triage.Data{triageData}, nil

@@ -11,11 +11,10 @@ import (
 )
 
 const (
-	triageModuleName = "recordedfuture"
+	triageModuleName      = "recordedfuture"
+	vulnerabilityEndpoint = "https://api.recordedfuture.com/v2/vulnerability/"
+	ipEndpoint            = "https://api.recordedfuture.com/v2/ip/"
 )
-
-// CVEReportFields are the fields to submit to get a standard CVE report
-var CVEReportFields = []string{"analystNotes", "commonNames", "counts", "rawrisk", "cvssv3", "cpe22uri", "cvss", "enterpriseLists", "cpe", "entity", "intelCard", "metrics", "nvdDescription", "relatedEntities", "relatedLinks", "risk", "sightings", "threatLists", "timestamps"}
 
 // CVEReport is a sample report that recorded future returns when enriching a CVE
 // if you request the fields CVEReportFields
@@ -177,33 +176,43 @@ type CVEReport struct {
 	} `json:"metadata"`
 }
 
+type IPReport struct {
+}
+
 //EnrichCVE  performs a CVE search with RecordedFuture
-func EnrichCVE(ctx context.Context, cves []string) {
+func (m *TriageModule) EnrichCVE(ctx context.Context, vulnerability string, fields []string, metadata bool) (*CVEReport, error) {
 	// Build URL
 	values := url.Values{}
 	values.Add("fields", strings.Join(fields, ","))
 	values.Add("metadata", fmt.Sprintf("%v", metadata))
-	URL := fmt.Sprintf("https://api.recordedfuture.com/v2/vulnerability/%v?%s", vulnerability, values.Encode())
+	URL := fmt.Sprintf("%s%v?%s", vulnerabilityEndpoint, vulnerability, values.Encode())
 
 	// Build request
 	req, err := http.NewRequestWithContext(ctx, "GET", URL, nil)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	resp, err := c.makeAuthenticatedRequest(req)
+	req.Header.Add("X-RFToken", m.RFKey)
+	resp, err := m.RFClient.Do(req)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	if resp.StatusCode != 200 {
-		return fmt.Errorf("bad status code: %d", resp.StatusCode)
+		return nil, fmt.Errorf("bad status code: %d", resp.StatusCode)
 	}
 
+	reportHolder := &CVEReport{}
 	err = json.NewDecoder(resp.Body).Decode(reportHolder)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	return nil
+	return reportHolder, nil
+}
+
+// EnrichIP performs an IP search with RecordedFuture
+func (m *TriageModule) EnrichIP(ctx context.Context, ip string, fields []string, metadata bool) (*IPReport, error) {
+	return nil, nil
 }
