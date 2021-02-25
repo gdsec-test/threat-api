@@ -17,7 +17,7 @@ func TestEnrichCVE(t *testing.T) {
 
 	var triageRequests []*triage.Request
 	triageRequests = append(triageRequests, &triage.Request{
-		IOCs:     []string{"CVE-2014-0160"},
+		IOCs:     []string{"CVE-2014-0160", "CVE-2010-2568"},
 		IOCsType: triage.CVEType,
 	})
 

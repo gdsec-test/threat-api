@@ -122,7 +122,7 @@ Resources:
     Properties:
       Name: /ThreatTools/Modules/recordedfuture
       Type: String
-      Value: '{"supportedIOCTypes": ["CVE"]}'
+      Value: '{"supportedIOCTypes": ["CVE", "IP"]}'
 
   shodanLambdaFunction:
     Type: AWS::Lambda::Function

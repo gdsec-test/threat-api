@@ -1,10 +1,7 @@
 package main
 
 import (
-	"bytes"
 	"context"
-	"encoding/csv"
-	"encoding/json"
 	"fmt"
 	"github.com/gdcorp-infosec/threat-api/lambdas/common/toolbox"
 	"github.com/gdcorp-infosec/threat-api/lambdas/common/triagelegacyconnector/triage"
@@ -66,7 +63,7 @@ func (m *TriageModule) Triage(ctx context.Context, triageRequest *triage.Request
 	rfCVEResults := make(map[string]*CVEReport)
 
 	if triageRequest.IOCsType == triage.CVEType {
-		for _, vulnerability := range triageRequest.IOCs {
+		for _, cve := range triageRequest.IOCs {
 			// Check context
 			select {
 			case <-ctx.Done():
@@ -74,12 +71,22 @@ func (m *TriageModule) Triage(ctx context.Context, triageRequest *triage.Request
 			default:
 			}
 
-			rfCVEResult, err := m.EnrichCVE(ctx, vulnerability, CVEReportFields, true)
+			// Calling RF API with metadata switched off
+			rfCVEResult, err := m.EnrichCVE(ctx, cve, CVEReportFields, false)
 			if err != nil {
-				rfCVEResults[vulnerability] = nil
+				rfCVEResults[cve] = nil
 				continue
 			}
-			rfCVEResults[vulnerability] = rfCVEResult
+			rfCVEResults[cve] = rfCVEResult
+		}
+
+		// Add the results
+		triageData.Metadata = cveMetaDataExtract(rfCVEResults)
+
+		// if verbose wasn't requested dump csv here
+		if !triageRequest.Verbose {
+			triageData.DataType = triage.CSVType
+			triageData.Data = dumpCVECSV(rfCVEResults)
 		}
 	}
 
@@ -93,71 +100,16 @@ func (m *TriageModule) Triage(ctx context.Context, triageRequest *triage.Request
 			}
 			// TODO : IP triaging
 			fmt.Printf(ip)
+			// Add the results
+			triageData.Metadata = ipMetaDataExtract(rfCVEResults)
+
+			// if verbose wasn't requested dump csv here
+			if !triageRequest.Verbose {
+				triageData.DataType = triage.CSVType
+				triageData.Data = dumpIPCSV(rfCVEResults)
+			}
 		}
 	}
 
-	// Dump full data if we are doing full dump
-	if triageRequest.Verbose {
-		result, err := json.Marshal(rfCVEResults)
-		if err != nil {
-			triageData.Data = fmt.Sprintf("Error marshaling: %s", err)
-			return []*triage.Data{triageData}, nil
-		}
-		triageData.Data = string(result)
-		triageData.DataType = triage.JSONType
-		return []*triage.Data{triageData}, nil
-	}
-
-	//Add metadata
-	triageData.Metadata = cveMetaDataExtract(rfCVEResults)
-
-	triageData.Data = dumpCVECSV(rfCVEResults)
 	return []*triage.Data{triageData}, nil
-}
-
-//cveMetaDataExtract gets the high level insights for CVE
-func cveMetaDataExtract(rfCVEResults map[string]*CVEReport) []string {
-	var triageMetaData []string
-	riskCVE := 0
-
-	for _, data := range rfCVEResults {
-		if data.Data.Risk.Score > 60 {
-			riskCVE += 1
-		}
-	}
-
-	if riskCVE > 0 {
-		triageMetaData = append(triageMetaData, fmt.Sprintf("%d CVE's have a risk score > 60", riskCVE))
-	}
-	return triageMetaData
-}
-
-//dumpCVECSV dumps the triage data to CSV
-func dumpCVECSV(rfCVEResults map[string]*CVEReport) string {
-	//Dump data as csv
-	resp := bytes.Buffer{}
-	csv := csv.NewWriter(&resp)
-	// Write headers
-	csv.Write([]string{
-		"Risk Score",
-		"Criticality",
-		"Access Vector",
-		"Auth Required",
-		"Complexity",
-		"Description",
-	})
-	for _, data := range rfCVEResults {
-		cols := []string{
-			fmt.Sprintf("%d", data.Data.Risk.Score),
-			fmt.Sprintf("%d", data.Data.Risk.Criticality),
-			data.Data.Cvss.AccessVector,
-			data.Data.Cvss.Authentication,
-			data.Data.Cvss.AccessComplexity,
-			data.Data.Entity.Description,
-		}
-		csv.Write(cols)
-	}
-	csv.Flush()
-
-	return resp.String()
 }

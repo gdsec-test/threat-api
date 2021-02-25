@@ -5,7 +5,8 @@
   "timeout": "15",
   "metadata": {
     "supportedIOCTypes": [
-      "CVE"
+      "CVE",
+      "IP"
     ]
   }
 }
