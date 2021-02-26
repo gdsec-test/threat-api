@@ -9,7 +9,7 @@ import (
 	"github.com/gdcorp-infosec/threat-api/lambdas/common/triagelegacyconnector/triage"
 )
 
-func TestEnrichCVE(t *testing.T) {
+func TestEnrichIP(t *testing.T) {
 
 	ctx := context.Background()
 	tb = toolbox.GetToolbox()
@@ -17,8 +17,8 @@ func TestEnrichCVE(t *testing.T) {
 
 	var triageRequests []*triage.Request
 	triageRequests = append(triageRequests, &triage.Request{
-		IOCs:     []string{"CVE-2014-0160", "CVE-2010-2568"},
-		IOCsType: triage.CVEType,
+		IOCs:     []string{"157.245.243.62", "185.186.247.114"},
+		IOCsType: triage.IPType,
 	})
 
 	for _, triageRequest := range triageRequests {

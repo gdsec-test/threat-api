@@ -90,6 +90,7 @@ func (m *TriageModule) Triage(ctx context.Context, triageRequest *triage.Request
 		}
 	}
 
+	rfIPResults := make(map[string]*IPReport)
 	if triageRequest.IOCsType == triage.IPType {
 		for _, ip := range triageRequest.IOCs {
 			// Check context
@@ -98,16 +99,21 @@ func (m *TriageModule) Triage(ctx context.Context, triageRequest *triage.Request
 				break
 			default:
 			}
-			// TODO : IP triaging
-			fmt.Printf(ip)
-			// Add the results
-			triageData.Metadata = ipMetaDataExtract(rfCVEResults)
 
-			// if verbose wasn't requested dump csv here
-			if !triageRequest.Verbose {
-				triageData.DataType = triage.CSVType
-				triageData.Data = dumpIPCSV(rfCVEResults)
+			rfIPResult, err := m.EnrichIP(ctx, ip, IPReportFields, false)
+			if err != nil {
+				rfCVEResults[ip] = nil
+				continue
 			}
+			rfIPResults[ip] = rfIPResult
+		}
+		// Add the results
+		triageData.Metadata = ipMetaDataExtract(rfIPResults)
+
+		// if verbose wasn't requested dump csv here
+		if !triageRequest.Verbose {
+			triageData.DataType = triage.CSVType
+			triageData.Data = dumpIPCSV(rfIPResults)
 		}
 	}
 
