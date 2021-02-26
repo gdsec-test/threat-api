@@ -56,7 +56,7 @@ func (t *Toolbox) InitAPM(ctx context.Context) error {
 
 	// Create the new tracer
 	tracer, err := apm.NewTracerOptions(apm.TracerOptions{
-		ServiceName: os.Getenv("ELASTIC_APM_SERVICE_NAME"), // TODO: How should we set this?
+		ServiceName: os.Getenv("AWS_LAMBDA_FUNCTION_NAME"), // TODO: How should we set this?
 		Transport:   transport,
 	})
 	if err != nil {
