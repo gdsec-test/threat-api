@@ -16,7 +16,9 @@ const (
 	ipEndpoint = "https://api.recordedfuture.com/v2/ip/"
 )
 
-// IPReport is a sample report that recorded future returns when enriching a CVE
+//TODO: Code breaks for more than 1 IP (Given the tests example IP's )
+
+// IPReport is a sample report that recorded future returns when enriching an IP
 // if you request the fields IPReportFields
 type IPReport struct {
 	Data struct {
@@ -157,7 +159,6 @@ func (m *TriageModule) EnrichIP(ctx context.Context, ip string, fields []string,
 func ipMetaDataExtract(rfIPResults map[string]*IPReport) []string {
 	var triageMetaData []string
 	riskIP := 0
-	//affectedSystemsCPE := 0
 
 	for ip, data := range rfIPResults {
 		// Add the RF Intelligence Card link to every IP for easy access to people with RF UI access
@@ -177,7 +178,7 @@ func ipMetaDataExtract(rfIPResults map[string]*IPReport) []string {
 	}
 
 	if riskIP > 0 {
-		triageMetaData = append(triageMetaData, fmt.Sprintf("%d CVE's have a risk score > 60", riskIP))
+		triageMetaData = append(triageMetaData, fmt.Sprintf("%d IP's have a risk score > 60", riskIP))
 	}
 	return triageMetaData
 }
