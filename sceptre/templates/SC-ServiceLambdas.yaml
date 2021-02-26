@@ -18,6 +18,10 @@ Parameters:
     Type: String
     Description: SHA1 hash of the geoip lambda source
     Default: ""
+  recordedfutureSHA1:
+    Type: String
+    Description: SHA1 hash of the recordedfuture lambda source
+    Default: ""
   shodanSHA1:
     Type: String
     Description: SHA1 hash of the shodan lambda source
@@ -119,6 +123,94 @@ Resources:
       Name: /ThreatTools/Modules/geoip
       Type: String
       Value: '{"supportedIOCTypes": ["IP"]}'
+
+  recordedfutureLambdaFunction:
+    Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
+    Properties:
+      ProductName: Lambda
+      ProvisioningArtifactName: 2.3.0
+      ProvisionedProductName: recordedfutureLambdaFunction
+      ProvisioningParameters:
+        - Key: S3Bucket
+          Value: !Sub gd-${DevelopmentTeam}-${DevelopmentEnvironment}-code-bucket
+        - Key: S3Key
+          Value: !Sub recordedfuture/${recordedfutureSHA1}
+        - Key: Handler
+          Value: recordedfuture
+        - Key: LambdaName
+          Value: recordedfuture
+        - Key: LambdaDescription
+          Value: !Sub recordedfuture lambda (${recordedfutureSHA1})
+        - Key: MemorySize
+          Value: 256
+        - Key: Runtime
+          Value: go1.x
+        - Key: Timeout
+          Value: 15
+        - Key: CustomIAMRoleNameSuffix
+          Value: ThreatRole
+      Tags:
+        - Key: doNotShutDown
+          Value: true
+
+  recordedfutureLambdaPermission:
+    DependsOn: recordedfutureLambdaFunction
+    Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
+    Properties:
+      ProductName: LambdaPermission
+      ProvisioningArtifactName: 1.0.1
+      ProvisionedProductName: recordedfutureLambdaPermission
+      ProvisioningParameters:
+        - Key: Action
+          Value: lambda:InvokeFunction
+        - Key: FunctionName
+          Value: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:recordedfuture
+        - Key: Principal
+          Value: sns.amazonaws.com
+        - Key: SourceArn
+          Value: !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:JobRequests
+      Tags:
+        - Key: doNotShutDown
+          Value: true
+
+  recordedfutureSNSSubscription:
+    DependsOn: recordedfutureLambdaFunction
+    Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
+    Properties:
+      ProductName: SNSSubscription
+      ProvisioningArtifactName: 1.0.1
+      ProvisionedProductName: recordedfutureSNSSubscription
+      ProvisioningParameters:
+        - Key: Protocol
+          Value: lambda
+        - Key: TopicArn
+          Value: !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:JobRequests
+        - Key: Endpoint
+          Value: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:recordedfuture
+        - Key: Region
+          Value: !Sub ${AWS::Region}
+      Tags:
+        - Key: doNotShutDown
+          Value: true
+
+  recordedfutureLambdaEventInvokeConfig:
+    DependsOn: recordedfutureLambdaFunction
+    Type: AWS::Lambda::EventInvokeConfig
+    Properties:
+      DestinationConfig:
+        OnSuccess:
+          Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobResponses
+        OnFailure:
+          Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobFailures
+      FunctionName: recordedfuture
+      Qualifier: $LATEST
+
+  recordedfutureLambdaMetadata:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: /ThreatTools/Modules/recordedfuture
+      Type: String
+      Value: '{"supportedIOCTypes": ["CVE", "IP"]}'
 
   shodanLambdaFunction:
     Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
