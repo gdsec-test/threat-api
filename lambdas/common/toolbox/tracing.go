@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/aws/aws-sdk-go/service/secretsmanager"
 	"github.com/opentracing/opentracing-go"
 	"go.elastic.co/apm"
 	"go.elastic.co/apm/module/apmhttp"
@@ -29,16 +28,16 @@ func (t *Toolbox) InitAPM(ctx context.Context) error {
 	apm.DefaultTracer.Close()
 
 	// Fetch config from credential store
-	paramsToFetch := map[string]*secretsmanager.GetSecretValueOutput{
-		"ELASTIC_APM_SERVER_URL":   nil,
-		"ELASTIC_APM_SECRET_TOKEN": nil,
+	paramsToFetch := map[string]string{
+		"ELASTIC_APM_SERVER_URL":   "",
+		"ELASTIC_APM_SECRET_TOKEN": "",
 	}
 	for key := range paramsToFetch {
-		secret, err := t.GetFromCredentialsStore(ctx, key, "")
+		secret, err := t.GetFromCredentialsStore(ctx, key, nil)
 		if err != nil {
 			return fmt.Errorf("error fetching %s from credential store: %w", key, err)
 		}
-		paramsToFetch[key] = secret
+		paramsToFetch[key] = *secret.SecretString
 	}
 
 	// Set ENV vars from parameter store
@@ -46,7 +45,7 @@ func (t *Toolbox) InitAPM(ctx context.Context) error {
 	// but it looks like this is the only way to do it...BAD DESIGN!
 	// https://github.com/elastic/apm-agent-go/issues/618
 	for key, value := range paramsToFetch {
-		os.Setenv(key, value.String())
+		os.Setenv(key, value)
 	}
 
 	// Re-init the default tracer with this config
@@ -57,7 +56,7 @@ func (t *Toolbox) InitAPM(ctx context.Context) error {
 
 	// Create the new tracer
 	tracer, err := apm.NewTracerOptions(apm.TracerOptions{
-		ServiceName: "", // TODO:
+		ServiceName: os.Getenv("ELASTIC_APM_SERVICE_NAME"), // TODO: How should we set this?
 		Transport:   transport,
 	})
 	if err != nil {
@@ -65,7 +64,8 @@ func (t *Toolbox) InitAPM(ctx context.Context) error {
 	}
 
 	// Wrap default APM Tracer with open tracing tracer
-	t.Tracer = apmot.New(apmot.WithTracer(tracer))
+	t.APMTracer = tracer
+	t.Tracer = apmot.New(apmot.WithTracer(t.APMTracer))
 	opentracing.SetGlobalTracer(t.Tracer)
 
 	return nil

@@ -28,7 +28,10 @@ type Toolbox struct {
 	Logger *logrus.Logger
 	// Defaults to defaultSSOEndpoint
 	SSOHostURL string `default:"sso.gdcorp.tools"`
-	Tracer     opentracing.Tracer
+
+	// Tracing
+	Tracer    opentracing.Tracer
+	APMTracer *apm.Tracer
 
 	client *http.Client
 
@@ -79,7 +82,10 @@ func GetToolbox() *Toolbox {
 	t.SetHTTPClient(&http.Client{Timeout: defaultTimeout})
 
 	// TODO: Use real context
-	t.InitAPM(context.Background())
+	err := t.InitAPM(context.Background())
+	if err != nil {
+		panic(fmt.Errorf("error init tracer: %w", err))
+	}
 
 	return t
 }
@@ -129,9 +135,9 @@ func (t *Toolbox) Close(ctx context.Context) error {
 			return
 		}
 	}()
-	apm.DefaultTracer.Flush(abort)
-	apm.DefaultTracer.SendMetrics(abort)
-	apm.DefaultTracer.Close()
+	t.APMTracer.Flush(abort)
+	t.APMTracer.SendMetrics(abort)
+	t.APMTracer.Close()
 	// Tell our waiting thread that it doesn't need to wait anymore
 	done <- struct{}{}
 
