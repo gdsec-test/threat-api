@@ -15,7 +15,6 @@ import (
 	"github.com/sirupsen/logrus"
 	"go.elastic.co/apm"
 	"go.elastic.co/apm/module/apmhttp"
-	"go.elastic.co/apm/module/apmot"
 )
 
 const (
@@ -41,7 +40,6 @@ type Toolbox struct {
 	JobDBTableName string `default:"jobs"`
 
 	// Asherah
-
 	AsherahDBTableName    string                            `default:"EncryptionKey"`
 	AsherahSession        map[string]*appencryption.Session // Map of jobID to asherah sessions
 	AsherahSessionFactory *appencryption.SessionFactory
@@ -55,7 +53,6 @@ type Toolbox struct {
 func GetToolbox() *Toolbox {
 	t := &Toolbox{
 		Logger:         logrus.New(),
-		Tracer:         apmot.New(), // Wrap default APM Tracer with open tracing tracer
 		AsherahSession: map[string]*appencryption.Session{},
 	}
 
@@ -80,7 +77,10 @@ func GetToolbox() *Toolbox {
 	}
 
 	t.SetHTTPClient(&http.Client{Timeout: defaultTimeout})
-	opentracing.SetGlobalTracer(t.Tracer)
+
+	// TODO: Use real context
+	t.InitAPM(context.Background())
+
 	return t
 }
 
