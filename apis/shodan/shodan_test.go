@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"testing"
 
 	"github.com/gdcorp-infosec/threat-api/lambdas/common/toolbox"
@@ -20,7 +21,7 @@ func TestGetServicesForIPs(t *testing.T) {
 		IOCsType: triage.IPType,
 	})
 	triageRequests = append(triageRequests, &triage.Request{
-		IOCs:     []string{"etbnaman.com", "gacetaeditorial.com"},
+		IOCs:     []string{"moraniz.co.il", "gacetaeditorial.com"},
 		IOCsType: triage.DomainType,
 	})
 
@@ -36,6 +37,9 @@ func TestGetServicesForIPs(t *testing.T) {
 		}
 		if triageResult[0].Data == "" {
 			t.Fatal("first data element empty ")
+		}
+		for _, data := range triageResult[0].Metadata {
+			fmt.Println(data)
 		}
 
 	}

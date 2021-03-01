@@ -158,22 +158,38 @@ func (m *TriageModule) EnrichIP(ctx context.Context, ip string, fields []string,
 //ipMetaDataExtract gets the high level insights for IP
 func ipMetaDataExtract(rfIPResults map[string]*IPReport) []string {
 	var triageMetaData []string
+	intelCardLinks := make(map[string]string)
+	riskyCIDRIPs := make(map[string]int)
+
 	riskIP := 0
 
 	for ip, data := range rfIPResults {
 		// Add the RF Intelligence Card link to every IP for easy access to people with RF UI access
 		if data.Data.IntelCard != "" {
-			triageMetaData = append(triageMetaData, fmt.Sprintf("RF Link for %s: %s", ip, data.Data.IntelCard))
+			intelCardLinks[ip] = data.Data.IntelCard
 		}
 
 		// Keep the count of risky CIDR IP
 		if len(data.Data.RiskyCIDRIPs) > 0 {
-			triageMetaData = append(triageMetaData, fmt.Sprintf("%d Risky IP's in same CIDR as %s", len(data.Data.RiskyCIDRIPs), ip))
+			riskyCIDRIPs[ip] = len(data.Data.RiskyCIDRIPs)
 		}
 
 		// Calculate on risk score
 		if data.Data.Risk.Score > 60 {
 			riskIP += 1
+		}
+	}
+
+	// Add the final results to Metadata
+	if len(intelCardLinks) > 0 {
+		for ip, link := range intelCardLinks {
+			triageMetaData = append(triageMetaData, fmt.Sprintf("RF Link for %s: %s", ip, link))
+		}
+	}
+
+	if len(riskyCIDRIPs) > 0 {
+		for ip, count := range riskyCIDRIPs {
+			triageMetaData = append(triageMetaData, fmt.Sprintf("%d Risky IP's in same CIDR as %s", count, ip))
 		}
 	}
 
