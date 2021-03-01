@@ -37,7 +37,7 @@
           "Jobs"
         ],
         "summary": "Create a new job",
-        "description": "This API creates a new job for a given set of IOCs and returns a job ID.",
+        "description": "This API creates a new job for a given set of IOCs and returns a job ID.  Each request can only specific a single IOC type, but any amount of IOCs.  Note that anything you specify in metadata will be explicitly returned when requesting a user's jobs.",
         "produces": [
           "application/json"
         ],
@@ -54,7 +54,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Successful operation",
+            "description": "Successful operation, returning a single jobId",
             "schema": {
               "type": "object",
               "properties": {
@@ -73,7 +73,7 @@
         "tags": [
           "Jobs"
         ],
-        "summary": "List summary data for jobs associated with the current user",
+        "summary": "List summary data for all jobs associated with the current user",
         "description": "This API returns a list of job IDs that are associated with the currently authenticated user.",
         "produces": [
           "application/json"
@@ -93,7 +93,7 @@
         "tags": [
           "Jobs"
         ],
-        "summary": "Request information about a job",
+        "summary": "Request information about a specific job",
         "description": "This API returns status and any available output for a specified job ID. The `responses` field of the returned JSON data includes responses from each service lambda that contributed output for specified IOCs.",
         "parameters": [
           {
@@ -127,7 +127,7 @@
         "parameters": [
           {
             "name": "body",
-            "description": "List of IOCs",
+            "description": "List of IOCs.  Can be a list of any amount of any different type of IOCs.",
             "in": "body",
             "schema": {
               "$ref": "#/definitions/ClassificationCreate"
@@ -150,7 +150,7 @@
         "tags": [
           "Miscellaneous"
         ],
-        "summary": "List modules and their associated IOC types",
+        "summary": "List modules and their supported IOC types.",
         "description": "This API returns a dictionary of supported modules, each of which contains metadata about the module (supported IOC types, etc.).",
         "produces": [
           "application/json"
@@ -215,6 +215,7 @@
       }
     },
     "IOCType": {
+      "description": "IOC Types that can be sent to create jobs, returned when getting modules returned when classifying IOCs.",
       "type": "string",
       "enum": [
         "UNKNOWN",
@@ -257,6 +258,9 @@
           "items": {
             "type": "string"
           }
+        },
+        "metadata": {
+          "type": "object"
         }
       },
       "example": {
@@ -266,7 +270,10 @@
         ],
         "modules": [
           "whois"
-        ]
+        ],
+        "metadata": {
+          "name": "My Test Run"
+        }
       }
     },
     "JobDetail": {
