@@ -32,6 +32,10 @@ func createJob(ctx context.Context, request events.APIGatewayProxyRequest) (even
 	}
 	span.LogKV("username", jwt.BaseToken.AccountName)
 
+	// TODO: If we want the default behavior on blank `modules` list to be launching all modules, we need to
+	// check the job request and add the list of all modules if it is blank.
+	// For now we require a user to submit what modules they want to run.
+
 	// Encrypt submission
 	span, ctx = opentracing.StartSpanFromContext(ctx, "EncryptSubmission")
 	encryptedData, err := to.Encrypt(ctx, jobID, []byte(request.Body))
@@ -226,10 +230,12 @@ func getJobs(ctx context.Context, request events.APIGatewayProxyRequest) (events
 			// Decrypt because we need the original request to pull out metadata if it's there
 			jobDB.Decrypt(ctx, to)
 
-			// Remove submission data except metadata
+			// Remove submission data except metadata and modules list
 			for key := range jobDB.DecryptedSubmission {
 				switch key {
 				case "metadata":
+					continue
+				case "modules":
 					continue
 				}
 
