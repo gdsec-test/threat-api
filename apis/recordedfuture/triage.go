@@ -32,7 +32,7 @@ type TriageModule struct {
 
 // GetDocs of this module
 func (m *TriageModule) GetDocs() *triage.Doc {
-	return &triage.Doc{Name: triageModuleName, Description: "Recorded Future triages CVE currently"}
+	return &triage.Doc{Name: triageModuleName, Description: "Recorded Future triages CVE, IP"}
 }
 
 // Supports returns true of we support this ioc type
@@ -60,9 +60,8 @@ func (m *TriageModule) Triage(ctx context.Context, triageRequest *triage.Request
 		m.RFClient = http.DefaultClient
 	}
 
-	rfCVEResults := make(map[string]*CVEReport)
-
 	if triageRequest.IOCsType == triage.CVEType {
+		rfCVEResults := make(map[string]*CVEReport)
 		for _, cve := range triageRequest.IOCs {
 			// Check context
 			select {
@@ -91,6 +90,7 @@ func (m *TriageModule) Triage(ctx context.Context, triageRequest *triage.Request
 	}
 
 	if triageRequest.IOCsType == triage.IPType {
+		rfIPResults := make(map[string]*IPReport)
 		for _, ip := range triageRequest.IOCs {
 			// Check context
 			select {
@@ -98,16 +98,21 @@ func (m *TriageModule) Triage(ctx context.Context, triageRequest *triage.Request
 				break
 			default:
 			}
-			// TODO : IP triaging
-			fmt.Printf(ip)
-			// Add the results
-			triageData.Metadata = ipMetaDataExtract(rfCVEResults)
 
-			// if verbose wasn't requested dump csv here
-			if !triageRequest.Verbose {
-				triageData.DataType = triage.CSVType
-				triageData.Data = dumpIPCSV(rfCVEResults)
+			rfIPResult, err := m.EnrichIP(ctx, ip, IPReportFields, false)
+			if err != nil {
+				rfIPResults[ip] = nil
+				continue
 			}
+			rfIPResults[ip] = rfIPResult
+		}
+		// Add the results
+		triageData.Metadata = ipMetaDataExtract(rfIPResults)
+
+		// if verbose wasn't requested dump csv here
+		if !triageRequest.Verbose {
+			triageData.DataType = triage.CSVType
+			triageData.Data = dumpIPCSV(rfIPResults)
 		}
 	}
 

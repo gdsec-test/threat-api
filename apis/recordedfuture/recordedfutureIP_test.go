@@ -9,7 +9,7 @@ import (
 	"github.com/gdcorp-infosec/threat-api/lambdas/common/triagelegacyconnector/triage"
 )
 
-func TestGetServicesForIPs(t *testing.T) {
+func TestEnrichIP(t *testing.T) {
 
 	ctx := context.Background()
 	tb = toolbox.GetToolbox()
@@ -17,12 +17,8 @@ func TestGetServicesForIPs(t *testing.T) {
 
 	var triageRequests []*triage.Request
 	triageRequests = append(triageRequests, &triage.Request{
-		IOCs:     []string{"72.210.63.111", "164.128.164.119", "93.90.222.20"},
+		IOCs:     []string{"157.245.243.62", "185.186.247.114"},
 		IOCsType: triage.IPType,
-	})
-	triageRequests = append(triageRequests, &triage.Request{
-		IOCs:     []string{"moraniz.co.il", "gacetaeditorial.com"},
-		IOCsType: triage.DomainType,
 	})
 
 	for _, triageRequest := range triageRequests {
@@ -38,9 +34,9 @@ func TestGetServicesForIPs(t *testing.T) {
 		if triageResult[0].Data == "" {
 			t.Fatal("first data element empty ")
 		}
+
 		for _, data := range triageResult[0].Metadata {
 			fmt.Println(data)
 		}
-
 	}
 }

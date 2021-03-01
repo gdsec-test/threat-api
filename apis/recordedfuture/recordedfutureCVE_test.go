@@ -38,7 +38,5 @@ func TestEnrichCVE(t *testing.T) {
 		for _, data := range triageResult[0].Metadata {
 			fmt.Println(data)
 		}
-		//fmt.Printf(triageResult[0].Data)
-
 	}
 }

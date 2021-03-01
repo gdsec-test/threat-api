@@ -178,12 +178,12 @@ type CVEReport struct {
 }
 
 //EnrichCVE  performs a CVE search with RecordedFuture
-func (m *TriageModule) EnrichCVE(ctx context.Context, vulnerability string, fields []string, metadata bool) (*CVEReport, error) {
+func (m *TriageModule) EnrichCVE(ctx context.Context, cve string, fields []string, metadata bool) (*CVEReport, error) {
 	// Build URL
 	values := url.Values{}
 	values.Add("fields", strings.Join(fields, ","))
 	values.Add("metadata", fmt.Sprintf("%v", metadata))
-	URL := fmt.Sprintf("%s%v?%s", vulnerabilityEndpoint, vulnerability, values.Encode())
+	URL := fmt.Sprintf("%s%v?%s", vulnerabilityEndpoint, cve, values.Encode())
 
 	// Build request
 	req, err := http.NewRequestWithContext(ctx, "GET", URL, nil)
@@ -276,6 +276,7 @@ func dumpCVECSV(rfCVEResults map[string]*CVEReport) string {
 		// Processing few non string data before adding to CSV
 		var threatLists, rawriskRules []string
 		for _, threatlist := range data.Data.ThreatLists {
+			//TODO: Check on threatlist is a defined struct with other edge cases
 			threatLists = append(threatLists, threatlist.(string))
 		}
 		for _, rawrisk := range data.Data.Rawrisk {
