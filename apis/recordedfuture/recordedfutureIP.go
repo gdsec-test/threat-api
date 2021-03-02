@@ -4,155 +4,47 @@ import (
 	"bytes"
 	"context"
 	"encoding/csv"
-	"encoding/json"
 	"fmt"
-	"net/http"
-	"net/url"
+	"github.com/gdcorp-infosec/threat-api/lambdas/common/triagelegacyconnector/triage"
 	"strings"
-	"time"
+	"sync"
 )
 
-const (
-	ipEndpoint = "https://api.recordedfuture.com/v2/ip/"
-)
+//cveReportCreate generates a map of CVEReport from RF API
+func (m *TriageModule) ipReportCreate(ctx context.Context, triageRequest *triage.Request) (map[string]*IPReport, error) {
+	rfIPResults := make(map[string]*IPReport)
 
-//TODO: Code breaks for more than 1 IP (Given the tests example IP's )
+	// TODO : Check on threadLimit
+	wg := sync.WaitGroup{}
+	wg.Add(len(triageRequest.IOCs))
+	rfIPResultsLock := sync.Mutex{}
 
-// IPReport is a sample report that recorded future returns when enriching an IP
-// if you request the fields IPReportFields
-type IPReport struct {
-	Data struct {
-		RiskyCIDRIPs []struct {
-			Score int `json:"score"`
-			IP    struct {
-				ID   string `json:"id"`
-				Name string `json:"name"`
-				Type string `json:"type"`
-			} `json:"ip"`
-		} `json:"riskyCIDRIPs"`
-		EnterpriseLists []interface{} `json:"enterpriseLists"`
-		Risk            struct {
-			CriticalityLabel string `json:"criticalityLabel"`
-			RiskString       string `json:"riskString"`
-			Rules            int    `json:"rules"`
-			Criticality      int    `json:"criticality"`
-			RiskSummary      string `json:"riskSummary"`
-			Score            int    `json:"score"`
-			EvidenceDetails  []struct {
-				MitigationString string    `json:"mitigationString"`
-				EvidenceString   string    `json:"evidenceString"`
-				Rule             string    `json:"rule"`
-				Criticality      int       `json:"criticality"`
-				Timestamp        time.Time `json:"timestamp"`
-				CriticalityLabel string    `json:"criticalityLabel"`
-			} `json:"evidenceDetails"`
-		} `json:"risk"`
-		IntelCard string        `json:"intelCard"`
-		Sightings []interface{} `json:"sightings"`
-		Entity    struct {
-			ID   string `json:"id"`
-			Name string `json:"name"`
-			Type string `json:"type"`
-		} `json:"entity"`
-		RelatedEntities []interface{} `json:"relatedEntities"`
-		AnalystNotes    []interface{} `json:"analystNotes"`
-		Location        struct {
-			Organization string `json:"organization"`
-			Cidr         struct {
-				ID   string `json:"id"`
-				Name string `json:"name"`
-				Type string `json:"type"`
-			} `json:"cidr"`
-			Location struct {
-				Continent string `json:"continent"`
-				Country   string `json:"country"`
-				City      string `json:"city"`
-			} `json:"location"`
-			Asn string `json:"asn"`
-		} `json:"location"`
-		Timestamps struct {
-			LastSeen  time.Time `json:"lastSeen"`
-			FirstSeen time.Time `json:"firstSeen"`
-		} `json:"timestamps"`
-		ThreatLists []struct {
-			ID          string `json:"id"`
-			Name        string `json:"name"`
-			Type        string `json:"type"`
-			Description string `json:"description"`
-		} `json:"threatLists"`
-		Counts  []interface{} `json:"counts"`
-		Metrics []struct {
-			Type  string `json:"type"`
-			Value int    `json:"value"`
-		} `json:"metrics"`
-	} `json:"data"`
-	Metadata struct {
-		Entries []struct {
-			Key   string `json:"key"`
-			Label string `json:"label"`
-			Item  struct {
-				Entries []struct {
-					Key     string `json:"key"`
-					Label   string `json:"label,omitempty"`
-					Type    string `json:"type"`
-					Entries []struct {
-						Key   string `json:"key"`
-						Label string `json:"label"`
-						Type  string `json:"type"`
-						Item  struct {
-							Type string `json:"type"`
-						} `json:"item,omitempty"`
-						Required bool `json:"required,omitempty"`
-					} `json:"entries,omitempty"`
-				} `json:"entries"`
-				Type string `json:"type"`
-			} `json:"item,omitempty"`
-			Type    string `json:"type"`
-			Entries []struct {
-				Key     string `json:"key"`
-				Label   string `json:"label"`
-				Type    string `json:"type"`
-				Entries []struct {
-					Key   string `json:"key"`
-					Label string `json:"label"`
-					Type  string `json:"type"`
-				} `json:"entries,omitempty"`
-			} `json:"entries,omitempty"`
-		} `json:"entries"`
-	} `json:"metadata"`
-}
+	for _, ip := range triageRequest.IOCs {
+		select {
+		case <-ctx.Done():
+			break
+		default:
+		}
 
-//EnrichIP  performs a CVE search with RecordedFuture
-func (m *TriageModule) EnrichIP(ctx context.Context, ip string, fields []string, metadata bool) (*IPReport, error) {
-	// Build URL
-	values := url.Values{}
-	values.Add("fields", strings.Join(fields, ","))
-	values.Add("metadata", fmt.Sprintf("%v", metadata))
-	URL := fmt.Sprintf("%s%v?%s", ipEndpoint, ip, values.Encode())
+		go func(ip string) {
+			defer wg.Done()
+			// Calling RF API with metadata switched off
+			rfIPResult, err := m.EnrichIP(ctx, ip, IPReportFields, false)
+			if err != nil {
+				rfIPResultsLock.Lock()
+				rfIPResults[ip] = nil
+				rfIPResultsLock.Unlock()
+				return
+			}
 
-	// Build request
-	req, err := http.NewRequestWithContext(ctx, "GET", URL, nil)
-	if err != nil {
-		return nil, err
+			rfIPResultsLock.Lock()
+			rfIPResults[ip] = rfIPResult
+			rfIPResultsLock.Unlock()
+		}(ip)
 	}
 
-	req.Header.Add("X-RFToken", m.RFKey)
-	resp, err := m.RFClient.Do(req)
-	if err != nil {
-		return nil, err
-	}
-
-	if resp.StatusCode != 200 {
-		return nil, fmt.Errorf("bad status code: %d", resp.StatusCode)
-	}
-
-	reportHolder := &IPReport{}
-	err = json.NewDecoder(resp.Body).Decode(reportHolder)
-	if err != nil {
-		return nil, err
-	}
-
-	return reportHolder, nil
+	wg.Wait()
+	return rfIPResults, nil
 }
 
 //ipMetaDataExtract gets the high level insights for IP
