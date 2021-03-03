@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"os"
 	"reflect"
 	"testing"
@@ -36,8 +37,10 @@ func TestJobWork(t *testing.T) {
 	t.Run("CreateJob", func(t *testing.T) {
 		// Create an empty job
 		resp, err := handler(context.Background(), events.APIGatewayProxyRequest{
-			Headers: headers,
-			Body:    testBody,
+			Headers:    headers,
+			Body:       testBody,
+			Path:       version + "/jobs",
+			HTTPMethod: "POST",
 		})
 		if err != nil {
 			t.Fatal(err)
@@ -65,7 +68,9 @@ func TestJobWork(t *testing.T) {
 	t.Run("GetJob", func(t *testing.T) {
 		// Get the job status
 		resp, err := handler(context.Background(), events.APIGatewayProxyRequest{
-			PathParameters: map[string]string{"jobId": jobID},
+			Path:           version + "/jobs/",
+			PathParameters: map[string]string{jobIDKey: jobID},
+			HTTPMethod:     http.MethodGet,
 		})
 		if err != nil {
 			t.Fatal(err)
@@ -75,31 +80,37 @@ func TestJobWork(t *testing.T) {
 		}
 
 		// Check to make sure we got our JobID
-		var response map[string]interface{}
+		response := struct {
+			common.JobDBEntry
+			JobStatus     JobStatus `json:"jobStatus"`
+			JobPercentage float64   `json:"jobPercentage"`
+		}{}
 		err = json.Unmarshal([]byte(resp.Body), &response)
 		if err != nil {
 			t.Fatal(err)
 		}
 		fmt.Printf("Found job data: %v\n", response)
-		if response["jobStatus"].(string) == string(JobCompleted) {
+		if string(response.JobStatus) == string(JobCompleted) {
 			fmt.Println("WARN: Job is already completed, that was quick")
 		}
 
 		// Make sure we got back our original request
-		submissionBytes, _ := json.Marshal(response["submission"])
+		submissionBytes, _ := json.Marshal(response.DecryptedSubmission)
 		if string(submissionBytes) != testBody {
 			t.Errorf("did not get original request/submission we made (was it not decrypted correctly?). Expected %s got %s", testBody, string(submissionBytes))
 		}
 
 		// Check to make sure TotalModules > 0
-		if response["TotalModules"].(float64) == 0 {
+		if response.TotalModules == 0 {
 			t.Errorf("Returned 0 total modules, probably expecting this to be more than 0")
 		}
 
 		// Wait a bit and check if the job completed
 		time.Sleep(time.Second * 3)
 		resp, err = handler(context.Background(), events.APIGatewayProxyRequest{
-			PathParameters: map[string]string{"jobId": jobID},
+			Path:           version + "/jobs/",
+			PathParameters: map[string]string{jobIDKey: jobID},
+			HTTPMethod:     http.MethodGet,
 		})
 		if err != nil {
 			t.Fatal(err)
@@ -111,10 +122,10 @@ func TestJobWork(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		if response["jobStatus"].(string) != string(JobCompleted) {
-			t.Errorf("job did not complete, it is in state %s", response["jobStatus"])
+		if string(response.JobStatus) != string(JobCompleted) {
+			t.Errorf("job did not complete, it is in state %s", response.JobStatus)
 		}
-		if response["jobPercentage"].(float64) == 0 {
+		if response.JobPercentage == 0 {
 			t.Error("Job percentage stuck at 0%, there's probably a problem generating the percentage, or no responses were generated.")
 		}
 
@@ -124,8 +135,9 @@ func TestJobWork(t *testing.T) {
 	t.Run("GetJobs", func(t *testing.T) {
 		// Get the jobs of this user
 		resp, err := handler(context.Background(), events.APIGatewayProxyRequest{
-			Path:    "/jobs/",
-			Headers: headers,
+			Path:       version + "/jobs/",
+			Headers:    headers,
+			HTTPMethod: http.MethodGet,
 		})
 		if err != nil {
 			t.Fatal(err)
@@ -166,6 +178,36 @@ func TestJobWork(t *testing.T) {
 		}
 
 		fmt.Printf("Found user's jobs: %v\n", response)
+	})
+
+	t.Run("DeleteJob", func(t *testing.T) {
+		// Get the created job
+		resp, err := handler(context.Background(), events.APIGatewayProxyRequest{
+			Path:           version + "/jobs/",
+			PathParameters: map[string]string{jobIDKey: jobID},
+			Headers:        headers,
+			HTTPMethod:     "DELETE",
+		})
+		if err != nil {
+			t.Fatal(err)
+		}
+		if resp.StatusCode != 200 {
+			t.Fatalf("bad response code: %d", resp.StatusCode)
+		}
+
+		// Check if job is actually deleted
+		resp, err = handler(context.Background(), events.APIGatewayProxyRequest{
+			Path:           version + "/jobs/",
+			PathParameters: map[string]string{jobIDKey: jobID},
+			HTTPMethod:     http.MethodGet,
+		})
+		if err != nil {
+			t.Fatal(err)
+		}
+		if resp.StatusCode != http.StatusNotFound {
+			t.Fatalf("Expected status code 404 but got: %d", resp.StatusCode)
+		}
+
 	})
 	to.Close(context.Background())
 }

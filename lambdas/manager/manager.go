@@ -15,8 +15,9 @@ import (
 const (
 	resourceName             = "geoip"
 	snsTopicARNParameterName = "/ThreatTools/JobRequests"
-	jobIDKey                 = "jobId"
-	usernameKey              = "username"
+	// jobIDKey used in DB and API
+	jobIDKey    = "jobId"
+	usernameKey = "username"
 	// API Version and API path prefix
 	version = "v1"
 )
@@ -57,10 +58,16 @@ func handler(ctx context.Context, request events.APIGatewayProxyRequest) (events
 		case http.MethodGet:
 			if jobID, ok := request.PathParameters[jobIDKey]; ok {
 				// They are checking the status of a job
-				return getJobStatus(ctx, jobID)
+				return getJob(ctx, jobID)
 			}
 			// They are getting all their jobs
 			return getJobs(ctx, request)
+		case http.MethodDelete:
+			if jobID, ok := request.PathParameters[jobIDKey]; ok {
+				// They deleting this job
+				return deleteJob(ctx, request, jobID)
+			}
+			return events.APIGatewayProxyResponse{StatusCode: http.StatusBadRequest, Body: "Missing jobId"}, nil
 		default:
 			return events.APIGatewayProxyResponse{StatusCode: http.StatusMethodNotAllowed}, nil
 		}

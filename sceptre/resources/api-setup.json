@@ -74,6 +74,36 @@
       }
     },
     "/v1/jobs/{jobId}": {
+      "delete": {
+        "summary": "Delete a job",
+        "description": "Delete a job by it's job id",
+        "parameters": [
+          {
+            "name": "jobId",
+            "description": "Job ID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful operation"
+          }
+        },
+        "security": [
+          {
+            "JWTAuthorizer": []
+          }
+        ],
+        "x-amazon-apigateway-integration": {
+          "type": "aws_proxy",
+          "uri": "arn:aws:apigateway:us-west-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-west-2:___AWS_ACCOUNT___:function:manager/invocations",
+          "passthroughBehavior": "when_no_match",
+          "httpMethod": "POST",
+          "contentHandling": "CONVERT_TO_TEXT"
+        }
+      },
       "get": {
         "summary": "Request information about a job",
         "description": "This API returns status and any available output for a specified job ID. The `responses` field of the returned JSON data includes responses from each service lambda that contributed output for specified IOCs.",

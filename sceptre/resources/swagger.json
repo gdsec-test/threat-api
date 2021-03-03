@@ -89,6 +89,30 @@
       }
     },
     "/jobs/{jobId}": {
+      "delete": {
+        "tags": [
+          "Jobs"
+        ],
+        "summary": "Delete a job",
+        "description": "Delete a job by it's ID.  You can only delete jobs that you own (jobs you created).",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "jobId",
+            "description": "Job ID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful operation"
+          }
+        }
+      },
       "get": {
         "tags": [
           "Jobs"
