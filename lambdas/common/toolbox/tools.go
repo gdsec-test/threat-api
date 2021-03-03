@@ -84,7 +84,9 @@ func GetToolbox() *Toolbox {
 	// TODO: Use real context
 	err := t.InitAPM(context.Background())
 	if err != nil {
-		panic(fmt.Errorf("error init tracer: %w", err))
+		// panic(fmt.Errorf("error init tracer: %w", err))
+		// TODO: Handle this error to let the caller know the tracing will not work
+		fmt.Printf("WARN: Tracer not configured due to error: %s\n", err)
 	}
 
 	return t
