@@ -15,6 +15,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"go.elastic.co/apm"
 	"go.elastic.co/apm/module/apmhttp"
+	"go.elastic.co/apm/module/apmot"
 )
 
 const (
@@ -87,6 +88,10 @@ func GetToolbox() *Toolbox {
 		// panic(fmt.Errorf("error init tracer: %w", err))
 		// TODO: Handle this error to let the caller know the tracing will not work
 		fmt.Printf("WARN: Tracer not configured due to error: %s\n", err)
+		// Set defaults (effectively noops)
+		t.APMTracer = apm.DefaultTracer
+		t.Tracer = apmot.New()
+		opentracing.SetGlobalTracer(t.Tracer)
 	}
 
 	return t
