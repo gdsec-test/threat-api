@@ -20,7 +20,7 @@ func TestRP(te *testing.T) {
 		ModuleName: "testModule",
 	}
 	json.NewEncoder(os.Stdout).Encode(message)
-	_, err := processCompletedJob(ctx, message)
+	err := processCompletedJob(ctx, message)
 	if err != nil {
 		te.Fatal(err)
 	}
