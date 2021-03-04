@@ -3,14 +3,21 @@ package main
 import (
 	"context"
 	"encoding/csv"
+	"fmt"
 	"io/ioutil"
 	"net/http"
+	"net/url"
 	"strings"
+	"time"
 )
 
 const (
 	triageModuleName = "urlhaus"
 	baseUrl          = "https://urlhaus.abuse.ch/feeds/asn/"
+	urlhausExpiry    = 10 * time.Minute
+	apiHashUrl       = "https://urlhaus-api.abuse.ch/v1/payload/"
+	apiHostUrl       = "https://urlhaus-api.abuse.ch/v1/host/"
+	apiUrlUrl        = "https://urlhaus-api.abuse.ch/v1/url/"
 )
 
 type urlHausEntry struct {
@@ -74,4 +81,45 @@ func DownloadAsns(ctx context.Context, asns []string) []*urlHausEntry {
 	}
 
 	return entries
+}
+
+func QueryApi(apiUrl string, key string, value string) string {
+	resp, err := http.PostForm(apiUrl, url.Values{key: {value}})
+	if err != nil {
+		fmt.Printf("Error in POST: %s", err)
+		return ""
+	}
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		fmt.Printf("Error in reading response body: %s", err)
+		return ""
+	}
+	return string(body)
+}
+
+func GetMd5(md5 string) {
+	fmt.Printf("MD5: %s\n", md5)
+	fmt.Println(QueryApi(apiHashUrl, "md5_hash", md5))
+}
+
+func GetSha256(sha256 string) {
+	fmt.Printf("SHA256: %s\n", sha256)
+	fmt.Println(QueryApi(apiHashUrl, "sha256_hash", sha256))
+}
+
+func GetDomainOrIp(host string) {
+	fmt.Printf("Host: %s\n", host)
+	fmt.Println(QueryApi(apiHostUrl, "host", host))
+}
+
+func GetUrl(url string) {
+	fmt.Printf("URL: %s\n", url)
+	fmt.Println(QueryApi(apiHostUrl, "url", url))
+}
+
+func GetDomainsByAsns() {
+	// get the current domains-by-ASN from Parameter Store
+	// lazy fetch the domains based on their ASNs from URLhaus
+
 }

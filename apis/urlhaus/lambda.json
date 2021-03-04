@@ -5,7 +5,11 @@
   "timeout": "15",
   "metadata": {
     "supportedIOCTypes": [
-      "UNKNOWN"
+      "DOMAIN",
+      "IP",
+      "URL",
+      "MD5",
+      "SHA256"
     ]
   }
 }

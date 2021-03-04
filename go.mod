@@ -15,6 +15,7 @@ require (
 	github.com/opentracing/opentracing-go v1.1.0
 	github.com/oschwald/geoip2-golang v1.4.0
 	github.com/sirupsen/logrus v1.7.0
+	github.com/vertoforce/gourlhaus v0.0.0-20201228182632-61363d1f8ecb
 	github.com/vertoforce/regexgrouphelp v0.1.1
 	github.secureserver.net/auth-contrib/go-auth v1.2.1
 	github.secureserver.net/threat/go-ldap v0.0.0-20201017001259-d06e7b5f7252
