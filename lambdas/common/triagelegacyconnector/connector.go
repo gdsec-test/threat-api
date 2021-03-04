@@ -9,6 +9,7 @@ import (
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/gdcorp-infosec/threat-api/lambdas/common"
+	"github.com/gdcorp-infosec/threat-api/lambdas/common/toolbox"
 	"github.com/gdcorp-infosec/threat-api/lambdas/common/triagelegacyconnector/triage"
 )
 
@@ -16,11 +17,11 @@ import (
 // This make it easy to call old triage modules with minimal code changes.
 // To do this, this function converts an AWS SNS event to the legacy triage interface, then
 // converts the response to what we expect for the response processor.
-func AWSToTriage(ctx context.Context, module triage.Module, request events.SNSEvent) ([]*common.CompletedJobData, error) {
+func AWSToTriage(ctx context.Context, t *toolbox.Toolbox, module triage.Module, request events.SNSEvent) ([]*common.CompletedJobData, error) {
 	ret := []*common.CompletedJobData{}
 
 	for _, event := range request.Records {
-		completedJobData, err := triageSNSEvent(ctx, module, event)
+		completedJobData, err := triageSNSEvent(ctx, t, module, event)
 		if err != nil {
 			return nil, fmt.Errorf("error processing event: %w", err)
 		}
@@ -31,7 +32,7 @@ func AWSToTriage(ctx context.Context, module triage.Module, request events.SNSEv
 }
 
 // triageSNSEvent converts the aws to legacy interface for a single job
-func triageSNSEvent(ctx context.Context, module triage.Module, request events.SNSEventRecord) (*common.CompletedJobData, error) {
+func triageSNSEvent(ctx context.Context, t *toolbox.Toolbox, module triage.Module, request events.SNSEventRecord) (*common.CompletedJobData, error) {
 	// Unmarshal the SNS job message
 	jobMessage := common.JobSNSMessage{}
 	err := json.Unmarshal([]byte(request.SNS.Message), &jobMessage)
@@ -39,6 +40,15 @@ func triageSNSEvent(ctx context.Context, module triage.Module, request events.SN
 		err = fmt.Errorf("error unmarshaling the SNS message to our common JobMessage structure: %w", err)
 		return nil, err
 	}
+
+	// Pull out the JWT and token to get the username from the JWT
+	JWT := toolbox.GetJWTFromRequest(jobMessage.Submission)
+	jwtToken, err := t.ValidateJWT(ctx, JWT)
+	if err != nil {
+		err = fmt.Errorf("error validating JWT: %w", err)
+		return nil, err
+	}
+	username := jwtToken.BaseToken.UserName
 
 	response := &common.CompletedJobData{
 		ModuleName: module.GetDocs().Name,
@@ -85,6 +95,7 @@ func triageSNSEvent(ctx context.Context, module triage.Module, request events.SN
 	triageRequest := &triage.Request{
 		IOCs:     jobSubmission.IOCs,
 		IOCsType: triage.IOCType(strings.ToUpper(jobSubmission.IOCType)),
+		Username: username,
 	}
 
 	triageDatas, err := module.Triage(ctx, triageRequest)

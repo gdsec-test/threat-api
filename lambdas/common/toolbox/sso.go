@@ -141,7 +141,7 @@ func (t *Toolbox) getJWTADGroups(ctx context.Context, jwt string) ([]string, err
 
 // GetJWTFromRequest pulls out the JWT from the request.
 // It first checks the Authorization header, then looks for the auth_jomax cookie
-func (t *Toolbox) GetJWTFromRequest(request events.APIGatewayProxyRequest) string {
+func GetJWTFromRequest(request events.APIGatewayProxyRequest) string {
 	// Try the auth header
 	authHeader, ok := request.Headers["Authorization"]
 	if ok && strings.HasPrefix(strings.ToLower(authHeader), "sso-jwt ") {

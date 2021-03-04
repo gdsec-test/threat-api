@@ -14,6 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/dynamodb/expression"
 	"github.com/aws/aws-sdk-go/service/sns"
 	"github.com/gdcorp-infosec/threat-api/lambdas/common"
+	"github.com/gdcorp-infosec/threat-api/lambdas/common/toolbox"
 	"github.com/opentracing/opentracing-go"
 )
 
@@ -26,7 +27,7 @@ func createJob(ctx context.Context, request events.APIGatewayProxyRequest) (even
 	jobID := to.GenerateJobID(ctx)
 
 	// Get username
-	jwt, err := to.ValidateJWT(ctx, to.GetJWTFromRequest(request))
+	jwt, err := to.ValidateJWT(ctx, toolbox.GetJWTFromRequest(request))
 	if err != nil {
 		return events.APIGatewayProxyResponse{StatusCode: 401}, err
 	}
@@ -251,7 +252,7 @@ func getJobs(ctx context.Context, request events.APIGatewayProxyRequest) (events
 	span, ctx := opentracing.StartSpanFromContext(ctx, "GetUserJobs")
 	defer span.Finish()
 
-	jwt, err := to.ValidateJWT(ctx, to.GetJWTFromRequest(request))
+	jwt, err := to.ValidateJWT(ctx, toolbox.GetJWTFromRequest(request))
 	if err != nil {
 		err = fmt.Errorf("error validating jwt: %w", err)
 		span.LogKV("error", err)
