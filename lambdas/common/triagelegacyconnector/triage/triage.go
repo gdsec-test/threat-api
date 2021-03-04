@@ -102,8 +102,7 @@ type Request struct {
 	IOCs     []string
 	IOCsType IOCType
 	// JWT from request
-	// Name username for legacy purposes, this parameter used to be the username of the requester
-	Username string
+	JWT string
 	// Whether to output full dumps of the fetched data
 	Verbose bool
 }

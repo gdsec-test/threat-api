@@ -89,7 +89,7 @@ func triageSNSEvent(ctx context.Context, t *toolbox.Toolbox, module triage.Modul
 	triageRequest := &triage.Request{
 		IOCs:     jobSubmission.IOCs,
 		IOCsType: triage.IOCType(strings.ToUpper(jobSubmission.IOCType)),
-		Username: JWT,
+		JWT:      JWT,
 	}
 
 	triageDatas, err := module.Triage(ctx, triageRequest)
