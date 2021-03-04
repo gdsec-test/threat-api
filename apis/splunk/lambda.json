@@ -1,0 +1,14 @@
+{
+  "handler": "splunk",
+  "memory-size": "256",
+  "runtime": "go1.x",
+  "timeout": "15",
+  "metadata": {
+    "supportedIOCTypes": [
+      "GODADDY_USERNAME",
+      "IP",
+      "CVE",
+      "AWSHOSTNAME"
+    ]
+  }
+}
