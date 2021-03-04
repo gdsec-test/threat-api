@@ -8,20 +8,13 @@ import (
 	"net/http"
 )
 
-// CVEReportFields are the fields to submit to get a standard CVE report
-var CVEReportFields = []string{"analystNotes", "commonNames", "counts", "rawrisk", "cvssv3", "cpe22uri", "cvss", "enterpriseLists", "cpe", "entity", "intelCard", "metrics", "nvdDescription", "relatedEntities", "relatedLinks", "risk", "sightings", "threatLists", "timestamps"}
-
-//IPReportFields are the fields to submit to get a standard IP report
-var IPReportFields = []string{"analystNotes", "counts", "enterpriseLists", "entity", "intelCard", "location", "metrics", "relatedEntities", "risk", "riskyCIDRIPs", "sightings", "threatLists", "timestamps"}
-
 //tb Toolbox to use secrets manager
 var tb *toolbox.Toolbox
 
-// TODO: Add tracing after IP Triaging
-
 const (
-	secretID     = "/ThreatTools/Integrations/recordedfuture"
-	versionStage = "AWSCURRENT"
+	triageModuleName = "recordedfuture"
+	secretID         = "/ThreatTools/Integrations/recordedfuture"
+	versionStage     = "AWSCURRENT"
 )
 
 // TriageModule triage module
@@ -61,59 +54,36 @@ func (m *TriageModule) Triage(ctx context.Context, triageRequest *triage.Request
 	}
 
 	if triageRequest.IOCsType == triage.CVEType {
-		rfCVEResults := make(map[string]*CVEReport)
-		for _, cve := range triageRequest.IOCs {
-			// Check context
-			select {
-			case <-ctx.Done():
-				break
-			default:
-			}
-
-			// Calling RF API with metadata switched off
-			rfCVEResult, err := m.EnrichCVE(ctx, cve, CVEReportFields, false)
-			if err != nil {
-				rfCVEResults[cve] = nil
-				continue
-			}
-			rfCVEResults[cve] = rfCVEResult
+		//retrieve results
+		rfCVEResults, err := m.cveReportCreate(ctx, triageRequest)
+		if err != nil {
+			triageData.Data = fmt.Sprintf("error from recorded future API for cve: %s", err)
+			return []*triage.Data{triageData}, err
 		}
 
-		// Add the results
+		//calculate and add the metadata
 		triageData.Metadata = cveMetaDataExtract(rfCVEResults)
 
-		// if verbose wasn't requested dump csv here
-		if !triageRequest.Verbose {
-			triageData.DataType = triage.CSVType
-			triageData.Data = dumpCVECSV(rfCVEResults)
-		}
+		//Dump data as csv
+		triageData.DataType = triage.CSVType
+		triageData.Data = dumpCVECSV(rfCVEResults)
+
 	}
 
 	if triageRequest.IOCsType == triage.IPType {
-		rfIPResults := make(map[string]*IPReport)
-		for _, ip := range triageRequest.IOCs {
-			// Check context
-			select {
-			case <-ctx.Done():
-				break
-			default:
-			}
-
-			rfIPResult, err := m.EnrichIP(ctx, ip, IPReportFields, false)
-			if err != nil {
-				rfIPResults[ip] = nil
-				continue
-			}
-			rfIPResults[ip] = rfIPResult
+		//retrieve results
+		rfIPResults, err := m.ipReportCreate(ctx, triageRequest)
+		if err != nil {
+			triageData.Data = fmt.Sprintf("error from recorded future API for ip: %s", err)
+			return []*triage.Data{triageData}, err
 		}
-		// Add the results
+
+		//calculate and add the metadata
 		triageData.Metadata = ipMetaDataExtract(rfIPResults)
 
-		// if verbose wasn't requested dump csv here
-		if !triageRequest.Verbose {
-			triageData.DataType = triage.CSVType
-			triageData.Data = dumpIPCSV(rfIPResults)
-		}
+		//dump data as csv
+		triageData.DataType = triage.CSVType
+		triageData.Data = dumpIPCSV(rfIPResults)
 	}
 
 	return []*triage.Data{triageData}, nil
