@@ -266,6 +266,7 @@ Resources:
         - arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess
         - arn:aws:iam::aws:policy/AmazonSSMReadOnlyAccess
         - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+        - !Ref ThreatPolicySecretsManager
         - !Ref ThreatPolicyDynamoDB
         - !Ref ThreatPolicyKMS
         - !Ref ThreatPolicySNS
