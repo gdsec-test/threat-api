@@ -5,14 +5,16 @@ import (
 	"context"
 	"encoding/csv"
 	"fmt"
-	"github.com/gdcorp-infosec/threat-api/lambdas/common/triagelegacyconnector/triage"
 	"strings"
 	"sync"
+
+	rf "github.com/gdcorp-infosec/threat-api/apis/recordedfuture/recordedfutureLibrary"
+	"github.com/gdcorp-infosec/threat-api/lambdas/common/triagelegacyconnector/triage"
 )
 
 //cveReportCreate generates a map of CVEReport from RF API
-func (m *TriageModule) cveReportCreate(ctx context.Context, triageRequest *triage.Request) (map[string]*CVEReport, error) {
-	rfCVEResults := make(map[string]*CVEReport)
+func (m *TriageModule) cveReportCreate(ctx context.Context, triageRequest *triage.Request) (map[string]*rf.CVEReport, error) {
+	rfCVEResults := make(map[string]*rf.CVEReport)
 
 	//TODO: Check on threadLimit
 	wg := sync.WaitGroup{}
@@ -29,7 +31,7 @@ func (m *TriageModule) cveReportCreate(ctx context.Context, triageRequest *triag
 		go func(cve string) {
 			defer wg.Done()
 			// Calling RF API with metadata switched off
-			rfCVEResult, err := m.EnrichCVE(ctx, cve, CVEReportFields, false)
+			rfCVEResult, err := rf.EnrichCVE(ctx, m.RFKey, m.RFClient, cve, rf.CVEReportFields, false)
 			if err != nil {
 				rfCVEResultsLock.Lock()
 				rfCVEResults[cve] = nil
@@ -48,7 +50,7 @@ func (m *TriageModule) cveReportCreate(ctx context.Context, triageRequest *triag
 }
 
 //cveMetaDataExtract gets the high level insights for CVE
-func cveMetaDataExtract(rfCVEResults map[string]*CVEReport) []string {
+func cveMetaDataExtract(rfCVEResults map[string]*rf.CVEReport) []string {
 	var triageMetaData, accessVectors []string
 	riskCVE := 0
 	affectedSystemsCPE := 0
@@ -84,7 +86,7 @@ func cveMetaDataExtract(rfCVEResults map[string]*CVEReport) []string {
 }
 
 //dumpCVECSV dumps the triage data to CSV
-func dumpCVECSV(rfCVEResults map[string]*CVEReport) string {
+func dumpCVECSV(rfCVEResults map[string]*rf.CVEReport) string {
 	//Dump data as csv
 	resp := bytes.Buffer{}
 	csv := csv.NewWriter(&resp)

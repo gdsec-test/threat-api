@@ -1,14 +1,15 @@
-package main
+package recordedfutureLibrary
 
 import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/opentracing/opentracing-go"
 	"net/http"
 	"net/url"
 	"strings"
 	"time"
+
+	"github.com/opentracing/opentracing-go"
 )
 
 const (
@@ -179,7 +180,7 @@ type CVEReport struct {
 }
 
 //EnrichCVE  performs a CVE search with RecordedFuture
-func (m *TriageModule) EnrichCVE(ctx context.Context, cve string, fields []string, metadata bool) (*CVEReport, error) {
+func EnrichCVE(ctx context.Context, RFKey string, RFClient *http.Client, cve string, fields []string, metadata bool) (*CVEReport, error) {
 	// Build URL
 	values := url.Values{}
 	values.Add("fields", strings.Join(fields, ","))
@@ -193,13 +194,13 @@ func (m *TriageModule) EnrichCVE(ctx context.Context, cve string, fields []strin
 		return nil, err
 	}
 
-	req.Header.Add("X-RFToken", m.RFKey)
+	req.Header.Add("X-RFToken", RFKey)
 
 	var CVEspan opentracing.Span
 	CVEspan, ctx = opentracing.StartSpanFromContext(ctx, "EnrichCVE")
 	defer CVEspan.Finish()
 
-	resp, err := m.RFClient.Do(req)
+	resp, err := RFClient.Do(req)
 	if err != nil {
 		return nil, err
 	}

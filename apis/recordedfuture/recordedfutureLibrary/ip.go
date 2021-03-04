@@ -1,4 +1,4 @@
-package main
+package recordedfutureLibrary
 
 import (
 	"context"
@@ -124,7 +124,7 @@ type IPReport struct {
 }
 
 //EnrichIP  performs a CVE search with RecordedFuture
-func (m *TriageModule) EnrichIP(ctx context.Context, ip string, fields []string, metadata bool) (*IPReport, error) {
+func EnrichIP(ctx context.Context, RFKey string, RFClient *http.Client, ip string, fields []string, metadata bool) (*IPReport, error) {
 	// Build URL
 	values := url.Values{}
 	values.Add("fields", strings.Join(fields, ","))
@@ -137,13 +137,13 @@ func (m *TriageModule) EnrichIP(ctx context.Context, ip string, fields []string,
 		return nil, err
 	}
 
-	req.Header.Add("X-RFToken", m.RFKey)
+	req.Header.Add("X-RFToken", RFKey)
 
 	var IPspan opentracing.Span
 	IPspan, ctx = opentracing.StartSpanFromContext(ctx, "EnrichIP")
 	defer IPspan.Finish()
 
-	resp, err := m.RFClient.Do(req)
+	resp, err := RFClient.Do(req)
 	if err != nil {
 		return nil, err
 	}

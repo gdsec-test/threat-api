@@ -5,14 +5,16 @@ import (
 	"context"
 	"encoding/csv"
 	"fmt"
-	"github.com/gdcorp-infosec/threat-api/lambdas/common/triagelegacyconnector/triage"
 	"strings"
 	"sync"
+
+	rf "github.com/gdcorp-infosec/threat-api/apis/recordedfuture/recordedfutureLibrary"
+	"github.com/gdcorp-infosec/threat-api/lambdas/common/triagelegacyconnector/triage"
 )
 
 //cveReportCreate generates a map of CVEReport from RF API
-func (m *TriageModule) ipReportCreate(ctx context.Context, triageRequest *triage.Request) (map[string]*IPReport, error) {
-	rfIPResults := make(map[string]*IPReport)
+func (m *TriageModule) ipReportCreate(ctx context.Context, triageRequest *triage.Request) (map[string]*rf.IPReport, error) {
+	rfIPResults := make(map[string]*rf.IPReport)
 
 	// TODO : Check on threadLimit
 	wg := sync.WaitGroup{}
@@ -29,7 +31,7 @@ func (m *TriageModule) ipReportCreate(ctx context.Context, triageRequest *triage
 		go func(ip string) {
 			defer wg.Done()
 			// Calling RF API with metadata switched off
-			rfIPResult, err := m.EnrichIP(ctx, ip, IPReportFields, false)
+			rfIPResult, err := rf.EnrichIP(ctx, m.RFKey, m.RFClient, ip, rf.IPReportFields, false)
 			if err != nil {
 				rfIPResultsLock.Lock()
 				rfIPResults[ip] = nil
@@ -48,7 +50,7 @@ func (m *TriageModule) ipReportCreate(ctx context.Context, triageRequest *triage
 }
 
 //ipMetaDataExtract gets the high level insights for IP
-func ipMetaDataExtract(rfIPResults map[string]*IPReport) []string {
+func ipMetaDataExtract(rfIPResults map[string]*rf.IPReport) []string {
 	var triageMetaData []string
 	intelCardLinks := make(map[string]string)
 	riskyCIDRIPs := make(map[string]int)
@@ -92,7 +94,7 @@ func ipMetaDataExtract(rfIPResults map[string]*IPReport) []string {
 }
 
 //dumpIPCSV dumps the triage data to CSV
-func dumpIPCSV(rfIPResults map[string]*IPReport) string {
+func dumpIPCSV(rfIPResults map[string]*rf.IPReport) string {
 	//Dump data as csv
 	resp := bytes.Buffer{}
 	csv := csv.NewWriter(&resp)
