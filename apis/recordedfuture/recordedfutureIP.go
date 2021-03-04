@@ -16,20 +16,23 @@ import (
 func (m *TriageModule) ipReportCreate(ctx context.Context, triageRequest *triage.Request) (map[string]*rf.IPReport, error) {
 	rfIPResults := make(map[string]*rf.IPReport)
 
-	// TODO : Check on threadLimit
 	wg := sync.WaitGroup{}
-	wg.Add(len(triageRequest.IOCs))
 	rfIPResultsLock := sync.Mutex{}
+	threadLimit := make(chan int, maxThreadCount)
 
 	for _, ip := range triageRequest.IOCs {
 		select {
 		case <-ctx.Done():
 			break
-		default:
+		case threadLimit <- 1:
+			wg.Add(1)
 		}
 
 		go func(ip string) {
-			defer wg.Done()
+			defer func() {
+				<-threadLimit
+				wg.Done()
+			}()
 			// Calling RF API with metadata switched off
 			rfIPResult, err := rf.EnrichIP(ctx, m.RFKey, m.RFClient, ip, rf.IPReportFields, false)
 			if err != nil {
@@ -107,8 +110,6 @@ func dumpIPCSV(rfIPResults map[string]*rf.IPReport) string {
 		"First Seen",
 		"Last Seen",
 		"ThreatLists",
-		// TODO: Evidence Details- show it in a better way
-		//TODO: "Analyst Notes- a better way to display",
 	})
 	for _, data := range rfIPResults {
 		// Processing few non string data before adding to CSV

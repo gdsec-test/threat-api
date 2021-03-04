@@ -12,24 +12,33 @@ import (
 	"github.com/gdcorp-infosec/threat-api/lambdas/common/triagelegacyconnector/triage"
 )
 
+const (
+	maxThreadCount = 5
+)
+
 //cveReportCreate generates a map of CVEReport from RF API
 func (m *TriageModule) cveReportCreate(ctx context.Context, triageRequest *triage.Request) (map[string]*rf.CVEReport, error) {
 	rfCVEResults := make(map[string]*rf.CVEReport)
 
-	//TODO: Check on threadLimit
 	wg := sync.WaitGroup{}
-	wg.Add(len(triageRequest.IOCs))
 	rfCVEResultsLock := sync.Mutex{}
+	threadLimit := make(chan int, maxThreadCount)
 
-	for _, cve := range triageRequest.IOCs {
+	for i, cve := range triageRequest.IOCs {
 		select {
 		case <-ctx.Done():
 			break
+		case threadLimit <- 1:
+			wg.Add(1)
+			fmt.Println("Adding a thread for i -> ", i)
 		default:
 		}
 
 		go func(cve string) {
-			defer wg.Done()
+			defer func() {
+				<-threadLimit
+				wg.Done()
+			}()
 			// Calling RF API with metadata switched off
 			rfCVEResult, err := rf.EnrichCVE(ctx, m.RFKey, m.RFClient, cve, rf.CVEReportFields, false)
 			if err != nil {
@@ -96,7 +105,6 @@ func dumpCVECSV(rfCVEResults map[string]*rf.CVEReport) string {
 		"Risk Score",
 		"Criticality",
 		"CriticalityLabel",
-		// TODO: Evidence Details- show it in a better way
 		"CommonNames",
 		"First Seen",
 		"Last Seen",
@@ -109,13 +117,11 @@ func dumpCVECSV(rfCVEResults map[string]*rf.CVEReport) string {
 		"Confidentiality",
 		"Integrity",
 		"NVD Description",
-		//TODO: "Analyst Notes- a better way to display",
 	})
 	for _, data := range rfCVEResults {
 		// Processing few non string data before adding to CSV
 		var threatLists, rawriskRules []string
 		for _, threatlist := range data.Data.ThreatLists {
-			//TODO: Check on threatlist is a defined struct with other edge cases
 			threatLists = append(threatLists, threatlist.(string))
 		}
 		for _, rawrisk := range data.Data.Rawrisk {
