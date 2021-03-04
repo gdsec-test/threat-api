@@ -41,14 +41,8 @@ func triageSNSEvent(ctx context.Context, t *toolbox.Toolbox, module triage.Modul
 		return nil, err
 	}
 
-	// Pull out the JWT and token to get the username from the JWT
+	// Pull out the JWT to pass to triage request
 	JWT := toolbox.GetJWTFromRequest(jobMessage.Submission)
-	jwtToken, err := t.ValidateJWT(ctx, JWT)
-	if err != nil {
-		err = fmt.Errorf("error validating JWT: %w", err)
-		return nil, err
-	}
-	username := jwtToken.BaseToken.UserName
 
 	response := &common.CompletedJobData{
 		ModuleName: module.GetDocs().Name,
@@ -95,7 +89,7 @@ func triageSNSEvent(ctx context.Context, t *toolbox.Toolbox, module triage.Modul
 	triageRequest := &triage.Request{
 		IOCs:     jobSubmission.IOCs,
 		IOCsType: triage.IOCType(strings.ToUpper(jobSubmission.IOCType)),
-		Username: username,
+		Username: JWT,
 	}
 
 	triageDatas, err := module.Triage(ctx, triageRequest)

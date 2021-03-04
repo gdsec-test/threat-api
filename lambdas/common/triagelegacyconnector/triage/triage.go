@@ -101,10 +101,8 @@ func (all IOCTypes) ToString() []string {
 type Request struct {
 	IOCs     []string
 	IOCsType IOCType
-	// DC1 username of the requester
-	// This must be the verified user making the request, and not a guess.  Certainly not user supplied.
-	// We use this username to check permissions of the data we are requesting.
-	// If a username is not available, leave this blank and any places requiring permissions will return false
+	// JWT from request
+	// Name username for legacy purposes, this parameter used to be the username of the requester
 	Username string
 	// Whether to output full dumps of the fetched data
 	Verbose bool
