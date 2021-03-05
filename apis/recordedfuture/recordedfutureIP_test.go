@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/gdcorp-infosec/threat-api/lambdas/common/toolbox"
 	"github.com/gdcorp-infosec/threat-api/lambdas/common/triagelegacyconnector/triage"
@@ -17,9 +18,10 @@ func TestEnrichIP(t *testing.T) {
 
 	var triageRequests []*triage.Request
 	triageRequests = append(triageRequests, &triage.Request{
-		IOCs:     []string{"157.245.243.62", "185.186.247.114"},
+		IOCs:     []string{"157.245.243.62"}, //, "185.186.247.114", "51.15.235.211", "23.129.64.205"},
 		IOCsType: triage.IPType,
 	})
+	start := time.Now()
 
 	for _, triageRequest := range triageRequests {
 		triageModule := TriageModule{}
@@ -39,4 +41,9 @@ func TestEnrichIP(t *testing.T) {
 			fmt.Println(data)
 		}
 	}
+
+	duration := time.Since(start)
+	fmt.Printf("--------- Time for IP ---------")
+	fmt.Println(duration)
+
 }
