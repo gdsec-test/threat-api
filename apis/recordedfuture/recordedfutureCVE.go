@@ -123,6 +123,12 @@ func dumpCVECSV(rfCVEResults map[string]*rf.CVEReport) string {
 		"NVD Description",
 	})
 	for _, data := range rfCVEResults {
+		if data == nil {
+			cols := []string{"", "", "", "", "", "", ""}
+			csv.Write(cols)
+			continue
+		}
+
 		// Processing few non string data before adding to CSV
 		var threatLists, rawriskRules []string
 		for _, threatlist := range data.Data.ThreatLists {

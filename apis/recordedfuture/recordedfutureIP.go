@@ -116,6 +116,11 @@ func dumpIPCSV(rfIPResults map[string]*rf.IPReport) string {
 		"ThreatLists",
 	})
 	for _, data := range rfIPResults {
+		if data == nil {
+			cols := []string{"", "", "", "", "", "", ""}
+			csv.Write(cols)
+			continue
+		}
 		// Processing few non string data before adding to CSV
 		var threatLists []string
 		for _, threatlist := range data.Data.ThreatLists {
