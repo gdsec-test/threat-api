@@ -1,6 +1,7 @@
 package toolbox
 
 import (
+	"context"
 	"reflect"
 	"testing"
 )
@@ -27,4 +28,9 @@ func TestGetToolbox(t *testing.T) {
 	if toolbox.client == nil {
 		t.Errorf("http client is nil")
 	}
+
+	// Tracing check
+	span := toolbox.Tracer.StartSpan("Test")
+	span.Finish()
+	toolbox.Close(context.Background())
 }

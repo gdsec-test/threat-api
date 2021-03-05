@@ -52,7 +52,7 @@ func (t *Toolbox) GetFromParameterStore(ctx context.Context, name string, withDe
 
 // GetFromCredentialsStore fetches a secret from AWS Secrets Manager.
 // If you call this function before calling LoadSession, it will return an error.
-func (t *Toolbox) GetFromCredentialsStore(ctx context.Context, secretID string, versionStage string) (*secretsmanager.GetSecretValueOutput, error) {
+func (t *Toolbox) GetFromCredentialsStore(ctx context.Context, secretID string, versionStage *string) (*secretsmanager.GetSecretValueOutput, error) {
 	if t.AWSSession == nil {
 		return nil, ErrNoAWSSession
 	}
@@ -61,7 +61,7 @@ func (t *Toolbox) GetFromCredentialsStore(ctx context.Context, secretID string, 
 	GetAWSSecretSpan, _ := opentracing.StartSpanFromContext(ctx, "GetAWSSecret")
 	secret, err := svc.GetSecretValue(&secretsmanager.GetSecretValueInput{
 		SecretId:     aws.String(secretID),
-		VersionStage: aws.String(versionStage),
+		VersionStage: versionStage,
 	})
 	defer GetAWSSecretSpan.Finish()
 
