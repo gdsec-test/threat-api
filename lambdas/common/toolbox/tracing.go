@@ -33,7 +33,7 @@ func (t *Toolbox) InitAPM(ctx context.Context) error {
 		"ELASTIC_APM_SECRET_TOKEN": "",
 	}
 	for key := range paramsToFetch {
-		secret, err := t.GetFromCredentialsStore(ctx, "ThreatTools/Integrations/"+key, nil)
+		secret, err := t.GetFromCredentialsStore(ctx, "/ThreatTools/Integrations/"+key, nil)
 		if err != nil {
 			return fmt.Errorf("error fetching %s from credential store: %w", key, err)
 		}
