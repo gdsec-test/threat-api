@@ -147,6 +147,7 @@ func EnrichIP(ctx context.Context, RFKey string, RFClient *http.Client, ip strin
 	if err != nil {
 		return nil, err
 	}
+	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("bad status code: %d", resp.StatusCode)

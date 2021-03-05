@@ -61,6 +61,10 @@ func ipMetaDataExtract(rfIPResults map[string]*rf.IPReport) []string {
 	riskIP := 0
 
 	for ip, data := range rfIPResults {
+		if data == nil {
+			triageMetaData = append(triageMetaData, fmt.Sprintf("data doesnt't exist for this ip %s", ip))
+			continue
+		}
 		// Add the RF Intelligence Card link to every IP for easy access to people with RF UI access
 		if data.Data.IntelCard != "" {
 			intelCardLinks[ip] = data.Data.IntelCard

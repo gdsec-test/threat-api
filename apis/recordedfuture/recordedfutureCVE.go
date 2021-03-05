@@ -24,13 +24,12 @@ func (m *TriageModule) cveReportCreate(ctx context.Context, triageRequest *triag
 	rfCVEResultsLock := sync.Mutex{}
 	threadLimit := make(chan int, maxThreadCount)
 
-	for i, cve := range triageRequest.IOCs {
+	for _, cve := range triageRequest.IOCs {
 		select {
 		case <-ctx.Done():
 			break
 		case threadLimit <- 1:
 			wg.Add(1)
-			fmt.Println("Adding a thread for i -> ", i)
 		default:
 		}
 
@@ -65,6 +64,11 @@ func cveMetaDataExtract(rfCVEResults map[string]*rf.CVEReport) []string {
 	affectedSystemsCPE := 0
 
 	for cve, data := range rfCVEResults {
+		if data == nil {
+			triageMetaData = append(triageMetaData, fmt.Sprintf("data doesnt't exist for this cve %s", cve))
+			continue
+		}
+
 		// Add the RF Intelligence Card link to every CVE for easy access to people with access
 		if data.Data.IntelCard != "" {
 			triageMetaData = append(triageMetaData, fmt.Sprintf("RF Link for %s: %s", cve, data.Data.IntelCard))
