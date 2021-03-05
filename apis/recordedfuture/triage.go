@@ -53,6 +53,9 @@ func (m *TriageModule) Triage(ctx context.Context, triageRequest *triage.Request
 		m.RFClient = http.DefaultClient
 	}
 
+	//TODO: TAKE OUT
+	fmt.Printf("Retrieved password from secrets manager %d \n", len(m.RFKey))
+
 	if triageRequest.IOCsType == triage.CVEType {
 		//retrieve results
 		rfCVEResults, err := m.cveReportCreate(ctx, triageRequest)
@@ -71,12 +74,18 @@ func (m *TriageModule) Triage(ctx context.Context, triageRequest *triage.Request
 	}
 
 	if triageRequest.IOCsType == triage.IPType {
+		//TODO: TAKE OUT
+		fmt.Printf("its an IP Type request\n")
+
 		//retrieve results
 		rfIPResults, err := m.ipReportCreate(ctx, triageRequest)
 		if err != nil {
 			triageData.Data = fmt.Sprintf("error from recorded future API for ip: %s", err)
 			return []*triage.Data{triageData}, err
 		}
+
+		//TODO: TAKE OUT
+		fmt.Printf("I got data back without errors %d \n", len(rfIPResults))
 
 		//calculate and add the metadata
 		triageData.Metadata = ipMetaDataExtract(rfIPResults)
