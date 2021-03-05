@@ -75,7 +75,7 @@ func (m *TriageModule) Triage(ctx context.Context, triageRequest *triage.Request
 
 	if triageRequest.IOCsType == triage.IPType {
 		//TODO: TAKE OUT
-		fmt.Sprintf("its an IP Type request\n")
+		fmt.Printf("its an IP Type request\n")
 		triageData.Metadata = append(triageData.Metadata, fmt.Sprintf("its an IP Type request"))
 
 		//retrieve results
@@ -86,7 +86,7 @@ func (m *TriageModule) Triage(ctx context.Context, triageRequest *triage.Request
 		}
 
 		//TODO: TAKE OUT
-		fmt.Sprintf("I got data back without errors %d \n", len(rfIPResults))
+		fmt.Printf("I got data back without errors %d \n", len(rfIPResults))
 		triageData.Metadata = append(triageData.Metadata, fmt.Sprintf("I got data back without errors %d", len(rfIPResults)))
 
 		//calculate and add the metadata
