@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/gdcorp-infosec/threat-api/lambdas/common/toolbox"
 	"github.com/gdcorp-infosec/threat-api/lambdas/common/triagelegacyconnector/triage"
@@ -20,6 +21,8 @@ func TestEnrichCVE(t *testing.T) {
 		IOCs:     []string{"CVE-2014-0160", "CVE-2010-2568"},
 		IOCsType: triage.CVEType,
 	})
+
+	start := time.Now()
 
 	for _, triageRequest := range triageRequests {
 		triageModule := TriageModule{}
@@ -39,4 +42,9 @@ func TestEnrichCVE(t *testing.T) {
 			fmt.Println(data)
 		}
 	}
+
+	duration := time.Since(start)
+	fmt.Printf("--------- Time for CVE ---------")
+	fmt.Println(duration)
+
 }
