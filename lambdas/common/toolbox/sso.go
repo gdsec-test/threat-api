@@ -153,7 +153,7 @@ func GetJWTFromRequest(request events.APIGatewayProxyRequest) string {
 	if ok {
 		cookies := parseCookies(cookieHeader)
 		if jwt, ok := cookies["auth_jomax"]; ok {
-			return jwt
+			return strings.Trim(jwt, " ")
 		}
 	}
 	return ""
