@@ -7,9 +7,9 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/gdcorp-infosec/threat-api/lambdas/common/triagelegacyconnector/triage"
+	"github.com/opentracing/opentracing-go"
 	"github.com/vertoforce/go-splunk"
-	"github.secureserver.net/threat/core"
-	"github.secureserver.net/threat/threatapi/triage/modules/triage"
 )
 
 const (
@@ -73,7 +73,7 @@ func (m *TriageModule) GetRecentLoginEvents(ctx context.Context, username string
 }
 
 // triageUsernames triages information from splunk given a username
-func (m *TriageModule) triageUsernames(ctx context.Context, triageRequest *triage.Request, api *core.Api) []*triage.Data {
+func (m *TriageModule) triageUsernames(ctx context.Context, triageRequest *triage.Request) []*triage.Data {
 	triageData := &triage.Data{Metadata: []string{}}
 
 	triageData.DataType = triage.CSVType
@@ -88,10 +88,13 @@ func (m *TriageModule) triageUsernames(ctx context.Context, triageRequest *triag
 
 	// Perform for each username
 	for _, username := range triageRequest.IOCs {
+		var span opentracing.Span
+		span, ctx = opentracing.StartSpanFromContext(ctx, "CheckSplunkUsername")
 		// Find recent logins
 		loginEvents, err := m.GetRecentLoginEvents(ctx, username)
 		if err != nil {
-			triage.Log(m.GetDocs().Name, "SplunkCheckFailure", api, core.LogFields{"error": err})
+			span.LogKV("error", "SplunkCheckFailure")
+			span.Finish()
 			continue
 		}
 
@@ -120,6 +123,7 @@ func (m *TriageModule) triageUsernames(ctx context.Context, triageRequest *triag
 					recentLoginsBackcheckDays,
 				))
 		}
+		span.Finish()
 	}
 
 	csvWriter.Flush()
