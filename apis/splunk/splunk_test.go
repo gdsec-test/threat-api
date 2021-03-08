@@ -38,7 +38,11 @@ func TestSplunkAWS(t *testing.T) {
 	tb = toolbox.GetToolbox()
 	defer tb.Close(context.Background())
 
-	tm := &TriageModule{}
+	tm := &TriageModule{
+		SplunkUsername: os.Getenv("SPLUNK_USERNAME"),
+		SplunkPassword: os.Getenv("SPLUNK_PASSWORD"),
+		SplunkBaseURL:  os.Getenv("SPLUNK_BASEURL"),
+	}
 	triageData, err := tm.Triage(context.Background(), &triage.Request{
 		IOCs:     []string{"1.1.1.1"},
 		IOCsType: triage.IPType,
