@@ -25,6 +25,7 @@ func AWSToTriage(ctx context.Context, t *toolbox.Toolbox, module triage.Module, 
 		if err != nil {
 			return nil, fmt.Errorf("error processing event: %w", err)
 		}
+		// TODO: check if the returned data is too large for SNS, and therefore needs to be put in a S3 or something.
 		ret = append(ret, completedJobData)
 	}
 
