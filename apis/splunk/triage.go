@@ -42,12 +42,16 @@ func (m *TriageModule) Triage(ctx context.Context, triageRequest *triage.Request
 	defer span.Finish()
 
 	// Check for reading splunk permission
-	authorized, _ := tb.Authorize(ctx, triageRequest.JWT, "ReadSplunk", m.GetDocs().Name)
+	authorized, err := tb.Authorize(ctx, triageRequest.JWT, "ReadSplunk", m.GetDocs().Name)
+	if err != nil {
+		fmt.Printf("Error checking permissions %s\n", err)
+		return nil, nil
+	}
 	if !authorized {
 		return []*triage.Data{{Title: "Splunk", Data: "Lacking permission.  You do not have permission to read splunk data."}}, nil
 	}
 
-	err := m.initClient(ctx)
+	err = m.initClient(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to log in to splunk: %s", err)
 	}
