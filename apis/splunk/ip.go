@@ -7,8 +7,7 @@ import (
 	"sync"
 	"time"
 
-	"github.secureserver.net/threat/core"
-	"github.secureserver.net/threat/threatapi/triage/modules/triage"
+	"github.com/gdcorp-infosec/threat-api/lambdas/common/triagelegacyconnector/triage"
 )
 
 const (
@@ -32,7 +31,7 @@ const (
 
 // triageIPs Finds failed login attempts and other events mentioning the ips.
 // It does not return any real data, instead linking to splunk searches
-func (m *TriageModule) triageIPs(ctx context.Context, triageRequest *triage.Request, api *core.Api) []*triage.Data {
+func (m *TriageModule) triageIPs(ctx context.Context, triageRequest *triage.Request) []*triage.Data {
 	triageData := &triage.Data{
 		Title:    "Splunk IP Events",
 		Metadata: []string{},
@@ -57,7 +56,7 @@ ipLoop:
 				<-threadLimit
 				wg.Done()
 			}()
-			results, search, err := m.performSplunkSearch(ctx, fmt.Sprintf(onPremLoginEvent, ip), api)
+			results, search, err := m.performSplunkSearch(ctx, fmt.Sprintf(onPremLoginEvent, ip))
 			if err != nil {
 				return
 			}
@@ -83,7 +82,7 @@ ipLoop:
 				<-threadLimit
 				wg.Done()
 			}()
-			results, search, err := m.performSplunkSearch(ctx, fmt.Sprintf(eventWithIP, ip), api)
+			results, search, err := m.performSplunkSearch(ctx, fmt.Sprintf(eventWithIP, ip))
 			if err != nil {
 				return
 			}
@@ -109,7 +108,7 @@ ipLoop:
 				<-threadLimit
 				wg.Done()
 			}()
-			results, search, err := m.performSplunkSearch(ctx, fmt.Sprintf(recentOktaLoginsByIPSearch, ip), api)
+			results, search, err := m.performSplunkSearch(ctx, fmt.Sprintf(recentOktaLoginsByIPSearch, ip))
 			if err != nil {
 				return
 			}
@@ -146,7 +145,7 @@ ipLoop:
 				<-threadLimit
 				wg.Done()
 			}()
-			results, search, err := m.performSplunkSearch(ctx, fmt.Sprintf(awsConfigItemSearch, ip, ip), api)
+			results, search, err := m.performSplunkSearch(ctx, fmt.Sprintf(awsConfigItemSearch, ip, ip))
 			if err != nil {
 				return
 			}

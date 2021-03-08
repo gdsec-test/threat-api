@@ -94,6 +94,7 @@ func (m *TriageModule) triageUsernames(ctx context.Context, triageRequest *triag
 		loginEvents, err := m.GetRecentLoginEvents(ctx, username)
 		if err != nil {
 			span.LogKV("error", "SplunkCheckFailure")
+			span.LogKV("errorMessage", err.Error())
 			span.Finish()
 			continue
 		}

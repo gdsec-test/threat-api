@@ -58,11 +58,11 @@ func (m *TriageModule) Triage(ctx context.Context, triageRequest *triage.Request
 	case triage.GoDaddyUsernameType:
 		triageDatas = m.triageUsernames(ctx, triageRequest)
 	case triage.CVEType:
-		triageDatas = m.triageCVEs(ctx, triageRequest, api)
+		triageDatas = m.triageCVEs(ctx, triageRequest)
 	case triage.IPType:
-		triageDatas = m.triageIPs(ctx, triageRequest, api)
+		triageDatas = m.triageIPs(ctx, triageRequest)
 	case triage.AWSHostnameType:
-		triageDatas = m.triageAWSHostnames(ctx, triageRequest, api)
+		triageDatas = m.triageAWSHostnames(ctx, triageRequest)
 	}
 
 	return triageDatas, nil

@@ -6,17 +6,24 @@ import (
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/gdcorp-infosec/threat-api/lambdas/common"
+	"github.com/gdcorp-infosec/threat-api/lambdas/common/toolbox"
 	"github.com/gdcorp-infosec/threat-api/lambdas/common/triagelegacyconnector"
 )
 
+var tb *toolbox.Toolbox
+var jwt string
+
 func handler(ctx context.Context, request events.SNSEvent) ([]*common.CompletedJobData, error) {
+	tb = toolbox.GetToolbox()
+	defer tb.Close(ctx)
+
 	splunkModule := TriageModule{
 		// TODO:
 		SplunkUsername: "",
 		SplunkPassword: "",
 		SplunkBaseURL:  "",
 	}
-	return triagelegacyconnector.AWSToTriage(ctx, &splunkModule, request)
+	return triagelegacyconnector.AWSToTriage(ctx, tb, &splunkModule, request)
 }
 
 func main() {

@@ -6,9 +6,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/gdcorp-infosec/threat-api/lambdas/common/triagelegacyconnector/triage"
 	"github.com/vertoforce/go-splunk"
-	"github.secureserver.net/threat/core"
-	"github.secureserver.net/threat/threatapi/triage/modules/triage"
 )
 
 const (
@@ -17,7 +16,7 @@ const (
 )
 
 // triageAWSHostnames Finds information on AWS machines
-func (m *TriageModule) triageAWSHostnames(ctx context.Context, triageRequest *triage.Request, api *core.Api) []*triage.Data {
+func (m *TriageModule) triageAWSHostnames(ctx context.Context, triageRequest *triage.Request) []*triage.Data {
 	triageData := &triage.Data{
 		Title:    "Splunk machine information",
 		Metadata: []string{},
@@ -29,6 +28,8 @@ func (m *TriageModule) triageAWSHostnames(ctx context.Context, triageRequest *tr
 	// Start a multithreaded operation performing splunk searches (with a max thread limit)
 	// And getting the results
 	for _, hostname := range triageRequest.IOCs {
+		// TODO: Add tracing
+
 		// Consume thread
 		threadLimit <- 1
 		wg.Add(1)

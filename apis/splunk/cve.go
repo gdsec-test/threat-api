@@ -8,9 +8,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/gdcorp-infosec/threat-api/lambdas/common/triagelegacyconnector/triage"
+	"github.com/opentracing/opentracing-go"
 	"github.com/vertoforce/go-splunk"
-	"github.secureserver.net/threat/core"
-	"github.secureserver.net/threat/threatapi/triage/modules/triage"
 )
 
 const (
@@ -77,7 +77,7 @@ func (m *TriageModule) RecentCVEEvents(ctx context.Context, CVE string) (chan *C
 }
 
 // triageCVEs triages information from splunk given a CVE
-func (m *TriageModule) triageCVEs(ctx context.Context, triageRequest *triage.Request, api *core.Api) []*triage.Data {
+func (m *TriageModule) triageCVEs(ctx context.Context, triageRequest *triage.Request) []*triage.Data {
 	triageData := &triage.Data{Metadata: []string{}}
 
 	triageData.DataType = triage.CSVType
@@ -91,11 +91,16 @@ func (m *TriageModule) triageCVEs(ctx context.Context, triageRequest *triage.Req
 	csvWriter.Write([]string{"Time", "CVE", "DestinationIP", "SourceIP", "DestinationPort", "SourcePort", "Alert"})
 
 	for _, CVE := range triageRequest.IOCs {
+		var span opentracing.Span
+		span, ctx = opentracing.StartSpanFromContext(ctx, "SplunkScanCVE")
+
 		spunkSearchContext, cancelSplunkSearch := context.WithCancel(ctx)
 		cveEvents, err := m.RecentCVEEvents(spunkSearchContext, CVE)
 		if err != nil {
-			triage.Log(m.GetDocs().Name, "SplunkCheckFailure", api, core.LogFields{"error": err})
+			span.LogKV("error", "SplunkCheckFailure")
+			span.LogKV("errorMessage", err.Error())
 			cancelSplunkSearch()
+			span.Finish()
 			continue
 		}
 
@@ -129,6 +134,7 @@ func (m *TriageModule) triageCVEs(ctx context.Context, triageRequest *triage.Req
 				))
 		}
 		cancelSplunkSearch()
+		span.Finish()
 	}
 
 	csvWriter.Flush()
