@@ -9,6 +9,11 @@
       "IP",
       "CVE",
       "AWSHOSTNAME"
-    ]
+    ],
+    "actions": {
+      "ReadSplunk": {
+        "requiredADGroups": ["Eng-ThreatIntel"]
+      }
+    }
   }
 }
