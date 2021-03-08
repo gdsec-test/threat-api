@@ -38,6 +38,11 @@ func (m *TriageModule) Triage(ctx context.Context, triageRequest *triage.Request
 		Title:    "Recorded Future Data",
 		Metadata: []string{},
 	}
+
+	//TODO: TAKE OUT
+	fmt.Printf(" Inside Recorded Future module \n")
+	triageData.Metadata = append(triageData.Metadata, fmt.Sprintf("its an IP Type request"))
+
 	tb = toolbox.GetToolbox()
 	defer tb.Close(ctx)
 
