@@ -23,6 +23,9 @@ do
 
     if [ -x "build.sh" ]; then
 
+        # Build the lambda using the supplied build script
+        ./build.sh
+
         # Store the SHA1 hash of the source directory
         SHA1HASH=$(shasum function.zip | cut -d' ' -f1)
 #        if [ -f "${LAMBDA}.go" ]; then
@@ -33,9 +36,6 @@ do
 #            SHA1HASH=$(shasum "build.sh" | cut -d' ' -f1)
 #        fi
         echo ${SHA1HASH} > ${RESOURCES_DIR}/${LAMBDA}.sha1
-
-        # Build the lambda using the supplied build script
-        ./build.sh
 
         # Upload the ZIP file to S3
         aws s3 cp function.zip s3://${CODE_BUCKET}/${LAMBDA}/${SHA1HASH}
