@@ -21,6 +21,7 @@ import (
 var t *toolbox.Toolbox
 
 var (
+	// Regex to pull a lambda name from a ARN
 	lambdaNameRegex = regexp.MustCompile(`\w+:\w+:\w+:.*?:.*?:.*?:(?P<lambdaName>.*?):`)
 )
 
@@ -31,6 +32,8 @@ func handler(ctx context.Context, request events.SQSEvent) (string, error) {
 	t.Logger.SetFormatter(&logrus.JSONFormatter{})
 
 	var span opentracing.Span
+	var span2 opentracing.Span
+	// Process each SQS record
 	for _, sqsRecord := range request.Records {
 		span, ctx = opentracing.StartSpanFromContext(ctx, "ProcessSQSEvent")
 		// Try to unmarshal body
@@ -45,13 +48,52 @@ func handler(ctx context.Context, request events.SQSEvent) (string, error) {
 
 		// Get lambda name from the event source ARN
 		lambdaName := ""
-		if groups, ok := regexgrouphelp.FindRegexGroups(lambdaNameRegex, sqsRecord.EventSourceARN)["lambdaName"]; ok && len(groups) > 0 {
+		if groups, ok := regexgrouphelp.FindRegexGroups(lambdaNameRegex, completedLambdaData.RequestContext.FunctionArn)["lambdaName"]; ok && len(groups) > 0 {
 			lambdaName = groups[0]
+		}
+
+		// Check if this was a failed execution
+		if completedLambdaData.RequestContext.Condition != "Success" {
+			// This lambda is actually a failure response
+			span2, ctx = opentracing.StartSpanFromContext(ctx, "ProcessErroredJob")
+
+			// When a job fails, it obviously does not submit the completed job data.
+			// The completed job data includes the jobID, so we'll need another way to get the jobID.
+			// Therefore, here we pull out the jobID from the original job SNS message
+			var jobID string
+			if len(completedLambdaData.RequestPayload.Records) > 0 {
+				var jobSNSMessage common.JobSNSMessage
+				json.Unmarshal([]byte(completedLambdaData.RequestPayload.Records[0].SNS.Message), &jobSNSMessage)
+				jobID = jobSNSMessage.JobID
+			}
+
+			t.Logger.WithFields(logrus.Fields{
+				"eventSourceARN": sqsRecord.EventSourceARN,
+				"functionARN":    completedLambdaData.RequestContext.FunctionArn,
+				"jobID":          jobID,
+				"moduleName":     lambdaName,
+				"Condition":      completedLambdaData.RequestContext.Condition,
+			}).Warn("This lambda response was a failed invocation.  We are replacing the data with error description")
+
+			// Process this job, changing the response to contain the error AWS returned us
+			err = processCompletedJob(ctx, common.CompletedJobData{
+				// TODO: Update this to some other standard format?
+				Response:   fmt.Sprintf(`[{"error":"%s"}]`, completedLambdaData.RequestContext.Condition),
+				ModuleName: lambdaName,
+				JobID:      jobID,
+			})
+			if err != nil {
+				span2.LogKV("error", err)
+				t.Logger.WithError(err).Error("Error processing response")
+			}
+
+			span2.Finish()
+			span.Finish()
+			continue
 		}
 
 		// Process every completed job from the passed in data
 		for i, completedJob := range completedLambdaData.ResponsePayload {
-			var span2 opentracing.Span
 			span2, ctx = opentracing.StartSpanFromContext(ctx, "ProcessCompletedJob")
 			// Set module name to be the lambda name if this job doesn't have a module name
 			if completedJob.ModuleName == "" {
@@ -68,8 +110,9 @@ func handler(ctx context.Context, request events.SQSEvent) (string, error) {
 				completedJob.Response = "[]"
 			}
 
-			_, err = processCompletedJob(ctx, completedJob)
+			err = processCompletedJob(ctx, completedJob)
 			if err != nil {
+				span2.LogKV("error", err)
 				t.Logger.WithError(err).Error("Error processing response")
 			}
 			span2.Finish()
@@ -80,9 +123,9 @@ func handler(ctx context.Context, request events.SQSEvent) (string, error) {
 }
 
 // processCompleteJob takes the completed job data, encrypts the response, and adds it to the appropriate dynamoDB entry
-func processCompletedJob(ctx context.Context, request common.CompletedJobData) (string, error) {
+func processCompletedJob(ctx context.Context, request common.CompletedJobData) error {
 	if request.JobID == "" || request.ModuleName == "" {
-		return "", fmt.Errorf("missing jobId or module name")
+		return fmt.Errorf("missing jobId or module name")
 	}
 
 	dynamodbClient := dynamodb.New(t.AWSSession)
@@ -94,7 +137,7 @@ func processCompletedJob(ctx context.Context, request common.CompletedJobData) (
 	if err != nil {
 		span.LogKV("error", err)
 		span.Finish()
-		return "", fmt.Errorf("error encrypting data: %w", err)
+		return fmt.Errorf("error encrypting data: %w", err)
 	}
 	span.Finish()
 
@@ -103,7 +146,7 @@ func processCompletedJob(ctx context.Context, request common.CompletedJobData) (
 		Set(expression.Name(fmt.Sprintf("responses.%s", request.ModuleName)), expression.Value(*encryptedData))
 	expr, err := expression.NewBuilder().WithUpdate(update).Build()
 	if err != nil {
-		return "", fmt.Errorf("error creating update expression: %w", err)
+		return fmt.Errorf("error creating update expression: %w", err)
 	}
 	_, err = dynamodbClient.UpdateItem(&dynamodb.UpdateItemInput{
 		Key: map[string]*dynamodb.AttributeValue{
@@ -115,10 +158,10 @@ func processCompletedJob(ctx context.Context, request common.CompletedJobData) (
 		TableName:                 &t.JobDBTableName,
 	})
 	if err != nil {
-		return "", err
+		return err
 	}
 
-	return "", nil
+	return nil
 }
 
 func main() {

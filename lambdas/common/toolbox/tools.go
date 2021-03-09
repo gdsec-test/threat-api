@@ -29,7 +29,10 @@ type Toolbox struct {
 	Logger *logrus.Logger
 	// Defaults to defaultSSOEndpoint
 	SSOHostURL string `default:"sso.gdcorp.tools"`
-	Tracer     opentracing.Tracer
+
+	// Tracing
+	Tracer    opentracing.Tracer
+	APMTracer *apm.Tracer
 
 	client *http.Client
 
@@ -41,7 +44,6 @@ type Toolbox struct {
 	JobDBTableName string `default:"jobs"`
 
 	// Asherah
-
 	AsherahDBTableName    string                            `default:"EncryptionKey"`
 	AsherahSession        map[string]*appencryption.Session // Map of jobID to asherah sessions
 	AsherahSessionFactory *appencryption.SessionFactory
@@ -55,7 +57,6 @@ type Toolbox struct {
 func GetToolbox() *Toolbox {
 	t := &Toolbox{
 		Logger:         logrus.New(),
-		Tracer:         apmot.New(), // Wrap default APM Tracer with open tracing tracer
 		AsherahSession: map[string]*appencryption.Session{},
 	}
 
@@ -80,7 +81,19 @@ func GetToolbox() *Toolbox {
 	}
 
 	t.SetHTTPClient(&http.Client{Timeout: defaultTimeout})
-	opentracing.SetGlobalTracer(t.Tracer)
+
+	// TODO: Use real context
+	err := t.InitAPM(context.Background())
+	if err != nil {
+		// panic(fmt.Errorf("error init tracer: %w", err))
+		// TODO: Handle this error to let the caller know the tracing will not work
+		fmt.Printf("WARN: Tracer not configured due to error: %s\n", err)
+		// Set defaults (effectively noops)
+		t.APMTracer = apm.DefaultTracer
+		t.Tracer = apmot.New()
+		opentracing.SetGlobalTracer(t.Tracer)
+	}
+
 	return t
 }
 
@@ -129,9 +142,9 @@ func (t *Toolbox) Close(ctx context.Context) error {
 			return
 		}
 	}()
-	apm.DefaultTracer.Flush(abort)
-	apm.DefaultTracer.SendMetrics(abort)
-	apm.DefaultTracer.Close()
+	t.APMTracer.Flush(abort)
+	t.APMTracer.SendMetrics(abort)
+	t.APMTracer.Close()
 	// Tell our waiting thread that it doesn't need to wait anymore
 	done <- struct{}{}
 

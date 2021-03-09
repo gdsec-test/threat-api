@@ -6,6 +6,10 @@ Parameters:
     Type: String
     Description: SHA1 hash of the geoip lambda source
     Default: ""
+  recordedfutureSHA1:
+    Type: String
+    Description: SHA1 hash of the recordedfuture lambda source
+    Default: ""
   shodanSHA1:
     Type: String
     Description: SHA1 hash of the shodan lambda source
@@ -73,6 +77,56 @@ Resources:
       Name: /ThreatTools/Modules/geoip
       Type: String
       Value: '{"supportedIOCTypes": ["IP"]}'
+
+  recordedfutureLambdaFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      Code:
+        S3Bucket: !Sub gd-threattools-${AWS::AccountId}-code-bucket
+        S3Key: !Sub recordedfuture/${recordedfutureSHA1}
+      Description: !Sub recordedfuture lambda (${recordedfutureSHA1})
+      FunctionName: recordedfuture
+      Handler: recordedfuture
+      MemorySize: 256
+      Role: !Sub arn:aws:iam::${AWS::AccountId}:role/threattools-custom-ThreatRole
+      Runtime: go1.x
+      Timeout: 15
+
+  recordedfutureLambdaPermission:
+    DependsOn: recordedfutureLambdaFunction
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:recordedfuture
+      Principal: sns.amazonaws.com
+      SourceArn: !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:JobRequests
+
+  recordedfutureSNSSubscription:
+    DependsOn: recordedfutureLambdaFunction
+    Type: AWS::SNS::Subscription
+    Properties:
+      Endpoint: !GetAtt recordedfutureLambdaFunction.Arn
+      Protocol: lambda
+      TopicArn: !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:JobRequests
+
+  recordedfutureLambdaEventInvokeConfig:
+    DependsOn: recordedfutureLambdaFunction
+    Type: AWS::Lambda::EventInvokeConfig
+    Properties:
+      DestinationConfig:
+        OnSuccess:
+          Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobResponses
+        OnFailure:
+          Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobFailures
+      FunctionName: recordedfuture
+      Qualifier: $LATEST
+
+  recordedfutureLambdaMetadata:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: /ThreatTools/Modules/recordedfuture
+      Type: String
+      Value: '{"supportedIOCTypes": ["CVE", "IP"]}'
 
   shodanLambdaFunction:
     Type: AWS::Lambda::Function

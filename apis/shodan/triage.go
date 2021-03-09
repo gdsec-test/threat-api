@@ -19,8 +19,7 @@ import (
 var tb *toolbox.Toolbox
 
 const (
-	secretID     = "/ThreatTools/Integrations/shodan"
-	versionStage = "AWSCURRENT"
+	secretID = "/ThreatTools/Integrations/shodan"
 )
 
 // TriageModule triage module
@@ -49,7 +48,7 @@ func (m *TriageModule) Triage(ctx context.Context, triageRequest *triage.Request
 	tb = toolbox.GetToolbox()
 	defer tb.Close(ctx)
 
-	secret, err := tb.GetFromCredentialsStore(ctx, secretID, versionStage)
+	secret, err := tb.GetFromCredentialsStore(ctx, secretID, nil)
 	if err != nil {
 		triageData.Data = fmt.Sprintf("error in retrieving secrets: %s", err)
 		return []*triage.Data{triageData}, err
@@ -120,6 +119,7 @@ func (m *TriageModule) Triage(ctx context.Context, triageRequest *triage.Request
 		return []*triage.Data{triageData}, nil
 	}
 
+	triageData.DataType = triage.CSVType
 	triageData.Data = dumpCSV(shodanhosts)
 
 	return []*triage.Data{triageData}, nil

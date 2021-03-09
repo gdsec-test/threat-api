@@ -4,12 +4,13 @@ import (
 	"context"
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/gdcorp-infosec/threat-api/lambdas/common/toolbox"
 	"github.com/gdcorp-infosec/threat-api/lambdas/common/triagelegacyconnector/triage"
 )
 
-func TestGetServicesForIPs(t *testing.T) {
+func TestEnrichCVE(t *testing.T) {
 
 	ctx := context.Background()
 	tb = toolbox.GetToolbox()
@@ -17,13 +18,11 @@ func TestGetServicesForIPs(t *testing.T) {
 
 	var triageRequests []*triage.Request
 	triageRequests = append(triageRequests, &triage.Request{
-		IOCs:     []string{"72.210.63.111", "164.128.164.119", "93.90.222.20"},
-		IOCsType: triage.IPType,
+		IOCs:     []string{"CVE-2014-0160", "CVE-2010-2568"},
+		IOCsType: triage.CVEType,
 	})
-	triageRequests = append(triageRequests, &triage.Request{
-		IOCs:     []string{"moraniz.co.il", "gacetaeditorial.com"},
-		IOCsType: triage.DomainType,
-	})
+
+	start := time.Now()
 
 	for _, triageRequest := range triageRequests {
 		triageModule := TriageModule{}
@@ -38,9 +37,14 @@ func TestGetServicesForIPs(t *testing.T) {
 		if triageResult[0].Data == "" {
 			t.Fatal("first data element empty ")
 		}
+
 		for _, data := range triageResult[0].Metadata {
 			fmt.Println(data)
 		}
-
 	}
+
+	duration := time.Since(start)
+	fmt.Printf("--------- Time for CVE ---------")
+	fmt.Println(duration)
+
 }
