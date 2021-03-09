@@ -39,10 +39,6 @@ func (m *TriageModule) Triage(ctx context.Context, triageRequest *triage.Request
 		Metadata: []string{},
 	}
 
-	//TODO: TAKE OUT
-	fmt.Printf(" Inside Recorded Future module \n")
-	triageData.Metadata = append(triageData.Metadata, fmt.Sprintf("its an IP Type request"))
-
 	tb = toolbox.GetToolbox()
 	defer tb.Close(ctx)
 
@@ -56,10 +52,6 @@ func (m *TriageModule) Triage(ctx context.Context, triageRequest *triage.Request
 	if m.RFClient == nil {
 		m.RFClient = http.DefaultClient
 	}
-
-	//TODO: TAKE OUT
-	fmt.Printf("Retrieved password from secrets manager %d \n", len(m.RFKey))
-	triageData.Metadata = append(triageData.Metadata, fmt.Sprintf("Retrieved password from secrets manager %d", len(m.RFKey)))
 
 	if triageRequest.IOCsType == triage.CVEType {
 		//retrieve results
@@ -79,10 +71,6 @@ func (m *TriageModule) Triage(ctx context.Context, triageRequest *triage.Request
 	}
 
 	if triageRequest.IOCsType == triage.IPType {
-		//TODO: TAKE OUT
-		fmt.Printf("its an IP Type request\n")
-		triageData.Metadata = append(triageData.Metadata, fmt.Sprintf("its an IP Type request"))
-
 		//retrieve results
 		rfIPResults, err := m.ipReportCreate(ctx, triageRequest)
 		if err != nil {
@@ -90,23 +78,8 @@ func (m *TriageModule) Triage(ctx context.Context, triageRequest *triage.Request
 			return []*triage.Data{triageData}, err
 		}
 
-		//TODO: TAKE OUT
-		fmt.Printf("I got data back without errors %d \n", len(rfIPResults))
-		cnt := 0
-		for _, data := range rfIPResults {
-			if data != nil {
-				cnt += 1
-			}
-		}
-		triageData.Metadata = append(triageData.Metadata, fmt.Sprintf("I got %d data back without errors ", cnt))
-
 		//calculate and add the metadata
-		//TODO: TAKE OUT
-		for _, text := range ipMetaDataExtract(rfIPResults) {
-			fmt.Printf("%s \n", text)
-			triageData.Metadata = append(triageData.Metadata, text)
-		}
-		//triageData.Metadata = ipMetaDataExtract(rfIPResults)
+		triageData.Metadata = ipMetaDataExtract(rfIPResults)
 
 		//dump data as csv
 		triageData.DataType = triage.CSVType
