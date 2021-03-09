@@ -92,7 +92,13 @@ func (m *TriageModule) Triage(ctx context.Context, triageRequest *triage.Request
 
 		//TODO: TAKE OUT
 		fmt.Printf("I got data back without errors %d \n", len(rfIPResults))
-		triageData.Metadata = append(triageData.Metadata, fmt.Sprintf("I got data back without errors %d", len(rfIPResults)))
+		cnt := 0
+		for _, data := range rfIPResults {
+			if data != nil {
+				cnt += 1
+			}
+		}
+		triageData.Metadata = append(triageData.Metadata, fmt.Sprintf("I got %d data back without errors ", cnt))
 
 		//calculate and add the metadata
 		//TODO: TAKE OUT

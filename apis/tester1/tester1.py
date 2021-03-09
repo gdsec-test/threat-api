@@ -33,7 +33,9 @@ def process(job_request):
     job_response["response"] = json.dumps(
         {
             "ts": str(time.time()),
-            "output": "Hello from tester1!",
+            # "output": "Hello from tester1!",
+            # TODO: TAKE IT OUT
+            "output": "Changing hash and testing!",
             "jobRequestBody": job_request_body,
         }
     )
