@@ -1,16 +1,14 @@
 package main
 
 import (
+	"bytes"
 	"context"
-	"encoding/json"
+	"encoding/csv"
 	"fmt"
-	"strings"
 
 	"github.com/gdcorp-infosec/threat-api/lambdas/common/toolbox"
 	"github.com/gdcorp-infosec/threat-api/lambdas/common/triagelegacyconnector/triage"
 )
-
-//"github.com/vertoforce/gourlhaus"
 
 const (
 	paramUrlhausAsns = "URLhaus-ASNs"
@@ -49,57 +47,146 @@ func (m *TriageModule) Triage(ctx context.Context, triageRequest *triage.Request
 	}
 
 	switch triageRequest.IOCsType {
+	case triage.MD5Type:
+		triageData.Title = "Malicious URLs hosting this MD5 hash (URLhaus)"
+		entries := make([]*UrlhausPayloadEntry, len(triageRequest.IOCs))
+		for i, ioc := range triageRequest.IOCs {
+			entry, err := GetMd5(ioc)
+			if err != nil {
+				fmt.Println(err)
+				continue
+			}
+			entries[i] = entry
+		}
+		triageData.Data = HashesToCsv(entries)
+	case triage.SHA256Type:
+		triageData.Title = "Malicious URLs hosting this SHA256 hash (URLhaus)"
+		entries := make([]*UrlhausPayloadEntry, len(triageRequest.IOCs))
+		for i, ioc := range triageRequest.IOCs {
+			entry, err := GetSha256(ioc)
+			if err != nil {
+				fmt.Println(err)
+				continue
+			}
+			entries[i] = entry
+		}
+		triageData.Data = HashesToCsv(entries)
 	case triage.DomainType, triage.IPType:
-		fmt.Print("")
-		/*
-			case triage.MD5Type, triage.SHA256Type:
-				triageData.Title = "Malicious URLs hosting this hash (URLhaus)"
-				entries, err = urlHausDatabase.FindEntriesHostingHashes(ctx, triageRequest.IOCs, triageRequest.IOCsType, api)
-				if err != nil {
-					triageData.Data = fmt.Sprintf("Error finding entries hosting hashes in urlhaus: %s", err)
-					return []*triage.Data{triageData}, nil
-				}
-				if len(entries) > 0 {
-					triageData.Metadata = append(triageData.Metadata, fmt.Sprintf("%d malicious urls have hosted these hashes at some point", len(entries)))
-				}
-			case triage.DomainType, triage.IPType:
-				triageData.Title = "Malicious URLs at this domain/IP (URLhaus)"
-				entries, err = urlHausDatabase.FindEntriesWithDomainOrIP(ctx, triageRequest.IOCs, api)
-				if err != nil {
-					triageData.Data = fmt.Sprintf("Error finding entries with domain or ip in urlhaus: %s", err)
-					return []*triage.Data{triageData}, nil
-				}
-				if len(entries) > 0 {
-					triageData.Metadata = append(triageData.Metadata, fmt.Sprintf("%d malicious urls have been hosted on this domain at some point", len(entries)))
-				}
-			case triage.URLType:
-				triageData.Title = "URLs that are malicious (found in URLhaus)"
-				entries, err = urlHausDatabase.FindEntriesWithURL(ctx, triageRequest.IOCs, api)
-				if err != nil {
-					triageData.Data = fmt.Sprintf("Error finding entries with url in urlhaus: %s", err)
-					return []*triage.Data{triageData}, nil
-				}
-				if len(entries) > 0 {
-					triageData.Metadata = append(triageData.Metadata, fmt.Sprintf("%d/%d of these urls are malicious (found on URLhaus)", len(entries), len(triageRequest.IOCs)))
-				}
-		*/
+		triageData.Title = "Information about this host (URLhaus)"
+		entries := make([]*UrlhausHostEntry, len(triageRequest.IOCs))
+		for i, ioc := range triageRequest.IOCs {
+			entry, err := GetDomainOrIp(ioc)
+			if err != nil {
+				fmt.Println(err)
+				continue
+			}
+			entries[i] = entry
+		}
+		triageData.Data = HostsToCsv(entries)
+	case triage.URLType:
+		triageData.Title = "Information about this URL address (URLhaus)"
+		entries := make([]*UrlhausUrlEntry, len(triageRequest.IOCs))
+		for i, ioc := range triageRequest.IOCs {
+			entry, err := GetUrl(ioc)
+			if err != nil {
+				fmt.Println(err)
+				continue
+			}
+			entries[i] = entry
+		}
+		triageData.Data = UrlsToCsv(entries)
 	}
 
-	// asns is a comma separated string
-	asnsJoined, err := m.GetAsns(ctx)
-	if err != nil {
-		triageData.Data = fmt.Sprintf("Error retrieving the ASNs from Parameter Store: %s", err)
-		return []*triage.Data{triageData}, nil
-	}
-	asns := strings.Split(asnsJoined, ",")
-	entries := DownloadAsns(ctx, asns)
-
-	result, err := json.Marshal(entries)
-	if err != nil {
-		triageData.Data = fmt.Sprintf("Error marshaling: %s", err)
-		return []*triage.Data{triageData}, nil
-	}
-	triageData.Data = string(result)
-	triageData.DataType = triage.JSONType
 	return []*triage.Data{triageData}, nil
+}
+
+func HostsToCsv(hosts []*UrlhausHostEntry) string {
+	// Dump data into CSV format
+	resp := bytes.Buffer{}
+	csv := csv.NewWriter(&resp)
+	// Headers
+	csv.Write([]string{
+		"First Seen",
+		"URL Summary",
+		"Spamhaus",
+		"SURBL",
+	})
+	// Rows
+	for _, host := range hosts {
+		if host == nil {
+			continue
+		}
+		cols := []string{
+			host.First,
+			fmt.Sprintf("Seen at %d different URLs", host.Count),
+			host.Blacklists.SpamhausStatus,
+			host.Blacklists.SurblStatus,
+		}
+		csv.Write(cols)
+	}
+	csv.Flush()
+
+	return resp.String()
+}
+
+func UrlsToCsv(urls []*UrlhausUrlEntry) string {
+	// Dump data into CSV format
+	resp := bytes.Buffer{}
+	csv := csv.NewWriter(&resp)
+	// Headers
+	csv.Write([]string{
+		"Host",
+		"Status",
+		"Added",
+		"Taken Down",
+	})
+	// Rows
+	for _, url := range urls {
+		if url == nil {
+			continue
+		}
+		cols := []string{
+			url.Host,
+			url.Status,
+			url.Added,
+			fmt.Sprint(url.Takedown),
+		}
+		csv.Write(cols)
+	}
+	csv.Flush()
+
+	return resp.String()
+}
+
+func HashesToCsv(payloads []*UrlhausPayloadEntry) string {
+	// Dump data into CSV format
+	resp := bytes.Buffer{}
+	csv := csv.NewWriter(&resp)
+	// Headers
+	csv.Write([]string{
+		"MD5",
+		"SHA256",
+		"File Type",
+		"File Size",
+		"First Seen",
+		"URL Summary",
+	})
+	// Rows
+	for _, payload := range payloads {
+		if payload == nil {
+			continue
+		}
+		cols := []string{
+			payload.Md5,
+			payload.Sha,
+			payload.FileType,
+			fmt.Sprint(payload.Size),
+			payload.First,
+			fmt.Sprintf("Seen at %d different URLs", payload.UrlCount),
+		}
+		csv.Write(cols)
+	}
+	csv.Flush()
+
+	return resp.String()
 }
