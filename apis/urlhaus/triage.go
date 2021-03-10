@@ -20,7 +20,7 @@ type TriageModule struct {
 
 // GetDocs of this module
 func (m *TriageModule) GetDocs() *triage.Doc {
-	return &triage.Doc{Name: triageModuleName, Description: "Download records of threats by ASNs"}
+	return &triage.Doc{Name: triageModuleName, Description: "Find hosted malware from urlhaus based on hash, domain, or URL."}
 }
 
 // Supports returns true of we support this IoC type
