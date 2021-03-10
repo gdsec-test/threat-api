@@ -69,11 +69,6 @@ func cveMetaDataExtract(rfCVEResults map[string]*rf.CVEReport) []string {
 			continue
 		}
 
-		// Add the RF Intelligence Card link to every CVE for easy access to people with access
-		if data.Data.IntelCard != "" {
-			triageMetaData = append(triageMetaData, fmt.Sprintf("RF Link for %s: %s", cve, data.Data.IntelCard))
-		}
-
 		// Calculate on risk score
 		if data.Data.Risk.Score > 60 {
 			riskCVE += 1

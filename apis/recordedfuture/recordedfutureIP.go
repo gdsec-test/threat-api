@@ -55,7 +55,6 @@ func (m *TriageModule) ipReportCreate(ctx context.Context, triageRequest *triage
 //ipMetaDataExtract gets the high level insights for IP
 func ipMetaDataExtract(rfIPResults map[string]*rf.IPReport) []string {
 	var triageMetaData []string
-	intelCardLinks := make(map[string]string)
 	riskyCIDRIPs := make(map[string]int)
 
 	riskIP := 0
@@ -64,10 +63,6 @@ func ipMetaDataExtract(rfIPResults map[string]*rf.IPReport) []string {
 		if data == nil {
 			triageMetaData = append(triageMetaData, fmt.Sprintf("data doesnt't exist for this ip %s", ip))
 			continue
-		}
-		// Add the RF Intelligence Card link to every IP for easy access to people with RF UI access
-		if data.Data.IntelCard != "" {
-			intelCardLinks[ip] = data.Data.IntelCard
 		}
 
 		// Keep the count of risky CIDR IP
@@ -82,12 +77,6 @@ func ipMetaDataExtract(rfIPResults map[string]*rf.IPReport) []string {
 	}
 
 	// Add the final results to Metadata
-	if len(intelCardLinks) > 0 {
-		for ip, link := range intelCardLinks {
-			triageMetaData = append(triageMetaData, fmt.Sprintf("RF Link for %s: %s", ip, link))
-		}
-	}
-
 	if len(riskyCIDRIPs) > 0 {
 		for ip, count := range riskyCIDRIPs {
 			triageMetaData = append(triageMetaData, fmt.Sprintf("%d Risky IP's in same CIDR as %s", count, ip))

@@ -28,13 +28,6 @@ do
 
         # Store the SHA1 hash of the source directory
         SHA1HASH=$(shasum function.zip | cut -d' ' -f1)
-#        if [ -f "${LAMBDA}.go" ]; then
-#            SHA1HASH=$(shasum "${LAMBDA}.go" | cut -d' ' -f1)
-#        elif [ -f "${LAMBDA}.py" ]; then
-#            SHA1HASH=$(shasum "${LAMBDA}.py" | cut -d' ' -f1)
-#        else
-#            SHA1HASH=$(shasum "build.sh" | cut -d' ' -f1)
-#        fi
         echo ${SHA1HASH} > ${RESOURCES_DIR}/${LAMBDA}.sha1
 
         # Upload the ZIP file to S3
