@@ -25,7 +25,13 @@ func (m *TriageModule) GetDocs() *triage.Doc {
 
 // Supports returns true of we support this IoC type
 func (m *TriageModule) Supports() []triage.IOCType {
-	return []triage.IOCType{triage.UnknownType}
+	return []triage.IOCType{
+		"DOMAIN",
+		"IP",
+		"URL",
+		"MD5",
+		"SHA256",
+	}
 }
 
 func (m *TriageModule) GetAsns(ctx context.Context) (string, error) {
@@ -51,7 +57,7 @@ func (m *TriageModule) Triage(ctx context.Context, triageRequest *triage.Request
 		triageData.Title = "Malicious URLs hosting this MD5 hash (URLhaus)"
 		entries := make([]*UrlhausPayloadEntry, len(triageRequest.IOCs))
 		for i, ioc := range triageRequest.IOCs {
-			entry, err := GetMd5(ioc)
+			entry, err := GetMd5(ctx, ioc)
 			if err != nil {
 				fmt.Println(err)
 				continue
@@ -63,7 +69,7 @@ func (m *TriageModule) Triage(ctx context.Context, triageRequest *triage.Request
 		triageData.Title = "Malicious URLs hosting this SHA256 hash (URLhaus)"
 		entries := make([]*UrlhausPayloadEntry, len(triageRequest.IOCs))
 		for i, ioc := range triageRequest.IOCs {
-			entry, err := GetSha256(ioc)
+			entry, err := GetSha256(ctx, ioc)
 			if err != nil {
 				fmt.Println(err)
 				continue
@@ -75,7 +81,7 @@ func (m *TriageModule) Triage(ctx context.Context, triageRequest *triage.Request
 		triageData.Title = "Information about this host (URLhaus)"
 		entries := make([]*UrlhausHostEntry, len(triageRequest.IOCs))
 		for i, ioc := range triageRequest.IOCs {
-			entry, err := GetDomainOrIp(ioc)
+			entry, err := GetDomainOrIp(ctx, ioc)
 			if err != nil {
 				fmt.Println(err)
 				continue
@@ -87,7 +93,7 @@ func (m *TriageModule) Triage(ctx context.Context, triageRequest *triage.Request
 		triageData.Title = "Information about this URL address (URLhaus)"
 		entries := make([]*UrlhausUrlEntry, len(triageRequest.IOCs))
 		for i, ioc := range triageRequest.IOCs {
-			entry, err := GetUrl(ioc)
+			entry, err := GetUrl(ctx, ioc)
 			if err != nil {
 				fmt.Println(err)
 				continue

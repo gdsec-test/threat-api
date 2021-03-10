@@ -11,6 +11,9 @@ import (
 	"net/url"
 	"strings"
 	"time"
+
+	"golang.org/x/net/context"
+	"golang.org/x/net/context/ctxhttp"
 )
 
 const (
@@ -38,7 +41,8 @@ func FetchSingleAsn(asn string) (string, error) {
 }
 
 func QueryApi(apiUrl string, key string, value string) ([]byte, error) {
-	resp, err := http.PostForm(apiUrl, url.Values{key: {value}})
+	//resp, err := http.PostForm(apiUrl, url.Values{key: {value}})
+	resp, err := ctxhttp.PostForm(ctx context.Context, ctx, http.DefaultClient, apiUrl, url.Values{key: {value}})
 	if err != nil {
 		fmt.Printf("Error in POST: %s", err)
 		return nil, err
@@ -88,7 +92,7 @@ func DownloadAsns(ctx context.Context, asns []string) []*urlHausEntry {
 	return entries
 }
 
-func GetMd5(md5 string) (*UrlhausPayloadEntry, error) {
+func GetMd5(ctx context.Context, md5 string) (*UrlhausPayloadEntry, error) {
 	body, err := QueryApi(apiHashUrl, "md5_hash", md5)
 	if err != nil {
 		return nil, err
@@ -102,12 +106,12 @@ func GetMd5(md5 string) (*UrlhausPayloadEntry, error) {
 		return nil, err
 	}
 	if entry.Status != "ok" {
-		return nil, errors.New(fmt.Sprintf("Query for %s returned no results (%s)", md5, entry.Status))
+		return nil, fmt.Errorf("Query for %s returned no results (%s)", md5, entry.Status)
 	}
 	return &entry, nil
 }
 
-func GetSha256(sha256 string) (*UrlhausPayloadEntry, error) {
+func GetSha256(ctx context.Context, sha256 string) (*UrlhausPayloadEntry, error) {
 	body, err := QueryApi(apiHashUrl, "sha256_hash", sha256)
 	if err != nil {
 		return nil, err
@@ -126,7 +130,7 @@ func GetSha256(sha256 string) (*UrlhausPayloadEntry, error) {
 	return &entry, nil
 }
 
-func GetDomainOrIp(host string) (*UrlhausHostEntry, error) {
+func GetDomainOrIp(ctx context.Context, host string) (*UrlhausHostEntry, error) {
 	body, err := QueryApi(apiHostUrl, "host", host)
 	if err != nil {
 		return nil, err
@@ -145,7 +149,7 @@ func GetDomainOrIp(host string) (*UrlhausHostEntry, error) {
 	return &entry, nil
 }
 
-func GetUrl(_url string) (*UrlhausUrlEntry, error) {
+func GetUrl(ctx context.Context, _url string) (*UrlhausUrlEntry, error) {
 	body, err := QueryApi(apiUrlUrl, "url", _url)
 	if err != nil {
 		return nil, err
