@@ -16,8 +16,6 @@ import (
 	"github.com/opentracing/opentracing-go"
 )
 
-var tb *toolbox.Toolbox
-
 const (
 	secretID = "/ThreatTools/Integrations/shodan"
 )

@@ -241,6 +241,8 @@ github.com/ugorji/go v1.1.4/go.mod h1:uQMGLiO92mf5W77hV/PUCpI3pbzQx3CRekS0kk+RGr
 github.com/ugorji/go v1.1.7/go.mod h1:kZn38zHttfInRq0xu/PH0az30d+z6vm202qpg1oXVMw=
 github.com/ugorji/go/codec v1.1.7/go.mod h1:Ax+UKWsSmolVDwsd+7N3ZtXu+yMGCf907BLYF3GoBXY=
 github.com/urfave/cli/v2 v2.2.0/go.mod h1:SE9GqnLQmjVa0iPEY0f1w3ygNIYcIJ0OKPMoW2caLfQ=
+github.com/vertoforce/go-splunk v0.0.0-20201016180916-bf97db989317 h1:Zg+aptUspnIP5yWilpGXjxz/eTVsgT5xCL7fmqVGdCY=
+github.com/vertoforce/go-splunk v0.0.0-20201016180916-bf97db989317/go.mod h1:MfAEyW1yqJ2TVKb/CAKKKLOCwU5Gx8XMu9msB9DF9RU=
 github.com/vertoforce/multiregex v0.0.0-20200305221808-10dce2b47221 h1:y+u62qEWLvIqiMn3+XnRuQDhzb82nXqV8aUZOtmT/SY=
 github.com/vertoforce/multiregex v0.0.0-20200305221808-10dce2b47221/go.mod h1:HuLba3nJXU4Y8nso+oIWEIUjO+3Cz6Y/I9LTXymsQDw=
 github.com/vertoforce/regexgrouphelp v0.1.1 h1:jCRE5u/QyuV7Gzz/quqz+oejROaJGuaBxPwYq1Oh0GM=
