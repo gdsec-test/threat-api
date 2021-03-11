@@ -15,7 +15,6 @@ const (
 	ipEndpoint = "https://api.recordedfuture.com/v2/ip/"
 )
 
-//TODO: Check where this const should go ?
 //IPReportFields are the fields to submit to get a standard IP report
 var IPReportFields = []string{"analystNotes", "counts", "enterpriseLists", "entity", "intelCard", "location", "metrics", "relatedEntities", "risk", "riskyCIDRIPs", "sightings", "threatLists", "timestamps"}
 
