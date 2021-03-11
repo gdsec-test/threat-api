@@ -12,7 +12,6 @@ import (
 	"strings"
 	"time"
 
-	"golang.org/x/net/context"
 	"golang.org/x/net/context/ctxhttp"
 )
 
@@ -40,9 +39,9 @@ func FetchSingleAsn(asn string) (string, error) {
 	return string(body), nil
 }
 
-func QueryApi(apiUrl string, key string, value string) ([]byte, error) {
+func QueryApi(ctx context.Context, apiUrl string, key string, value string) ([]byte, error) {
 	//resp, err := http.PostForm(apiUrl, url.Values{key: {value}})
-	resp, err := ctxhttp.PostForm(ctx context.Context, ctx, http.DefaultClient, apiUrl, url.Values{key: {value}})
+	resp, err := ctxhttp.PostForm(ctx, http.DefaultClient, apiUrl, url.Values{key: {value}})
 	if err != nil {
 		fmt.Printf("Error in POST: %s", err)
 		return nil, err
@@ -93,7 +92,7 @@ func DownloadAsns(ctx context.Context, asns []string) []*urlHausEntry {
 }
 
 func GetMd5(ctx context.Context, md5 string) (*UrlhausPayloadEntry, error) {
-	body, err := QueryApi(apiHashUrl, "md5_hash", md5)
+	body, err := QueryApi(ctx, apiHashUrl, "md5_hash", md5)
 	if err != nil {
 		return nil, err
 	}
@@ -112,7 +111,7 @@ func GetMd5(ctx context.Context, md5 string) (*UrlhausPayloadEntry, error) {
 }
 
 func GetSha256(ctx context.Context, sha256 string) (*UrlhausPayloadEntry, error) {
-	body, err := QueryApi(apiHashUrl, "sha256_hash", sha256)
+	body, err := QueryApi(ctx, apiHashUrl, "sha256_hash", sha256)
 	if err != nil {
 		return nil, err
 	}
@@ -131,7 +130,7 @@ func GetSha256(ctx context.Context, sha256 string) (*UrlhausPayloadEntry, error)
 }
 
 func GetDomainOrIp(ctx context.Context, host string) (*UrlhausHostEntry, error) {
-	body, err := QueryApi(apiHostUrl, "host", host)
+	body, err := QueryApi(ctx, apiHostUrl, "host", host)
 	if err != nil {
 		return nil, err
 	}
@@ -150,7 +149,7 @@ func GetDomainOrIp(ctx context.Context, host string) (*UrlhausHostEntry, error) 
 }
 
 func GetUrl(ctx context.Context, _url string) (*UrlhausUrlEntry, error) {
-	body, err := QueryApi(apiUrlUrl, "url", _url)
+	body, err := QueryApi(ctx, apiUrlUrl, "url", _url)
 	if err != nil {
 		return nil, err
 	}
