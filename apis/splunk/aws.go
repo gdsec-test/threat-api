@@ -28,8 +28,6 @@ func (m *TriageModule) triageAWSHostnames(ctx context.Context, triageRequest *tr
 	// Start a multithreaded operation performing splunk searches (with a max thread limit)
 	// And getting the results
 	for _, hostname := range triageRequest.IOCs {
-		// TODO: Add tracing
-
 		// Consume thread
 		threadLimit <- 1
 		wg.Add(1)

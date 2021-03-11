@@ -19,7 +19,6 @@ const (
 	// Okta logins from IP
 	recentOktaLoginsByIPSearch = `index=oktalogs src_ip="%s" displayMessage="User single sign on to app" | stats count by src_ip user`
 	// Search for any on_prem log mentioning the IP
-	// TODO: Fis this to not match ips with suffixes / prefixes on the provided ips
 	eventWithIP = `index=on_prem "*%s*" | rex field=_raw "\b(?P<src_ip>\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})\b" | stats count`
 	// AWS config item search
 	awsConfigItemSearch = `index=*aws_config earliest=-1d resourceType="AWS::EC2::NetworkInterface" ("configuration.association.publicIp"="%s" OR "configuration.privateIpAddress"="%s") | fields host product configuration.privateIpAddress configuration.association.publicIp awsRegion awsAccountId`

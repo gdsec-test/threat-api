@@ -112,7 +112,6 @@ func (m *TriageModule) triageUsernames(ctx context.Context, triageRequest *triag
 		}
 		if firstLoginEvent != nil {
 			triageData.Metadata = append(triageData.Metadata,
-				// TODO: Add link to splunk search
 				fmt.Sprintf("`%s` (%s)'s last okta login was on *%s* (UTC) to *%s* from *%s* user agent *%s*.  They have logged in *%d* times in the last *%d* days",
 					username,
 					firstLoginEvent.DisplayName,
