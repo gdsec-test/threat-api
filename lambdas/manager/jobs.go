@@ -142,7 +142,7 @@ func deleteJob(ctx context.Context, request events.APIGatewayProxyRequest, jobID
 	// Check to make sure this user owns this job
 
 	// Check JWT
-	jwt, err := to.ValidateJWT(ctx, to.GetJWTFromRequest(request))
+	jwt, err := to.ValidateJWT(ctx, toolbox.GetJWTFromRequest(request))
 	if err != nil {
 		err = fmt.Errorf("error validating jwt: %w", err)
 		span.LogKV("error", err)
