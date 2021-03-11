@@ -6,6 +6,7 @@ import (
 	"os"
 	"testing"
 
+	"github.com/aws/aws-lambda-go/events"
 	"github.com/gdcorp-infosec/threat-api/lambdas/common/toolbox"
 	"github.com/gdcorp-infosec/threat-api/lambdas/common/triagelegacyconnector/triage"
 )
@@ -53,5 +54,12 @@ func TestSplunkAWS(t *testing.T) {
 	}
 	if len(triageData) == 0 {
 		t.Fatalf("no data returned")
+	}
+}
+
+func TestRawHandler(t *testing.T) {
+	_, err := handler(context.Background(), events.SNSEvent{})
+	if err != nil {
+		t.Fatal(err)
 	}
 }
