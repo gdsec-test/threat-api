@@ -26,11 +26,11 @@ func (m *TriageModule) GetDocs() *triage.Doc {
 // Supports returns true of we support this IoC type
 func (m *TriageModule) Supports() []triage.IOCType {
 	return []triage.IOCType{
-		"DOMAIN",
-		"IP",
-		"URL",
-		"MD5",
-		"SHA256",
+		triage.DomainType,
+		triage.IPType,
+		triage.URLType,
+		triage.MD5Type,
+		triage.SHA256Type,
 	}
 }
 
