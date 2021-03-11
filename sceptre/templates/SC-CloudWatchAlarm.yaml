@@ -1,0 +1,46 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: CloudWatch Alarm
+Parameters:
+  ClusterName:
+    Type: String
+  ServiceName:
+    Type: String
+  DevelopmentTeam:
+    Type: String
+  DevelopmentEnvironment:
+    Type: String
+  LoadBalancerName:
+    Type: String
+  ProjectCode:
+    Type: String
+    Default: "ThreatAPI"
+  SlackSnsTopicName:
+    Type: AWS::SSM::Parameter::Value<String>
+    Description: SNS Topic Name, which has Slack webhook to send messages
+    Default: /AdminParams/SNS/AlarmNotificationTopic
+Resources:
+  CPUWarning:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmActions:
+        - !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:warning-moog-${DevelopmentTeam}-${DevelopmentEnvironment}${ClusterName}
+        - !Sub ${SlackSnsTopicName}
+      OKActions:
+        - !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:warning-moog-${DevelopmentTeam}-${DevelopmentEnvironment}${ClusterName}
+        - !Sub ${SlackSnsTopicName}
+      AlarmDescription: !Sub fires when any container in the ${ClusterName} cluster has CPU Utilization over the threshold
+      AlarmName: !Sub "${ProjectCode}: CPU Utilization for ${DevelopmentEnvironment} ${ClusterName}"
+      ComparisonOperator: GreaterThanThreshold
+      DatapointsToAlarm: 3
+      Dimensions:
+        - Name: "ClusterName"
+          Value: !Sub ${ClusterName}
+        - Name: "ServiceName"
+          Value: !Sub ${ServiceName}
+      EvaluationPeriods: 10
+      MetricName: CPUUtilization
+      Namespace: 'AWS/ECS'
+      Period: 60
+      Statistic: Average
+      Threshold: 90
+      Unit: Percent

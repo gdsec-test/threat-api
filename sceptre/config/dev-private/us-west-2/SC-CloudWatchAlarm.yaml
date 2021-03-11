@@ -1,0 +1,8 @@
+template_path: SC-CloudWatchAlarm.yaml
+stack_name: {{project_code}}-cloudwatch-alarm
+parameters:
+  ClusterName: {{cluster_name}}
+  ServiceName: {{service_name}}
+  DevelopmentTeam: {{development_team}}
+  DevelopmentEnvironment: {{development_environment}}
+  LoadBalancerName: {{service_name}}

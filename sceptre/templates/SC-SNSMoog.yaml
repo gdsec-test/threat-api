@@ -1,0 +1,53 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Deploy the SNS Moog Service Catalog Product
+Parameters:
+  # Must be provided by env/region specific config
+  SnsMoogLambdaDocId:
+    Type: String
+    Description: (optional) Default DOC_ID for all SNS Topic that haven't got a specific DOC_ID assigned. This value will be pushed from the configs.yaml pertaining to the region or the account based on the team's requirement
+    Default: ""
+  SnsMoogLambdaDocIdMinor:
+    Type: String
+    Description: (optional) DOC_ID for Minor SNS Topic to correlate alerts to teams and actions in Moogsoft/ServiceNOW (ActionID's in ServiceNOW). This value will be pushed from the configs.yaml pertaining to the region or the account based on the team's requirement
+    Default: ""
+  SnsMoogLambdaDocIdWarning:
+    Type: String
+    Description: (optional) DOC_ID for Warning SNS Topic to correlate alerts to teams and actions in Moogsoft/ServiceNOW (ActionID's in ServiceNOW). This value will be pushed from the configs.yaml pertaining to the region or the account based on the team's requirement
+    Default: ""
+  SnsMoogLambdaDocIdMajor:
+    Type: String
+    Description: (optional) DOC_ID for Major SNS Topic to correlate alerts to teams and actions in Moogsoft/ServiceNOW (ActionID's in ServiceNOW). This value will be pushed from the configs.yaml pertaining to the region or the account based on the team's requirement
+    Default: ""
+  SnsMoogLambdaDocIdCritical:
+    Type: String
+    Description: (optional) DOC_ID for Critical SNS Topic to correlate alerts to teams and actions in Moogsoft/ServiceNOW (ActionID's in ServiceNOW). This value will be pushed from the configs.yaml pertaining to the region or the account based on the team's requirement
+    Default: ""
+  SnsMoogTopicNameSuffix:
+    Type: String
+    Description: (optional) Unique naming suffix for SNS topics. This value is provided to avoid SNS topic collisions for more than one SNSMoog product per aws account.
+    Default: ""
+Resources:
+  SNSMoog:
+    Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
+    Properties:
+      ProductName: SNSMoog
+      ProvisioningArtifactName: 1.0.9
+      ProvisionedProductName: !Sub sns-moog-threatresearch-${SnsMoogTopicNameSuffix}
+      ProvisioningParameters:
+        # required parameters
+        - Key: SnsMoogLambdaDocId
+          Value: !Ref SnsMoogLambdaDocId
+        - Key: SnsMoogLambdaDocIdMinor
+          Value: !Ref SnsMoogLambdaDocIdMinor
+        - Key: SnsMoogLambdaDocIdWarning
+          Value: !Ref SnsMoogLambdaDocIdWarning
+        - Key: SnsMoogLambdaDocIdMajor
+          Value: !Ref SnsMoogLambdaDocIdMajor
+        - Key: SnsMoogLambdaDocIdCritical
+          Value: !Ref SnsMoogLambdaDocIdCritical
+        - Key: SnsMoogTopicNameSuffix
+          Value: !Ref SnsMoogTopicNameSuffix
+      Tags:
+        - Key: doNotShutDown
+          # change to false if it can be turned off outside of business hours
+          Value: "true"
