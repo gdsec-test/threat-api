@@ -32,7 +32,7 @@ Resources:
     Properties:
       ProductName: SNSMoog
       ProvisioningArtifactName: 1.0.9
-      ProvisionedProductName: !Sub sns-moog-threatresearch-${SnsMoogTopicNameSuffix}
+      ProvisionedProductName: !Sub sns-moog-threatresearch
       ProvisioningParameters:
         # required parameters
         - Key: SnsMoogLambdaDocId

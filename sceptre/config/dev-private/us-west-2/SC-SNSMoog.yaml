@@ -1,5 +1,3 @@
 template_path: SC-SNSMoog.yaml
-stack_name: {{project_code}}-sns-moog
 parameters:
   SnsMoogLambdaDocId: "1001813"
-  SnsMoogTopicNameSuffix: "{{cluster_name}}"
