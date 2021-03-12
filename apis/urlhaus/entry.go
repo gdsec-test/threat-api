@@ -18,7 +18,7 @@ func handler(ctx context.Context, request events.SNSEvent) ([]*common.CompletedJ
 	defer tb.Close(ctx)
 	// and return the results
 	urlhausTriageModule := TriageModule{}
-	return triagelegacyconnector.AWSToTriage(ctx, &urlhausTriageModule, request)
+	return triagelegacyconnector.AWSToTriage(ctx, tb, &urlhausTriageModule, request)
 }
 
 func main() {
