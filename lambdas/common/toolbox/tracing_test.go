@@ -13,17 +13,17 @@ func TestTracing(t *testing.T) {
 	defer tb.Close(ctx)
 
 	// Try starting a span (should be a apm transaction)
-	span, ctx := tb.StartSpan(ctx, "TestTransaction", "test.transaction")
+	span, ctx := tb.StartSpan(ctx, "TestTransaction", "test.transaction.test")
 	span.LogKV("testTransactionKey", "testValue")
 	defer span.Close()
 
 	// Start a span (should be a apm span)
-	span, ctx = tb.StartSpan(ctx, "TestSpan", "test.span")
+	span, ctx = tb.StartSpan(ctx, "TestSpan", "test.span.test")
 	span.LogKV("testSpanKey", "testValue")
 	defer span.Close()
 
 	// Start another span (should be a apm span)
-	span, ctx = tb.StartSpan(ctx, "TestSpan2", "test.span")
+	span, ctx = tb.StartSpan(ctx, "TestSpan2", "test.span.test")
 	span.AddError(fmt.Errorf("test error"))
 	defer span.Close()
 
