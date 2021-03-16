@@ -6,12 +6,18 @@ import (
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/gdcorp-infosec/threat-api/lambdas/common"
+	"github.com/gdcorp-infosec/threat-api/lambdas/common/toolbox"
 	"github.com/gdcorp-infosec/threat-api/lambdas/common/triagelegacyconnector"
 )
 
+var tb *toolbox.Toolbox
+
 func handler(ctx context.Context, request events.SNSEvent) ([]*common.CompletedJobData, error) {
+	tb := toolbox.GetToolbox()
+	defer tb.Close(ctx)
+
 	shodanTriageModule := TriageModule{}
-	return triagelegacyconnector.AWSToTriage(ctx, &shodanTriageModule, request)
+	return triagelegacyconnector.AWSToTriage(ctx, tb, &shodanTriageModule, request)
 }
 
 func main() {

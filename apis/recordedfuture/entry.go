@@ -13,7 +13,7 @@ func handler(ctx context.Context, request events.SNSEvent) ([]*common.CompletedJ
 	// Super simple code to convert our interface to the legacy one
 	// and return the results
 	recordedFutureTriageModule := TriageModule{}
-	return triagelegacyconnector.AWSToTriage(ctx, &recordedFutureTriageModule, request)
+	return triagelegacyconnector.AWSToTriage(ctx, tb, &recordedFutureTriageModule, request)
 }
 
 func main() {
