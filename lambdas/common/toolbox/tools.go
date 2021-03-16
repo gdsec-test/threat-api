@@ -11,11 +11,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/godaddy/asherah/go/appencryption"
-	"github.com/opentracing/opentracing-go"
 	"github.com/sirupsen/logrus"
 	"go.elastic.co/apm"
 	"go.elastic.co/apm/module/apmhttp"
-	"go.elastic.co/apm/module/apmot"
 )
 
 const (
@@ -31,7 +29,6 @@ type Toolbox struct {
 	SSOHostURL string `default:"sso.gdcorp.tools"`
 
 	// Tracing
-	Tracer    opentracing.Tracer
 	APMTracer *apm.Tracer
 
 	client *http.Client
@@ -90,8 +87,6 @@ func GetToolbox() *Toolbox {
 		fmt.Printf("WARN: Tracer not configured due to error: %s\n", err)
 		// Set defaults (effectively noops)
 		t.APMTracer = apm.DefaultTracer
-		t.Tracer = apmot.New()
-		opentracing.SetGlobalTracer(t.Tracer)
 	}
 
 	return t
