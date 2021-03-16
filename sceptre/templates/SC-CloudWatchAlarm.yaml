@@ -1,15 +1,9 @@
 AWSTemplateFormatVersion: 2010-09-09
 Description: CloudWatch Alarm
 Parameters:
-  ClusterName:
-    Type: String
-  ServiceName:
-    Type: String
   DevelopmentTeam:
     Type: String
   DevelopmentEnvironment:
-    Type: String
-  LoadBalancerName:
     Type: String
   ProjectCode:
     Type: String
