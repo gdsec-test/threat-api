@@ -117,6 +117,7 @@ func (s *Span) LogKV(key string, value interface{}) {
 }
 
 // StartSpan starts a new span.
+// The operationType is in the format of type.subtype.action.  For example: db.sql.query.
 // It will use the span/transaction in the context as it's parent.  If no span/transaction
 // exists in the context, a root transaction will be created.
 func (t *Toolbox) StartSpan(ctx context.Context, operationName, operationType string) (*Span, context.Context) {
