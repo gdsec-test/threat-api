@@ -4,8 +4,8 @@ import "context"
 
 // Span is a generic tracing span.  It may be a root span or sub span
 type TracingSpan interface {
-	// Close the span
-	Close(context.Context)
+	// End the span
+	End(context.Context)
 	// Add an error to the span (and send an appsec log)
 	AddError(err error)
 	// LogKV Log a generic key value to the span

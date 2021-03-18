@@ -83,11 +83,11 @@ func (a *APMTracer) Close(ctx context.Context) error {
 	return nil
 }
 
-// Close the current span.
+// End the current span.
 // If it is called twice, it is a noop.
 // It will nil-ify the current span, so the span must not be
 // used again.
-func (s *APMSpan) Close(ctx context.Context) {
+func (s *APMSpan) End(ctx context.Context) {
 	switch {
 	case s.span != nil:
 		s.span.End()

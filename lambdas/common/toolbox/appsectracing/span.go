@@ -26,8 +26,8 @@ func (s *Span) AddError(err error) {
 	}
 }
 
-func (s *Span) Close(ctx context.Context) {
-	s.span.Close(ctx)
+func (s *Span) End(ctx context.Context) {
+	s.span.End(ctx)
 }
 
 // StartSpan starts a new span.
