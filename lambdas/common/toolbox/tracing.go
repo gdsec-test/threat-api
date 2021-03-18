@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/gdcorp-infosec/threat-api/lambdas/common/toolbox/appseclogging"
 	"go.elastic.co/apm"
 	"go.elastic.co/apm/module/apmhttp"
 	"go.elastic.co/apm/transport"
@@ -72,6 +73,7 @@ func (t *Toolbox) InitAPM(ctx context.Context) error {
 type Span struct {
 	span        *apm.Span
 	transaction *apm.Transaction
+	toolbox     *Toolbox
 }
 
 // Close the current span.
@@ -101,7 +103,9 @@ func (s *Span) AddError(err error) {
 		apmError.SetTransaction(s.transaction)
 		apmError.Send()
 	}
-	// TODO: Appsec logging
+
+	// Log error
+	s.toolbox.AppSecLogger.Error(err.Error(), map[string]map[string]string{"errorDetails": {"error": err.Error()}})
 }
 
 // LogKV Logs a keyvalue to the transaction context
@@ -124,7 +128,7 @@ func (t *Toolbox) StartSpan(ctx context.Context, operationName, operationType st
 	// Check if the context has a span
 	if span := apm.SpanFromContext(ctx); span != nil {
 		span, ctx = apm.StartSpan(ctx, operationName, operationType)
-		return &Span{span: span}, ctx
+		return &Span{span: span, toolbox: t}, ctx
 	}
 
 	// Check if the context has a transaction
@@ -132,11 +136,15 @@ func (t *Toolbox) StartSpan(ctx context.Context, operationName, operationType st
 		// Create span off this transaction
 		span := transaction.StartSpan(operationName, operationType, nil)
 		ctx = apm.ContextWithSpan(ctx, span)
-		return &Span{span: span}, ctx
+		return &Span{span: span, toolbox: t}, ctx
 	}
 
 	// There is nothing in the context, start a new transaction
 	transaction := t.APMTracer.StartTransaction(operationName, operationType)
 	ctx = apm.ContextWithTransaction(ctx, transaction)
-	return &Span{transaction: transaction}, ctx
+
+	// Log this as an appsec log
+	t.AppSecLogger.Info(operationName, appseclogging.Fields{"operationDetails": map[string]string{"operationType": operationType}})
+
+	return &Span{transaction: transaction, toolbox: t}, ctx
 }

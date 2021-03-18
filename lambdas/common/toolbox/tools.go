@@ -10,6 +10,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/gdcorp-infosec/threat-api/lambdas/common/toolbox/appseclogging"
 	"github.com/godaddy/asherah/go/appencryption"
 	"github.com/sirupsen/logrus"
 	"go.elastic.co/apm"
@@ -29,7 +30,8 @@ type Toolbox struct {
 	SSOHostURL string `default:"sso.gdcorp.tools"`
 
 	// Tracing
-	APMTracer *apm.Tracer
+	APMTracer    *apm.Tracer
+	AppSecLogger appseclogging.AppSecLogger
 
 	client *http.Client
 
@@ -88,6 +90,10 @@ func GetToolbox() *Toolbox {
 		// Set defaults (effectively noops)
 		t.APMTracer = apm.DefaultTracer
 	}
+
+	// Load appsec logger
+	logger := appseclogging.NewLogger([]string{"threat-intel"}, map[string]string{"environment": "prod"})
+	t.AppSecLogger = logger
 
 	return t
 }
