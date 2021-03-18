@@ -23,14 +23,17 @@ do
     pushd ${THREAT_API_SOURCE}/lambdas/${LAMBDA}
 
     # Store the SHA1 hash of the source code
-    SHA1HASH=$(shasum "${LAMBDA}.go" | cut -d' ' -f1)
-    echo ${SHA1HASH} > ${RESOURCES_DIR}/${LAMBDA}.sha1
+
 
     env GOPRIVATE=github.secureserver.net,github.com/gdcorp-* GOOS=linux GOARCH=amd64 go build
 
     # Create ZIP file and upload to S3
     rm -f function.zip
     zip -9 function.zip ${LAMBDA}
+
+    SHA1HASH=$(shasum function.zip | cut -d' ' -f1)
+    echo ${SHA1HASH} > ${RESOURCES_DIR}/${LAMBDA}.sha1
+
     aws s3 cp function.zip s3://${CODE_BUCKET}/${LAMBDA}/${SHA1HASH}
 
     # Cleanup
