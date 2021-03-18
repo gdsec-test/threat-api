@@ -7,6 +7,7 @@ type EventOutcome string
 
 const (
 	// Event Kinds
+	// https://www.elastic.co/guide/en/ecs/current/ecs-allowed-values-event-kind.html
 
 	EventKindAlert         EventKind = "alert"
 	EventKindEvent         EventKind = "event"
@@ -16,6 +17,7 @@ const (
 	EventKindSignal        EventKind = "signal"
 
 	// Event Categories
+	// https://www.elastic.co/guide/en/ecs/current/ecs-allowed-values-event-category.html
 
 	EventCategoryAuthentication     EventCategory = "authentication"
 	EventCategoryConfiguration      EventCategory = "configuration"
@@ -32,6 +34,7 @@ const (
 	EventCategoryWeb                EventCategory = "web"
 
 	// Event Types
+	// https://www.elastic.co/guide/en/ecs/current/ecs-allowed-values-event-type.html
 
 	EventTypeAccess       EventType = "access"
 	EventTypeAdmin        EventType = "admin"
@@ -51,6 +54,7 @@ const (
 	EventTypeUser         EventType = "user"
 
 	// Event Outcomes
+	// https://www.elastic.co/guide/en/ecs/current/ecs-allowed-values-event-outcome.html
 
 	EventOutcomeSuccess EventOutcome = "success"
 	EventOutcomeFailure EventOutcome = "failure"
