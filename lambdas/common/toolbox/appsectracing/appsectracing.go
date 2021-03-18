@@ -5,6 +5,7 @@ import (
 	"context"
 
 	"github.com/gdcorp-infosec/threat-api/lambdas/common/toolbox/appsectracing/appseclogging"
+	"go.elastic.co/apm"
 )
 
 // TracerLogger is a tool that supports tracing and appsec logging.
@@ -18,6 +19,13 @@ type TracerLogger struct {
 
 // NewTracerLogger Creates a new logger with the provided tracer and appseclogger
 func NewTracerLogger(tracer Tracer, appSecLogger *appseclogging.AppSecLogger) *TracerLogger {
+	// Handle nil cases to do default noop behavior
+	if tracer == nil {
+		tracer = &APMTracer{apm.DefaultTracer}
+	}
+	if appSecLogger == nil {
+		appSecLogger = appseclogging.NewLogger(nil, nil)
+	}
 	return &TracerLogger{AppSecLogger: appSecLogger, Tracer: tracer}
 }
 

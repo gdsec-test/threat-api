@@ -27,6 +27,9 @@ func (t *Toolbox) InitTracerLogger(ctx context.Context) error {
 	// See this for why we do this: https://pkg.go.dev/go.elastic.co/apm#NewTracerOptions
 	apm.DefaultTracer.Close()
 
+	// Set noop default tracer for now
+	t.TracerLogger = appsectracing.NewTracerLogger(nil, nil)
+
 	// Fetch config from credential store
 	paramsToFetch := map[string]string{
 		"ELASTIC_APM_SERVER_URL":   "",
