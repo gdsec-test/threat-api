@@ -10,10 +10,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/gdcorp-infosec/threat-api/lambdas/common/toolbox/appseclogging"
+	"github.com/gdcorp-infosec/threat-api/lambdas/common/toolbox/appsectracing"
 	"github.com/godaddy/asherah/go/appencryption"
 	"github.com/sirupsen/logrus"
-	"go.elastic.co/apm"
 	"go.elastic.co/apm/module/apmhttp"
 )
 
@@ -30,8 +29,7 @@ type Toolbox struct {
 	SSOHostURL string `default:"sso.gdcorp.tools"`
 
 	// Tracing
-	APMTracer    *apm.Tracer
-	AppSecLogger appseclogging.AppSecLogger
+	TracerLogger *appsectracing.TracerLogger
 
 	client *http.Client
 
@@ -82,18 +80,12 @@ func GetToolbox() *Toolbox {
 	t.SetHTTPClient(&http.Client{Timeout: defaultTimeout})
 
 	// TODO: Use real context
-	err := t.InitAPM(context.Background())
+	err := t.InitTracerLogger(context.Background())
 	if err != nil {
 		// panic(fmt.Errorf("error init tracer: %w", err))
 		// TODO: Handle this error to let the caller know the tracing will not work
 		fmt.Printf("WARN: Tracer not configured due to error: %s\n", err)
-		// Set defaults (effectively noops)
-		t.APMTracer = apm.DefaultTracer
 	}
-
-	// Load appsec logger
-	logger := appseclogging.NewLogger([]string{"threat-intel"}, map[string]string{"environment": "prod"})
-	t.AppSecLogger = logger
 
 	return t
 }
@@ -119,38 +111,10 @@ func (t *Toolbox) Close(ctx context.Context) error {
 		}
 	}
 
-	// Although we use open tracing as our generic tracing interface,
-	// it's useful to call our specific APM flush functions here to make sure all spans are sent
-
-	// Create abort channel based on the context
-	abort := make(chan struct{})
-	done := make(chan struct{})
-	// Create a thread to wait on the context being canceled to signal the abort channel
-	go func() {
-		select {
-		case <-ctx.Done():
-			// Keep signalling the abort channel until done is signaled
-			// This will cancel anything reading from the abort channel until we are told to stop
-			for {
-				select {
-				case abort <- struct{}{}:
-				case <-done:
-					return
-				}
-			}
-		case <-done:
-			// The tracer functions completed successfully, stop waiting on this context
-			return
-		}
-	}()
-	t.APMTracer.Flush(abort)
-	t.APMTracer.SendMetrics(abort)
-	t.APMTracer.Close()
-	// Tell our waiting thread that it doesn't need to wait anymore
-	done <- struct{}{}
-
-	if ctx.Err() != nil {
-		return ctx.Err()
+	// Close appsec logger
+	err = t.TracerLogger.Close(ctx)
+	if err != nil {
+		return fmt.Errorf("error closing tracer: %w", err)
 	}
 
 	return nil

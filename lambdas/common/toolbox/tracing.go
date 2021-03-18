@@ -6,7 +6,8 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/gdcorp-infosec/threat-api/lambdas/common/toolbox/appseclogging"
+	"github.com/gdcorp-infosec/threat-api/lambdas/common/toolbox/appsectracing"
+	"github.com/gdcorp-infosec/threat-api/lambdas/common/toolbox/appsectracing/appseclogging"
 	"go.elastic.co/apm"
 	"go.elastic.co/apm/module/apmhttp"
 	"go.elastic.co/apm/transport"
@@ -20,8 +21,8 @@ func (t *Toolbox) GetHTTPClient(inputClient *http.Client) *http.Client {
 	return apmhttp.WrapClient(inputClient)
 }
 
-// InitAPM gets the APM config from secrets manager
-func (t *Toolbox) InitAPM(ctx context.Context) error {
+// InitTracerLogger inits our APM tracer / App sec logger
+func (t *Toolbox) InitTracerLogger(ctx context.Context) error {
 	// Close the default tracer
 	// See this for why we do this: https://pkg.go.dev/go.elastic.co/apm#NewTracerOptions
 	apm.DefaultTracer.Close()
@@ -47,13 +48,13 @@ func (t *Toolbox) InitAPM(ctx context.Context) error {
 		os.Setenv(key, value)
 	}
 
-	// Re-init the default tracer with this config
+	// Re-init the APM default tracer with this config
 	transport, err := transport.InitDefault()
 	if err != nil {
 		return fmt.Errorf("error creating transport, probably a problem with the config: %w", err)
 	}
 
-	// Create the new tracer
+	// Create the new apm tracer
 	tracer, err := apm.NewTracerOptions(apm.TracerOptions{
 		ServiceName: os.Getenv("AWS_LAMBDA_FUNCTION_NAME"), // TODO: How should we set this?
 		Transport:   transport,
@@ -62,89 +63,20 @@ func (t *Toolbox) InitAPM(ctx context.Context) error {
 		return fmt.Errorf("error creating tracer: %w", err)
 	}
 
-	t.APMTracer = tracer
-	apm.DefaultTracer = t.APMTracer
+	// Set global APM tracer
+	apm.DefaultTracer = tracer
+
+	// Wrap the raw APM tracer in the appsectracing logger so we can create a TracerLogger object.
+	// I know this sounds confusing.  Basically we just wrap the tracer in a library that lets us
+	// handle tracing and logging in one place.
+	appsecTracingTracer := appsectracing.NewAPMTracer(tracer)
+
+	// Load appsec logger
+	// TODO: Make this more generic?
+	logger := appseclogging.NewLogger([]string{"threat-intel"}, map[string]string{"environment": "prod"})
+
+	// Set toolbox appsec TracerLogger
+	t.TracerLogger = appsectracing.NewTracerLogger(appsecTracingTracer, logger)
 
 	return nil
-}
-
-// Span is a wrapper around the backend span we use (currently APM spans and transactions),
-// providing some other functionality also, like appsec logging errors.
-type Span struct {
-	span        *apm.Span
-	transaction *apm.Transaction
-	toolbox     *Toolbox
-}
-
-// Close the current span.
-// If it is called twice, it is a noop.
-// It will nil-ify the current span, so it must not be
-// used again.
-func (s *Span) Close() {
-	switch {
-	case s.span != nil:
-		s.span.End()
-		s.span = nil
-	case s.transaction != nil:
-		s.transaction.End()
-		s.transaction = nil
-	}
-}
-
-// AddError attaches an error to this span, also logging it via appsec logging
-func (s *Span) AddError(err error) {
-	s.LogKV("error", err.Error())
-	apmError := apm.DefaultTracer.NewError(err)
-	switch {
-	case s.span != nil:
-		apmError.SetSpan(s.span)
-		apmError.Send()
-	case s.transaction != nil:
-		apmError.SetTransaction(s.transaction)
-		apmError.Send()
-	}
-
-	// Log error
-	s.toolbox.AppSecLogger.Error(err.Error(), map[string]map[string]string{"errorDetails": {"error": err.Error()}})
-}
-
-// LogKV Logs a keyvalue to the transaction context
-func (s *Span) LogKV(key string, value interface{}) {
-	switch {
-	case s.span != nil:
-		s.span.Context.SetLabel(key, value)
-	case s.transaction != nil:
-		s.transaction.Context.SetLabel(key, value)
-	default:
-		panic("nil span")
-	}
-}
-
-// StartSpan starts a new span.
-// The operationType is in the format of type.subtype.action.  For example: db.sql.query.
-// It will use the span/transaction in the context as it's parent.  If no span/transaction
-// exists in the context, a root transaction will be created.
-func (t *Toolbox) StartSpan(ctx context.Context, operationName, operationType string) (*Span, context.Context) {
-	// Check if the context has a span
-	if span := apm.SpanFromContext(ctx); span != nil {
-		span, ctx = apm.StartSpan(ctx, operationName, operationType)
-		return &Span{span: span, toolbox: t}, ctx
-	}
-
-	// Check if the context has a transaction
-	if transaction := apm.TransactionFromContext(ctx); transaction != nil {
-		// Create span off this transaction
-		span := transaction.StartSpan(operationName, operationType, nil)
-		ctx = apm.ContextWithSpan(ctx, span)
-		return &Span{span: span, toolbox: t}, ctx
-	}
-
-	// There is nothing in the context, start a new transaction
-	transaction := t.APMTracer.StartTransaction(operationName, operationType)
-	ctx = apm.ContextWithTransaction(ctx, transaction)
-
-	// Log this as an appsec log
-	t.AppSecLogger.Info(operationName, appseclogging.Fields{"operationDetails": map[string]string{"operationType": operationType}})
-
-	return &Span{transaction: transaction, toolbox: t}, ctx
 }

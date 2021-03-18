@@ -29,7 +29,7 @@ func (a Fields) toZAPFields() []zap.Field {
 	return ret
 }
 
-func NewLogger(tags []string, labels map[string]string) AppSecLogger {
+func NewLogger(tags []string, labels map[string]string) *AppSecLogger {
 	encoderConfig := ecszap.NewDefaultEncoderConfig()
 	core := encoderConfig.ToZapCoreEncoderConfig()
 	core.LevelKey = zapcore.OmitKey
@@ -41,7 +41,7 @@ func NewLogger(tags []string, labels map[string]string) AppSecLogger {
 	defer logger.Sync()
 
 	tagsNew := tags
-	l := AppSecLogger{logger: logger, tags: append(tagsNew, "security"), labels: labels}
+	l := &AppSecLogger{logger: logger, tags: append(tagsNew, "security"), labels: labels}
 	return l
 }
 
