@@ -6,6 +6,11 @@
   "metadata": {
     "supportedIOCTypes": [
       "DOMAIN"
-    ]
+    ],
+    "actions": {
+      "ViewPII": {
+        "requiredADGroups": ["Eng-ThreatIntel"]
+      }
+    }
   }
 }
