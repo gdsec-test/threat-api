@@ -5,16 +5,14 @@ import (
 	"context"
 	"crypto/tls"
 	"encoding/csv"
-	"encoding/json"
 	"fmt"
 	"sort"
 	"strings"
 
+	"github.com/gdcorp-infosec/threat-api/lambdas/common/toolbox/appsectracing"
+	"github.com/gdcorp-infosec/threat-api/lambdas/common/triagelegacyconnector/triage"
 	"github.secureserver.net/clake1/cmap-go/cmap"
 	"github.secureserver.net/go/sso-client/sso"
-	"github.secureserver.net/threat/core"
-	"github.secureserver.net/threat/core/common"
-	"github.secureserver.net/threat/threatapi/triage/modules/triage"
 )
 
 const (
@@ -45,20 +43,36 @@ func (m *TriageModule) Triage(ctx context.Context, triageRequest *triage.Request
 		Title:    "GoDaddy Shopper Data",
 		Metadata: []string{},
 	}
+	var span *appsectracing.Span
+
+	// Check to make sure we have permission to do a cmap lookup
+	span, ctx = tb.TracerLogger.StartSpan(ctx, "CMAPAuth", "cmap.auth.authorize")
+	if auth, err := tb.Authorize(ctx, triageRequest.JWT, "ViewPII", triageModuleName); !auth {
+		triageData.Data = "Permission denied.  You are not in the correct group to see the real shopper data for each domain.  Reach out to #threat if you need the shopper data."
+		span.LogKV("failedAuthReason", err)
+		span.End(ctx)
+		return []*triage.Data{triageData}, nil
+	}
+	span.End(ctx)
 
 	// Build client
+	span, ctx = tb.TracerLogger.StartSpan(ctx, "BuildCMAPClient", "cmap.client.build")
+	defer span.End(ctx)
 	cmapCert := strings.ReplaceAll(m.CMAPCert, ":", "\n")
 	cmapKey := strings.ReplaceAll(m.CMAPKey, ":", "\n")
 	cert, err := tls.X509KeyPair([]byte(cmapCert), []byte(cmapKey))
 	if err != nil {
-		api.Error("ErrorLoadingCMAPCert", core.LogFields{"error": err})
-		return nil, fmt.Errorf("error loading cmap cert: %s", err)
+		err = fmt.Errorf("error loading cmap cert: %w", err)
+		span.AddError(err)
+		return nil, err
 	}
 	c, err := cmap.New(ctx, cmap.ProdBaseURL, cert, sso.Production)
 	if err != nil {
-		api.Error("ErrorCreatingCMAPClient", core.LogFields{"error": err})
-		return nil, fmt.Errorf("error creating cmap client: %s", err)
+		err = fmt.Errorf("error creating cmap client: %s", err)
+		span.AddError(err)
+		return nil, err
 	}
+	span.End(ctx)
 
 	// Process domains
 	cmapResults := cmapResultsType{}
@@ -73,12 +87,14 @@ func (m *TriageModule) Triage(ctx context.Context, triageRequest *triage.Request
 		default:
 		}
 
-		triage.Log(triageModuleName, "CMAPDomainEnrich", api, core.LogFields{
-			"domain": domain,
-		})
+		// Process this domain
+		span, ctx = tb.TracerLogger.StartSpan(ctx, "CMAPDomainEnrich", "cmap.domain.enrich")
+		span.LogKV("domain", domain)
 		result, err := c.DoDomainQuery(ctx, domain)
 		if err != nil {
-			api.Error("CMAPLookupError", core.LogFields{"error": err, "domain": domain})
+			err = fmt.Errorf("cmap lookup error: %w", err)
+			span.AddError(err)
+			span.End(ctx)
 			// TODO: Add error entry to results
 			continue
 		}
@@ -94,8 +110,10 @@ func (m *TriageModule) Triage(ctx context.Context, triageRequest *triage.Request
 		}
 
 		cmapResults = append(cmapResults, result)
+		span.End(ctx)
 	}
 
+	span, ctx = tb.TracerLogger.StartSpan(ctx, "CMAPBuildMetadata", "cmap.metadata.build")
 	if totalGoDaddyDomains == 0 {
 		return []*triage.Data{triageData}, nil
 	}
@@ -107,26 +125,8 @@ func (m *TriageModule) Triage(ctx context.Context, triageRequest *triage.Request
 		triageData.Metadata = append(triageData.Metadata, fmt.Sprintf("Out of %d GoDaddy domains, they are owned by %d unique shoppers", totalGoDaddyDomains, len(customerCounts)))
 	}
 
-	// Check to make sure we have permission to list the actual shopper data
-	if !api.UserInRequiredGroups(ctx, triageRequest.Username, m.RequiredGroups) {
-		triageData.Data = "Permission denied.  You are not in the correct group to see the real shopper data for each domain.  Reach out to #threat if you need the shopper data."
-		return []*triage.Data{triageData}, nil
-	}
-
 	// Sort by shopperID
 	sort.Sort(&cmapResults)
-
-	if triageRequest.Verbose {
-		// Write response as JSON
-		json, err := json.Marshal(cmapResults)
-		if err != nil {
-			api.Error("MarshalError", core.LogFields{"error": err})
-			return nil, fmt.Errorf("error marshaling: %s", err)
-		}
-		triageData.Data = common.IndentJSON(string(json))
-		triageData.DataType = triage.JSONType
-		return []*triage.Data{triageData}, nil
-	}
 
 	// Write response as csv
 	response := bytes.Buffer{}
@@ -155,6 +155,7 @@ func (m *TriageModule) Triage(ctx context.Context, triageRequest *triage.Request
 		})
 	}
 	csv.Flush()
+	span.End(ctx)
 
 	triageData.Data = response.String()
 	return []*triage.Data{triageData}, nil
