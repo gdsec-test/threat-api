@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/gdcorp-infosec/threat-api/lambdas/common/toolbox/appsectracing"
 	"github.com/gdcorp-infosec/threat-api/lambdas/common/triagelegacyconnector/triage"
-	"github.com/opentracing/opentracing-go"
 	"github.com/vertoforce/go-splunk"
 )
 
@@ -37,9 +37,9 @@ func (m *TriageModule) Supports() []triage.IOCType {
 
 // Triage takes some ioc and finds what we can in splunk
 func (m *TriageModule) Triage(ctx context.Context, triageRequest *triage.Request) ([]*triage.Data, error) {
-	var span opentracing.Span
-	span, ctx = opentracing.StartSpanFromContext(ctx, "TriageSplunk")
-	defer span.Finish()
+	var span *appsectracing.Span
+	span, ctx = tb.TracerLogger.StartSpan(ctx, "TriageSplunk", "splunk.splunk.triage")
+	defer span.End(ctx)
 
 	// Check for reading splunk permission
 	authorized, err := tb.Authorize(ctx, triageRequest.JWT, "ReadSplunk", m.GetDocs().Name)

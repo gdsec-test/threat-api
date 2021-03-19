@@ -11,9 +11,9 @@ import (
 	"strings"
 
 	"github.com/gdcorp-infosec/threat-api/lambdas/common/toolbox"
+	"github.com/gdcorp-infosec/threat-api/lambdas/common/toolbox/appsectracing"
 	"github.com/gdcorp-infosec/threat-api/lambdas/common/triagelegacyconnector/triage"
 	"github.com/ns3777k/go-shodan/v4/shodan"
-	"github.com/opentracing/opentracing-go"
 )
 
 const (
@@ -69,9 +69,9 @@ func (m *TriageModule) Triage(ctx context.Context, triageRequest *triage.Request
 		}
 	}
 
-	var span opentracing.Span
-	span, ctx = opentracing.StartSpanFromContext(ctx, "ShodanGetServices")
-	defer span.Finish()
+	var span *appsectracing.Span
+	span, ctx = tb.TracerLogger.StartSpan(ctx, "ShodanGetServices", "shodan.services.get")
+	defer span.End(ctx)
 
 	shodanhosts := m.GetServicesForIPs(ctx, ips)
 	if len(shodanhosts) == 0 {

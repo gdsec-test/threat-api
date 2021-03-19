@@ -8,8 +8,6 @@ import (
 	"net/url"
 	"strings"
 	"time"
-
-	"github.com/opentracing/opentracing-go"
 )
 
 const (
@@ -195,10 +193,6 @@ func EnrichCVE(ctx context.Context, RFKey string, RFClient *http.Client, cve str
 	}
 
 	req.Header.Add("X-RFToken", RFKey)
-
-	var CVEspan opentracing.Span
-	CVEspan, ctx = opentracing.StartSpanFromContext(ctx, "EnrichCVE")
-	defer CVEspan.Finish()
 
 	resp, err := RFClient.Do(req)
 	if err != nil {

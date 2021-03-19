@@ -11,8 +11,8 @@ import (
 func TestLookup(t *testing.T) {
 
 	ctx := context.Background()
-	toolbox := toolbox.GetToolbox()
-	defer toolbox.Close(ctx)
+	tb = toolbox.GetToolbox()
+	defer tb.Close(ctx)
 
 	testIP := "72.210.63.111"
 	triageRequest := &triage.Request{
@@ -24,7 +24,6 @@ func TestLookup(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	toolbox.Close(ctx)
 
 	if len(triageResult) == 0 {
 		t.Fatal("len 0")

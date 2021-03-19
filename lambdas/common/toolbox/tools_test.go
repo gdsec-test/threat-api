@@ -30,7 +30,5 @@ func TestGetToolbox(t *testing.T) {
 	}
 
 	// Tracing check
-	span := toolbox.Tracer.StartSpan("Test")
-	span.Finish()
 	toolbox.Close(context.Background())
 }

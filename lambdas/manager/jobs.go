@@ -15,13 +15,12 @@ import (
 	"github.com/aws/aws-sdk-go/service/sns"
 	"github.com/gdcorp-infosec/threat-api/lambdas/common"
 	"github.com/gdcorp-infosec/threat-api/lambdas/common/toolbox"
-	"github.com/opentracing/opentracing-go"
 )
 
 // createJob creates a new job ID in dynamo DB and sends it to the appropriate SNS topics
 func createJob(ctx context.Context, request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "CreateJob")
-	defer span.Finish()
+	span, ctx := to.TracerLogger.StartSpan(ctx, "CreateJob", "job.manager.create")
+	defer span.End(ctx)
 
 	// Generate jobId
 	jobID := to.GenerateJobID(ctx)
@@ -38,27 +37,27 @@ func createJob(ctx context.Context, request events.APIGatewayProxyRequest) (even
 	// For now we require a user to submit what modules they want to run.
 
 	// Encrypt submission
-	span, ctx = opentracing.StartSpanFromContext(ctx, "EncryptSubmission")
+	span, ctx = to.TracerLogger.StartSpan(ctx, "EncryptSubmission", "job.manager.encrypt")
 	encryptedData, err := to.Encrypt(ctx, jobID, []byte(request.Body))
 	if err != nil {
 		span.LogKV("error", err)
-		span.Finish()
+		span.End(ctx)
 		return events.APIGatewayProxyResponse{StatusCode: 500}, fmt.Errorf("error encrypting submission: %w", err)
 	}
 	encryptedDataMarshalled, err := dynamodbattribute.Marshal(encryptedData)
 	if err != nil {
 		span.LogKV("error", err)
-		span.Finish()
+		span.End(ctx)
 		return events.APIGatewayProxyResponse{StatusCode: 500}, fmt.Errorf("error marshalling encrypted data: %w", err)
 	}
-	span.Finish()
+	span.End(ctx)
 
 	// Get the SNS topic ARN
-	span, ctx = opentracing.StartSpanFromContext(ctx, "GetSNSTopicInfo")
+	span, ctx = to.TracerLogger.StartSpan(ctx, "GetSNSTopicInfo", "job.sns.getinfo")
 	topicARN, err := to.GetFromParameterStore(ctx, snsTopicARNParameterName, false)
 	if err != nil || topicARN.Value == nil {
 		span.LogKV("error", fmt.Errorf("error getting SNS topic ARN: %w", err))
-		span.Finish()
+		span.End(ctx)
 		return events.APIGatewayProxyResponse{StatusCode: 500}, nil
 	}
 
@@ -70,15 +69,15 @@ func createJob(ctx context.Context, request events.APIGatewayProxyRequest) (even
 	})
 	if err != nil {
 		span.LogKV("error", fmt.Errorf("error getting SNS topic subscriptions: %w", err))
-		span.Finish()
+		span.End(ctx)
 		return events.APIGatewayProxyResponse{StatusCode: 500}, nil
 	}
 	totalModuleCount := len(subscriptionsOutput.Subscriptions)
 	span.LogKV("SNSSubscriptionSize", totalModuleCount)
-	span.Finish()
+	span.End(ctx)
 
 	// Store in database
-	span, ctx = opentracing.StartSpanFromContext(ctx, "StoreJob")
+	span, ctx = to.TracerLogger.StartSpan(ctx, "StoreJob", "job.manager.store")
 	span.LogKV("jobId", jobID)
 	_, err = dynamoDBClient.PutItem(&dynamodb.PutItemInput{
 		Item: map[string]*dynamodb.AttributeValue{
@@ -94,19 +93,19 @@ func createJob(ctx context.Context, request events.APIGatewayProxyRequest) (even
 	})
 	if err != nil {
 		span.LogKV("error", err)
-		span.Finish()
+		span.End(ctx)
 		return events.APIGatewayProxyResponse{StatusCode: 500}, err
 	}
-	span.Finish()
+	span.End(ctx)
 
 	// Send to SNS
-	span, ctx = opentracing.StartSpanFromContext(ctx, "SendSNS")
+	span, ctx = to.TracerLogger.StartSpan(ctx, "SendSNS", "job.manager.sendsns")
 
 	// Marshal body
 	submissionMarshalled, err := json.Marshal(common.JobSNSMessage{Submission: request, JobID: jobID})
 	if err != nil {
 		span.LogKV("error", err)
-		span.Finish()
+		span.End(ctx)
 		return events.APIGatewayProxyResponse{StatusCode: 500}, err
 	}
 	submissionMarshalledString := string(submissionMarshalled)
@@ -118,10 +117,10 @@ func createJob(ctx context.Context, request events.APIGatewayProxyRequest) (even
 	})
 	if err != nil {
 		span.LogKV("error", err)
-		span.Finish()
+		span.End(ctx)
 		return events.APIGatewayProxyResponse{StatusCode: 500}, err
 	}
-	span.Finish()
+	span.End(ctx)
 
 	response := struct {
 		JobID string `json:"jobId"`
@@ -135,9 +134,9 @@ func createJob(ctx context.Context, request events.APIGatewayProxyRequest) (even
 
 // deleteJob deletes a job by JobID
 func deleteJob(ctx context.Context, request events.APIGatewayProxyRequest, jobID string) (events.APIGatewayProxyResponse, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "DeleteJob")
+	span, ctx := to.TracerLogger.StartSpan(ctx, "DeleteJob", "job.manager.delete")
 	span.LogKV("job_id", jobID)
-	defer span.Finish()
+	defer span.End(ctx)
 
 	// Check to make sure this user owns this job
 
@@ -192,9 +191,9 @@ func deleteJob(ctx context.Context, request events.APIGatewayProxyRequest, jobID
 
 // getJob gets the job status from dynamoDB and send it as a response
 func getJob(ctx context.Context, jobID string) (events.APIGatewayProxyResponse, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "GetJobStatus")
+	span, ctx := to.TracerLogger.StartSpan(ctx, "GetJobStatus", "job.manager.getstatus")
 	span.LogKV("jobId", jobID)
-	defer span.Finish()
+	defer span.End(ctx)
 
 	if jobID == "" {
 		return events.APIGatewayProxyResponse{StatusCode: 400}, nil
@@ -249,8 +248,8 @@ func getJob(ctx context.Context, jobID string) (events.APIGatewayProxyResponse, 
 }
 
 func getJobs(ctx context.Context, request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "GetUserJobs")
-	defer span.Finish()
+	span, ctx := to.TracerLogger.StartSpan(ctx, "GetUserJobs", "job.manager.listuserjobs")
+	defer span.End(ctx)
 
 	jwt, err := to.ValidateJWT(ctx, toolbox.GetJWTFromRequest(request))
 	if err != nil {
@@ -327,8 +326,8 @@ func getJobs(ctx context.Context, request events.APIGatewayProxyRequest) (events
 // or we are still waiting on modules to finish.  It will also compute the percentage complete of the job
 // as len(responses) / len(modules subscribed to SNS topic)
 func getJobProgress(ctx context.Context, jobEntry *common.JobDBEntry) (JobStatus, float64, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "GetJobProgress")
-	defer span.Finish()
+	span, ctx := to.TracerLogger.StartSpan(ctx, "GetJobProgress", "job.manager.getprogress")
+	defer span.End(ctx)
 
 	jobStatus := JobInProgress
 	switch {
