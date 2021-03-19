@@ -8,15 +8,15 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ssm"
+	"github.com/gdcorp-infosec/threat-api/lambdas/common/toolbox/appsectracing"
 	"github.com/gdcorp-infosec/threat-api/lambdas/common/triagelegacyconnector/triage"
-	"github.com/opentracing/opentracing-go"
 )
 
 // GetModules gets the available modules and their supported IOC types
 func (t *Toolbox) GetModules(ctx context.Context) (map[string]LambdaMetadata, error) {
-	var span opentracing.Span
-	span, ctx = opentracing.StartSpanFromContext(ctx, "GetModules")
-	defer span.Finish()
+	var span *appsectracing.Span
+	span, ctx = t.TracerLogger.StartSpan(ctx, "GetModules", "modules.modules.list")
+	defer span.End(ctx)
 
 	ssmClient := ssm.New(t.AWSSession)
 

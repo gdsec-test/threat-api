@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/opentracing/opentracing-go"
 	"net/http"
 	"net/url"
 	"strings"
@@ -137,10 +136,6 @@ func EnrichIP(ctx context.Context, RFKey string, RFClient *http.Client, ip strin
 	}
 
 	req.Header.Add("X-RFToken", RFKey)
-
-	var IPspan opentracing.Span
-	IPspan, ctx = opentracing.StartSpanFromContext(ctx, "EnrichIP")
-	defer IPspan.Finish()
 
 	resp, err := RFClient.Do(req)
 	if err != nil {

@@ -8,7 +8,7 @@ import (
 	"strings"
 
 	"github.com/aws/aws-lambda-go/events"
-	"github.com/opentracing/opentracing-go"
+	"github.com/gdcorp-infosec/threat-api/lambdas/common/toolbox/appsectracing"
 	"github.secureserver.net/auth-contrib/go-auth/gdsso"
 	"github.secureserver.net/auth-contrib/go-auth/gdtoken"
 )
@@ -19,10 +19,11 @@ const (
 
 // Authorize Takes a JWT, Action, and resource and determines is the action is permitted or not
 func (t *Toolbox) Authorize(ctx context.Context, jwt, action, resource string) (bool, error) {
-	var span opentracing.Span
-	span, ctx = opentracing.StartSpanFromContext(ctx, "Authorize")
-	span.LogKV("action", action, "resource", resource)
-	defer span.Finish()
+	var span *appsectracing.Span
+	span, ctx = t.TracerLogger.StartSpan(ctx, "Authorize", "auth.jwt.authorize")
+	span.LogKV("action", action)
+	span.LogKV("resource", resource)
+	defer span.End(ctx)
 
 	// Validate JWT
 	_, err := t.ValidateJWT(ctx, jwt)
@@ -52,8 +53,8 @@ func (t *Toolbox) Authorize(ctx context.Context, jwt, action, resource string) (
 	}
 
 	// Find the action
-	span, _ = opentracing.StartSpanFromContext(ctx, "ParseAuthZStructure")
-	defer span.Finish()
+	span, _ = t.TracerLogger.StartSpan(ctx, "ParseAuthZStructure", "auth.authz.parse")
+	defer span.End(ctx)
 	actionObj, ok := lambda.Actions[action]
 	if !ok {
 		return false, fmt.Errorf("action not found")
@@ -72,9 +73,9 @@ func (t *Toolbox) Authorize(ctx context.Context, jwt, action, resource string) (
 // ValidateJWT performs a simple validation of the provided JWT, returning it if it is valid
 // or an error if it is now
 func (t *Toolbox) ValidateJWT(ctx context.Context, jwt string) (*gdtoken.Token, error) {
-	var span opentracing.Span
-	span, ctx = opentracing.StartSpanFromContext(ctx, "ValidateJWT")
-	defer span.Finish()
+	var span *appsectracing.Span
+	span, ctx = t.TracerLogger.StartSpan(ctx, "ValidateJWT", "auth.jwt.validate")
+	defer span.End(ctx)
 
 	// Check formatting and build token
 	token, err := gdtoken.FromStringV2(jwt)
@@ -104,9 +105,9 @@ func (t *Toolbox) GetJWTGroups(ctx context.Context, jwt string) ([]string, error
 // Hopefully this can be moved to the godaddy SSO library someday
 // https://github.secureserver.net/auth-contrib/go-auth/issues/30
 func (t *Toolbox) getJWTADGroups(ctx context.Context, jwt string) ([]string, error) {
-	var span opentracing.Span
-	span, ctx = opentracing.StartSpanFromContext(ctx, "GetJWTADGroups")
-	defer span.Finish()
+	var span *appsectracing.Span
+	span, ctx = t.TracerLogger.StartSpan(ctx, "GetJWTADGroups", "auth.jwt.getadgroups")
+	defer span.End(ctx)
 
 	req, err := http.NewRequestWithContext(ctx, "GET", fmt.Sprintf("https://%s/%s", strings.Trim(t.SSOHostURL, "/"), ssoADURL), nil)
 	if err != nil {
