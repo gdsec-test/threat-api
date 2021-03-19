@@ -8,7 +8,7 @@
       "DOMAIN"
     ],
     "actions": {
-      "ViewPII": {
+      "Run": {
         "requiredADGroups": ["Eng-ThreatIntel"]
       }
     }

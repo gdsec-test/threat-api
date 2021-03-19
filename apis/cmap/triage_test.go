@@ -34,6 +34,6 @@ func TestTriage(t *testing.T) {
 		if len(data) == 0 {
 			t.Errorf("test %d failed, no data returned", i)
 		}
-		fmt.Printf("Job finished: %s, data: %s\n", data[0].Title, data[0].Data)
+		fmt.Printf("Job finished: %s, metadata: %s, data: %s\n", data[0].Title, data[0].Metadata, data[0].Data)
 	}
 }
