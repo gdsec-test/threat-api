@@ -45,12 +45,12 @@ func initCMAPModule(ctx context.Context) (*TriageModule, error) {
 	if err != nil {
 		return nil, fmt.Errorf("error unmarshalling cmap creds: %w", err)
 	}
-	geoIPTriageModule := &TriageModule{
+	cmapTriageModule := &TriageModule{
 		CMAPCert: cmapCreds.CMAPCert,
 		CMAPKey:  cmapCreds.CMAPKey,
 	}
 
-	return geoIPTriageModule, nil
+	return cmapTriageModule, nil
 }
 
 func main() {
