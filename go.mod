@@ -23,6 +23,8 @@ require (
 	go.elastic.co/apm/module/apmhttp v1.9.0
 	go.elastic.co/apm/module/apmlambda v1.8.0
 	go.elastic.co/apm/module/apmot v1.9.0
+	go.elastic.co/ecszap v1.0.0
+	go.uber.org/zap v1.14.0
 	golang.org/x/net v0.0.0-20201216054612-986b41b23924
 	gopkg.in/check.v1 v1.0.0-20190902080502-41f04d3bba15 // indirect
 )

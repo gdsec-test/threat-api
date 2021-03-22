@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/opentracing/opentracing-go"
+	"github.com/gdcorp-infosec/threat-api/lambdas/common/toolbox/appsectracing"
 	"github.com/vertoforce/go-splunk"
 )
 
@@ -13,9 +13,9 @@ import (
 //
 // This is mostly for long running searches that have a stats command at the end
 func (m *TriageModule) performSplunkSearch(ctx context.Context, searchString string) (chan splunk.SearchResult, *splunk.Search, error) {
-	var span opentracing.Span
-	span, ctx = opentracing.StartSpanFromContext(ctx, "PerformSplunkSearch")
-	defer span.Finish()
+	var span *appsectracing.Span
+	span, ctx = tb.TracerLogger.StartSpan(ctx, "PerformSplunkSearch", "splunk.search.search")
+	defer span.End(ctx)
 
 	search, err := m.splunkClient.CreateSearchJob(ctx, searchString, map[string]string{
 		"earliest_time": splunk.FormatTime(time.Now().Add(-time.Hour * 24 * recentLoginsBackcheckDays)),

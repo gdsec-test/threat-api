@@ -4,20 +4,20 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/gdcorp-infosec/threat-api/lambdas/common/toolbox/appsectracing"
 	"github.com/godaddy/asherah/go/appencryption"
 	"github.com/godaddy/asherah/go/appencryption/pkg/crypto/aead"
 	"github.com/godaddy/asherah/go/appencryption/pkg/kms"
 	"github.com/godaddy/asherah/go/appencryption/pkg/persistence"
-	"github.com/opentracing/opentracing-go"
 )
 
 // Decrypt a data blob using asherah.
 // The jobID is used to find the appropriate asherah session to use.
 func (t *Toolbox) Decrypt(ctx context.Context, jobID string, decryptionRecord appencryption.DataRowRecord) ([]byte, error) {
-	var span opentracing.Span
-	span, ctx = opentracing.StartSpanFromContext(ctx, "DecryptData")
+	var span *appsectracing.Span
+	span, ctx = t.TracerLogger.StartSpan(ctx, "DecryptData", "decryption")
 	span.LogKV("dataSizeBytes", len(decryptionRecord.Data))
-	defer span.Finish()
+	defer span.End(ctx)
 
 	session, err := t.GetAsherahSession(ctx, jobID)
 	if err != nil {
@@ -36,10 +36,10 @@ func (t *Toolbox) Decrypt(ctx context.Context, jobID string, decryptionRecord ap
 // Encrypt a data blob using asherah
 // The jobID is used to find the appropriate asherah session to use.
 func (t *Toolbox) Encrypt(ctx context.Context, jobID string, data []byte) (*appencryption.DataRowRecord, error) {
-	var span opentracing.Span
-	span, ctx = opentracing.StartSpanFromContext(ctx, "EncryptData")
+	var span *appsectracing.Span
+	span, ctx = t.TracerLogger.StartSpan(ctx, "EncryptData", "encryption")
 	span.LogKV("dataSizeBytes", len(data))
-	defer span.Finish()
+	defer span.End(ctx)
 
 	session, err := t.GetAsherahSession(ctx, jobID)
 	if err != nil {
@@ -79,8 +79,8 @@ func (t *Toolbox) GetAsherahSession(ctx context.Context, jobID string) (*appencr
 
 // CloseAsherahSessions Closes any asherah sessions we have open
 func (t *Toolbox) CloseAsherahSessions(ctx context.Context) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "CloseAsherahSessions")
-	defer span.Finish()
+	span, ctx := t.TracerLogger.StartSpan(ctx, "CloseAsherahSessions", "asherah.sessions.close")
+	defer span.End(ctx)
 	for jobID, ashrahSession := range t.AsherahSession {
 		err := ashrahSession.Close()
 		if err != nil {
@@ -97,9 +97,9 @@ func (t *Toolbox) getAsherahSession(ctx context.Context, sessionID string) (*app
 		return nil, ErrNoAWSSession
 	}
 
-	var span opentracing.Span
-	span, ctx = opentracing.StartSpanFromContext(ctx, "SetUpAsherahSession")
-	defer span.Finish()
+	var span *appsectracing.Span
+	span, ctx = t.TracerLogger.StartSpan(ctx, "SetUpAsherahSession", "asherah.session.setup")
+	defer span.End(ctx)
 
 	// Build session factory if we haven't already
 	if t.AsherahSessionFactory == nil {
@@ -120,9 +120,9 @@ func (t *Toolbox) getAsherahSession(ctx context.Context, sessionID string) (*app
 // Build the asherah session factory
 func (t *Toolbox) getAsherahSessionFactory(ctx context.Context) error {
 	// Build the Metastore
-	var span opentracing.Span
-	span, ctx = opentracing.StartSpanFromContext(ctx, "SetUpAsherahSessionFactory")
-	defer span.Finish()
+	var span *appsectracing.Span
+	span, ctx = t.TracerLogger.StartSpan(ctx, "SetUpAsherahSessionFactory", "asherah.sessionfactory.setup")
+	defer span.End(ctx)
 
 	// Create metastore from AWS session
 	metastore := persistence.NewDynamoDBMetastore(
