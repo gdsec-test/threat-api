@@ -13,7 +13,7 @@ Parameters:
     Description: SNS Topic Name, which has Slack webhook to send messages
     Default: /AdminParams/SNS/AlarmNotificationTopic
 Resources:
-  APIGatewayCountTest:
+  APIGateway500ErrorCount:
     Type: AWS::CloudWatch::Alarm
     Properties:
       AlarmActions:
@@ -22,35 +22,35 @@ Resources:
       OKActions:
         - !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:warning-moog-${DevelopmentTeam}-${DevelopmentEnvironment}
         - !Sub ${SlackSnsTopicName}
-      AlarmDescription: !Sub Testing Request Count APIGateway
-      AlarmName: !Sub "${ProjectCode}: Number of request hits ${DevelopmentEnvironment}"
+      AlarmDescription: !Sub Fires when a 5xx errors occurs at APIGateway
+      AlarmName: !Sub "${ProjectCode}: 5xx error from APIGateway  ${DevelopmentEnvironment}"
       ComparisonOperator: GreaterThanThreshold
       DatapointsToAlarm: 1
       EvaluationPeriods: 10
-      MetricName: 'Count'
+      MetricName: '5XXError'
       Namespace: 'AWS/ApiGateway'
       Period: 60
       Statistic: Average
       Threshold: 1
       Unit: Count
 
-#  APIGateway500ErrorCount:
-#    Type: AWS::CloudWatch::Alarm
-#    Properties:
-#      AlarmActions:
-#        - !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:warning-moog-${DevelopmentTeam}-${DevelopmentEnvironment}
-#        - !Sub ${SlackSnsTopicName}
-#      OKActions:
-#        - !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:warning-moog-${DevelopmentTeam}-${DevelopmentEnvironment}
-#        - !Sub ${SlackSnsTopicName}
-#      AlarmDescription: !Sub Fires when a 5xx errors occurs at APIGateway
-#      AlarmName: !Sub "${ProjectCode}: 5xx error from APIGateway  ${DevelopmentEnvironment}"
-#      ComparisonOperator: GreaterThanThreshold
-#      DatapointsToAlarm: 1
-#      EvaluationPeriods: 10
-#      MetricName: '5XXError'
-#      Namespace: 'AWS/ApiGateway'
-#      Period: 60
-#      Statistic: Average
-#      Threshold: 1
-#      Unit: Count
+  APIGateway400ErrorCount:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmActions:
+        - !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:warning-moog-${DevelopmentTeam}-${DevelopmentEnvironment}
+        - !Sub ${SlackSnsTopicName}
+      OKActions:
+        - !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:warning-moog-${DevelopmentTeam}-${DevelopmentEnvironment}
+        - !Sub ${SlackSnsTopicName}
+      AlarmDescription: !Sub Fires when a 4xx errors occurs at APIGateway
+      AlarmName: !Sub "${ProjectCode}: 4xx error from APIGateway  ${DevelopmentEnvironment}"
+      ComparisonOperator: GreaterThanThreshold
+      DatapointsToAlarm: 1
+      EvaluationPeriods: 10
+      MetricName: '4XXError'
+      Namespace: 'AWS/ApiGateway'
+      Period: 60
+      Statistic: Average
+      Threshold: 1
+      Unit: Count
