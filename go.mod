@@ -12,7 +12,6 @@ require (
 	github.com/likexian/whois-go v1.7.2
 	github.com/likexian/whois-parser-go v1.15.2
 	github.com/ns3777k/go-shodan/v4 v4.2.0
-	github.com/opentracing/opentracing-go v1.1.0
 	github.com/oschwald/geoip2-golang v1.4.0
 	github.com/sirupsen/logrus v1.7.0
 	github.com/vertoforce/go-splunk v0.0.0-20201016180916-bf97db989317
@@ -22,7 +21,6 @@ require (
 	go.elastic.co/apm v1.9.0
 	go.elastic.co/apm/module/apmhttp v1.9.0
 	go.elastic.co/apm/module/apmlambda v1.8.0
-	go.elastic.co/apm/module/apmot v1.9.0
 	go.elastic.co/ecszap v1.0.0
 	go.uber.org/zap v1.14.0
 	golang.org/x/net v0.0.0-20201216054612-986b41b23924
