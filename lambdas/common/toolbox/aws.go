@@ -14,6 +14,12 @@ import (
 	"github.com/aws/aws-sdk-go/service/ssm"
 )
 
+const (
+	// This it the prefix used when fetching module specific items from
+	// secrest manager.
+	SecretsMangerSecretIDIntegrationsPrefix = "/ThreatTools/Integrations/"
+)
+
 // ErrNoAWSSession Returns when you try to perform an AWS function without first calling LoadAWSSession
 var ErrNoAWSSession = fmt.Errorf("no session in toolbox, call LoadAWSSession")
 

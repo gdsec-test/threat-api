@@ -17,6 +17,8 @@ require (
 	github.com/vertoforce/go-splunk v0.0.0-20201016180916-bf97db989317
 	github.com/vertoforce/regexgrouphelp v0.1.1
 	github.secureserver.net/auth-contrib/go-auth v1.2.1
+	github.secureserver.net/clake1/cmap-go v0.0.0-20200512164520-f1fa9adb4895
+	github.secureserver.net/go/sso-client v0.0.1
 	github.secureserver.net/threat/go-ldap v0.0.0-20201017001259-d06e7b5f7252
 	go.elastic.co/apm v1.9.0
 	go.elastic.co/apm/module/apmhttp v1.9.0
