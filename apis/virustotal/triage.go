@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	paramUrlhausAsns = "URLhaus-ASNs"
+	secretID = "/ThreatTools/Integrations/virustotal"
 )
 
 // Triage module
@@ -20,7 +20,7 @@ type TriageModule struct {
 
 // GetDocs of this module
 func (m *TriageModule) GetDocs() *triage.Doc {
-	return &triage.Doc{Name: triageModuleName, Description: "Find hosted malware from urlhaus based on hash, domain, or URL."}
+	return &triage.Doc{Name: triageModuleName, Description: "Return information about scanned filed and URLs from VirusTotal."}
 }
 
 // Supports returns true of we support this IoC type
@@ -34,17 +34,6 @@ func (m *TriageModule) Supports() []triage.IOCType {
 	}
 }
 
-func (m *TriageModule) GetAsns(ctx context.Context) (string, error) {
-	t := toolbox.GetToolbox()
-	defer t.Close(ctx)
-
-	parameter, err := t.GetFromParameterStore(context.Background(), paramUrlhausAsns, false)
-	if err != nil {
-		return "", err
-	}
-	return *parameter.Value, nil
-}
-
 // Triage finds malware domains according to URLhaus by ASN
 func (m *TriageModule) Triage(ctx context.Context, triageRequest *triage.Request) ([]*triage.Data, error) {
 	triageData := &triage.Data{
@@ -53,7 +42,7 @@ func (m *TriageModule) Triage(ctx context.Context, triageRequest *triage.Request
 	}
 
 	switch triageRequest.IOCsType {
-	case triage.MD5Type:
+	case triage.MD5Type, triage.SHA256Type:
 		triageData.Title = "Malicious URLs hosting this MD5 hash (URLhaus)"
 		entries := make([]*UrlhausPayloadEntry, len(triageRequest.IOCs))
 		for i, ioc := range triageRequest.IOCs {
@@ -65,42 +54,9 @@ func (m *TriageModule) Triage(ctx context.Context, triageRequest *triage.Request
 			entries[i] = entry
 		}
 		triageData.Data = HashesToCsv(entries)
-	case triage.SHA256Type:
-		triageData.Title = "Malicious URLs hosting this SHA256 hash (URLhaus)"
-		entries := make([]*UrlhausPayloadEntry, len(triageRequest.IOCs))
-		for i, ioc := range triageRequest.IOCs {
-			entry, err := GetSha256(ctx, ioc)
-			if err != nil {
-				fmt.Println(err)
-				continue
-			}
-			entries[i] = entry
-		}
-		triageData.Data = HashesToCsv(entries)
-	case triage.DomainType, triage.IPType:
-		triageData.Title = "Information about this host (URLhaus)"
-		entries := make([]*UrlhausHostEntry, len(triageRequest.IOCs))
-		for i, ioc := range triageRequest.IOCs {
-			entry, err := GetDomainOrIp(ctx, ioc)
-			if err != nil {
-				fmt.Println(err)
-				continue
-			}
-			entries[i] = entry
-		}
-		triageData.Data = HostsToCsv(entries)
+	case triage.DomainType:
+	case triage.IPType:
 	case triage.URLType:
-		triageData.Title = "Information about this URL address (URLhaus)"
-		entries := make([]*UrlhausUrlEntry, len(triageRequest.IOCs))
-		for i, ioc := range triageRequest.IOCs {
-			entry, err := GetUrl(ctx, ioc)
-			if err != nil {
-				fmt.Println(err)
-				continue
-			}
-			entries[i] = entry
-		}
-		triageData.Data = UrlsToCsv(entries)
 	}
 
 	return []*triage.Data{triageData}, nil
