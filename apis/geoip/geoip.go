@@ -3,9 +3,10 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/opentracing/opentracing-go"
-	"github.com/oschwald/geoip2-golang"
 	"net"
+
+	"github.com/gdcorp-infosec/threat-api/lambdas/common/toolbox/appsectracing"
+	"github.com/oschwald/geoip2-golang"
 )
 
 const (
@@ -25,9 +26,9 @@ type GeoIPInfo struct {
 // Lookup performs a geoIP search on passed IPs
 func Lookup(ctx context.Context, ips []string) []*GeoIPInfo {
 
-	var span opentracing.Span
-	span, ctx = opentracing.StartSpanFromContext(ctx, "GeoIPDBSession")
-	defer span.Finish()
+	var span *appsectracing.Span
+	span, ctx = tb.TracerLogger.StartSpan(ctx, "GeoIPDBSession", "geoip.db.session")
+	defer span.End(ctx)
 
 	geoipResults := []*GeoIPInfo{}
 	// load geoip Database
@@ -49,14 +50,14 @@ func Lookup(ctx context.Context, ips []string) []*GeoIPInfo {
 		default:
 		}
 
-		span, ctx = opentracing.StartSpanFromContext(ctx, "GeoIPLookup")
+		span, ctx = tb.TracerLogger.StartSpan(ctx, "GeoIPLookup", "geoip.ip.lookup")
 		addErrRow := func(err error) {
 			geoipResults = append(geoipResults, &GeoIPInfo{
 				IP:             ip,
 				EnglishCity:    fmt.Sprintf("ERROR: %s", err),
 				EnglishCountry: fmt.Sprintf("ERROR: %s", err),
 			})
-			span.Finish()
+			span.End(ctx)
 		}
 
 		record, err := db.City(net.ParseIP(ip))
@@ -73,7 +74,7 @@ func Lookup(ctx context.Context, ips []string) []*GeoIPInfo {
 			Lat:            record.Location.Latitude,
 			Long:           record.Location.Longitude,
 		})
-		span.Finish()
+		span.End(ctx)
 	}
 
 	return geoipResults

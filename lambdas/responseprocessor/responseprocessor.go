@@ -12,7 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/dynamodb/expression"
 	"github.com/gdcorp-infosec/threat-api/lambdas/common"
 	"github.com/gdcorp-infosec/threat-api/lambdas/common/toolbox"
-	"github.com/opentracing/opentracing-go"
+	"github.com/gdcorp-infosec/threat-api/lambdas/common/toolbox/appsectracing"
 	"github.com/sirupsen/logrus"
 	"github.com/vertoforce/regexgrouphelp"
 	_ "go.elastic.co/apm/module/apmlambda"
@@ -31,18 +31,18 @@ func handler(ctx context.Context, request events.SQSEvent) (string, error) {
 	t = toolbox.GetToolbox()
 	t.Logger.SetFormatter(&logrus.JSONFormatter{})
 
-	var span opentracing.Span
-	var span2 opentracing.Span
+	var span *appsectracing.Span
+	var span2 *appsectracing.Span
 	// Process each SQS record
 	for _, sqsRecord := range request.Records {
-		span, ctx = opentracing.StartSpanFromContext(ctx, "ProcessSQSEvent")
+		span, ctx = t.TracerLogger.StartSpan(ctx, "ProcessSQSEvent", "jobs.sqsevent.process")
 		// Try to unmarshal body
 		completedLambdaData := LambdaDestination{}
 		err := json.Unmarshal([]byte(sqsRecord.Body), &completedLambdaData)
 		if err != nil {
 			t.Logger.WithFields(logrus.Fields{"error": err, "body": sqsRecord.Body}).Error("Error unmarshaling completed job data")
 			span.LogKV("error", err)
-			span.Finish()
+			span.End(ctx)
 			continue
 		}
 
@@ -55,7 +55,7 @@ func handler(ctx context.Context, request events.SQSEvent) (string, error) {
 		// Check if this was a failed execution
 		if completedLambdaData.RequestContext.Condition != "Success" {
 			// This lambda is actually a failure response
-			span2, ctx = opentracing.StartSpanFromContext(ctx, "ProcessErroredJob")
+			span2, ctx = t.TracerLogger.StartSpan(ctx, "ProcessErroredJob", "jobs.errors.processjob")
 
 			// When a job fails, it obviously does not submit the completed job data.
 			// The completed job data includes the jobID, so we'll need another way to get the jobID.
@@ -87,14 +87,14 @@ func handler(ctx context.Context, request events.SQSEvent) (string, error) {
 				t.Logger.WithError(err).Error("Error processing response")
 			}
 
-			span2.Finish()
-			span.Finish()
+			span2.End(ctx)
+			span.End(ctx)
 			continue
 		}
 
 		// Process every completed job from the passed in data
 		for i, completedJob := range completedLambdaData.ResponsePayload {
-			span2, ctx = opentracing.StartSpanFromContext(ctx, "ProcessCompletedJob")
+			span2, ctx = t.TracerLogger.StartSpan(ctx, "ProcessCompletedJob", "job.job.processcompletedjob")
 			// Set module name to be the lambda name if this job doesn't have a module name
 			if completedJob.ModuleName == "" {
 				// Get module name from ARN
@@ -115,9 +115,9 @@ func handler(ctx context.Context, request events.SQSEvent) (string, error) {
 				span2.LogKV("error", err)
 				t.Logger.WithError(err).Error("Error processing response")
 			}
-			span2.Finish()
+			span2.End(ctx)
 		}
-		span.Finish()
+		span.End(ctx)
 	}
 	return "", nil
 }
@@ -131,15 +131,15 @@ func processCompletedJob(ctx context.Context, request common.CompletedJobData) e
 	dynamodbClient := dynamodb.New(t.AWSSession)
 
 	// Encrypt results with asherah
-	var span opentracing.Span
-	span, ctx = opentracing.StartSpanFromContext(ctx, "AsherahEncrypt")
+	var span *appsectracing.Span
+	span, ctx = t.TracerLogger.StartSpan(ctx, "AsherahEncrypt", "asherah.job.encrypt")
 	encryptedData, err := t.Encrypt(ctx, request.JobID, []byte(request.Response))
 	if err != nil {
 		span.LogKV("error", err)
-		span.Finish()
+		span.End(ctx)
 		return fmt.Errorf("error encrypting data: %w", err)
 	}
-	span.Finish()
+	span.End(ctx)
 
 	// Update the "responses" entry to contain a new map
 	update := expression.

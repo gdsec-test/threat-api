@@ -5,8 +5,6 @@ import (
 	"crypto/sha256"
 	"fmt"
 	"time"
-
-	"github.com/opentracing/opentracing-go"
 )
 
 const (
@@ -15,11 +13,11 @@ const (
 
 // GenerateJobID Creates a new job id
 func (t *Toolbox) GenerateJobID(ctx context.Context) string {
-	generateHashSpan, _ := opentracing.StartSpanFromContext(ctx, "GenerateRequestID")
+	generateHashSpan, _ := t.TracerLogger.StartSpan(ctx, "GenerateRequestID", "job.jobid.generate")
 	requestIDSha := sha256.New()
 	requestIDSha.Write([]byte(fmt.Sprintf("%d%s", time.Now().UnixNano(), salt)))
 	jobID := fmt.Sprintf("%x", requestIDSha.Sum(nil))
-	generateHashSpan.Finish()
+	generateHashSpan.End(ctx)
 
 	return jobID
 }

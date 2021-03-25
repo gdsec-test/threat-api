@@ -8,7 +8,6 @@ import (
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/gdcorp-infosec/threat-api/lambdas/common/toolbox"
 	"github.com/godaddy/asherah/go/appencryption"
-	"github.com/opentracing/opentracing-go"
 )
 
 // JobSNSMessage is the structure sent via the SNS topic to represent a job ready for processing
@@ -46,19 +45,19 @@ type JobDBEntry struct {
 
 // Decrypt will use asherah to decrypt the Responses and Submission
 func (j *JobDBEntry) Decrypt(ctx context.Context, t *toolbox.Toolbox) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "DecryptJobDBEntry")
-	defer span.Finish()
+	span, ctx := t.TracerLogger.StartSpan(ctx, "DecryptJobDBEntry", "job.db.decrypt")
+	defer span.End(ctx)
 
 	// Decrypt submission
-	span, ctx = opentracing.StartSpanFromContext(ctx, "DecryptSubmission")
+	span, ctx = t.TracerLogger.StartSpan(ctx, "DecryptSubmission", "job.submission.decrypt")
 	decryptedData, err := t.Decrypt(ctx, j.JobID, j.Submission)
 	if err == nil {
 		json.Unmarshal(decryptedData, &j.DecryptedSubmission)
 	}
-	span.Finish()
+	span.End(ctx)
 
 	// Decrypt responses
-	span, ctx = opentracing.StartSpanFromContext(ctx, "DecryptResponses")
+	span, ctx = t.TracerLogger.StartSpan(ctx, "DecryptResponses", "job.responses.decrypt")
 	j.DecryptedResponses = map[string]interface{}{}
 	for moduleName, response := range j.Responses {
 		decryptedData, err := t.Decrypt(ctx, j.JobID, response)
@@ -75,7 +74,7 @@ func (j *JobDBEntry) Decrypt(ctx context.Context, t *toolbox.Toolbox) {
 		}
 		j.DecryptedResponses[moduleName] = unmarshalledDecryptedData
 	}
-	span.Finish()
+	span.End(ctx)
 }
 
 // JobSubmission contains information to request a job to be performed

@@ -12,7 +12,12 @@ import (
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
 	"github.com/aws/aws-sdk-go/service/secretsmanager"
 	"github.com/aws/aws-sdk-go/service/ssm"
-	"github.com/opentracing/opentracing-go"
+)
+
+const (
+	// This it the prefix used when fetching module specific items from
+	// secrest manager.
+	SecretsMangerSecretIDIntegrationsPrefix = "/ThreatTools/Integrations/"
 )
 
 // ErrNoAWSSession Returns when you try to perform an AWS function without first calling LoadAWSSession
@@ -33,14 +38,14 @@ func (t *Toolbox) GetFromParameterStore(ctx context.Context, name string, withDe
 	}
 	svc := ssm.New(t.AWSSession)
 
-	GetAWSParameterSpan, _ := opentracing.StartSpanFromContext(ctx, "GetAWSParameter")
+	GetAWSParameterSpan, _ := t.TracerLogger.StartSpan(ctx, "GetAWSParameter", "aws.parameter.get")
 	output, err := svc.GetParameter(
 		&ssm.GetParameterInput{
 			Name:           aws.String(name),
 			WithDecryption: aws.Bool(withDecryption),
 		},
 	)
-	defer GetAWSParameterSpan.Finish()
+	defer GetAWSParameterSpan.End(ctx)
 
 	if err != nil {
 		GetAWSParameterSpan.LogKV("error", err)
@@ -58,12 +63,12 @@ func (t *Toolbox) GetFromCredentialsStore(ctx context.Context, secretID string, 
 	}
 	svc := secretsmanager.New(t.AWSSession)
 
-	GetAWSSecretSpan, _ := opentracing.StartSpanFromContext(ctx, "GetAWSSecret")
+	GetAWSSecretSpan, _ := t.TracerLogger.StartSpan(ctx, "GetAWSSecret", "aws.secret.get")
 	secret, err := svc.GetSecretValue(&secretsmanager.GetSecretValueInput{
 		SecretId:     aws.String(secretID),
 		VersionStage: versionStage,
 	})
-	defer GetAWSSecretSpan.Finish()
+	defer GetAWSSecretSpan.End(ctx)
 
 	if err != nil {
 		GetAWSSecretSpan.LogKV("error", err)
