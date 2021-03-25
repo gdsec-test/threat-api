@@ -12,6 +12,8 @@ import (
 // By default it logs all root spans as an app sec log, or any errors.
 // You can disable this by setting NoDefaultAppSecLogging.
 type TracerLogger struct {
+	// This will turn of any default triggered appsec logs.  So any
+	// app sec logging you want to do will be manual.
 	NoDefaultAppSecLogging bool
 	AppSecLogger           *appseclogging.AppSecLogger
 	Tracer                 Tracer
