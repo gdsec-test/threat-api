@@ -2,6 +2,7 @@ template_path: CF-ServiceLambdas.yaml
 dependencies:
   - {{environment}}/{{region}}/CF-CoreResources.yaml
 parameters:
+  cmapSHA1: !file_contents resources/cmap.sha1
   geoipSHA1: !file_contents resources/geoip.sha1
   recordedfutureSHA1: !file_contents resources/recordedfuture.sha1
   shodanSHA1: !file_contents resources/shodan.sha1
