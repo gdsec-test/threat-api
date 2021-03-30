@@ -32,14 +32,19 @@ func (m *TriageModule) triageAWSHostnames(ctx context.Context, triageRequest *tr
 		threadLimit <- 1
 		wg.Add(1)
 		go func(hostname string) {
+			span, _ := tb.TracerLogger.StartSpan(ctx, "SplunkScanAWSHostnames", "splunk.aws.search")
+			defer span.End(ctx)
+
 			search, err := m.splunkClient.CreateSearchJob(ctx, fmt.Sprintf(awsHostnameSearch, hostname), map[string]string{
 				"earliest_time": splunk.FormatTime(time.Now().Add(-time.Hour * 24 * recentLoginsBackcheckDays)),
 			})
 			if err != nil {
+				span.AddError(err)
 				return
 			}
 			results, err := search.GetResults(ctx)
 			if err != nil {
+				span.AddError(err)
 				return
 			}
 			for result := range results {

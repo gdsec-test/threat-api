@@ -22,7 +22,7 @@ func (m *TriageModule) performSplunkSearch(ctx context.Context, searchString str
 	})
 	if err != nil {
 		span.LogKV("error", "FailedLoginSplunkSearchError")
-		span.LogKV("errorMessage", err.Error())
+		span.AddError(err)
 		return nil, nil, err
 	}
 	waitCtx, cancel := context.WithTimeout(ctx, maxSplunkWaitTime)
@@ -38,7 +38,7 @@ func (m *TriageModule) performSplunkSearch(ctx context.Context, searchString str
 	results, err := search.GetResults(ctx)
 	if err != nil {
 		span.LogKV("error", "FailedLoginSplunkSearchError")
-		span.LogKV("errorMessage", err.Error())
+		span.AddError(err)
 		return nil, nil, err
 	}
 	return results, search, nil

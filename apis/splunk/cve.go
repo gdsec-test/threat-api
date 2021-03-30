@@ -92,13 +92,13 @@ func (m *TriageModule) triageCVEs(ctx context.Context, triageRequest *triage.Req
 
 	for _, CVE := range triageRequest.IOCs {
 		var span *appsectracing.Span
-		span, ctx = tb.TracerLogger.StartSpan(ctx, "SplunkScanCVE", "splunk.cve.scan")
+		span, ctx = tb.TracerLogger.StartSpan(ctx, "SplunkScanCVE", "splunk.cve.search")
+		span.LogKV("CVE", CVE)
 
 		spunkSearchContext, cancelSplunkSearch := context.WithCancel(ctx)
 		cveEvents, err := m.RecentCVEEvents(spunkSearchContext, CVE)
 		if err != nil {
-			span.LogKV("error", "SplunkCheckFailure")
-			span.LogKV("errorMessage", err.Error())
+			span.AddError(err)
 			cancelSplunkSearch()
 			span.End(ctx)
 			continue
