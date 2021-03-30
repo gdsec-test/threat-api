@@ -29,11 +29,19 @@ func (m *TriageModule) triageAWSHostnames(ctx context.Context, triageRequest *tr
 	// And getting the results
 	for _, hostname := range triageRequest.IOCs {
 		// Consume thread
-		threadLimit <- 1
-		wg.Add(1)
+		select {
+		case threadLimit <- 1:
+			wg.Add(1)
+		case <-ctx.Done():
+			break
+		}
 		go func(hostname string) {
 			span, _ := tb.TracerLogger.StartSpan(ctx, "SplunkScanAWSHostname", "splunk.aws.search")
 			defer span.End(ctx)
+			defer func() {
+				<-threadLimit
+				wg.Done()
+			}()
 
 			search, err := m.splunkClient.CreateSearchJob(ctx, fmt.Sprintf(awsHostnameSearch, hostname), map[string]string{
 				"earliest_time": splunk.FormatTime(time.Now().Add(-time.Hour * 24 * recentLoginsBackcheckDays)),
@@ -62,8 +70,6 @@ func (m *TriageModule) triageAWSHostnames(ctx context.Context, triageRequest *tr
 				))
 				metadataLock.Unlock()
 			}
-			<-threadLimit
-			wg.Done()
 		}(hostname)
 	}
 	wg.Wait()
