@@ -32,7 +32,7 @@ func (m *TriageModule) triageAWSHostnames(ctx context.Context, triageRequest *tr
 		threadLimit <- 1
 		wg.Add(1)
 		go func(hostname string) {
-			span, _ := tb.TracerLogger.StartSpan(ctx, "SplunkScanAWSHostnames", "splunk.aws.search")
+			span, _ := tb.TracerLogger.StartSpan(ctx, "SplunkScanAWSHostname", "splunk.aws.search")
 			defer span.End(ctx)
 
 			search, err := m.splunkClient.CreateSearchJob(ctx, fmt.Sprintf(awsHostnameSearch, hostname), map[string]string{
