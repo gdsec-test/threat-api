@@ -34,16 +34,21 @@ func AWSToTriage(ctx context.Context, t *toolbox.Toolbox, module triage.Module, 
 
 // triageSNSEvent converts the aws to legacy interface for a single job
 func triageSNSEvent(ctx context.Context, t *toolbox.Toolbox, module triage.Module, request events.SNSEventRecord) (*common.CompletedJobData, error) {
+	span, _ := t.TracerLogger.StartSpan(ctx, "TriageLegacyConnector", "triagelegacyconnector.sns.triage")
+	defer span.End(ctx)
+
 	// Unmarshal the SNS job message
 	jobMessage := common.JobSNSMessage{}
 	err := json.Unmarshal([]byte(request.SNS.Message), &jobMessage)
 	if err != nil {
 		err = fmt.Errorf("error unmarshaling the SNS message to our common JobMessage structure: %w", err)
+		span.AddError(err)
 		return nil, err
 	}
 
 	// Pull out the JWT to pass to triage request
 	JWT := toolbox.GetJWTFromRequest(jobMessage.Submission)
+	span.LogKV("JWTLength", len(JWT))
 
 	response := &common.CompletedJobData{
 		ModuleName: module.GetDocs().Name,
@@ -58,6 +63,8 @@ func triageSNSEvent(ctx context.Context, t *toolbox.Toolbox, module triage.Modul
 		return nil, err
 	}
 	fmt.Printf("Got job submission: %v\n", jobSubmission)
+	span.LogKV("IOCType", jobSubmission.IOCType)
+	span.LogKV("IOCsLength", len(jobSubmission.IOCs))
 
 	// Check if our module should be run
 	ourModuleMentioned := func() bool {
@@ -79,6 +86,8 @@ func triageSNSEvent(ctx context.Context, t *toolbox.Toolbox, module triage.Modul
 	}
 	ourModuleMentionedOut := ourModuleMentioned()
 	weSupportThisIOCTypeOut := weSupportThisIOCType()
+	span.LogKV("ourModuleMentioned", ourModuleMentionedOut)
+	span.LogKV("weSupportThisIOC", weSupportThisIOCTypeOut)
 	if !ourModuleMentionedOut || !weSupportThisIOCTypeOut {
 		// TODO: Change this to something else?
 		// For now just return nothing
@@ -96,6 +105,7 @@ func triageSNSEvent(ctx context.Context, t *toolbox.Toolbox, module triage.Modul
 	triageDatas, err := module.Triage(ctx, triageRequest)
 	if err != nil {
 		err = fmt.Errorf("This module had an error processing this request: %s", err)
+		span.AddError(err)
 		response.Response = err.Error()
 		return response, nil
 	}
@@ -105,6 +115,7 @@ func triageSNSEvent(ctx context.Context, t *toolbox.Toolbox, module triage.Modul
 	if err != nil {
 		err = fmt.Errorf("error marshalling the triage data: %w", err)
 		response.Response = err.Error()
+		span.AddError(err)
 		return response, err
 	}
 	response.Response = string(triageDataMarshal)
