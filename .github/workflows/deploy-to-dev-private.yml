@@ -1,6 +1,6 @@
 name: ThreatAPI Deployment (DEV-PRIVATE)
 
-# Deploys the ThreatAPI main branch to the AWS DEV environment using sceptre.
+# Deploys the ThreatAPI main branch to the AWS DEV PRIVATE environment using sceptre.
 
 # This workflow needs to run on a self-hosted runner for the time being,
 # because "go get" can't access modules on github.secureserver.net correctly
