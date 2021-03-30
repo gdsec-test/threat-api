@@ -51,10 +51,14 @@ func (m *TriageModule) Triage(ctx context.Context, triageRequest *triage.Request
 		return []*triage.Data{{Title: "Splunk", Data: "Lacking permission.  You do not have permission to read splunk data."}}, nil
 	}
 
+	span, _ = tb.TracerLogger.StartSpan(ctx, "InitSplunkClient", "splunk.client.init")
 	err = m.initClient(ctx)
 	if err != nil {
+		span.AddError(err)
+		span.End(ctx)
 		return nil, fmt.Errorf("Failed to log in to splunk: %s", err)
 	}
+	span.End(ctx)
 
 	var triageDatas []*triage.Data
 
