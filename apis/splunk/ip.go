@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"reflect"
 	"strconv"
 	"sync"
 	"time"
@@ -30,7 +29,7 @@ const (
 )
 
 // ipSearchFunction is a simple function that accepts an ip, and appends items to the triage metadata.
-type ipSearchFunction func(ip string)
+type ipSearchFunction func(ctx context.Context, ip string)
 
 // triageIPs Finds failed login attempts and other events mentioning the ips.
 // It does not return any real data, instead linking to splunk searches
@@ -45,7 +44,7 @@ func (m *TriageModule) triageIPs(ctx context.Context, triageRequest *triage.Requ
 
 	// Here we define all of our different search functions for IPs.  Each function needs to search splunk,
 	// then perform some intelligence logic to create a `triage.Data` entry with insights (metadata) that it found.
-	searchOnPremFailedLoginEvents := ipSearchFunction(func(ip string) {
+	searchOnPremFailedLoginEvents := ipSearchFunction(func(ctx context.Context, ip string) {
 		results, search, err := m.performSplunkSearch(ctx, fmt.Sprintf(onPremLoginEvent, ip))
 		if err != nil {
 			return
@@ -59,7 +58,7 @@ func (m *TriageModule) triageIPs(ctx context.Context, triageRequest *triage.Requ
 			metadataLock.Unlock()
 		}
 	})
-	searchGenericIPEvents := ipSearchFunction(func(ip string) {
+	searchGenericIPEvents := ipSearchFunction(func(ctx context.Context, ip string) {
 		results, search, err := m.performSplunkSearch(ctx, fmt.Sprintf(eventWithIP, ip))
 		if err != nil {
 			return
@@ -73,7 +72,7 @@ func (m *TriageModule) triageIPs(ctx context.Context, triageRequest *triage.Requ
 			metadataLock.Unlock()
 		}
 	})
-	searchOktaLogins := ipSearchFunction(func(ip string) {
+	searchOktaLogins := ipSearchFunction(func(ctx context.Context, ip string) {
 		results, search, err := m.performSplunkSearch(ctx, fmt.Sprintf(recentOktaLoginsByIPSearch, ip))
 		if err != nil {
 			return
@@ -98,7 +97,7 @@ func (m *TriageModule) triageIPs(ctx context.Context, triageRequest *triage.Requ
 			metadataLock.Unlock()
 		}
 	})
-	searchAWSItems := ipSearchFunction(func(ip string) {
+	searchAWSItems := ipSearchFunction(func(ctx context.Context, ip string) {
 		results, search, err := m.performSplunkSearch(ctx, fmt.Sprintf(awsConfigItemSearch, ip, ip))
 		if err != nil {
 			return
@@ -135,14 +134,13 @@ ipLoop:
 			}
 			// Search for on prem failed login events
 			go func(ipSF ipSearchFunction, ip string) {
-				span, _ := tb.TracerLogger.StartSpan(ctx, "IPSearch", "splunk.ip.search")
-				span.LogKV("functionName", reflect.TypeOf(ipSF).Name())
+				span, ipCtx := tb.TracerLogger.StartSpan(ctx, "IPSearch", "splunk.ip.search")
 				defer func() {
 					<-threadLimit
 					wg.Done()
 					span.End(ctx)
 				}()
-				ipSF(ip)
+				ipSF(ipCtx, ip)
 			}(ipSF, ip)
 		}
 	}
