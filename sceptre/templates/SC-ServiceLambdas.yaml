@@ -14,6 +14,22 @@ Parameters:
     Default: /AdminParams/Team/Environment
     AllowedValues:
       - /AdminParams/Team/Environment
+  SSOHost:
+    Type: String
+    Description: SSO endpoint used by the Authorizer lambda
+    Default: "sso.gdcorp.tools"
+  DXVpcSecurityGroups:
+    Type: AWS::SSM::Parameter::Value<String>
+    Description: SSM Parameter for private dx app security group id
+    Default: /AdminParams/VPC/PrivateDXAPPSG
+    AllowedValues:
+      - /AdminParams/VPC/PrivateDXAPPSG
+  DXVpcSubnetIds:
+    Type: AWS::SSM::Parameter::Value<List<String>>
+    Description: SSM Parameter for private dx app subnet ids
+    Default: /AdminParams/VPC/DXAPPSubnets
+    AllowedValues:
+      - /AdminParams/VPC/DXAPPSubnets
   cmapSHA1:
     Type: String
     Description: SHA1 hash of the cmap lambda source
@@ -73,6 +89,12 @@ Resources:
           Value: 15
         - Key: CustomIAMRoleNameSuffix
           Value: ThreatRole
+        - Key: EnvironmentVariablesJson
+          Value: !Sub '{"SSO_HOST": "${SSOHost}"}'
+        - Key: VpcSecurityGroups
+          Value: !Ref DXVpcSecurityGroups
+        - Key: VpcSubnetIds
+          Value: !Join [ ",", !Ref DXVpcSubnetIds ]
       Tags:
         - Key: doNotShutDown
           Value: true
@@ -161,6 +183,12 @@ Resources:
           Value: 15
         - Key: CustomIAMRoleNameSuffix
           Value: ThreatRole
+        - Key: EnvironmentVariablesJson
+          Value: !Sub '{"SSO_HOST": "${SSOHost}"}'
+        - Key: VpcSecurityGroups
+          Value: !Ref DXVpcSecurityGroups
+        - Key: VpcSubnetIds
+          Value: !Join [ ",", !Ref DXVpcSubnetIds ]
       Tags:
         - Key: doNotShutDown
           Value: true
@@ -249,6 +277,12 @@ Resources:
           Value: 15
         - Key: CustomIAMRoleNameSuffix
           Value: ThreatRole
+        - Key: EnvironmentVariablesJson
+          Value: !Sub '{"SSO_HOST": "${SSOHost}"}'
+        - Key: VpcSecurityGroups
+          Value: !Ref DXVpcSecurityGroups
+        - Key: VpcSubnetIds
+          Value: !Join [ ",", !Ref DXVpcSubnetIds ]
       Tags:
         - Key: doNotShutDown
           Value: true
@@ -337,6 +371,12 @@ Resources:
           Value: 15
         - Key: CustomIAMRoleNameSuffix
           Value: ThreatRole
+        - Key: EnvironmentVariablesJson
+          Value: !Sub '{"SSO_HOST": "${SSOHost}"}'
+        - Key: VpcSecurityGroups
+          Value: !Ref DXVpcSecurityGroups
+        - Key: VpcSubnetIds
+          Value: !Join [ ",", !Ref DXVpcSubnetIds ]
       Tags:
         - Key: doNotShutDown
           Value: true
@@ -425,6 +465,12 @@ Resources:
           Value: 15
         - Key: CustomIAMRoleNameSuffix
           Value: ThreatRole
+        - Key: EnvironmentVariablesJson
+          Value: !Sub '{"SSO_HOST": "${SSOHost}"}'
+        - Key: VpcSecurityGroups
+          Value: !Ref DXVpcSecurityGroups
+        - Key: VpcSubnetIds
+          Value: !Join [ ",", !Ref DXVpcSubnetIds ]
       Tags:
         - Key: doNotShutDown
           Value: true
@@ -513,6 +559,12 @@ Resources:
           Value: 15
         - Key: CustomIAMRoleNameSuffix
           Value: ThreatRole
+        - Key: EnvironmentVariablesJson
+          Value: !Sub '{"SSO_HOST": "${SSOHost}"}'
+        - Key: VpcSecurityGroups
+          Value: !Ref DXVpcSecurityGroups
+        - Key: VpcSubnetIds
+          Value: !Join [ ",", !Ref DXVpcSubnetIds ]
       Tags:
         - Key: doNotShutDown
           Value: true
@@ -601,6 +653,12 @@ Resources:
           Value: 15
         - Key: CustomIAMRoleNameSuffix
           Value: ThreatRole
+        - Key: EnvironmentVariablesJson
+          Value: !Sub '{"SSO_HOST": "${SSOHost}"}'
+        - Key: VpcSecurityGroups
+          Value: !Ref DXVpcSecurityGroups
+        - Key: VpcSubnetIds
+          Value: !Join [ ",", !Ref DXVpcSubnetIds ]
       Tags:
         - Key: doNotShutDown
           Value: true
@@ -689,6 +747,12 @@ Resources:
           Value: 15
         - Key: CustomIAMRoleNameSuffix
           Value: ThreatRole
+        - Key: EnvironmentVariablesJson
+          Value: !Sub '{"SSO_HOST": "${SSOHost}"}'
+        - Key: VpcSecurityGroups
+          Value: !Ref DXVpcSecurityGroups
+        - Key: VpcSubnetIds
+          Value: !Join [ ",", !Ref DXVpcSubnetIds ]
       Tags:
         - Key: doNotShutDown
           Value: true
