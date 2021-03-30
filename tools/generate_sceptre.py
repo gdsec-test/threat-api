@@ -29,6 +29,7 @@ SC_CONFIG_START = dedent(
     dependencies:
       - {{environment}}/{{region}}/SC-CoreResources.yaml
     parameters:
+      SSOHost: {{sso_host}}
     """
 )
 
@@ -137,6 +138,22 @@ SC_PARAMETERS_HEADER = dedent(
         Default: /AdminParams/Team/Environment
         AllowedValues:
           - /AdminParams/Team/Environment
+      SSOHost:
+        Type: String
+        Description: SSO endpoint used by the Authorizer lambda
+        Default: "sso.gdcorp.tools"
+      DXVpcSecurityGroups:
+        Type: AWS::SSM::Parameter::Value<String>
+        Description: SSM Parameter for private dx app security group id
+        Default: /AdminParams/VPC/PrivateDXAPPSG
+        AllowedValues:
+          - /AdminParams/VPC/PrivateDXAPPSG
+      DXVpcSubnetIds:
+        Type: AWS::SSM::Parameter::Value<List<String>>
+        Description: SSM Parameter for private dx app subnet ids
+        Default: /AdminParams/VPC/DXAPPSubnets
+        AllowedValues:
+          - /AdminParams/VPC/DXAPPSubnets
     """
 )
 
@@ -176,6 +193,12 @@ SC_RESOURCES_BLOCK = dedent(
             Value: __TIMEOUT__
           - Key: CustomIAMRoleNameSuffix
             Value: ThreatRole
+          - Key: EnvironmentVariablesJson
+            Value: !Sub '{"SSO_HOST": "${SSOHost}"}'
+          - Key: VpcSecurityGroups
+            Value: !Ref DXVpcSecurityGroups
+          - Key: VpcSubnetIds
+            Value: !Join [ ",", !Ref DXVpcSubnetIds ]
         Tags:
           - Key: doNotShutDown
             Value: true
