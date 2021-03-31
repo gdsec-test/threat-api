@@ -2,7 +2,7 @@
 
 ![ThreatAPI Deployment (PROD)](https://github.com/gdcorp-infosec/threat-api/workflows/ThreatAPI%20Deployment%20(PROD)/badge.svg)
 ![ThreatAPI Deployment (DEV)](https://github.com/gdcorp-infosec/threat-api/workflows/ThreatAPI%20Deployment%20(DEV)/badge.svg)
-![ThreatAPI Deployment (DEV)](https://github.com/gdcorp-infosec/threat-api/workflows/ThreatAPI%20Deployment%20(DEV-PRIVATE)/badge.svg)
+![ThreatAPI Deployment (DEV-PRIVATE)](https://github.com/gdcorp-infosec/threat-api/workflows/ThreatAPI%20Deployment%20(DEV-PRIVATE)/badge.svg)
 ![Code quality check](https://github.com/gdcorp-infosec/threat-api/workflows/Code%20quality%20check/badge.svg)
 ![Deploy role secret sync](https://github.com/gdcorp-infosec/threat-api/workflows/Deploy%20Role%20secrets%20automatic%20sync/badge.svg)
 
