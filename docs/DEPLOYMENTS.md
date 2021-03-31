@@ -11,7 +11,9 @@
     - `github.com` password for this username can be retrieved from AWS Secrets Manager
     - Created from the service account `SVCOJtJzC2BlV1MvD` with email address `SVCOJtJzC2BlV1MvD@godaddy.com` whose credentials can be retrieved from CyberArk
     - Part of `gdcorp-infosec` and `gdcorp-cp` organisations
-    - PAT `threat-repo-github-actions ` defined for usage with GitHub API, authorised by  `gdcorp-infosec` and `gdcorp-cp`. Secret value is available through AWS Secrets Manager for team's access
+    - PAT `threat-repo-github-actions` defined for usage with GitHub API, authorised by  `gdcorp-infosec`, `gdcorp-cp` & `gdcorp-actions`. Secret value is available through AWS Secrets Manager for team's access
+    - PAT `github-aws-secrets-sync` defined for usage with GitHub API, authorised by  `gdcorp-infosec`. This GitHub PAT is setup with full repo and admin:org scopes as documented [here](https://github.com/gdcorp-actions/update-cloud-service-credentials#environment). Secret value is available through AWS Secrets Manager for team's access
+      >NOTE: This is an extremely powerful token. This PAT is for the action to sync credentials from AWS Secrets Manager to Github Secrets **ONLY** and not used in any other context. Use `threat-repo-github-actions` for normal code checkouts.
     - SSH key pair `GITHUBCLOUD_SSH_PRIVATE_KEY` is attached and authorised by this account to clone private repositories with Go and from `github.com`. Secret value pair is available through AWS Secrets Manager with the same name for the team's access
 
 - `025f610c17f9ecm` is a DC1 Service account to handle connections with `github.secureserver.net`
@@ -39,3 +41,22 @@ go-code-check-lambdas:
       matrix:
         go-lambdas: [manager] # Add golang infrastructure lambdas here
 ```
+
+##### deploy-role-secrets-sync.yml
+- Runs a cron job scheduled weekly at 00:00 on Sunday UTC
+- Can also be manually triggered if a sync is needed. Choose `main` to run from
+- Sync happens across all environments - dev-private, dev, production
+
+##### deploy-to-dev-private.yml
+- Manually triggered
+- Make sure you choose your branch to trigger the deployment from
+  ![workflow_dispatch](./diagrams/workflow_dispatch.png)
+
+##### deploy-to-dev.yml
+- Triggered on every merge into `main`
+- Can also be manually triggered via `workflow_dispatch`
+  - Make sure you choose `main` to trigger the deployment from
+
+##### deploy-to-prod.yml
+- Manually triggered
+- Make sure you choose `main` to trigger the deployment from
