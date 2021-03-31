@@ -2,33 +2,74 @@ package main
 
 import (
 	"context"
-	"encoding/json"
+	"crypto/sha256"
+	"fmt"
 
 	vt "github.com/VirusTotal/vt-go"
 )
 
 const (
 	triageModuleName = "virustotal"
-	hashPath = "files/%s"
-	urlPath = "urls/%s"
-	domainHash = "domains/%s"
-	ipHash = "ip_addresses/%s"
+	hashPath         = "files/%s"
+	urlPath          = "urls/%s"
+	domainPath       = "domains/%s"
+	ipPath           = "ip_addresses/%s"
 )
 
-type VirusModule struct {
+type VirusTotal struct {
 	apiKey string
+	client *vt.Client
 }
 
-func (m *VirusModule) GetHash(ctx context.Context, hash string) (*vt.Object, error) {
-	// TODO: use context object
+func NewVirusTotal(apiKey string) *VirusTotal {
+	virusTotal := new(VirusTotal)
+	virusTotal.apiKey = apiKey
+	virusTotal.client = vt.NewClient(apiKey)
+	return virusTotal
+}
 
-	// TODO: move into constructor?
-	client := vt.NewClient(m.apiKey)
+func (m *VirusTotal) GetHash(ctx context.Context, hash string) (*vt.Object, error) {
+	// TODO: use context object?
 
-	data, err := client.GetObject(vt.URL("hahes/%s/analyses", hash))
+	url := vt.URL(hashPath, hash)
+	obj, err := m.client.GetObject(url)
 	if err != nil {
 		return nil, err
 	}
+	return obj, nil
+}
 
-	return data, nil
+func (m *VirusTotal) GetUrl(ctx context.Context, _url string) (*vt.Object, error) {
+	// TODO: use context object?
+
+	hashedUrl := sha256.Sum256([]byte(_url))
+	stringHashedUrl := fmt.Sprintf("%x", hashedUrl[:])
+	url := vt.URL(urlPath, stringHashedUrl)
+	obj, err := m.client.GetObject(url)
+	if err != nil {
+		return nil, err
+	}
+	return obj, nil
+}
+
+func (m *VirusTotal) GetDomain(ctx context.Context, domain string) (*vt.Object, error) {
+	// TODO: use context object?
+
+	url := vt.URL(domainPath, domain)
+	obj, err := m.client.GetObject(url)
+	if err != nil {
+		return nil, err
+	}
+	return obj, nil
+}
+
+func (m *VirusTotal) GetAddress(ctx context.Context, ip string) (*vt.Object, error) {
+	// TODO: use context object?
+
+	url := vt.URL(ipPath, ip)
+	obj, err := m.client.GetObject(url)
+	if err != nil {
+		return nil, err
+	}
+	return obj, nil
 }
