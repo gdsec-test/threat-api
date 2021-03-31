@@ -2,7 +2,7 @@
 
 # This script supports the build process for the system
 # ("manager" and "responseprocessor") lambdas:
-# - Store a SHA1 hash of the source code so the CloudFormation templates can
+# - Store a SHA1 hash of the binary so the CloudFormation templates can
 #   use them to detect differences and trigger an update
 # - Build the lambdas (both are assumed to be golang implementations)
 # - Create ZIP files and upload them to S3 so that the CloudFormation templates
@@ -22,18 +22,15 @@ do
 
     pushd ${THREAT_API_SOURCE}/lambdas/${LAMBDA}
 
-    # Store the SHA1 hash of the source code
-
-
     env GOPRIVATE=github.secureserver.net,github.com/gdcorp-* GOOS=linux GOARCH=amd64 go build
+
+    # Store the SHA1 hash of the resulting binary
+    SHA1HASH=$(shasum "${LAMBDA}" | cut -d' ' -f1)
+    echo ${SHA1HASH} > ${RESOURCES_DIR}/${LAMBDA}.sha1
 
     # Create ZIP file and upload to S3
     rm -f function.zip
     zip -9 function.zip ${LAMBDA}
-
-    SHA1HASH=$(shasum function.zip | cut -d' ' -f1)
-    echo ${SHA1HASH} > ${RESOURCES_DIR}/${LAMBDA}.sha1
-
     aws s3 cp function.zip s3://${CODE_BUCKET}/${LAMBDA}/${SHA1HASH}
 
     # Cleanup
