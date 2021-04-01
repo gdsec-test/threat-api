@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/csv"
 	"fmt"
+	"strconv"
 	"time"
 
 	vt "github.com/VirusTotal/vt-go"
@@ -52,14 +53,14 @@ func (m *TriageModule) Triage(ctx context.Context, triageRequest *triage.Request
 		return []*triage.Data{triageData}, err
 	}
 	apiKey := *secret.SecretString
-	virusTotal * VirusTotal = NewVirusTotal(apiKey)
+	virusTotal := NewVirusTotal(apiKey)
 
 	switch triageRequest.IOCsType {
 	case triage.MD5Type, triage.SHA256Type:
 		triageData.Title = "Analyses of previously seen hashes"
 		entries := make([]*vt.Object, len(triageRequest.IOCs))
 		for i, ioc := range triageRequest.IOCs {
-			entry, err := virusTotal.GetHash(ioc)
+			entry, err := virusTotal.GetHash(nil, ioc)
 			if err != nil {
 				fmt.Println(err)
 				continue
@@ -71,7 +72,7 @@ func (m *TriageModule) Triage(ctx context.Context, triageRequest *triage.Request
 		triageData.Title = "Analyses of previously seen domain names"
 		entries := make([]*vt.Object, len(triageRequest.IOCs))
 		for i, ioc := range triageRequest.IOCs {
-			entry, err := virusTotal.GetDomain(ioc)
+			entry, err := virusTotal.GetDomain(nil, ioc)
 			if err != nil {
 				fmt.Println(err)
 				continue
@@ -83,7 +84,7 @@ func (m *TriageModule) Triage(ctx context.Context, triageRequest *triage.Request
 		triageData.Title = "Analyses of previously seen IP addresses"
 		entries := make([]*vt.Object, len(triageRequest.IOCs))
 		for i, ioc := range triageRequest.IOCs {
-			entry, err := virusTotal.GetAddress(ioc)
+			entry, err := virusTotal.GetAddress(nil, ioc)
 			if err != nil {
 				fmt.Println(err)
 				continue
@@ -95,7 +96,7 @@ func (m *TriageModule) Triage(ctx context.Context, triageRequest *triage.Request
 		triageData.Title = "Analyses of previously seen URLs"
 		entries := make([]*vt.Object, len(triageRequest.IOCs))
 		for i, ioc := range triageRequest.IOCs {
-			entry, err := virusTotal.GetUrl(ioc)
+			entry, err := virusTotal.GetUrl(nil, ioc)
 			if err != nil {
 				fmt.Println(err)
 				continue
@@ -112,11 +113,6 @@ func HashesToCsv(payloads []*vt.Object) string {
 	resp := bytes.Buffer{}
 	csv := csv.NewWriter(&resp)
 
-	// convert the "first seen in the wild" field from
-	// the Linux epoch time as an integer into a RFC 3339 string
-	t := time.Unix(payload.GetInt64("first_seen_itw_date", 0))
-	firstSeen := t.Format(time.RFC3339)
-
 	csv.Write([]string{
 		"MD5",
 		"SHA1",
@@ -131,14 +127,56 @@ func HashesToCsv(payloads []*vt.Object) string {
 		if payload == nil {
 			continue
 		}
+
+		// convert the "first seen in the wild" field from
+		// the Linux epoch time as an integer into a RFC 3339 string
+		firstSeenEpoch, err := payload.GetInt64("first_seen_itw_date")
+		if err != nil {
+			fmt.Println(err)
+			continue
+		}
+		t := time.Unix(firstSeenEpoch, 0)
+		firstSeen := t.Format(time.RFC3339)
+
+		md5, err := payload.GetString("md5")
+		if err != nil {
+			fmt.Println(err)
+			continue
+		}
+		sha1, err := payload.GetString("sha1")
+		if err != nil {
+			fmt.Println(err)
+			continue
+		}
+		sha256, err := payload.GetString("sha256")
+		if err != nil {
+			fmt.Println(err)
+			continue
+		}
+		magic, err := payload.GetString("magic")
+		if err != nil {
+			fmt.Println(err)
+			continue
+		}
+		size, err := payload.GetInt64("size")
+		if err != nil {
+			fmt.Println(err)
+			continue
+		}
+		reputation, err := payload.GetInt64("reputation")
+		if err != nil {
+			fmt.Println(err)
+			continue
+		}
+
 		cols := []string{
-			payload.GetString("md5"),
-			payload.GetString("sha1"),
-			payload.GetString("sha256"),
-			payload.GetString("magic"),
-			str(payload.GetInt64("size")),
+			md5,
+			sha1,
+			sha256,
+			magic,
+			strconv.FormatInt(size, 10),
 			firstSeen,
-			str(payload.GetInt64("reputation"))
+			strconv.FormatInt(reputation, 10),
 		}
 		csv.Write(cols)
 	}
@@ -151,11 +189,6 @@ func DomainsToCsv(payloads []*vt.Object) string {
 	resp := bytes.Buffer{}
 	csv := csv.NewWriter(&resp)
 
-	// convert the creation date field from
-	// the Linux epoch time as an integer into a RFC 3339 string
-	t := time.Unix(payload.GetInt64("creation_date", 0))
-	creationDate := t.Format(time.RFC3339)
-
 	csv.Write([]string{
 		"Created",
 		"Reputation",
@@ -166,10 +199,32 @@ func DomainsToCsv(payloads []*vt.Object) string {
 		if payload == nil {
 			continue
 		}
+
+		// convert the creation date field from
+		// the Linux epoch time as an integer into a RFC 3339 string
+		creationDateEpoch, err := payload.GetInt64("creation_date")
+		if err != nil {
+			fmt.Println(err)
+			continue
+		}
+		t := time.Unix(creationDateEpoch, 0)
+		creationDate := t.Format(time.RFC3339)
+
+		whois, err := payload.GetString("whois")
+		if err != nil {
+			fmt.Println(err)
+			continue
+		}
+		reputation, err := payload.GetInt64("reputation")
+		if err != nil {
+			fmt.Println(err)
+			continue
+		}
+
 		cols := []string{
 			creationDate,
-			str(payload.GetInt64("reputation"))
-			payload.GetString("whois"),
+			strconv.FormatInt(reputation, 10),
+			whois,
 		}
 		csv.Write(cols)
 	}
@@ -192,10 +247,27 @@ func IpsToCsv(payloads []*vt.Object) string {
 		if payload == nil {
 			continue
 		}
+
+		owner, err := payload.GetString("as_owner")
+		if err != nil {
+			fmt.Println(err)
+			continue
+		}
+		asn, err := payload.GetInt64("asn")
+		if err != nil {
+			fmt.Println(err)
+			continue
+		}
+		country, err := payload.GetString("country")
+		if err != nil {
+			fmt.Println(err)
+			continue
+		}
+
 		cols := []string{
-			payload.GetString("as_owner"),
-			str(payload.GetInt64("asn")),
-			payload.GetString("country"),
+			owner,
+			strconv.FormatInt(asn, 10),
+			country,
 		}
 		csv.Write(cols)
 	}
@@ -207,11 +279,6 @@ func IpsToCsv(payloads []*vt.Object) string {
 func UrlsToCsv(payloads []*vt.Object) string {
 	resp := bytes.Buffer{}
 	csv := csv.NewWriter(&resp)
-
-	// convert the first submission date field from
-	// the Linux epoch time as an integer into a RFC 3339 string
-	t := time.Unix(payload.GetInt64("first_submission_date", 0))
-	firstSubmission := t.Format(time.RFC3339)
 
 	csv.Write([]string{
 		"URL",
@@ -225,12 +292,44 @@ func UrlsToCsv(payloads []*vt.Object) string {
 		if payload == nil {
 			continue
 		}
+
+		// convert the first submission date field from
+		// the Linux epoch time as an integer into a RFC 3339 string
+		firstSubmissionEpoch, err := payload.GetInt64("first_submission_date")
+		if err != nil {
+			fmt.Println(err)
+			continue
+		}
+		t := time.Unix(firstSubmissionEpoch, 0)
+		firstSubmission := t.Format(time.RFC3339)
+
+		url, err := payload.GetString("url")
+		if err != nil {
+			fmt.Println(err)
+			continue
+		}
+		title, err := payload.GetString("title")
+		if err != nil {
+			fmt.Println(err)
+			continue
+		}
+		reputation, err := payload.GetInt64("reputation")
+		if err != nil {
+			fmt.Println(err)
+			continue
+		}
+		category, err := payload.GetString("last_analysis_results.category")
+		if err != nil {
+			fmt.Println(err)
+			continue
+		}
+
 		cols := []string{
-			payload.GetString("url"),
-			payload.GetString("title"),
-			payload.GetInt64("reputation"),
+			url,
+			title,
+			strconv.FormatInt(reputation, 10),
 			firstSubmission,
-			payload.GetString("last_analysis_results.category"),
+			category,
 		}
 		csv.Write(cols)
 	}
