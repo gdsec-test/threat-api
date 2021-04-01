@@ -67,6 +67,7 @@ func (t *Toolbox) Authorize(ctx context.Context, jwt, action, resource string) (
 	}
 
 	// They pass all checks for this action, they are good!
+	span.LogKV("authorized", true)
 	return true, nil
 }
 
