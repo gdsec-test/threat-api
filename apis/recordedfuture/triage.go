@@ -3,13 +3,11 @@ package main
 import (
 	"context"
 	"fmt"
+	"net/http"
+
 	"github.com/gdcorp-infosec/threat-api/lambdas/common/toolbox"
 	"github.com/gdcorp-infosec/threat-api/lambdas/common/triagelegacyconnector/triage"
-	"net/http"
 )
-
-//tb Toolbox to use secrets manager
-var tb *toolbox.Toolbox
 
 const (
 	triageModuleName = "recordedfuture"
