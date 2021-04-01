@@ -3,6 +3,9 @@ exclude-paths = ".tartufo-excludes"
 exclude-signatures = [
 "0d87be6673203617696bcbbc34b465cb1e3b4c14d79b9cf180628c1be6a9acca", # Signature for sys_id in THREAT_API.md
 "6fe4c4cfb73bc9fbaa56916cdf056921f7d5f8a94b15cc803bbbd0436a17eb2b", # Tested if new Tartufo repo failure is working good by adding a entropy string and deleted it
+"01d47b5b5cb3a504912028ad93004d5d20aa1ccb88a95dfa4e62479d1ca866e0", # Hash in URLHaus test cases
+"63d35e0fec52b9d99aaa3552e54a80bd943df660d3edf41e7b6dbb8ab43687f0", # Hash in URLHaus test cases
+"9d8796389b3346824afbb4dc1cc36184e58349c4915ba13b0dd6935a0afe9667", # Hash in SNow library test cases
 ]
 json = false
 regex = true

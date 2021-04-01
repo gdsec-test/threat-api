@@ -29,16 +29,27 @@ func (a *APMTracer) StartSpan(ctx context.Context, operationName, operationType 
 	// Check if the context has a span
 	if span := apm.SpanFromContext(ctx); span != nil {
 		// TODO: Start off a.APMTracer
-		span, ctx = apm.StartSpan(ctx, operationName, operationType)
-		return &APMSpan{span: span}, ctx
+
+		// Only use this span if it hasn't been completed yet.
+		// If spanData is nil, it means the span is already done.  So we'll
+		// just start a new one
+		if span.SpanData != nil {
+			span, ctx = apm.StartSpan(ctx, operationName, operationType)
+			return &APMSpan{span: span}, ctx
+		}
 	}
 
 	// Check if the context has a transaction
 	if transaction := apm.TransactionFromContext(ctx); transaction != nil {
 		// Create span off this transaction
-		span := transaction.StartSpan(operationName, operationType, nil)
-		ctx = apm.ContextWithSpan(ctx, span)
-		return &APMSpan{span: span}, ctx
+		// Only use this transaction if it hasn't been completed yet.
+		// If transactionData is nil, it means the transaction is already done.  So we'll
+		// just start a new one
+		if transaction.TransactionData != nil {
+			span := transaction.StartSpan(operationName, operationType, nil)
+			ctx = apm.ContextWithSpan(ctx, span)
+			return &APMSpan{span: span}, ctx
+		}
 	}
 
 	// There is nothing in the context, start a new transaction

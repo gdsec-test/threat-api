@@ -1,0 +1,7 @@
+template_path: SC-CloudWatchAlarm.yaml
+dependencies:
+  - {{environment}}/{{region}}/SC-SNSMoog.yaml
+parameters:
+  DevelopmentTeam: {{development_team}}
+  DevelopmentEnvironment: {{environment}}
+  ProjectCode: {{project_code}}

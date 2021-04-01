@@ -2,6 +2,7 @@ package appsectracing
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/gdcorp-infosec/threat-api/lambdas/common/toolbox/appsectracing/appseclogging"
 )
@@ -9,11 +10,19 @@ import (
 // Span is a generic span,
 // providing some other functionality, like appsec logging errors.
 type Span struct {
+	operationName string
+	operationType string
+	// Key values logged during this span
+	KV     map[string]interface{}
 	span   TracingSpan
 	logger *TracerLogger
 }
 
 func (s *Span) LogKV(key string, value interface{}) {
+	if s.KV == nil {
+		s.KV = map[string]interface{}{}
+	}
+	s.KV[key] = value
 	s.span.LogKV(key, value)
 }
 
@@ -27,6 +36,20 @@ func (s *Span) AddError(err error) {
 }
 
 func (s *Span) End(ctx context.Context) {
+	// Log this as an appsec log
+	if !s.logger.NoDefaultAppSecLogging {
+		fields := appseclogging.Fields{"operationDetails": map[string]string{"operationType": s.operationType}}
+
+		if len(s.KV) > 0 {
+			fields["KeyValuePairs"] = map[string]string{}
+			for key, value := range s.KV {
+				fields["KeyValuePairs"][key] = fmt.Sprintf("%v", value)
+			}
+		}
+
+		s.logger.AppSecLogger.Info(s.operationName, fields)
+	}
+
 	s.span.End(ctx)
 }
 
@@ -36,10 +59,10 @@ func (l *TracerLogger) StartSpan(ctx context.Context, operationName, operationTy
 	var span TracingSpan
 	span, ctx = l.Tracer.StartSpan(ctx, operationName, operationType)
 
-	// Log this as an appsec log
-	if !l.NoDefaultAppSecLogging {
-		l.AppSecLogger.Info(operationName, appseclogging.Fields{"operationDetails": map[string]string{"operationType": operationType}})
-	}
-
-	return &Span{span: span, logger: l}, ctx
+	return &Span{
+		operationName: operationName,
+		operationType: operationType,
+		span:          span,
+		logger:        l,
+	}, ctx
 }

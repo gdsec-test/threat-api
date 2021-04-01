@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # This script supports the build process for the service lambdas:
-# - Store a SHA1 hash of the source code so the CloudFormation templates can
+# - Store a SHA1 hash of the binary so the CloudFormation templates can
 #   use them to detect differences and trigger an update
 # - Build the lambdas
 # - Create ZIP files and upload them to S3 so that the CloudFormation templates
@@ -26,8 +26,13 @@ do
         # Build the lambda using the supplied build script
         ./build.sh
 
-        # Store the SHA1 hash of the source directory
-        SHA1HASH=$(shasum function.zip | cut -d' ' -f1)
+        if [ -f "${LAMBDA}" ]; then
+            # Store the SHA1 hash of the resulting binary
+            SHA1HASH=$(shasum "${LAMBDA}" | cut -d' ' -f1)
+        else
+            # Store the SHA1 hash of the generated zip file
+            SHA1HASH=$(shasum "function.zip" | cut -d' ' -f1)
+        fi
         echo ${SHA1HASH} > ${RESOURCES_DIR}/${LAMBDA}.sha1
 
         # Upload the ZIP file to S3

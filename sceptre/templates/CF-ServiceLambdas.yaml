@@ -2,6 +2,10 @@ AWSTemplateFormatVersion: 2010-09-09
 Description: ThreatTools API Service Lambdas
 
 Parameters:
+  cmapSHA1:
+    Type: String
+    Description: SHA1 hash of the cmap lambda source
+    Default: ""
   geoipSHA1:
     Type: String
     Description: SHA1 hash of the geoip lambda source
@@ -32,6 +36,56 @@ Parameters:
     Default: ""
 
 Resources:
+  cmapLambdaFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      Code:
+        S3Bucket: !Sub gd-threattools-${AWS::AccountId}-code-bucket
+        S3Key: !Sub cmap/${cmapSHA1}
+      Description: !Sub cmap lambda (${cmapSHA1})
+      FunctionName: cmap
+      Handler: cmap
+      MemorySize: 256
+      Role: !Sub arn:aws:iam::${AWS::AccountId}:role/threattools-custom-ThreatRole
+      Runtime: go1.x
+      Timeout: 15
+
+  cmapLambdaPermission:
+    DependsOn: cmapLambdaFunction
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:cmap
+      Principal: sns.amazonaws.com
+      SourceArn: !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:JobRequests
+
+  cmapSNSSubscription:
+    DependsOn: cmapLambdaFunction
+    Type: AWS::SNS::Subscription
+    Properties:
+      Endpoint: !GetAtt cmapLambdaFunction.Arn
+      Protocol: lambda
+      TopicArn: !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:JobRequests
+
+  cmapLambdaEventInvokeConfig:
+    DependsOn: cmapLambdaFunction
+    Type: AWS::Lambda::EventInvokeConfig
+    Properties:
+      DestinationConfig:
+        OnSuccess:
+          Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobResponses
+        OnFailure:
+          Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobFailures
+      FunctionName: cmap
+      Qualifier: $LATEST
+
+  cmapLambdaMetadata:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: /ThreatTools/Modules/cmap
+      Type: String
+      Value: '{"supportedIOCTypes": ["DOMAIN"], "actions": {"Run": {"requiredADGroups": ["Eng-ThreatIntel"]}}}'
+
   geoipLambdaFunction:
     Type: AWS::Lambda::Function
     Properties:
@@ -330,7 +384,7 @@ Resources:
     Properties:
       Name: /ThreatTools/Modules/urlhaus
       Type: String
-      Value: '{"supportedIOCTypes": ["UNKNOWN"]}'
+      Value: '{"supportedIOCTypes": ["DOMAIN", "IP", "URL", "MD5", "SHA256"]}'
 
   whoisLambdaFunction:
     Type: AWS::Lambda::Function

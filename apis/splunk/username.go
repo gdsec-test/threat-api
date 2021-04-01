@@ -89,12 +89,12 @@ func (m *TriageModule) triageUsernames(ctx context.Context, triageRequest *triag
 	// Perform for each username
 	for _, username := range triageRequest.IOCs {
 		var span *appsectracing.Span
-		span, ctx = tb.TracerLogger.StartSpan(ctx, "CheckSplunkUsername", "splunk.search.usernamecheck")
+		span, ctx = tb.TracerLogger.StartSpan(ctx, "CheckSplunkUsername", "splunk.username.search")
 		// Find recent logins
 		loginEvents, err := m.GetRecentLoginEvents(ctx, username)
 		if err != nil {
 			span.LogKV("error", "SplunkCheckFailure")
-			span.LogKV("errorMessage", err.Error())
+			span.AddError(err)
 			span.End(ctx)
 			continue
 		}

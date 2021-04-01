@@ -67,6 +67,7 @@ func (t *Toolbox) Authorize(ctx context.Context, jwt, action, resource string) (
 	}
 
 	// They pass all checks for this action, they are good!
+	span.LogKV("authorized", true)
 	return true, nil
 }
 
@@ -75,21 +76,26 @@ func (t *Toolbox) Authorize(ctx context.Context, jwt, action, resource string) (
 func (t *Toolbox) ValidateJWT(ctx context.Context, jwt string) (*gdtoken.Token, error) {
 	var span *appsectracing.Span
 	span, ctx = t.TracerLogger.StartSpan(ctx, "ValidateJWT", "auth.jwt.validate")
+	span.LogKV("JWTLength", len(jwt))
 	defer span.End(ctx)
 
 	// Check formatting and build token
 	token, err := gdtoken.FromStringV2(jwt)
 	if err != nil {
+		span.AddError(err)
 		return nil, err
 	}
 
 	validator := gdsso.ValidatorFactory(t.SSOHostURL)
 	if validator == nil {
-		return nil, fmt.Errorf("failed to get validator factory")
+		err = fmt.Errorf("failed to get validator factory")
+		span.AddError(err)
+		return nil, err
 	}
 
 	err = validator.Validate(ctx, jwt)
 	if err != nil {
+		span.AddError(err)
 		return nil, err
 	}
 

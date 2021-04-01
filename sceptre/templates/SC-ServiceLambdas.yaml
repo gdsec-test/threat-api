@@ -14,6 +14,26 @@ Parameters:
     Default: /AdminParams/Team/Environment
     AllowedValues:
       - /AdminParams/Team/Environment
+  SSOHost:
+    Type: String
+    Description: SSO endpoint used by the Authorizer lambda
+    Default: "sso.gdcorp.tools"
+  DXVpcSecurityGroups:
+    Type: AWS::SSM::Parameter::Value<String>
+    Description: SSM Parameter for private dx app security group id
+    Default: /AdminParams/VPC/PrivateDXAPPSG
+    AllowedValues:
+      - /AdminParams/VPC/PrivateDXAPPSG
+  DXVpcSubnetIds:
+    Type: AWS::SSM::Parameter::Value<List<String>>
+    Description: SSM Parameter for private dx app subnet ids
+    Default: /AdminParams/VPC/DXAPPSubnets
+    AllowedValues:
+      - /AdminParams/VPC/DXAPPSubnets
+  cmapSHA1:
+    Type: String
+    Description: SHA1 hash of the cmap lambda source
+    Default: ""
   geoipSHA1:
     Type: String
     Description: SHA1 hash of the geoip lambda source
@@ -44,6 +64,100 @@ Parameters:
     Default: ""
 
 Resources:
+  cmapLambdaFunction:
+    Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
+    Properties:
+      ProductName: Lambda
+      ProvisioningArtifactName: 2.3.0
+      ProvisionedProductName: cmapLambdaFunction
+      ProvisioningParameters:
+        - Key: S3Bucket
+          Value: !Sub gd-${DevelopmentTeam}-${DevelopmentEnvironment}-code-bucket
+        - Key: S3Key
+          Value: !Sub cmap/${cmapSHA1}
+        - Key: Handler
+          Value: cmap
+        - Key: LambdaName
+          Value: cmap
+        - Key: LambdaDescription
+          Value: !Sub cmap lambda (${cmapSHA1})
+        - Key: MemorySize
+          Value: 256
+        - Key: Runtime
+          Value: go1.x
+        - Key: Timeout
+          Value: 15
+        - Key: CustomIAMRoleNameSuffix
+          Value: ThreatRole
+        - Key: EnvironmentVariablesJson
+          Value: !Sub '{"SSO_HOST": "${SSOHost}"}'
+        - Key: VpcSecurityGroups
+          Value: !Ref DXVpcSecurityGroups
+        - Key: VpcSubnetIds
+          Value: !Join [ ",", !Ref DXVpcSubnetIds ]
+      Tags:
+        - Key: doNotShutDown
+          Value: true
+
+  cmapLambdaPermission:
+    DependsOn: cmapLambdaFunction
+    Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
+    Properties:
+      ProductName: LambdaPermission
+      ProvisioningArtifactName: 1.0.1
+      ProvisionedProductName: cmapLambdaPermission
+      ProvisioningParameters:
+        - Key: Action
+          Value: lambda:InvokeFunction
+        - Key: FunctionName
+          Value: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:cmap
+        - Key: Principal
+          Value: sns.amazonaws.com
+        - Key: SourceArn
+          Value: !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:JobRequests
+      Tags:
+        - Key: doNotShutDown
+          Value: true
+
+  cmapSNSSubscription:
+    DependsOn: cmapLambdaFunction
+    Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
+    Properties:
+      ProductName: SNSSubscription
+      ProvisioningArtifactName: 1.0.1
+      ProvisionedProductName: cmapSNSSubscription
+      ProvisioningParameters:
+        - Key: Protocol
+          Value: lambda
+        - Key: TopicArn
+          Value: !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:JobRequests
+        - Key: Endpoint
+          Value: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:cmap
+        - Key: Region
+          Value: !Sub ${AWS::Region}
+      Tags:
+        - Key: doNotShutDown
+          Value: true
+
+  cmapLambdaEventInvokeConfig:
+    DependsOn: cmapLambdaFunction
+    Type: AWS::Lambda::EventInvokeConfig
+    Properties:
+      DestinationConfig:
+        OnSuccess:
+          Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobResponses
+        OnFailure:
+          Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobFailures
+      FunctionName: cmap
+      Qualifier: $LATEST
+
+  cmapLambdaMetadata:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: /ThreatTools/Modules/cmap
+      Type: String
+      Value: '{"supportedIOCTypes": ["DOMAIN"], "actions": {"Run": {"requiredADGroups": ["Eng-ThreatIntel"]}}}'
+
   geoipLambdaFunction:
     Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
     Properties:
@@ -69,6 +183,12 @@ Resources:
           Value: 15
         - Key: CustomIAMRoleNameSuffix
           Value: ThreatRole
+        - Key: EnvironmentVariablesJson
+          Value: !Sub '{"SSO_HOST": "${SSOHost}"}'
+        - Key: VpcSecurityGroups
+          Value: !Ref DXVpcSecurityGroups
+        - Key: VpcSubnetIds
+          Value: !Join [ ",", !Ref DXVpcSubnetIds ]
       Tags:
         - Key: doNotShutDown
           Value: true
@@ -157,6 +277,12 @@ Resources:
           Value: 15
         - Key: CustomIAMRoleNameSuffix
           Value: ThreatRole
+        - Key: EnvironmentVariablesJson
+          Value: !Sub '{"SSO_HOST": "${SSOHost}"}'
+        - Key: VpcSecurityGroups
+          Value: !Ref DXVpcSecurityGroups
+        - Key: VpcSubnetIds
+          Value: !Join [ ",", !Ref DXVpcSubnetIds ]
       Tags:
         - Key: doNotShutDown
           Value: true
@@ -245,6 +371,12 @@ Resources:
           Value: 15
         - Key: CustomIAMRoleNameSuffix
           Value: ThreatRole
+        - Key: EnvironmentVariablesJson
+          Value: !Sub '{"SSO_HOST": "${SSOHost}"}'
+        - Key: VpcSecurityGroups
+          Value: !Ref DXVpcSecurityGroups
+        - Key: VpcSubnetIds
+          Value: !Join [ ",", !Ref DXVpcSubnetIds ]
       Tags:
         - Key: doNotShutDown
           Value: true
@@ -333,6 +465,12 @@ Resources:
           Value: 15
         - Key: CustomIAMRoleNameSuffix
           Value: ThreatRole
+        - Key: EnvironmentVariablesJson
+          Value: !Sub '{"SSO_HOST": "${SSOHost}"}'
+        - Key: VpcSecurityGroups
+          Value: !Ref DXVpcSecurityGroups
+        - Key: VpcSubnetIds
+          Value: !Join [ ",", !Ref DXVpcSubnetIds ]
       Tags:
         - Key: doNotShutDown
           Value: true
@@ -421,6 +559,12 @@ Resources:
           Value: 15
         - Key: CustomIAMRoleNameSuffix
           Value: ThreatRole
+        - Key: EnvironmentVariablesJson
+          Value: !Sub '{"SSO_HOST": "${SSOHost}"}'
+        - Key: VpcSecurityGroups
+          Value: !Ref DXVpcSecurityGroups
+        - Key: VpcSubnetIds
+          Value: !Join [ ",", !Ref DXVpcSubnetIds ]
       Tags:
         - Key: doNotShutDown
           Value: true
@@ -509,6 +653,12 @@ Resources:
           Value: 15
         - Key: CustomIAMRoleNameSuffix
           Value: ThreatRole
+        - Key: EnvironmentVariablesJson
+          Value: !Sub '{"SSO_HOST": "${SSOHost}"}'
+        - Key: VpcSecurityGroups
+          Value: !Ref DXVpcSecurityGroups
+        - Key: VpcSubnetIds
+          Value: !Join [ ",", !Ref DXVpcSubnetIds ]
       Tags:
         - Key: doNotShutDown
           Value: true
@@ -570,7 +720,7 @@ Resources:
     Properties:
       Name: /ThreatTools/Modules/urlhaus
       Type: String
-      Value: '{"supportedIOCTypes": ["UNKNOWN"]}'
+      Value: '{"supportedIOCTypes": ["DOMAIN", "IP", "URL", "MD5", "SHA256"]}'
 
   whoisLambdaFunction:
     Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
@@ -597,6 +747,12 @@ Resources:
           Value: 15
         - Key: CustomIAMRoleNameSuffix
           Value: ThreatRole
+        - Key: EnvironmentVariablesJson
+          Value: !Sub '{"SSO_HOST": "${SSOHost}"}'
+        - Key: VpcSecurityGroups
+          Value: !Ref DXVpcSecurityGroups
+        - Key: VpcSubnetIds
+          Value: !Join [ ",", !Ref DXVpcSubnetIds ]
       Tags:
         - Key: doNotShutDown
           Value: true
