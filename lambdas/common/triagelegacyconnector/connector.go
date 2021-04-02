@@ -57,6 +57,9 @@ func AWSToTriage(ctx context.Context, t *toolbox.Toolbox, module triage.Module, 
 	allJobsDone := make(chan struct{})
 	go func() {
 		wg.Wait()
+		// Signal that all jobs are done, or if we are
+		// dealing with a different scenario, do nothing so this go routine
+		// doesn't dangle around.
 		select {
 		case allJobsDone <- struct{}{}:
 		default:
