@@ -34,7 +34,7 @@ func AWSToTriage(ctx context.Context, t *toolbox.Toolbox, module triage.Module, 
 
 	// Start each job in a new thread
 	wg := sync.WaitGroup{}
-	jobErrors := make(chan error)
+	jobErrors := make(chan error) // Channel to capture any error
 	jobsCtx, jobsCancel := context.WithCancel(ctx)
 	for _, event := range request.Records {
 		wg.Add(1)
@@ -57,27 +57,27 @@ func AWSToTriage(ctx context.Context, t *toolbox.Toolbox, module triage.Module, 
 	allJobsDone := make(chan struct{})
 	go func() {
 		wg.Wait()
-		allJobsDone <- struct{}{}
+		select {
+		case allJobsDone <- struct{}{}:
+		default:
+		}
 	}()
 
 	// Wait for either each job to finish, or time to run out!
 	select {
-	case jobError := <-jobErrors:
-		// A job had an error, cancel everything and return the error
+	case jobError := <-jobErrors: // A job had an error, cancel everything and return the error
 		jobsCancel()
 		wg.Wait()
 
 		return nil, jobError
-	case <-time.After(moduleTimeLimit):
-		// Out of time!  We need to wrap up!
+	case <-time.After(moduleTimeLimit): // Out of time!  We need to wrap up!
 
 		// Cancel the context, this should cause all jobs to "wrap up"
 		// and return partial results (see the comments on the module.Triage interface)
 		jobsCancel()
 		// Wait for the job(s) to actually finish
 		wg.Wait()
-	case <-allJobsDone:
-		// We are all done :)
+	case <-allJobsDone: // We are all done :)
 	}
 	jobsCancel()
 	return ret, nil
