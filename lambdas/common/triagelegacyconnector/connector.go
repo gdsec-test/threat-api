@@ -71,7 +71,6 @@ func AWSToTriage(ctx context.Context, t *toolbox.Toolbox, module triage.Module, 
 
 		return nil, jobError
 	case <-time.After(moduleTimeLimit): // Out of time!  We need to wrap up!
-
 		// Cancel the context, this should cause all jobs to "wrap up"
 		// and return partial results (see the comments on the module.Triage interface)
 		jobsCancel()
