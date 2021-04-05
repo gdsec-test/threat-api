@@ -2,13 +2,18 @@ package appsectracing
 
 import (
 	"context"
+	"time"
 
 	"go.elastic.co/apm"
 )
 
-// APMSpan is a wrapper around backend APM spans.
-// It treats both APM transactions and spans as "spans"
+// APMSpan is a wrapper around backend APM spans/transactions.
+// Note that our tracer logger abstracts everything as a "span"
+// but APM has both transactions and spans.  So this APMSpan could
+// technically be a span or transaction under the hood, but we call
+// it a span from higher up.
 type APMSpan struct {
+	startTime   time.Time
 	span        *apm.Span
 	transaction *apm.Transaction
 }
@@ -34,8 +39,9 @@ func (a *APMTracer) StartSpan(ctx context.Context, operationName, operationType 
 		// If spanData is nil, it means the span is already done.  So we'll
 		// just start a new one
 		if span.SpanData != nil {
-			span, ctx = apm.StartSpan(ctx, operationName, operationType)
-			return &APMSpan{span: span}, ctx
+			startTime := time.Now()
+			span, ctx = apm.StartSpanOptions(ctx, operationName, operationType, apm.SpanOptions{Start: startTime})
+			return &APMSpan{startTime: startTime, span: span}, ctx
 		}
 	}
 
@@ -46,17 +52,19 @@ func (a *APMTracer) StartSpan(ctx context.Context, operationName, operationType 
 		// If transactionData is nil, it means the transaction is already done.  So we'll
 		// just start a new one
 		if transaction.TransactionData != nil {
-			span := transaction.StartSpan(operationName, operationType, nil)
+			startTime := time.Now()
+			span := transaction.StartSpanOptions(operationName, operationType, apm.SpanOptions{Start: startTime})
 			ctx = apm.ContextWithSpan(ctx, span)
-			return &APMSpan{span: span}, ctx
+			return &APMSpan{startTime: startTime, span: span}, ctx
 		}
 	}
 
 	// There is nothing in the context, start a new transaction
-	transaction := a.APMTracer.StartTransaction(operationName, operationType)
+	startTime := time.Now()
+	transaction := a.APMTracer.StartTransactionOptions(operationName, operationType, apm.TransactionOptions{Start: startTime})
 	ctx = apm.ContextWithTransaction(ctx, transaction)
 
-	return &APMSpan{transaction: transaction}, ctx
+	return &APMSpan{startTime: startTime, transaction: transaction}, ctx
 }
 
 func (a *APMTracer) Close(ctx context.Context) error {
@@ -134,4 +142,9 @@ func (s *APMSpan) LogKV(key string, value interface{}) {
 	default:
 		panic("nil span")
 	}
+}
+
+// GetStartTime of this span
+func (s *APMSpan) GetStartTime() time.Time {
+	return s.startTime
 }
