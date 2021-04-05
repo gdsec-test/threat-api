@@ -744,7 +744,7 @@ Resources:
         - Key: Runtime
           Value: go1.x
         - Key: Timeout
-          Value: 15
+          Value: 300
         - Key: CustomIAMRoleNameSuffix
           Value: ThreatRole
         - Key: EnvironmentVariablesJson
