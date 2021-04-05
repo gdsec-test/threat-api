@@ -114,7 +114,7 @@ type Request struct {
 type Module interface {
 	// Triage is the base command to return whatever data we can find about the ioc
 	// If no data was found it should not return any []*Data
-	// It should only return an error if there is a critical error, otherwise it should return whatever data it can
+	// It should only return an error if there is a critical error, otherwise it should return whatever data it can (partial results)
 	Triage(ctx context.Context, triageRequest *Request) ([]*Data, error)
 	// Supports returns the IOCTypes this modules support
 	Supports() []IOCType
