@@ -63,7 +63,7 @@ func (s *Span) End(ctx context.Context) {
 	if !s.logger.NoDefaultAppSecLogging {
 		fields := appseclogging.Fields{"operationDetails": map[string]string{
 			"operationType": s.operationType,
-			"startTime":     fmt.Sprintf("%d", s.span.GetStartTime().Unix()),
+			"startTime":     fmt.Sprintf("%d", s.span.GetStartTime().UTC().Unix()),
 		}}
 
 		if len(s.KV) > 0 {
