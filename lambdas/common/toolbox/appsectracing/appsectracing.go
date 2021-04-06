@@ -9,7 +9,7 @@ import (
 )
 
 // TracerLogger is a tool that supports tracing and appsec logging.
-// By default it logs all root spans as an app sec log, or any errors.
+// By default it (appsec) logs all errors, and spans on their completion.
 // You can disable this by setting NoDefaultAppSecLogging.
 type TracerLogger struct {
 	// This will turn of any default triggered appsec logs.  So any
@@ -31,7 +31,9 @@ func NewTracerLogger(tracer Tracer, appSecLogger *appseclogging.AppSecLogger) *T
 	return &TracerLogger{AppSecLogger: appSecLogger, Tracer: tracer}
 }
 
-// Close the tracer and logger
+// Close the tracer and logger.
+// This should _always_ be called after you are done using this.
+// Some underlying implementations require flushing.
 func (t *TracerLogger) Close(ctx context.Context) error {
 	return t.Tracer.Close(ctx)
 }
