@@ -6,11 +6,23 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
+	"sync"
+	"time"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/gdcorp-infosec/threat-api/lambdas/common"
 	"github.com/gdcorp-infosec/threat-api/lambdas/common/toolbox"
 	"github.com/gdcorp-infosec/threat-api/lambdas/common/triagelegacyconnector/triage"
+)
+
+const (
+	// This limit sets the time limit for an old module before canceling it's context.
+	// The previous framework operated such that each module could run as long as it wants,
+	// until the parent cancels the context.  Then the module would wrap up and send whatever
+	// results it has.  Because we now operate in lambdas, we need to cancel the lambda slightly
+	// before the lambda timeout so it can return partial results.
+	// For now this is hard coded to 5 minutes.
+	moduleTimeLimit = time.Minute * 5
 )
 
 // AWSToTriage acts as an interface from our new interface to the old threat api triage interface.
@@ -20,15 +32,56 @@ import (
 func AWSToTriage(ctx context.Context, t *toolbox.Toolbox, module triage.Module, request events.SNSEvent) ([]*common.CompletedJobData, error) {
 	ret := []*common.CompletedJobData{}
 
+	// Start each job in a new thread
+	wg := sync.WaitGroup{}
+	jobErrors := make(chan error) // Channel to capture any error
+	jobsCtx, jobsCancel := context.WithCancel(ctx)
 	for _, event := range request.Records {
-		completedJobData, err := triageSNSEvent(ctx, t, module, event)
-		if err != nil {
-			return nil, fmt.Errorf("error processing event: %w", err)
-		}
-		// TODO: check if the returned data is too large for SNS, and therefore needs to be put in a S3 or something.
-		ret = append(ret, completedJobData)
+		wg.Add(1)
+		// Spawn thread to handle this job
+		go func(event events.SNSEventRecord) {
+			defer wg.Done()
+
+			completedJobData, err := triageSNSEvent(jobsCtx, t, module, event)
+			if err != nil {
+				// Alert the other thread about this error to cancel everything
+				jobErrors <- fmt.Errorf("error processing event: %w", err)
+				return
+			}
+			// TODO: check if the returned data is too large for SNS, and therefore needs to be put in a S3 or something.
+			ret = append(ret, completedJobData)
+		}(event)
 	}
 
+	// Start thread to wait for all jobs to be done
+	allJobsDone := make(chan struct{})
+	go func() {
+		wg.Wait()
+		// Signal that all jobs are done, or if we are
+		// dealing with a different scenario, do nothing so this go routine
+		// doesn't dangle around.
+		select {
+		case allJobsDone <- struct{}{}:
+		default:
+		}
+	}()
+
+	// Wait for either each job to finish, or time to run out!
+	select {
+	case jobError := <-jobErrors: // A job had an error, cancel everything and return the error
+		jobsCancel()
+		wg.Wait()
+
+		return nil, jobError
+	case <-time.After(moduleTimeLimit): // Out of time!  We need to wrap up!
+		// Cancel the context, this should cause all jobs to "wrap up"
+		// and return partial results (see the comments on the module.Triage interface)
+		jobsCancel()
+		// Wait for the job(s) to actually finish
+		wg.Wait()
+	case <-allJobsDone: // We are all done :)
+	}
+	jobsCancel()
 	return ret, nil
 }
 

@@ -248,7 +248,7 @@ Resources:
       MemorySize: 256
       Role: !Sub arn:aws:iam::${AWS::AccountId}:role/threattools-custom-ThreatRole
       Runtime: go1.x
-      Timeout: 15
+      Timeout: 300
 
   splunkLambdaPermission:
     DependsOn: splunkLambdaFunction
@@ -398,7 +398,7 @@ Resources:
       MemorySize: 256
       Role: !Sub arn:aws:iam::${AWS::AccountId}:role/threattools-custom-ThreatRole
       Runtime: go1.x
-      Timeout: 15
+      Timeout: 300
 
   whoisLambdaPermission:
     DependsOn: whoisLambdaFunction
