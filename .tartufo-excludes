@@ -1,7 +1,6 @@
 go.sum
 pyproject.toml
 apis/geoip/build.sh
-apis/splunk/splunkcert.go
 docs/diagrams/asynchronous.svg
 docs/diagrams/job_request_flow.svg
 docs/diagrams/lambda_architecture.svg
