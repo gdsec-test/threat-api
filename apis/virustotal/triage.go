@@ -37,22 +37,11 @@ func (m *TriageModule) Supports() []triage.IOCType {
 	}
 }
 
-// Triage finds malware domains according to URLhaus by ASN
-func (m *TriageModule) Triage(ctx context.Context, triageRequest *triage.Request) ([]*triage.Data, error) {
+func (m *TriageModule) ProcessRequest(triageRequest *triage.Request, apiKey string) (*triage.Data, error) {
 	triageData := &triage.Data{
 		Title:    "VirusTotal",
 		Metadata: []string{},
 	}
-
-	tb = toolbox.GetToolbox()
-	defer tb.Close(ctx)
-
-	secret, err := tb.GetFromCredentialsStore(ctx, secretID, nil)
-	if err != nil {
-		triageData.Data = fmt.Sprintf("Error retrieving secret with key, %s: %s", secretID, err)
-		return []*triage.Data{triageData}, err
-	}
-	apiKey := *secret.SecretString
 	virusTotal := NewVirusTotal(apiKey)
 
 	switch triageRequest.IOCsType {
@@ -106,7 +95,30 @@ func (m *TriageModule) Triage(ctx context.Context, triageRequest *triage.Request
 		triageData.Data = UrlsToCsv(entries)
 	}
 
-	return []*triage.Data{triageData}, nil
+	return triageData, nil
+}
+
+// Triage finds malware domains according to URLhaus by ASN
+func (m *TriageModule) Triage(ctx context.Context, triageRequest *triage.Request) ([]*triage.Data, error) {
+	triageData := &triage.Data{
+		Title:    "VirusTotal",
+		Metadata: []string{},
+	}
+
+	tb = toolbox.GetToolbox()
+	defer tb.Close(ctx)
+
+	secret, err := tb.GetFromCredentialsStore(ctx, secretID, nil)
+	if err != nil {
+		triageData.Data = fmt.Sprintf("Error retrieving secret with key, %s: %s", secretID, err)
+		return []*triage.Data{triageData}, err
+	}
+	apiKey := *secret.SecretString
+	data, err := m.ProcessRequest(triageRequest, apiKey)
+	if err != nil {
+		return nil, err
+	}
+	return []*triage.Data{data}, nil
 }
 
 func HashesToCsv(payloads []*vt.Object) string {
@@ -285,7 +297,11 @@ func UrlsToCsv(payloads []*vt.Object) string {
 		"Title",
 		"Reputation",
 		"First Submission",
-		"Analysis",
+		"Harmless",
+		"Malicious",
+		"Suspicious",
+		"Timeout",
+		"Undetected",
 	})
 
 	for _, payload := range payloads {
@@ -310,26 +326,36 @@ func UrlsToCsv(payloads []*vt.Object) string {
 		}
 		title, err := payload.GetString("title")
 		if err != nil {
-			fmt.Println(err)
-			continue
+			// some legitimate results omit a title field
+			title = ""
 		}
 		reputation, err := payload.GetInt64("reputation")
 		if err != nil {
 			fmt.Println(err)
 			continue
 		}
-		category, err := payload.GetString("last_analysis_results.category")
+		lastAnalysis, err := payload.Get("last_analysis_stats")
 		if err != nil {
 			fmt.Println(err)
 			continue
 		}
+		lastAnalysisMap := lastAnalysis.(map[string]interface{})
+		harmless := lastAnalysisMap["harmless"]
+		malicious := lastAnalysisMap["malicious"]
+		suspicious := lastAnalysisMap["suspicious"]
+		timeout := lastAnalysisMap["timeout"]
+		undetected := lastAnalysisMap["undetected"]
 
 		cols := []string{
 			url,
 			title,
 			strconv.FormatInt(reputation, 10),
 			firstSubmission,
-			category,
+			strconv.FormatInt(int64(harmless.(float64)), 10),
+			strconv.FormatInt(int64(malicious.(float64)), 10),
+			strconv.FormatInt(int64(suspicious.(float64)), 10),
+			strconv.FormatInt(int64(timeout.(float64)), 10),
+			strconv.FormatInt(int64(undetected.(float64)), 10),
 		}
 		csv.Write(cols)
 	}
