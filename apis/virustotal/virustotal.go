@@ -29,8 +29,6 @@ func NewVirusTotal(apiKey string) *VirusTotal {
 }
 
 func (m *VirusTotal) GetHash(ctx context.Context, hash string) (*vt.Object, error) {
-	// TODO: use context object?
-
 	url := vt.URL(hashPath, hash)
 	obj, err := m.client.GetObject(url)
 	if err != nil {
@@ -39,9 +37,7 @@ func (m *VirusTotal) GetHash(ctx context.Context, hash string) (*vt.Object, erro
 	return obj, nil
 }
 
-func (m *VirusTotal) GetUrl(ctx context.Context, _url string) (*vt.Object, error) {
-	// TODO: use context object?
-
+func (m *VirusTotal) GetURL(ctx context.Context, _url string) (*vt.Object, error) {
 	hashedUrl := sha256.Sum256([]byte(_url))
 	stringHashedUrl := fmt.Sprintf("%x", hashedUrl[:])
 	url := vt.URL(urlPath, stringHashedUrl)
@@ -53,8 +49,6 @@ func (m *VirusTotal) GetUrl(ctx context.Context, _url string) (*vt.Object, error
 }
 
 func (m *VirusTotal) GetDomain(ctx context.Context, domain string) (*vt.Object, error) {
-	// TODO: use context object?
-
 	url := vt.URL(domainPath, domain)
 	obj, err := m.client.GetObject(url)
 	if err != nil {
@@ -64,8 +58,6 @@ func (m *VirusTotal) GetDomain(ctx context.Context, domain string) (*vt.Object, 
 }
 
 func (m *VirusTotal) GetAddress(ctx context.Context, ip string) (*vt.Object, error) {
-	// TODO: use context object?
-
 	url := vt.URL(ipPath, ip)
 	obj, err := m.client.GetObject(url)
 	if err != nil {

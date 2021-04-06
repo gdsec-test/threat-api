@@ -10,6 +10,7 @@ import (
 
 	vt "github.com/VirusTotal/vt-go"
 	"github.com/gdcorp-infosec/threat-api/lambdas/common/toolbox"
+	"github.com/gdcorp-infosec/threat-api/lambdas/common/toolbox/appsectracing"
 	"github.com/gdcorp-infosec/threat-api/lambdas/common/triagelegacyconnector/triage"
 )
 
@@ -85,7 +86,7 @@ func (m *TriageModule) ProcessRequest(triageRequest *triage.Request, apiKey stri
 		triageData.Title = "Analyses of previously seen URLs"
 		entries := make([]*vt.Object, len(triageRequest.IOCs))
 		for i, ioc := range triageRequest.IOCs {
-			entry, err := virusTotal.GetUrl(nil, ioc)
+			entry, err := virusTotal.GetURL(nil, ioc)
 			if err != nil {
 				fmt.Println(err)
 				continue
@@ -100,27 +101,44 @@ func (m *TriageModule) ProcessRequest(triageRequest *triage.Request, apiKey stri
 
 // Triage finds malware domains according to URLhaus by ASN
 func (m *TriageModule) Triage(ctx context.Context, triageRequest *triage.Request) ([]*triage.Data, error) {
+	var span *appsectracing.Span
+	span, ctx = tb.TracerLogger.StartSpan(ctx, "TriageSplunk", "splunk.splunk.triage")
+	defer span.End(ctx)
+
 	triageData := &triage.Data{
 		Title:    "VirusTotal",
 		Metadata: []string{},
 	}
 
+	// Get the API key from
 	tb = toolbox.GetToolbox()
 	defer tb.Close(ctx)
-
+	span, _ = tb.TracerLogger.StartSpan(ctx, "GetAPIKey", "virustotal.getapikey")
 	secret, err := tb.GetFromCredentialsStore(ctx, secretID, nil)
 	if err != nil {
+		span.AddError(err)
+		span.End(ctx)
 		triageData.Data = fmt.Sprintf("Error retrieving secret with key, %s: %s", secretID, err)
 		return []*triage.Data{triageData}, err
 	}
 	apiKey := *secret.SecretString
+
+	// Process the request by querying each API endpoint per IoC type
+	span, _ = tb.TracerLogger.StartSpan(ctx, "ProcessRequest", "virustotal.processrequest")
 	data, err := m.ProcessRequest(triageRequest, apiKey)
 	if err != nil {
+		span.AddError(err)
+		span.End(ctx)
 		return nil, err
 	}
+	span.End(ctx)
+
+	// Return the data
 	return []*triage.Data{data}, nil
 }
 
+// Dump the relevant fields from the VirusTotal Object returned by
+// the files interface into CSV format.
 func HashesToCsv(payloads []*vt.Object) string {
 	resp := bytes.Buffer{}
 	csv := csv.NewWriter(&resp)
@@ -197,6 +215,8 @@ func HashesToCsv(payloads []*vt.Object) string {
 	return resp.String()
 }
 
+// Dump the relevant fields from the VirusTotal Object returned by
+// the domains interface into CSV format.
 func DomainsToCsv(payloads []*vt.Object) string {
 	resp := bytes.Buffer{}
 	csv := csv.NewWriter(&resp)
@@ -245,6 +265,8 @@ func DomainsToCsv(payloads []*vt.Object) string {
 	return resp.String()
 }
 
+// Dump the relevant fields from the VirusTotal Object returned by
+// the ip_addresses interface into CSV format.
 func IpsToCsv(payloads []*vt.Object) string {
 	resp := bytes.Buffer{}
 	csv := csv.NewWriter(&resp)
@@ -288,6 +310,8 @@ func IpsToCsv(payloads []*vt.Object) string {
 	return resp.String()
 }
 
+// Dump the relevant fields from the VirusTotal Object returned by
+// the urls interface into CSV format.
 func UrlsToCsv(payloads []*vt.Object) string {
 	resp := bytes.Buffer{}
 	csv := csv.NewWriter(&resp)

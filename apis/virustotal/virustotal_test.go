@@ -36,7 +36,7 @@ func TestWebQueries(t *testing.T) {
 		IOCsType: triage.IPType,
 	})
 
-	apiKey := "2f2fa71c9de7f277f7d0da556d1882821488c038f2138985085df23be724b0f3"
+	apiKey := "..."
 	for i, triageRequest := range triageRequests {
 		fmt.Printf("Triage request test %d\n", i)
 
@@ -47,14 +47,5 @@ func TestWebQueries(t *testing.T) {
 		}
 
 		fmt.Println(triageResult.Title)
-
-		/*
-			if len(triageResult) == 0 {
-				t.Fatal("len 0")
-			}
-			if triageResult[0].Data == "" {
-				t.Fatal("first data element empty ")
-			}
-		*/
 	}
 }
