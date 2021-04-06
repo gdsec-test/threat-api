@@ -27,7 +27,7 @@ type GeoIPInfo struct {
 func Lookup(ctx context.Context, ips []string) []*GeoIPInfo {
 
 	var span *appsectracing.Span
-	span, ctx = tb.TracerLogger.StartSpan(ctx, "GeoIPDBSession", "geoip.db.session")
+	span, ctx = tb.TracerLogger.StartSpan(ctx, "GeoIPDBSession", "geoip", "db", "session")
 	defer span.End(ctx)
 
 	geoipResults := []*GeoIPInfo{}
@@ -50,7 +50,7 @@ func Lookup(ctx context.Context, ips []string) []*GeoIPInfo {
 		default:
 		}
 
-		span, ctx = tb.TracerLogger.StartSpan(ctx, "GeoIPLookup", "geoip.ip.lookup")
+		span, ctx = tb.TracerLogger.StartSpan(ctx, "GeoIPLookup", "geoip", "ip", "lookup")
 		addErrRow := func(err error) {
 			geoipResults = append(geoipResults, &GeoIPInfo{
 				IP:             ip,

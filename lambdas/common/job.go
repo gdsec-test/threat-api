@@ -45,11 +45,11 @@ type JobDBEntry struct {
 
 // Decrypt will use asherah to decrypt the Responses and Submission
 func (j *JobDBEntry) Decrypt(ctx context.Context, t *toolbox.Toolbox) {
-	span, ctx := t.TracerLogger.StartSpan(ctx, "DecryptJobDBEntry", "job.db.decrypt")
+	span, ctx := t.TracerLogger.StartSpan(ctx, "DecryptJobDBEntry", "job", "db", "decrypt")
 	defer span.End(ctx)
 
 	// Decrypt submission
-	span, ctx = t.TracerLogger.StartSpan(ctx, "DecryptSubmission", "job.submission.decrypt")
+	span, ctx = t.TracerLogger.StartSpan(ctx, "DecryptSubmission", "job", "submission", "decrypt")
 	decryptedData, err := t.Decrypt(ctx, j.JobID, j.Submission)
 	if err == nil {
 		json.Unmarshal(decryptedData, &j.DecryptedSubmission)
@@ -57,7 +57,7 @@ func (j *JobDBEntry) Decrypt(ctx context.Context, t *toolbox.Toolbox) {
 	span.End(ctx)
 
 	// Decrypt responses
-	span, ctx = t.TracerLogger.StartSpan(ctx, "DecryptResponses", "job.responses.decrypt")
+	span, ctx = t.TracerLogger.StartSpan(ctx, "DecryptResponses", "job", "responses", "decrypt")
 	j.DecryptedResponses = map[string]interface{}{}
 	for moduleName, response := range j.Responses {
 		decryptedData, err := t.Decrypt(ctx, j.JobID, response)

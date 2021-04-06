@@ -38,7 +38,7 @@ func (m *TriageModule) Supports() []triage.IOCType {
 // Triage takes some ioc and finds what we can in splunk
 func (m *TriageModule) Triage(ctx context.Context, triageRequest *triage.Request) ([]*triage.Data, error) {
 	var span *appsectracing.Span
-	span, ctx = tb.TracerLogger.StartSpan(ctx, "TriageSplunk", "splunk.splunk.triage")
+	span, ctx = tb.TracerLogger.StartSpan(ctx, "TriageSplunk", "splunk", "splunk", "triage")
 	defer span.End(ctx)
 
 	// Check for reading splunk permission
@@ -51,7 +51,7 @@ func (m *TriageModule) Triage(ctx context.Context, triageRequest *triage.Request
 		return []*triage.Data{{Title: "Splunk", Data: "Lacking permission.  You do not have permission to read splunk data."}}, nil
 	}
 
-	span, _ = tb.TracerLogger.StartSpan(ctx, "InitSplunkClient", "splunk.client.init")
+	span, _ = tb.TracerLogger.StartSpan(ctx, "InitSplunkClient", "splunk", "client", "init")
 	err = m.initClient(ctx)
 	if err != nil {
 		span.AddError(err)
@@ -64,19 +64,19 @@ func (m *TriageModule) Triage(ctx context.Context, triageRequest *triage.Request
 
 	switch triageRequest.IOCsType {
 	case triage.GoDaddyUsernameType:
-		span, ctx = tb.TracerLogger.StartSpan(ctx, "TriageUsernames", "splunk.splunk.triage")
+		span, ctx = tb.TracerLogger.StartSpan(ctx, "TriageUsernames", "splunk", "splunk", "triage")
 		triageDatas = m.triageUsernames(ctx, triageRequest)
 		span.End(ctx)
 	case triage.CVEType:
-		span, ctx = tb.TracerLogger.StartSpan(ctx, "TriageCVEs", "splunk.splunk.triage")
+		span, ctx = tb.TracerLogger.StartSpan(ctx, "TriageCVEs", "splunk", "splunk", "triage")
 		triageDatas = m.triageCVEs(ctx, triageRequest)
 		span.End(ctx)
 	case triage.IPType:
-		span, ctx = tb.TracerLogger.StartSpan(ctx, "TriageIPs", "splunk.splunk.triage")
+		span, ctx = tb.TracerLogger.StartSpan(ctx, "TriageIPs", "splunk", "splunk", "triage")
 		triageDatas = m.triageIPs(ctx, triageRequest)
 		span.End(ctx)
 	case triage.AWSHostnameType:
-		span, ctx = tb.TracerLogger.StartSpan(ctx, "TriageAWSHostnames", "splunk.splunk.triage")
+		span, ctx = tb.TracerLogger.StartSpan(ctx, "TriageAWSHostnames", "splunk", "splunk", "triage")
 		triageDatas = m.triageAWSHostnames(ctx, triageRequest)
 		span.End(ctx)
 	}

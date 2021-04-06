@@ -38,7 +38,7 @@ func (t *Toolbox) GetFromParameterStore(ctx context.Context, name string, withDe
 	}
 	svc := ssm.New(t.AWSSession)
 
-	GetAWSParameterSpan, _ := t.TracerLogger.StartSpan(ctx, "GetAWSParameter", "aws.parameter.get")
+	GetAWSParameterSpan, _ := t.TracerLogger.StartSpan(ctx, "GetAWSParameter", "aws", "parameter", "get")
 	output, err := svc.GetParameter(
 		&ssm.GetParameterInput{
 			Name:           aws.String(name),
@@ -63,7 +63,7 @@ func (t *Toolbox) GetFromCredentialsStore(ctx context.Context, secretID string, 
 	}
 	svc := secretsmanager.New(t.AWSSession)
 
-	GetAWSSecretSpan, _ := t.TracerLogger.StartSpan(ctx, "GetAWSSecret", "aws.secret.get")
+	GetAWSSecretSpan, _ := t.TracerLogger.StartSpan(ctx, "GetAWSSecret", "aws", "secret", "get")
 	secret, err := svc.GetSecretValue(&secretsmanager.GetSecretValueInput{
 		SecretId:     aws.String(secretID),
 		VersionStage: versionStage,

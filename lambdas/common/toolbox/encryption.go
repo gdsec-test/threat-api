@@ -15,7 +15,7 @@ import (
 // The jobID is used to find the appropriate asherah session to use.
 func (t *Toolbox) Decrypt(ctx context.Context, jobID string, decryptionRecord appencryption.DataRowRecord) ([]byte, error) {
 	var span *appsectracing.Span
-	span, ctx = t.TracerLogger.StartSpan(ctx, "DecryptData", "decryption")
+	span, ctx = t.TracerLogger.StartSpan(ctx, "DecryptData", "asherah", "", "decrypt")
 	span.LogKV("dataSizeBytes", len(decryptionRecord.Data))
 	defer span.End(ctx)
 
@@ -37,7 +37,7 @@ func (t *Toolbox) Decrypt(ctx context.Context, jobID string, decryptionRecord ap
 // The jobID is used to find the appropriate asherah session to use.
 func (t *Toolbox) Encrypt(ctx context.Context, jobID string, data []byte) (*appencryption.DataRowRecord, error) {
 	var span *appsectracing.Span
-	span, ctx = t.TracerLogger.StartSpan(ctx, "EncryptData", "encryption")
+	span, ctx = t.TracerLogger.StartSpan(ctx, "EncryptData", "asherah", "", "encrypt")
 	span.LogKV("dataSizeBytes", len(data))
 	defer span.End(ctx)
 
@@ -79,7 +79,7 @@ func (t *Toolbox) GetAsherahSession(ctx context.Context, jobID string) (*appencr
 
 // CloseAsherahSessions Closes any asherah sessions we have open
 func (t *Toolbox) CloseAsherahSessions(ctx context.Context) error {
-	span, ctx := t.TracerLogger.StartSpan(ctx, "CloseAsherahSessions", "asherah.sessions.close")
+	span, ctx := t.TracerLogger.StartSpan(ctx, "CloseAsherahSessions", "asherah", "sessions", "close")
 	defer span.End(ctx)
 	for jobID, ashrahSession := range t.AsherahSession {
 		err := ashrahSession.Close()
@@ -98,7 +98,7 @@ func (t *Toolbox) getAsherahSession(ctx context.Context, sessionID string) (*app
 	}
 
 	var span *appsectracing.Span
-	span, ctx = t.TracerLogger.StartSpan(ctx, "SetUpAsherahSession", "asherah.session.setup")
+	span, ctx = t.TracerLogger.StartSpan(ctx, "SetUpAsherahSession", "asherah", "session", "setup")
 	defer span.End(ctx)
 
 	// Build session factory if we haven't already
@@ -121,7 +121,7 @@ func (t *Toolbox) getAsherahSession(ctx context.Context, sessionID string) (*app
 func (t *Toolbox) getAsherahSessionFactory(ctx context.Context) error {
 	// Build the Metastore
 	var span *appsectracing.Span
-	span, ctx = t.TracerLogger.StartSpan(ctx, "SetUpAsherahSessionFactory", "asherah.sessionfactory.setup")
+	span, ctx = t.TracerLogger.StartSpan(ctx, "SetUpAsherahSessionFactory", "asherah", "sessionfactory", "setup")
 	defer span.End(ctx)
 
 	// Create metastore from AWS session

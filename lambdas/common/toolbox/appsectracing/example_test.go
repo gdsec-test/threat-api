@@ -26,7 +26,7 @@ func Example() {
 	defer tl.Close(ctx)
 
 	// Start a span!
-	span, ctx := tl.StartSpan(ctx, "PerformWork", "general.work")
+	span, ctx := tl.StartSpan(ctx, "PerformWork", "general", "", "work")
 	span.LogKV("time", fmt.Sprintf("%v", time.Now()))
 	span.End(ctx)
 }
