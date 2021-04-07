@@ -46,7 +46,7 @@ func NewLogger(tags []string, labels map[string]string) *AppLogger {
 	defer logger.Sync()
 
 	tagsNew := tags
-	l := &AppLogger{logger: logger, tags: append(tagsNew, "security"), labels: labels}
+	l := &AppLogger{logger: logger, tags: append(tagsNew), labels: labels}
 	return l
 }
 
