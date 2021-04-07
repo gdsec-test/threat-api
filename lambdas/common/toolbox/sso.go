@@ -21,6 +21,7 @@ const (
 func (t *Toolbox) Authorize(ctx context.Context, jwt, action, resource string) (bool, error) {
 	var span *appsectracing.Span
 	span, ctx = t.TracerLogger.StartSpan(ctx, "Authorize", "auth", "jwt", "authorize")
+	span.SetAppSecLogEvent()
 	span.LogKV("action", action)
 	span.LogKV("resource", resource)
 	defer span.End(ctx)
