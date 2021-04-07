@@ -7,7 +7,7 @@ You create a new `TracerLogger` object which you can then trace your application
 ## How it works
 
 By default, you can create "spans", which are time boxed groups of functionality.  You can create spans inside of other spans to create hierarchical events to...trace! You can also log key values to each individual spans.
-Whenever you close a span, an AppSec Log is triggered with the operation name, type, and logged key values from that span.  You can disable this functionality by setting `TracerLogger.NoDefaultAppSecLogging = true`.
+Whenever you close a span, an application log is triggered with the operation name, type, and logged key values from that span.  You can disable this functionality by setting `TracerLogger.NoDefaultAppLogging = true`.
 
 ### Example
 

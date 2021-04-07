@@ -9,7 +9,7 @@ import (
 
 // Span is a generic span, which tracks the start time, end time, and information about some event.
 // Spans can be within other spans.
-// By default, whenever a span ends, an AppSecLog is triggered with details about the span.
+// By default, whenever a span ends, an AppLog is triggered with details about the span.
 type Span struct {
 	operationName    string
 	operationType    string
@@ -27,7 +27,7 @@ type Span struct {
 }
 
 // LogKV Logs a generic key value to the span.  The underlying tracer implementation may
-// handle this in different ways, but by default the finalized AppSecLogger will log out all
+// handle this in different ways, but by default the finalized AppLogger will log out all
 // span key/values when the span finishes.  The span's logged key/values may be accessed through
 // the KV variable.
 func (s *Span) LogKV(key string, value interface{}) {
@@ -39,7 +39,7 @@ func (s *Span) LogKV(key string, value interface{}) {
 }
 
 // AddError adds an error to the span.  The underlying tracer implementation may handle
-// this different ways.  By Default the AppSecLogger will immediately log the error.
+// this different ways.  By Default the AppLogger will immediately log the error.
 // It will also add the error the list of errors in the span to be logged on the end of the span.
 func (s *Span) AddError(err error) {
 	s.span.AddError(err)
@@ -48,23 +48,23 @@ func (s *Span) AddError(err error) {
 	}
 	s.Errors = append(s.Errors, err)
 
-	// AppSec Log error
-	if !s.logger.NoDefaultAppSecLogging {
-		s.logger.AppSecLogger.Error(err.Error(), appseclogging.Fields{
+	// App Log error
+	if !s.logger.NoDefaultAppLogging {
+		s.logger.AppLogger.Error(err.Error(), appseclogging.Fields{
 			"errorDetails": {"error": err.Error()},
 			"spanDetails":  {"spanStartTime": "s"},
-		})
+		}, nil, nil)
 	}
 }
 
 // End ends this span.  The span will be completed.
-// By default the AppSecLogger will log the completed span with it's details,
+// By default the AppLogger will log the completed span with it's details,
 // errors, and logged key values.
 func (s *Span) End(ctx context.Context) {
 	s.span.End(ctx)
 
 	// Log this as an appsec log
-	if !s.logger.NoDefaultAppSecLogging {
+	if !s.logger.NoDefaultAppLogging {
 		fields := appseclogging.Fields{"operationDetails": map[string]string{
 			"operationName": s.operationName,
 			"operationType": s.operationType,
@@ -90,7 +90,7 @@ func (s *Span) End(ctx context.Context) {
 			}
 		}
 
-		s.logger.AppSecLogger.Info(s.operationName, fields)
+		s.logger.AppLogger.Info(s.operationName, fields, nil, nil)
 	}
 
 }

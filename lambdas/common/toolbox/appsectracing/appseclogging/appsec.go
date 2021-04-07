@@ -8,11 +8,14 @@ import (
 	"go.uber.org/zap/zapcore"
 )
 
-type AppSecLogger struct {
+// AppLogger is a logger designed to support normal application logging, and Application Security Logging
+type AppLogger struct {
 	// underlying ZAP logger.
 	// We use ZAP because the ECS (elastic common schema) uses ZAP as the JSON formatter
 	logger *zap.Logger
-	tags   []string
+	// tags to apply to every log event
+	tags []string
+	// labels to apply to ever log event
 	labels map[string]string
 }
 
@@ -29,7 +32,9 @@ func (a Fields) toZAPFields() []zap.Field {
 	return ret
 }
 
-func NewLogger(tags []string, labels map[string]string) *AppSecLogger {
+// NewLogger creates a new app logger with the provided tags and labels that will be
+// applied to each log event.
+func NewLogger(tags []string, labels map[string]string) *AppLogger {
 	encoderConfig := ecszap.NewDefaultEncoderConfig()
 	core := encoderConfig.ToZapCoreEncoderConfig()
 	core.LevelKey = zapcore.OmitKey
@@ -41,34 +46,55 @@ func NewLogger(tags []string, labels map[string]string) *AppSecLogger {
 	defer logger.Sync()
 
 	tagsNew := tags
-	l := &AppSecLogger{logger: logger, tags: append(tagsNew, "security"), labels: labels}
+	l := &AppLogger{logger: logger, tags: append(tagsNew, "security"), labels: labels}
 	return l
 }
 
-// requiredFields returns the required fields for every log entry
-func (l AppSecLogger) requiredFields() []zap.Field {
-	return []zap.Field{
-		zap.Any("tags", l.tags),
-		zap.Any("labels", l.labels),
+// buildZapFields Takes the provided fields and combines them with the logger
+// default, returning a slice of zap fields.
+func (l AppLogger) buildZapFields(fields Fields, tags []string, labels map[string]string) []zap.Field {
+	logEventLabels := l.labels // default lables
+	// Add the provided labels
+	for key, value := range labels {
+		logEventLabels[key] = value
 	}
+
+	// Add tags and labels as fields
+	zapFields := []zap.Field{
+		zap.Any("tags", append(l.tags, tags...)),
+		zap.Any("labels", logEventLabels),
+	}
+
+	return append(zapFields, fields.toZAPFields()...)
 }
 
-func (l AppSecLogger) Info(msg string, fields Fields) {
-	l.logger.Info(msg, append(l.requiredFields(), fields.toZAPFields()...)...)
+// InfoSecurity is a helper function around Info that logs it as a application security log.
+// https://github.secureserver.net/CTO/guidelines/blob/master/Standards-Best-Practices/Security/Application-Security-Logging-Standard.md
+func (l AppLogger) InfoSecurity(msg string, fields Fields) {
+	l.Info(msg, fields, []string{"security"}, nil)
 }
 
-func (l AppSecLogger) Debug(msg string, fields Fields) {
-	l.logger.Debug(msg, append(l.requiredFields(), fields.toZAPFields()...)...)
+// Info logs the provided message with the custom tags and labels
+func (l AppLogger) Info(msg string, fields Fields, tags []string, labels map[string]string) {
+	l.logger.Info(msg, l.buildZapFields(fields, tags, labels)...)
 }
 
-func (l AppSecLogger) Warn(msg string, fields Fields) {
-	l.logger.Warn(msg, append(l.requiredFields(), fields.toZAPFields()...)...)
+// Debug logs the provided message with the custom tags and labels
+func (l AppLogger) Debug(msg string, fields Fields, tags []string, labels map[string]string) {
+	l.logger.Debug(msg, l.buildZapFields(fields, tags, labels)...)
 }
 
-func (l AppSecLogger) Error(msg string, fields Fields) {
-	l.logger.Error(msg, append(l.requiredFields(), fields.toZAPFields()...)...)
+// Warn logs the provided message with the custom tags and labels
+func (l AppLogger) Warn(msg string, fields Fields, tags []string, labels map[string]string) {
+	l.logger.Warn(msg, l.buildZapFields(fields, tags, labels)...)
 }
 
-func (l AppSecLogger) Fatal(msg string, fields Fields) {
-	l.logger.Fatal(msg, append(l.requiredFields(), fields.toZAPFields()...)...)
+// Error logs the provided message with the custom tags and labels
+func (l AppLogger) Error(msg string, fields Fields, tags []string, labels map[string]string) {
+	l.logger.Error(msg, l.buildZapFields(fields, tags, labels)...)
+}
+
+// Fatal logs the provided message with the custom tags and labels
+func (l AppLogger) Fatal(msg string, fields Fields, tags []string, labels map[string]string) {
+	l.logger.Fatal(msg, l.buildZapFields(fields, tags, labels)...)
 }
