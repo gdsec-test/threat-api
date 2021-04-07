@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"crypto/tls"
 	"net/http"
 
 	"github.com/vertoforce/go-splunk"
@@ -14,17 +13,7 @@ func (m *TriageModule) initClient(ctx context.Context) error {
 		return nil
 	}
 
-	client, err := splunk.NewClient(ctx, m.SplunkUsername, m.SplunkPassword, &splunk.Config{
-		HTTPClient: &http.Client{
-			Transport: &http.Transport{
-				TLSClientConfig: &tls.Config{
-					// TODO: Change this to accept the cert instead
-					InsecureSkipVerify: true,
-				},
-			},
-		},
-		BaseURL: m.SplunkBaseURL,
-	})
+	client, err := splunk.NewClient(ctx, m.SplunkUsername, m.SplunkPassword, &splunk.Config{HTTPClient: http.DefaultClient, BaseURL: m.SplunkBaseURL})
 	if err != nil {
 		return err
 	}
