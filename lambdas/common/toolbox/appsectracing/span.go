@@ -24,6 +24,9 @@ type Span struct {
 	span TracingSpan
 	// The root tracer logger object
 	logger *TracerLogger
+	// Indicated if this span is an appseclog event
+	// https://github.secureserver.net/CTO/guidelines/blob/master/Standards-Best-Practices/Security/Application-Security-Logging-Standard.md
+	appSecLogEvent bool
 }
 
 // LogKV Logs a generic key value to the span.  The underlying tracer implementation may
@@ -90,9 +93,13 @@ func (s *Span) End(ctx context.Context) {
 			}
 		}
 
-		s.logger.AppLogger.Info(s.operationName, fields, nil, nil)
-	}
+		tags := []string{}
+		if s.appSecLogEvent {
+			tags = []string{"security"}
+		}
 
+		s.logger.AppLogger.Info(s.operationName, fields, tags, nil)
+	}
 }
 
 // StartSpan starts a new span.
@@ -111,4 +118,12 @@ func (l *TracerLogger) StartSpan(ctx context.Context, operationName, operationTy
 		span:             span,
 		logger:           l,
 	}, ctx
+}
+
+// SetAppSecLogEvent sets this span to be an application security logging event.
+// It will hence have the key-value pair logged of "AppSecLog"="true", and will log
+// as a security event on span end.
+// https://github.secureserver.net/CTO/guidelines/blob/master/Standards-Best-Practices/Security/Application-Security-Logging-Standard.md
+func (s *Span) SetAppSecLogEvent(ctx context.Context) {
+	s.appSecLogEvent = true
 }
