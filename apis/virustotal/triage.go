@@ -99,7 +99,6 @@ func (m *TriageModule) ProcessRequest(triageRequest *triage.Request, apiKey stri
 	return triageData, nil
 }
 
-// Triage finds malware domains according to URLhaus by ASN
 func (m *TriageModule) Triage(ctx context.Context, triageRequest *triage.Request) ([]*triage.Data, error) {
 	var span *appsectracing.Span
 	span, ctx = tb.TracerLogger.StartSpan(ctx, "TriageSplunk", "splunk.splunk.triage")
