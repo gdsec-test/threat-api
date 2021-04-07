@@ -1,5 +1,5 @@
 {
-  "handler": "urlhaus",
+  "handler": "virustotal",
   "memory-size": "256",
   "runtime": "go1.x",
   "timeout": "15",

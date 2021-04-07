@@ -738,7 +738,7 @@ Resources:
         - Key: S3Key
           Value: !Sub virustotal/${virustotalSHA1}
         - Key: Handler
-          Value: urlhaus
+          Value: virustotal
         - Key: LambdaName
           Value: virustotal
         - Key: LambdaDescription
