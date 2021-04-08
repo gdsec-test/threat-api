@@ -14,7 +14,7 @@ import (
 // This is mostly for long running searches that have a stats command at the end
 func (m *TriageModule) performSplunkSearch(ctx context.Context, searchString string) (chan splunk.SearchResult, *splunk.Search, error) {
 	var span *appsectracing.Span
-	span, ctx = tb.TracerLogger.StartSpan(ctx, "PerformSplunkSearch", "splunk.search.search")
+	span, ctx = tb.TracerLogger.StartSpan(ctx, "PerformSplunkSearch", "splunk", "search", "search")
 	defer span.End(ctx)
 
 	search, err := m.splunkClient.CreateSearchJob(ctx, searchString, map[string]string{

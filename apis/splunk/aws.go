@@ -36,7 +36,7 @@ func (m *TriageModule) triageAWSHostnames(ctx context.Context, triageRequest *tr
 			break
 		}
 		go func(hostname string) {
-			span, _ := tb.TracerLogger.StartSpan(ctx, "SplunkScanAWSHostname", "splunk.aws.search")
+			span, _ := tb.TracerLogger.StartSpan(ctx, "SplunkScanAWSHostname", "splunk", "aws", "search")
 			defer span.End(ctx)
 			defer func() {
 				<-threadLimit

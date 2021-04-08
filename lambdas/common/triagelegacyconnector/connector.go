@@ -87,7 +87,7 @@ func AWSToTriage(ctx context.Context, t *toolbox.Toolbox, module triage.Module, 
 
 // triageSNSEvent converts the aws to legacy interface for a single job
 func triageSNSEvent(ctx context.Context, t *toolbox.Toolbox, module triage.Module, request events.SNSEventRecord) (*common.CompletedJobData, error) {
-	span, _ := t.TracerLogger.StartSpan(ctx, "TriageLegacyConnector", "triagelegacyconnector.sns.triage")
+	span, _ := t.TracerLogger.StartSpan(ctx, "TriageLegacyConnector", "triagelegacyconnector", "sns", "triage")
 	defer span.End(ctx)
 
 	// Unmarshal the SNS job message

@@ -92,7 +92,7 @@ func (m *TriageModule) triageCVEs(ctx context.Context, triageRequest *triage.Req
 
 	for _, CVE := range triageRequest.IOCs {
 		var span *appsectracing.Span
-		span, ctx = tb.TracerLogger.StartSpan(ctx, "SplunkScanCVE", "splunk.cve.search")
+		span, ctx = tb.TracerLogger.StartSpan(ctx, "SplunkScanCVE", "splunk", "cve", "search")
 		span.LogKV("CVE", CVE)
 
 		spunkSearchContext, cancelSplunkSearch := context.WithCancel(ctx)

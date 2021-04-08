@@ -134,7 +134,7 @@ ipLoop:
 			}
 			// Search for on prem failed login events
 			go func(ipSF ipSearchFunction, ip string) {
-				span, ipCtx := tb.TracerLogger.StartSpan(ctx, "IPSearch", "splunk.ip.search")
+				span, ipCtx := tb.TracerLogger.StartSpan(ctx, "IPSearch", "splunk", "ip", "search")
 				defer func() {
 					<-threadLimit
 					wg.Done()

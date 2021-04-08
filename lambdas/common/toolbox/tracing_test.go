@@ -15,17 +15,17 @@ func TestTracingLogger(t *testing.T) {
 	defer tb.Close(ctx)
 
 	// Try starting a span (should be a apm transaction)
-	span, ctx := tb.TracerLogger.StartSpan(ctx, "TestTransaction", "test.transaction.test")
+	span, ctx := tb.TracerLogger.StartSpan(ctx, "TestTransaction", "test", "transaction", "test")
 	span.LogKV("testTransactionKey", "testValue")
 	defer span.End(ctx)
 
 	// Start a span (should be a apm span)
-	span, ctx = tb.TracerLogger.StartSpan(ctx, "TestSpan", "test.span.test")
+	span, ctx = tb.TracerLogger.StartSpan(ctx, "TestSpan", "test", "span", "test")
 	span.LogKV("testSpanKey", "testValue")
 	defer span.End(ctx)
 
 	// Start another span (should be a apm span)
-	span, ctx = tb.TracerLogger.StartSpan(ctx, "TestSpan2", "test.span.test")
+	span, ctx = tb.TracerLogger.StartSpan(ctx, "TestSpan2", "test", "span", "test")
 	// Should send an appsec log
 	span.AddError(fmt.Errorf("test error"))
 	defer span.End(ctx)

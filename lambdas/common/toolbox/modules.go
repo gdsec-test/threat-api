@@ -15,7 +15,7 @@ import (
 // GetModules gets the available modules and their supported IOC types
 func (t *Toolbox) GetModules(ctx context.Context) (map[string]LambdaMetadata, error) {
 	var span *appsectracing.Span
-	span, ctx = t.TracerLogger.StartSpan(ctx, "GetModules", "modules.modules.list")
+	span, ctx = t.TracerLogger.StartSpan(ctx, "GetModules", "modules", "modules", "list")
 	defer span.End(ctx)
 
 	ssmClient := ssm.New(t.AWSSession)

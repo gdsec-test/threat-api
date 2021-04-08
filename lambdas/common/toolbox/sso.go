@@ -20,7 +20,7 @@ const (
 // Authorize Takes a JWT, Action, and resource and determines is the action is permitted or not
 func (t *Toolbox) Authorize(ctx context.Context, jwt, action, resource string) (bool, error) {
 	var span *appsectracing.Span
-	span, ctx = t.TracerLogger.StartSpan(ctx, "Authorize", "auth.jwt.authorize")
+	span, ctx = t.TracerLogger.StartSpan(ctx, "Authorize", "auth", "jwt", "authorize")
 	span.LogKV("action", action)
 	span.LogKV("resource", resource)
 	defer span.End(ctx)
@@ -53,7 +53,7 @@ func (t *Toolbox) Authorize(ctx context.Context, jwt, action, resource string) (
 	}
 
 	// Find the action
-	span, _ = t.TracerLogger.StartSpan(ctx, "ParseAuthZStructure", "auth.authz.parse")
+	span, _ = t.TracerLogger.StartSpan(ctx, "ParseAuthZStructure", "auth", "authz", "parse")
 	defer span.End(ctx)
 	actionObj, ok := lambda.Actions[action]
 	if !ok {
@@ -75,7 +75,7 @@ func (t *Toolbox) Authorize(ctx context.Context, jwt, action, resource string) (
 // or an error if it is now
 func (t *Toolbox) ValidateJWT(ctx context.Context, jwt string) (*gdtoken.Token, error) {
 	var span *appsectracing.Span
-	span, ctx = t.TracerLogger.StartSpan(ctx, "ValidateJWT", "auth.jwt.validate")
+	span, ctx = t.TracerLogger.StartSpan(ctx, "ValidateJWT", "auth", "jwt", "validate")
 	span.LogKV("JWTLength", len(jwt))
 	defer span.End(ctx)
 
@@ -112,7 +112,7 @@ func (t *Toolbox) GetJWTGroups(ctx context.Context, jwt string) ([]string, error
 // https://github.secureserver.net/auth-contrib/go-auth/issues/30
 func (t *Toolbox) getJWTADGroups(ctx context.Context, jwt string) ([]string, error) {
 	var span *appsectracing.Span
-	span, ctx = t.TracerLogger.StartSpan(ctx, "GetJWTADGroups", "auth.jwt.getadgroups")
+	span, ctx = t.TracerLogger.StartSpan(ctx, "GetJWTADGroups", "auth", "jwt", "getadgroups")
 	defer span.End(ctx)
 
 	req, err := http.NewRequestWithContext(ctx, "GET", fmt.Sprintf("https://%s/%s", strings.Trim(t.SSOHostURL, "/"), ssoADURL), nil)

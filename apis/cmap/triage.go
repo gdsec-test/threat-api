@@ -46,7 +46,7 @@ func (m *TriageModule) Triage(ctx context.Context, triageRequest *triage.Request
 	var span *appsectracing.Span
 
 	// Check to make sure we have permission to do a cmap lookup
-	span, _ = tb.TracerLogger.StartSpan(ctx, "CMAPAuth", "cmap.auth.authorize")
+	span, _ = tb.TracerLogger.StartSpan(ctx, "CMAPAuth", "cmap", "auth", "authorize")
 	if auth, err := tb.Authorize(ctx, triageRequest.JWT, "Run", triageModuleName); !auth {
 		triageData.Data = "Permission denied.  You cannot run this module."
 		span.LogKV("failedAuthReason", err)
@@ -56,7 +56,7 @@ func (m *TriageModule) Triage(ctx context.Context, triageRequest *triage.Request
 	span.End(ctx)
 
 	// Build client
-	span, _ = tb.TracerLogger.StartSpan(ctx, "BuildCMAPClient", "cmap.client.build")
+	span, _ = tb.TracerLogger.StartSpan(ctx, "BuildCMAPClient", "cmap", "client", "build")
 	defer span.End(ctx)
 	cmapCert := strings.ReplaceAll(m.CMAPCert, ":", "\n")
 	cmapKey := strings.ReplaceAll(m.CMAPKey, ":", "\n")
@@ -88,7 +88,7 @@ func (m *TriageModule) Triage(ctx context.Context, triageRequest *triage.Request
 		}
 
 		// Process this domain
-		span, _ = tb.TracerLogger.StartSpan(ctx, "CMAPDomainEnrich", "cmap.domain.enrich")
+		span, _ = tb.TracerLogger.StartSpan(ctx, "CMAPDomainEnrich", "cmap", "domain", "enrich")
 		span.LogKV("domain", domain)
 		result, err := c.DoDomainQuery(ctx, domain)
 		if err != nil {
@@ -113,7 +113,7 @@ func (m *TriageModule) Triage(ctx context.Context, triageRequest *triage.Request
 		span.End(ctx)
 	}
 
-	span, _ = tb.TracerLogger.StartSpan(ctx, "CMAPBuildMetadata", "cmap.metadata.build")
+	span, _ = tb.TracerLogger.StartSpan(ctx, "CMAPBuildMetadata", "cmap", "metadata", "build")
 	if totalGoDaddyDomains == 0 {
 		return []*triage.Data{triageData}, nil
 	}
