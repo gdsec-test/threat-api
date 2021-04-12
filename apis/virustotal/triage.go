@@ -101,7 +101,7 @@ func (m *TriageModule) ProcessRequest(triageRequest *triage.Request, apiKey stri
 
 func (m *TriageModule) Triage(ctx context.Context, triageRequest *triage.Request) ([]*triage.Data, error) {
 	var span *appsectracing.Span
-	span, ctx = tb.TracerLogger.StartSpan(ctx, "TriageSplunk", "splunk.splunk.triage")
+	span, ctx = tb.TracerLogger.StartSpan(ctx, "TriageVT", "virustotal", "", "triage")
 	defer span.End(ctx)
 
 	triageData := &triage.Data{
