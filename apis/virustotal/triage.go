@@ -110,8 +110,6 @@ func (m *TriageModule) Triage(ctx context.Context, triageRequest *triage.Request
 	}
 
 	// Get the API key from
-	tb = toolbox.GetToolbox()
-	defer tb.Close(ctx)
 	span, _ = tb.TracerLogger.StartSpan(ctx, "GetAPIKey", "virustotal", "", "getapikey")
 	secret, err := tb.GetFromCredentialsStore(ctx, secretID, nil)
 	if err != nil {
