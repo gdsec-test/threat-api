@@ -70,7 +70,7 @@ func (m *TriageModule) Triage(ctx context.Context, triageRequest *triage.Request
 	}
 
 	var span *appsectracing.Span
-	span, ctx = tb.TracerLogger.StartSpan(ctx, "ShodanGetServices", "shodan.services.get")
+	span, ctx = tb.TracerLogger.StartSpan(ctx, "ShodanGetServices", "shodan", "services", "get")
 	defer span.End(ctx)
 
 	shodanhosts := m.GetServicesForIPs(ctx, ips)

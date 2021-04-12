@@ -2,6 +2,7 @@ package appsectracing
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"go.elastic.co/apm"
@@ -30,7 +31,10 @@ func NewAPMTracer(apmTracer *apm.Tracer) *APMTracer {
 // The operationType is in the format of type.subtype.action.  For example: db.sql.query.
 // It will use the span/transaction in the context as it's parent.  If no span/transaction
 // exists in the context, a root transaction will be created.
-func (a *APMTracer) StartSpan(ctx context.Context, operationName, operationType string) (TracingSpan, context.Context) {
+func (a *APMTracer) StartSpan(ctx context.Context, operationName, opType, operationSubType, operationAction string) (TracingSpan, context.Context) {
+	// combine operation type, sub type, and action to APM specific formation
+	operationType := fmt.Sprintf("%s.%s.%s", opType, operationSubType, operationAction)
+
 	// Check if the context has a span
 	if span := apm.SpanFromContext(ctx); span != nil {
 		// TODO: Start off a.APMTracer
@@ -147,4 +151,23 @@ func (s *APMSpan) LogKV(key string, value interface{}) {
 // GetStartTime of this span
 func (s *APMSpan) GetStartTime() time.Time {
 	return s.startTime
+}
+
+// GetEndTime of this span
+func (s *APMSpan) GetEndTime() time.Time {
+	switch {
+	case s.span != nil:
+		if s.span.Duration == -1 {
+			// Still ongoing, return time.Zero
+			return time.Time{}
+		}
+		return s.startTime.Add(s.span.Duration)
+	case s.transaction != nil:
+		if s.transaction.Duration == -1 {
+			// Still ongoing, return time.Zero
+			return time.Time{}
+		}
+		return s.startTime.Add(s.transaction.Duration)
+	}
+	return time.Time{}
 }

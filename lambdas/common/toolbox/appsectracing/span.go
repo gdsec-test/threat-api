@@ -11,8 +11,10 @@ import (
 // Spans can be within other spans.
 // By default, whenever a span ends, an AppSecLog is triggered with details about the span.
 type Span struct {
-	operationName string
-	operationType string
+	operationName    string
+	operationType    string
+	operationSubType string
+	operationAction  string
 	// Key values logged during this span
 	KV map[string]interface{}
 	// Any errors attached to this span
@@ -59,11 +61,19 @@ func (s *Span) AddError(err error) {
 // By default the AppSecLogger will log the completed span with it's details,
 // errors, and logged key values.
 func (s *Span) End(ctx context.Context) {
+	s.span.End(ctx)
+
 	// Log this as an appsec log
 	if !s.logger.NoDefaultAppSecLogging {
 		fields := appseclogging.Fields{"operationDetails": map[string]string{
+			"operationName": s.operationName,
 			"operationType": s.operationType,
+			"subType":       s.operationSubType,
+			"action":        s.operationAction,
 			"startTime":     fmt.Sprintf("%d", s.span.GetStartTime().UTC().Unix()),
+			"endTime":       fmt.Sprintf("%d", s.span.GetEndTime().UTC().Unix()),
+			// Duration in microseconds
+			"duration": fmt.Sprintf("%d", s.span.GetStartTime().Sub(s.span.GetEndTime()).Microseconds()),
 		}}
 
 		if len(s.KV) > 0 {
@@ -83,19 +93,22 @@ func (s *Span) End(ctx context.Context) {
 		s.logger.AppSecLogger.Info(s.operationName, fields)
 	}
 
-	s.span.End(ctx)
 }
 
 // StartSpan starts a new span.
-// The operationType is in the format of type.subtype.action.  For example: db.sql.query.
-func (l *TracerLogger) StartSpan(ctx context.Context, operationName, operationType string) (*Span, context.Context) {
+// OperationName is the name of the operation, ex: ValidateJWT.
+// Operation Type is the high level type, ex: auth, operation sub type is the sub type, ex: jwt,
+// and operation action is the action description, ex: validate.
+func (l *TracerLogger) StartSpan(ctx context.Context, operationName, operationType, operationSubType, operationAction string) (*Span, context.Context) {
 	var span TracingSpan
-	span, ctx = l.Tracer.StartSpan(ctx, operationName, operationType)
+	span, ctx = l.Tracer.StartSpan(ctx, operationName, operationType, operationSubType, operationAction)
 
 	return &Span{
-		operationName: operationName,
-		operationType: operationType,
-		span:          span,
-		logger:        l,
+		operationName:    operationName,
+		operationType:    operationType,
+		operationSubType: operationSubType,
+		operationAction:  operationAction,
+		span:             span,
+		logger:           l,
 	}, ctx
 }
