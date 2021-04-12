@@ -122,7 +122,7 @@ func (m *TriageModule) Triage(ctx context.Context, triageRequest *triage.Request
 	span.End(ctx)
 
 	// Process the request by querying each API endpoint per IoC type
-	span, _ = tb.TracerLogger.StartSpan(ctx, "ProcessRequest", "virustotal.processrequest")
+	span, _ = tb.TracerLogger.StartSpan(ctx, "ProcessRequest", "virustotal", "", "processrequest")
 	data, err := m.ProcessRequest(triageRequest, apiKey)
 	if err != nil {
 		span.AddError(err)
