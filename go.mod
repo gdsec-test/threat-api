@@ -3,6 +3,7 @@ module github.com/gdcorp-infosec/threat-api
 go 1.15
 
 require (
+	github.com/VirusTotal/vt-go v0.0.0-20201216104058-17a6ee4f94a6
 	github.com/aws/aws-lambda-go v1.19.1
 	github.com/aws/aws-sdk-go v1.35.27
 	github.com/gdcorp-infosec/go-ioc v0.0.0-20210201161615-55598c0a06df
@@ -14,6 +15,7 @@ require (
 	github.com/ns3777k/go-shodan/v4 v4.2.0
 	github.com/oschwald/geoip2-golang v1.4.0
 	github.com/sirupsen/logrus v1.7.0
+	github.com/thedevsaddam/gojsonq v2.3.0+incompatible // indirect
 	github.com/vertoforce/go-splunk v0.0.0-20201016180916-bf97db989317
 	github.com/vertoforce/regexgrouphelp v0.1.1
 	github.secureserver.net/auth-contrib/go-auth v1.2.1
