@@ -9,7 +9,6 @@ import (
 	"time"
 
 	vt "github.com/VirusTotal/vt-go"
-	"github.com/gdcorp-infosec/threat-api/lambdas/common/toolbox"
 	"github.com/gdcorp-infosec/threat-api/lambdas/common/toolbox/appsectracing"
 	"github.com/gdcorp-infosec/threat-api/lambdas/common/triagelegacyconnector/triage"
 )
