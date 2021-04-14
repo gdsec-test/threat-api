@@ -45,8 +45,11 @@ func NewLogger(tags []string, labels map[string]string) *AppLogger {
 	logger := zap.New(wrapCore, zap.AddCaller())
 	defer logger.Sync()
 
-	tagsNew := tags
-	l := &AppLogger{logger: logger, tags: append(tagsNew), labels: labels}
+	tagsNew := append([]string{}, tags...) // avoid empty slice
+	if labels == nil {
+		labels = map[string]string{}
+	}
+	l := &AppLogger{logger: logger, tags: tagsNew, labels: labels}
 	return l
 }
 
