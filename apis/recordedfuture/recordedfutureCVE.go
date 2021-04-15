@@ -18,6 +18,10 @@ const (
 
 //cveReportCreate generates a map of CVEReport from RF API
 func (m *TriageModule) cveReportCreate(ctx context.Context, triageRequest *triage.Request) (map[string]*rf.CVEReport, error) {
+
+	span, spanCtx := tb.TracerLogger.StartSpan(ctx, "RecordedFutureCVELookup", "recordedfuture", "", "cveEnrich")
+	defer span.End(spanCtx)
+
 	rfCVEResults := make(map[string]*rf.CVEReport)
 
 	wg := sync.WaitGroup{}
@@ -41,6 +45,7 @@ func (m *TriageModule) cveReportCreate(ctx context.Context, triageRequest *triag
 			// Calling RF API with metadata switched off
 			rfCVEResult, err := rf.EnrichCVE(ctx, m.RFKey, m.RFClient, cve, rf.CVEReportFields, false)
 			if err != nil {
+				span.AddError(err)
 				rfCVEResultsLock.Lock()
 				rfCVEResults[cve] = nil
 				rfCVEResultsLock.Unlock()

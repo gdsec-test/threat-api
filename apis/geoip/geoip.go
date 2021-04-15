@@ -39,6 +39,7 @@ func Lookup(ctx context.Context, ips []string) []*GeoIPInfo {
 			EnglishCity:    fmt.Sprintf("ERROR: %s", err),
 			EnglishCountry: fmt.Sprintf("ERROR: %s", err),
 		})
+		span.AddError(err)
 	}
 	defer db.Close()
 
@@ -57,6 +58,7 @@ func Lookup(ctx context.Context, ips []string) []*GeoIPInfo {
 				EnglishCity:    fmt.Sprintf("ERROR: %s", err),
 				EnglishCountry: fmt.Sprintf("ERROR: %s", err),
 			})
+			span.AddError(err)
 			span.End(ctx)
 		}
 

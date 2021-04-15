@@ -24,6 +24,10 @@ type WhoisStats struct {
 
 // Lookup performs a whoislookup on the passed in domains
 func Lookup(ctx context.Context, domains []string) ([]*whoisparser.WhoisInfo, *WhoisStats) {
+
+	span, spanCtx := tb.TracerLogger.StartSpan(ctx, "WhoisLookup", "whois", "", "lookup")
+	defer span.End(spanCtx)
+
 	stats := &WhoisStats{
 		SameRegistrant: map[string][]*whoisparser.WhoisInfo{},
 		SameRegistrar:  map[string][]*whoisparser.WhoisInfo{},
@@ -49,6 +53,7 @@ func Lookup(ctx context.Context, domains []string) ([]*whoisparser.WhoisInfo, *W
 
 		// AddErrRow is a standard to add an errored whois query to the list of results
 		addErrRow := func(err error) {
+			span.AddError(err)
 			stats.InvalidDomains++
 			whoisResults = append(whoisResults, &whoisparser.WhoisInfo{Domain: &whoisparser.Domain{Domain: domain}, Registrant: &whoisparser.Contact{}, Registrar: &whoisparser.Contact{Name: fmt.Sprintf("ERROR: %s", err)}, Administrative: &whoisparser.Contact{}})
 		}
@@ -56,6 +61,7 @@ func Lookup(ctx context.Context, domains []string) ([]*whoisparser.WhoisInfo, *W
 		// Convert to the base domain
 		domainSplit := strings.Split(domain, ".")
 		if len(domainSplit) < 2 {
+			span.AddError(fmt.Errorf("not a domain"))
 			addErrRow(fmt.Errorf("not a domain"))
 			continue
 		}
@@ -66,11 +72,13 @@ func Lookup(ctx context.Context, domains []string) ([]*whoisparser.WhoisInfo, *W
 		// triage.Log(triageModuleName, "WhoisLookup", api, core.LogFields{"domain": domain})
 		whoisRaw, err := whois.Whois(domain)
 		if err != nil {
+			span.AddError(err)
 			addErrRow(err)
 			continue
 		}
 		whoisResult, err := whoisparser.Parse(whoisRaw)
 		if err != nil {
+			span.AddError(err)
 			addErrRow(err)
 			continue
 		}

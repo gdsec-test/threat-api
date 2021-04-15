@@ -47,6 +47,7 @@ func (m *TriageModule) GetAsns(ctx context.Context) (string, error) {
 
 // Triage finds malware domains according to URLhaus by ASN
 func (m *TriageModule) Triage(ctx context.Context, triageRequest *triage.Request) ([]*triage.Data, error) {
+
 	triageData := &triage.Data{
 		Title:    "URLhaus",
 		Metadata: []string{},

@@ -89,7 +89,6 @@ func (m *TriageModule) Triage(ctx context.Context, triageRequest *triage.Request
 
 		// Process this domain
 		span, _ = tb.TracerLogger.StartSpan(ctx, "CMAPDomainEnrich", "cmap", "domain", "enrich")
-		span.LogKV("domain", domain)
 		result, err := c.DoDomainQuery(ctx, domain)
 		if err != nil {
 			err = fmt.Errorf("cmap lookup error: %w", err)
@@ -158,7 +157,7 @@ func (m *TriageModule) Triage(ctx context.Context, triageRequest *triage.Request
 	span.End(ctx)
 
 	if auth, _ := tb.Authorize(ctx, triageRequest.JWT, "ViewPII", triageModuleName); !auth {
-		triageData.Data = "Permission denied.  You are not in the correct group to see the real shopper data for each domain.  Reach out to #threat if you need the shopper data."
+		triageData.Data = "Permission denied.  You are not in the correct group to see the real shopper data for each domain.  Reach out to #threat-research if you need the shopper data."
 		return []*triage.Data{triageData}, nil
 	}
 

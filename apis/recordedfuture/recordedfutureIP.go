@@ -14,6 +14,9 @@ import (
 
 //cveReportCreate generates a map of CVEReport from RF API
 func (m *TriageModule) ipReportCreate(ctx context.Context, triageRequest *triage.Request) (map[string]*rf.IPReport, error) {
+	span, spanCtx := tb.TracerLogger.StartSpan(ctx, "RecordedFutureIPLookup", "recordedfuture", "", "ipEnrich")
+	defer span.End(spanCtx)
+
 	rfIPResults := make(map[string]*rf.IPReport)
 
 	wg := sync.WaitGroup{}
@@ -36,6 +39,7 @@ func (m *TriageModule) ipReportCreate(ctx context.Context, triageRequest *triage
 			// Calling RF API with metadata switched off
 			rfIPResult, err := rf.EnrichIP(ctx, m.RFKey, m.RFClient, ip, rf.IPReportFields, false)
 			if err != nil {
+				span.AddError(err)
 				rfIPResultsLock.Lock()
 				rfIPResults[ip] = nil
 				rfIPResultsLock.Unlock()
