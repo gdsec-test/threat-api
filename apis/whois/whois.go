@@ -24,10 +24,6 @@ type WhoisStats struct {
 
 // Lookup performs a whoislookup on the passed in domains
 func Lookup(ctx context.Context, domains []string) ([]*whoisparser.WhoisInfo, *WhoisStats) {
-
-	span, spanCtx := tb.TracerLogger.StartSpan(ctx, "WhoisLookup", "whois", "", "lookup")
-	defer span.End(spanCtx)
-
 	stats := &WhoisStats{
 		SameRegistrant: map[string][]*whoisparser.WhoisInfo{},
 		SameRegistrar:  map[string][]*whoisparser.WhoisInfo{},
@@ -51,6 +47,8 @@ func Lookup(ctx context.Context, domains []string) ([]*whoisparser.WhoisInfo, *W
 		default:
 		}
 
+		span, spanCtx := tb.TracerLogger.StartSpan(ctx, "WhoisLookup", "whois", "", "lookup")
+
 		// AddErrRow is a standard to add an errored whois query to the list of results
 		addErrRow := func(err error) {
 			span.AddError(err)
@@ -61,8 +59,8 @@ func Lookup(ctx context.Context, domains []string) ([]*whoisparser.WhoisInfo, *W
 		// Convert to the base domain
 		domainSplit := strings.Split(domain, ".")
 		if len(domainSplit) < 2 {
-			span.AddError(fmt.Errorf("not a domain"))
 			addErrRow(fmt.Errorf("not a domain"))
+			span.End(spanCtx)
 			continue
 		}
 		domain = fmt.Sprintf("%s.%s", domainSplit[len(domainSplit)-2], domainSplit[len(domainSplit)-1])
@@ -74,12 +72,14 @@ func Lookup(ctx context.Context, domains []string) ([]*whoisparser.WhoisInfo, *W
 		if err != nil {
 			span.AddError(err)
 			addErrRow(err)
+			span.End(spanCtx)
 			continue
 		}
 		whoisResult, err := whoisparser.Parse(whoisRaw)
 		if err != nil {
 			span.AddError(err)
 			addErrRow(err)
+			span.End(spanCtx)
 			continue
 		}
 
@@ -109,6 +109,8 @@ func Lookup(ctx context.Context, domains []string) ([]*whoisparser.WhoisInfo, *W
 			break
 		case <-time.After(time.Millisecond * 500):
 		}
+
+		span.End(spanCtx)
 	}
 
 	return whoisResults, stats
