@@ -146,7 +146,7 @@ func processCompletedJob(ctx context.Context, request common.CompletedJobData) e
 	span.End(ctx)
 
 	// Update the "responses" entry to contain a new map
-	span, ctx = t.TracerLogger.StartSpan(ctx, "DynamoDBUpdate", "db", "dynamodb", "updateItem")
+	span, ctx = t.TracerLogger.StartSpan(ctx, "DynamoDBUpdate", "aws", "dynamodb", "updateItem")
 	span.LogKV("jobID", request.JobID)
 	defer span.End(ctx)
 
