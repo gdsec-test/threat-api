@@ -26,10 +26,11 @@ func (t *Toolbox) GenerateJobID(ctx context.Context) string {
 // CreateExecuteSpan is a helper function to standardize logging the execution of a module.
 // It creates a standardized "Execute" span with the module name and jobID.
 // This makes it easier to trace execution of the modules
-func (t *Toolbox) CreateExecuteSpan(ctx context.Context, moduleName string, jobID string) (*appsectracing.Span, context.Context) {
+func (t *Toolbox) CreateExecuteSpan(ctx context.Context, moduleName string, jobID string, iocType string) (*appsectracing.Span, context.Context) {
 	span, spanCtx := t.TracerLogger.StartSpan(ctx, "Execute", "module", "", "execute")
 	span.LogKV("moduleName", moduleName)
 	span.LogKV("jobID", jobID)
+	span.LogKV("iocType", iocType)
 
 	return span, spanCtx
 }

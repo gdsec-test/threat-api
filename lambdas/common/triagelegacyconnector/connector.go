@@ -155,12 +155,12 @@ func triageSNSEvent(ctx context.Context, t *toolbox.Toolbox, module triage.Modul
 		JWT:      JWT,
 	}
 
-	span, spanCtx := t.CreateExecuteSpan(ctx, module.GetDocs().Name, jobMessage.JobID)
+	span, spanCtx := t.CreateExecuteSpan(ctx, module.GetDocs().Name, jobMessage.JobID, jobSubmission.IOCType)
 	defer span.End(spanCtx)
 
 	triageDatas, err := module.Triage(ctx, triageRequest)
 	if err != nil {
-		err = fmt.Errorf("This module had an error processing this request: %s", err)
+		err = fmt.Errorf("this module had an error processing this request: %s", err)
 		span.AddError(err)
 		response.Response = err.Error()
 		return response, nil
