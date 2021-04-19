@@ -155,8 +155,8 @@ func triageSNSEvent(ctx context.Context, t *toolbox.Toolbox, module triage.Modul
 		JWT:      JWT,
 	}
 
-	span, spanCtx := t.CreateExecuteSpan(ctx, module.GetDocs().Name, jobMessage.JobID, jobSubmission.IOCType)
-	defer span.End(spanCtx)
+	spanExecute, _ := t.CreateExecuteSpan(ctx, module.GetDocs().Name, jobMessage.JobID, jobSubmission.IOCType)
+	defer spanExecute.End(ctx)
 
 	triageDatas, err := module.Triage(ctx, triageRequest)
 	if err != nil {
