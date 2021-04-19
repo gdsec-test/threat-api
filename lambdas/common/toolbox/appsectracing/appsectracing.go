@@ -8,19 +8,19 @@ import (
 	"go.elastic.co/apm"
 )
 
-// TracerLogger is a tool that supports tracing and appsec logging.
-// By default it (appsec) logs all errors, and spans on their completion.
-// You can disable this by setting NoDefaultAppSecLogging.
+// TracerLogger is a tool that supports tracing and application / application security logging.
+// By default it logs all errors, and spans on their completion.
+// You can disable this by setting NoDefaultAppLogging.
 type TracerLogger struct {
 	// This will turn of any default triggered appsec logs.  So any
 	// app sec logging you want to do will be manual.
-	NoDefaultAppSecLogging bool
-	AppSecLogger           *appseclogging.AppSecLogger
-	Tracer                 Tracer
+	NoDefaultAppLogging bool
+	AppLogger           *appseclogging.AppLogger
+	Tracer              Tracer
 }
 
 // NewTracerLogger Creates a new logger with the provided tracer and appseclogger
-func NewTracerLogger(tracer Tracer, appSecLogger *appseclogging.AppSecLogger) *TracerLogger {
+func NewTracerLogger(tracer Tracer, appSecLogger *appseclogging.AppLogger) *TracerLogger {
 	// Handle nil cases to do default noop behavior
 	if tracer == nil {
 		tracer = &APMTracer{apm.DefaultTracer}
@@ -28,7 +28,7 @@ func NewTracerLogger(tracer Tracer, appSecLogger *appseclogging.AppSecLogger) *T
 	if appSecLogger == nil {
 		appSecLogger = appseclogging.NewLogger(nil, nil)
 	}
-	return &TracerLogger{AppSecLogger: appSecLogger, Tracer: tracer}
+	return &TracerLogger{AppLogger: appSecLogger, Tracer: tracer}
 }
 
 // Close the tracer and logger.

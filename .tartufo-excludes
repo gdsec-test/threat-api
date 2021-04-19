@@ -8,3 +8,4 @@ docs/diagrams/Polling.svg
 docs/diagrams/threat_api_aws.svg
 .github/workflows/(.*)
 apis/splunk/splunkcert.go
+apis/.*/.*_test\.go$
