@@ -33,7 +33,7 @@ func (m *TriageModule) cveReportCreate(ctx context.Context, triageRequest *triag
 		default:
 		}
 
-		//span, spanCtx := tb.TracerLogger.StartSpan(ctx, "RecordedFutureCVELookup", "recordedfuture", "", "cveEnrich")
+		span, spanCtx := tb.TracerLogger.StartSpan(ctx, "RecordedFutureCVELookup", "recordedfuture", "", "cveEnrich")
 
 		go func(cve string) {
 			defer func() {
@@ -43,10 +43,11 @@ func (m *TriageModule) cveReportCreate(ctx context.Context, triageRequest *triag
 			// Calling RF API with metadata switched off
 			rfCVEResult, err := rf.EnrichCVE(ctx, m.RFKey, m.RFClient, cve, rf.CVEReportFields, false)
 			if err != nil {
-				//span.AddError(err)
+				span.AddError(err)
 				rfCVEResultsLock.Lock()
 				rfCVEResults[cve] = nil
 				rfCVEResultsLock.Unlock()
+				span.End(spanCtx)
 				return
 			}
 
@@ -54,7 +55,7 @@ func (m *TriageModule) cveReportCreate(ctx context.Context, triageRequest *triag
 			rfCVEResults[cve] = rfCVEResult
 			rfCVEResultsLock.Unlock()
 		}(cve)
-		//span.End(spanCtx)
+		span.End(spanCtx)
 	}
 
 	wg.Wait()
