@@ -164,12 +164,11 @@ func triageSNSEvent(ctx context.Context, t *toolbox.Toolbox, module triage.Modul
 	span.LogKV("jobID", jobMessage.JobID)
 	span.LogKV("iocType", jobSubmission.IOCType)
 
-	fmt.Println("I have the span logs")
+	fmt.Println("I have the span logs for execute")
 
 	//spanExecute, spanExecuteCtx := t.CreateExecuteSpan(spanCtx, module.GetDocs().Name, jobMessage.JobID, jobSubmission.IOCType)
 	//defer spanExecute.End(spanExecuteCtx)
 
-	fmt.Println("Calling my module")
 	triageDatas, err := module.Triage(ctx, triageRequest)
 	if err != nil {
 		err = fmt.Errorf("this module had an error processing this request: %s", err)
@@ -177,8 +176,6 @@ func triageSNSEvent(ctx context.Context, t *toolbox.Toolbox, module triage.Modul
 		response.Response = err.Error()
 		return response, nil
 	}
-
-	fmt.Println("I have the result back")
 
 	// Combine the triage data list into a single CompletedJobData.  For now just marshal it
 	triageDataMarshal, err := json.Marshal(triageDatas)
@@ -189,9 +186,6 @@ func triageSNSEvent(ctx context.Context, t *toolbox.Toolbox, module triage.Modul
 		return response, err
 	}
 	response.Response = string(triageDataMarshal)
-
-	fmt.Println("Here is the result intended")
-	fmt.Println(response.Response)
 
 	return response, nil
 }
