@@ -157,12 +157,12 @@ func triageSNSEvent(ctx context.Context, t *toolbox.Toolbox, module triage.Modul
 
 	fmt.Println("logged and checked")
 
-	spanExecute, spanExecuteCtx := t.TracerLogger.StartSpan(ctx, "Execute", "module", "", "execute")
+	spanExecute, spanExecuteCtx := t.TracerLogger.StartSpan(spanCtx, "Execute", "module", "", "execute")
 	defer spanExecute.End(spanExecuteCtx)
 	fmt.Println("Logging in module span .. inside CreateExecuteSpan")
-	span.LogKV("moduleName", module.GetDocs().Name)
-	span.LogKV("jobID", jobMessage.JobID)
-	span.LogKV("iocType", jobSubmission.IOCType)
+	spanExecute.LogKV("moduleName", module.GetDocs().Name)
+	spanExecute.LogKV("jobID", jobMessage.JobID)
+	spanExecute.LogKV("iocType", jobSubmission.IOCType)
 
 	fmt.Println("I have the span logs for execute")
 
