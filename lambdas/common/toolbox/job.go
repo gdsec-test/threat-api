@@ -28,6 +28,7 @@ func (t *Toolbox) GenerateJobID(ctx context.Context) string {
 // This makes it easier to trace execution of the modules
 func (t *Toolbox) CreateExecuteSpan(ctx context.Context, moduleName string, jobID string, iocType string) (*appsectracing.Span, context.Context) {
 	span, spanCtx := t.TracerLogger.StartSpan(ctx, "Execute", "module", "", "execute")
+	fmt.Println("Logging in module span .. inside CreateExecuteSpan")
 	span.LogKV("moduleName", moduleName)
 	span.LogKV("jobID", jobID)
 	span.LogKV("iocType", iocType)

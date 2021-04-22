@@ -3,9 +3,9 @@ package main
 import (
 	"context"
 	"fmt"
+	"github.com/gdcorp-infosec/threat-api/lambdas/common/toolbox"
 	"net/http"
 
-	"github.com/gdcorp-infosec/threat-api/lambdas/common/toolbox"
 	"github.com/gdcorp-infosec/threat-api/lambdas/common/triagelegacyconnector/triage"
 )
 
@@ -38,7 +38,6 @@ func (m *TriageModule) Triage(ctx context.Context, triageRequest *triage.Request
 	}
 
 	tb = toolbox.GetToolbox()
-	defer tb.Close(ctx)
 
 	secret, err := tb.GetFromCredentialsStore(ctx, secretID, nil)
 	if err != nil {
@@ -46,12 +45,15 @@ func (m *TriageModule) Triage(ctx context.Context, triageRequest *triage.Request
 		return []*triage.Data{triageData}, err
 	}
 
+	fmt.Println("Got my keys ")
+
 	m.RFKey = *secret.SecretString
 	if m.RFClient == nil {
 		m.RFClient = http.DefaultClient
 	}
 
 	if triageRequest.IOCsType == triage.CVEType {
+		fmt.Println("I'm a CVE")
 		//retrieve results
 		rfCVEResults, err := m.cveReportCreate(ctx, triageRequest)
 		if err != nil {
