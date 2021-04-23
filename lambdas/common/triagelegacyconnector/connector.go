@@ -155,19 +155,11 @@ func triageSNSEvent(ctx context.Context, t *toolbox.Toolbox, module triage.Modul
 		JWT:      JWT,
 	}
 
-	fmt.Println("logged and checked")
-
 	spanExecute, spanExecuteCtx := t.TracerLogger.StartSpan(spanCtx, "Execute", "module", "", "execute")
 	defer spanExecute.End(spanExecuteCtx)
-	fmt.Println("Logging in module span .. inside CreateExecuteSpan")
 	spanExecute.LogKV("moduleName", module.GetDocs().Name)
 	spanExecute.LogKV("jobID", jobMessage.JobID)
 	spanExecute.LogKV("iocType", jobSubmission.IOCType)
-
-	fmt.Println("I have the span logs for execute")
-
-	//spanExecute, spanExecuteCtx := t.CreateExecuteSpan(spanCtx, module.GetDocs().Name, jobMessage.JobID, jobSubmission.IOCType)
-	//defer spanExecute.End(spanExecuteCtx)
 
 	triageDatas, err := module.Triage(ctx, triageRequest)
 	if err != nil {

@@ -42,15 +42,12 @@ func (m *TriageModule) Triage(ctx context.Context, triageRequest *triage.Request
 		return []*triage.Data{triageData}, err
 	}
 
-	fmt.Println("Got my keys ")
-
 	m.RFKey = *secret.SecretString
 	if m.RFClient == nil {
 		m.RFClient = http.DefaultClient
 	}
 
 	if triageRequest.IOCsType == triage.CVEType {
-		fmt.Println("I'm a CVE")
 		//retrieve results
 		rfCVEResults, err := m.cveReportCreate(ctx, triageRequest)
 		if err != nil {
