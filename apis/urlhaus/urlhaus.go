@@ -110,8 +110,9 @@ func GetMd5(ctx context.Context, md5 string) (*UrlhausPayloadEntry, error) {
 		return nil, err
 	}
 	if entry.Status != "ok" {
-		span.AddError(fmt.Errorf("query for %s returned no results (%s)", md5, entry.Status))
-		return nil, fmt.Errorf("Query for %s returned no results (%s)", md5, entry.Status)
+		errString := fmt.Errorf("query for %s returned no results (%s)", md5, entry.Status)
+		span.AddError(errString)
+		return nil, errString
 	}
 	return &entry, nil
 }
@@ -126,8 +127,9 @@ func GetSha256(ctx context.Context, sha256 string) (*UrlhausPayloadEntry, error)
 		return nil, err
 	}
 	if len(body) == 0 {
-		span.AddError(errors.New("no error reported but the body was empty"))
-		return nil, errors.New("no error reported but the body was empty")
+		errString := errors.New("no error reported but the body was empty")
+		span.AddError(errString)
+		return nil, errString
 	}
 	var entry UrlhausPayloadEntry
 	err = json.Unmarshal(body, &entry)
@@ -136,8 +138,9 @@ func GetSha256(ctx context.Context, sha256 string) (*UrlhausPayloadEntry, error)
 		return nil, err
 	}
 	if entry.Status != "ok" {
-		span.AddError(errors.New(fmt.Sprintf("query for %s returned no results (%s)", sha256, entry.Status)))
-		return nil, errors.New(fmt.Sprintf("query for %s returned no results (%s)", sha256, entry.Status))
+		errString := errors.New(fmt.Sprintf("query for %s returned no results (%s)", sha256, entry.Status))
+		span.AddError(errString)
+		return nil, errString
 	}
 	return &entry, nil
 }
@@ -152,8 +155,9 @@ func GetDomainOrIp(ctx context.Context, host string) (*UrlhausHostEntry, error) 
 		return nil, err
 	}
 	if len(body) == 0 {
-		span.AddError(errors.New("no error reported but the body was empty"))
-		return nil, errors.New("no error reported but the body was empty")
+		errString := errors.New("no error reported but the body was empty")
+		span.AddError(errString)
+		return nil, errString
 	}
 	var entry UrlhausHostEntry
 	err = json.Unmarshal(body, &entry)
@@ -162,8 +166,9 @@ func GetDomainOrIp(ctx context.Context, host string) (*UrlhausHostEntry, error) 
 		return nil, err
 	}
 	if entry.Status != "ok" {
-		span.AddError(errors.New(fmt.Sprintf("query for %s returned no results (%s)", host, entry.Status)))
-		return nil, errors.New(fmt.Sprintf("query for %s returned no results (%s)", host, entry.Status))
+		errString := errors.New(fmt.Sprintf("query for %s returned no results (%s)", host, entry.Status))
+		span.AddError(errString)
+		return nil, errString
 	}
 	return &entry, nil
 }
@@ -178,8 +183,9 @@ func GetUrl(ctx context.Context, _url string) (*UrlhausUrlEntry, error) {
 		return nil, err
 	}
 	if len(body) == 0 {
-		span.AddError(errors.New("no error reported but the body was empty"))
-		return nil, errors.New("no error reported but the body was empty")
+		errString := errors.New("no error reported but the body was empty")
+		span.AddError(errString)
+		return nil, errString
 	}
 	var entry UrlhausUrlEntry
 	err = json.Unmarshal(body, &entry)
@@ -188,8 +194,9 @@ func GetUrl(ctx context.Context, _url string) (*UrlhausUrlEntry, error) {
 		return nil, err
 	}
 	if entry.Status != "ok" {
-		span.AddError(errors.New(fmt.Sprintf("query for %s returned no results (%s)", _url, entry.Status)))
-		return nil, errors.New(fmt.Sprintf("query for %s returned no results (%s)", _url, entry.Status))
+		errString := errors.New(fmt.Sprintf("query for %s returned no results (%s)", _url, entry.Status))
+		span.AddError(errString)
+		return nil, errString
 	}
 	return &entry, nil
 }

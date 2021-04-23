@@ -59,7 +59,9 @@ func Lookup(ctx context.Context, domains []string) ([]*whoisparser.WhoisInfo, *W
 		// Convert to the base domain
 		domainSplit := strings.Split(domain, ".")
 		if len(domainSplit) < 2 {
-			addErrRow(fmt.Errorf("not a domain"))
+			errString := fmt.Errorf("ioc passed is not a domain")
+			addErrRow(errString)
+			span.AddError(errString)
 			span.End(spanCtx)
 			continue
 		}

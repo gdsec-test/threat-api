@@ -47,7 +47,6 @@ func (m *TriageModule) cveReportCreate(ctx context.Context, triageRequest *triag
 				rfCVEResultsLock.Lock()
 				rfCVEResults[cve] = nil
 				rfCVEResultsLock.Unlock()
-				span.End(spanCtx)
 				return
 			}
 
