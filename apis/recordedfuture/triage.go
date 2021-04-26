@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/gdcorp-infosec/threat-api/lambdas/common/toolbox"
 	"github.com/gdcorp-infosec/threat-api/lambdas/common/triagelegacyconnector/triage"
 )
 
@@ -36,9 +35,6 @@ func (m *TriageModule) Triage(ctx context.Context, triageRequest *triage.Request
 		Title:    "Recorded Future Data",
 		Metadata: []string{},
 	}
-
-	tb = toolbox.GetToolbox()
-	defer tb.Close(ctx)
 
 	secret, err := tb.GetFromCredentialsStore(ctx, secretID, nil)
 	if err != nil {

@@ -25,6 +25,9 @@ func createJob(ctx context.Context, request events.APIGatewayProxyRequest) (even
 	// Generate jobId
 	jobID := to.GenerateJobID(ctx)
 
+	//log the joID to ESSP for tracing
+	span.LogKV("jobID", jobID)
+
 	// Get username
 	jwt, err := to.ValidateJWT(ctx, toolbox.GetJWTFromRequest(request))
 	if err != nil {
@@ -38,6 +41,9 @@ func createJob(ctx context.Context, request events.APIGatewayProxyRequest) (even
 
 	// Encrypt submission
 	span, ctx = to.TracerLogger.StartSpan(ctx, "EncryptSubmission", "job", "manager", "encrypt")
+	//log jobID
+	span.LogKV("jobID", jobID)
+
 	encryptedData, err := to.Encrypt(ctx, jobID, []byte(request.Body))
 	if err != nil {
 		span.LogKV("error", err)
@@ -79,6 +85,7 @@ func createJob(ctx context.Context, request events.APIGatewayProxyRequest) (even
 	// Store in database
 	span, ctx = to.TracerLogger.StartSpan(ctx, "StoreJob", "job", "manager", "store")
 	span.LogKV("jobId", jobID)
+
 	_, err = dynamoDBClient.PutItem(&dynamodb.PutItemInput{
 		Item: map[string]*dynamodb.AttributeValue{
 			jobIDKey:       {S: &jobID},
@@ -100,6 +107,7 @@ func createJob(ctx context.Context, request events.APIGatewayProxyRequest) (even
 
 	// Send to SNS
 	span, ctx = to.TracerLogger.StartSpan(ctx, "SendSNS", "job", "manager", "sendsns")
+	span.LogKV("jobID", jobID)
 
 	// Marshal body
 	submissionMarshalled, err := json.Marshal(common.JobSNSMessage{Submission: request, JobID: jobID})

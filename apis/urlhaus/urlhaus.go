@@ -92,8 +92,12 @@ func DownloadAsns(ctx context.Context, asns []string) []*urlHausEntry {
 }
 
 func GetMd5(ctx context.Context, md5 string) (*UrlhausPayloadEntry, error) {
+	span, spanCtx := tb.TracerLogger.StartSpan(ctx, "URLHausLookup", "urlhaus", "", "md5Enrich")
+	defer span.End(spanCtx)
+
 	body, err := QueryApi(ctx, apiHashUrl, "md5_hash", md5)
 	if err != nil {
+		span.AddError(err)
 		return nil, err
 	}
 	if len(body) == 0 {
@@ -102,67 +106,97 @@ func GetMd5(ctx context.Context, md5 string) (*UrlhausPayloadEntry, error) {
 	var entry UrlhausPayloadEntry
 	err = json.Unmarshal(body, &entry)
 	if err != nil {
+		span.AddError(err)
 		return nil, err
 	}
 	if entry.Status != "ok" {
-		return nil, fmt.Errorf("Query for %s returned no results (%s)", md5, entry.Status)
+		errString := fmt.Errorf("query for %s returned no results (%s)", md5, entry.Status)
+		span.AddError(errString)
+		return nil, errString
 	}
 	return &entry, nil
 }
 
 func GetSha256(ctx context.Context, sha256 string) (*UrlhausPayloadEntry, error) {
+	span, spanCtx := tb.TracerLogger.StartSpan(ctx, "URLHausLookup", "urlhaus", "", "sha256Enrich")
+	defer span.End(spanCtx)
+
 	body, err := QueryApi(ctx, apiHashUrl, "sha256_hash", sha256)
 	if err != nil {
+		span.AddError(err)
 		return nil, err
 	}
 	if len(body) == 0 {
-		return nil, errors.New("No error reported but the body was empty")
+		errString := errors.New("no error reported but the body was empty")
+		span.AddError(errString)
+		return nil, errString
 	}
 	var entry UrlhausPayloadEntry
 	err = json.Unmarshal(body, &entry)
 	if err != nil {
+		span.AddError(err)
 		return nil, err
 	}
 	if entry.Status != "ok" {
-		return nil, errors.New(fmt.Sprintf("Query for %s returned no results (%s)", sha256, entry.Status))
+		errString := errors.New(fmt.Sprintf("query for %s returned no results (%s)", sha256, entry.Status))
+		span.AddError(errString)
+		return nil, errString
 	}
 	return &entry, nil
 }
 
 func GetDomainOrIp(ctx context.Context, host string) (*UrlhausHostEntry, error) {
+	span, spanCtx := tb.TracerLogger.StartSpan(ctx, "URLHausLookup", "urlhaus", "", "ipdomainEnrich")
+	defer span.End(spanCtx)
+
 	body, err := QueryApi(ctx, apiHostUrl, "host", host)
 	if err != nil {
+		span.AddError(err)
 		return nil, err
 	}
 	if len(body) == 0 {
-		return nil, errors.New("No error reported but the body was empty")
+		errString := errors.New("no error reported but the body was empty")
+		span.AddError(errString)
+		return nil, errString
 	}
 	var entry UrlhausHostEntry
 	err = json.Unmarshal(body, &entry)
 	if err != nil {
+		span.AddError(err)
 		return nil, err
 	}
 	if entry.Status != "ok" {
-		return nil, errors.New(fmt.Sprintf("Query for %s returned no results (%s)", host, entry.Status))
+		errString := errors.New(fmt.Sprintf("query for %s returned no results (%s)", host, entry.Status))
+		span.AddError(errString)
+		return nil, errString
 	}
 	return &entry, nil
 }
 
 func GetUrl(ctx context.Context, _url string) (*UrlhausUrlEntry, error) {
+	span, spanCtx := tb.TracerLogger.StartSpan(ctx, "URLHausLookup", "urlhaus", "", "urlEnrich")
+	defer span.End(spanCtx)
+
 	body, err := QueryApi(ctx, apiUrlUrl, "url", _url)
 	if err != nil {
+		span.AddError(err)
 		return nil, err
 	}
 	if len(body) == 0 {
-		return nil, errors.New("No error reported but the body was empty")
+		errString := errors.New("no error reported but the body was empty")
+		span.AddError(errString)
+		return nil, errString
 	}
 	var entry UrlhausUrlEntry
 	err = json.Unmarshal(body, &entry)
 	if err != nil {
+		span.AddError(err)
 		return nil, err
 	}
 	if entry.Status != "ok" {
-		return nil, errors.New(fmt.Sprintf("Query for %s returned no results (%s)", _url, entry.Status))
+		errString := errors.New(fmt.Sprintf("query for %s returned no results (%s)", _url, entry.Status))
+		span.AddError(errString)
+		return nil, errString
 	}
 	return &entry, nil
 }

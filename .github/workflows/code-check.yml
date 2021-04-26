@@ -92,6 +92,7 @@ jobs:
         run: |
           source venv/bin/activate
           python -m pytest -v
+
   go-code-check-apis:
     needs: tartufo
     runs-on: self-hosted
@@ -106,6 +107,16 @@ jobs:
           rm -f $HOME/.gitconfig
       - name: Checkout this repository
         uses: actions/checkout@5a4ac9002d0be2fb38bd78e4b4dbde5606d7042f
+
+#      TODO: Remove this actual AWS access once we have dependency injection
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@cefc5912bc61e2b5a3b049c839fc283c7712d4e0
+        with:
+          aws-access-key-id: ${{ secrets.DEV_PRIVATE_AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.DEV_PRIVATE_AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-west-2
+          role-to-assume: arn:aws:iam::345790377847:role/GD-AWS-USA-GD-ThreatTools-Dev-Private-Deploy
+          role-duration-seconds: 3600
 
       - name: Set up Go
         uses: actions/setup-go@3b4dc6cbed1779f759b9c638cb83696acea809d1

@@ -29,6 +29,9 @@ func (m *TriageModule) ipReportCreate(ctx context.Context, triageRequest *triage
 		}
 
 		go func(ip string) {
+			span, spanCtx := tb.TracerLogger.StartSpan(ctx, "RecordedFutureIPLookup", "recordedfuture", "", "ipEnrich")
+			defer span.End(spanCtx)
+
 			defer func() {
 				<-threadLimit
 				wg.Done()
@@ -36,6 +39,7 @@ func (m *TriageModule) ipReportCreate(ctx context.Context, triageRequest *triage
 			// Calling RF API with metadata switched off
 			rfIPResult, err := rf.EnrichIP(ctx, m.RFKey, m.RFClient, ip, rf.IPReportFields, false)
 			if err != nil {
+				span.AddError(err)
 				rfIPResultsLock.Lock()
 				rfIPResults[ip] = nil
 				rfIPResultsLock.Unlock()

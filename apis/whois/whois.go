@@ -47,8 +47,11 @@ func Lookup(ctx context.Context, domains []string) ([]*whoisparser.WhoisInfo, *W
 		default:
 		}
 
+		span, spanCtx := tb.TracerLogger.StartSpan(ctx, "WhoisLookup", "whois", "", "lookup")
+
 		// AddErrRow is a standard to add an errored whois query to the list of results
 		addErrRow := func(err error) {
+			span.AddError(err)
 			stats.InvalidDomains++
 			whoisResults = append(whoisResults, &whoisparser.WhoisInfo{Domain: &whoisparser.Domain{Domain: domain}, Registrant: &whoisparser.Contact{}, Registrar: &whoisparser.Contact{Name: fmt.Sprintf("ERROR: %s", err)}, Administrative: &whoisparser.Contact{}})
 		}
@@ -56,7 +59,10 @@ func Lookup(ctx context.Context, domains []string) ([]*whoisparser.WhoisInfo, *W
 		// Convert to the base domain
 		domainSplit := strings.Split(domain, ".")
 		if len(domainSplit) < 2 {
-			addErrRow(fmt.Errorf("not a domain"))
+			errString := fmt.Errorf("ioc passed is not a domain")
+			addErrRow(errString)
+			span.AddError(errString)
+			span.End(spanCtx)
 			continue
 		}
 		domain = fmt.Sprintf("%s.%s", domainSplit[len(domainSplit)-2], domainSplit[len(domainSplit)-1])
@@ -66,12 +72,16 @@ func Lookup(ctx context.Context, domains []string) ([]*whoisparser.WhoisInfo, *W
 		// triage.Log(triageModuleName, "WhoisLookup", api, core.LogFields{"domain": domain})
 		whoisRaw, err := whois.Whois(domain)
 		if err != nil {
+			span.AddError(err)
 			addErrRow(err)
+			span.End(spanCtx)
 			continue
 		}
 		whoisResult, err := whoisparser.Parse(whoisRaw)
 		if err != nil {
+			span.AddError(err)
 			addErrRow(err)
+			span.End(spanCtx)
 			continue
 		}
 
@@ -101,6 +111,8 @@ func Lookup(ctx context.Context, domains []string) ([]*whoisparser.WhoisInfo, *W
 			break
 		case <-time.After(time.Millisecond * 500):
 		}
+
+		span.End(spanCtx)
 	}
 
 	return whoisResults, stats

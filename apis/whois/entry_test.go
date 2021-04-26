@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/gdcorp-infosec/threat-api/lambdas/common/toolbox"
 	"testing"
 
 	"github.com/aws/aws-lambda-go/events"
@@ -14,6 +15,9 @@ import (
 // convertJobToSNSEvents converts a given job to a SNS event, panicing
 // if there is any problem.  This is used for writing tests
 func convertJobToSNSEvent(job common.JobSubmission) events.SNSEvent {
+	tb = toolbox.GetToolbox()
+	defer tb.Close(context.Background())
+
 	jobBodyMarshalled, err := json.Marshal(job)
 	if err != nil {
 		panic(err)

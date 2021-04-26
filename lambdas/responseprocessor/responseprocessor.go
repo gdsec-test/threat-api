@@ -25,7 +25,7 @@ var (
 	lambdaNameRegex = regexp.MustCompile(`\w+:\w+:\w+:.*?:.*?:.*?:(?P<lambdaName>.*?):`)
 )
 
-// handle is a lambda function that takes an array of SQS events, and processes every CompletedJob within that SQS event.
+// handler is a lambda function that takes an array of SQS events, and processes every CompletedJob within that SQS event.
 // So each event in is an array of SQS events, and each SQS event has an array of completed job data.
 func handler(ctx context.Context, request events.SQSEvent) (string, error) {
 	t = toolbox.GetToolbox()
@@ -66,6 +66,9 @@ func handler(ctx context.Context, request events.SQSEvent) (string, error) {
 				json.Unmarshal([]byte(completedLambdaData.RequestPayload.Records[0].SNS.Message), &jobSNSMessage)
 				jobID = jobSNSMessage.JobID
 			}
+			// log the module name and jobID with "ProcessErroredJob" for jobs that failed. The success ones are logged later anyway
+			span2.LogKV("moduleName", lambdaName)
+			span2.LogKV("jobID", jobID)
 
 			t.Logger.WithFields(logrus.Fields{
 				"eventSourceARN": sqsRecord.EventSourceARN,
@@ -133,6 +136,7 @@ func processCompletedJob(ctx context.Context, request common.CompletedJobData) e
 	// Encrypt results with asherah
 	var span *appsectracing.Span
 	span, ctx = t.TracerLogger.StartSpan(ctx, "AsherahEncrypt", "asherah", "job", "encrypt")
+	span.LogKV("jobID", request.JobID)
 	encryptedData, err := t.Encrypt(ctx, request.JobID, []byte(request.Response))
 	if err != nil {
 		span.LogKV("error", err)
@@ -142,6 +146,10 @@ func processCompletedJob(ctx context.Context, request common.CompletedJobData) e
 	span.End(ctx)
 
 	// Update the "responses" entry to contain a new map
+	span, ctx = t.TracerLogger.StartSpan(ctx, "DynamoDBUpdate", "aws", "dynamodb", "updateItem")
+	span.LogKV("jobID", request.JobID)
+	defer span.End(ctx)
+
 	update := expression.
 		Set(expression.Name(fmt.Sprintf("responses.%s", request.ModuleName)), expression.Value(*encryptedData))
 	expr, err := expression.NewBuilder().WithUpdate(update).Build()
