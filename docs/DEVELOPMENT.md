@@ -48,6 +48,21 @@ You can then use the _lambda toolbox_ (`lambdas/common/toolbox`) to check author
 
 ### Standards / Best Practices
 
+The Threat API repository uses the [git-flow](https://nvie.com/posts/a-successful-git-branching-model/) branching model. There are two branches
+that should always be present, `main` and `develop`. The code in the `main` branch should always build successfully. Releases/tags are made off of this
+`main` branch. The `develop` branch is where new features should be added. At the time of a release, the `develop` branch is merged back into the `main`
+branch.
+
+All branches should be named according to this convention:
+* The branch name should always begin with `hotfix`, `bug`, or `feature`.
+    * `hotfix` is for critical bugs found in production. A `hotfix` can be branched off of `main`, but must be merged into both `main` and `develop`.
+    * `bug` is a non-critical bug addressed in a JIRA ticket. A `bug` should be branched off of `develop`.
+    * `feature` addresses all other changes/additions and should be branched off of `develop`.
+* Next is a forward slash divider.
+* Finally, the human-readable portion of the branch name that is all in lowercase with dashes separating words.
+
+As an example, a story for adding a new field to a module could have a branch name like, `feature/module-add-ssdeep-field`.
+
 * Development of the ThreatTools API will follow the [CTO
   Guidelines](https://github.secureserver.net/CTO/guidelines/blob/master/Standards-Best-Practices/MustHaveShouldDo.md)
   for applications that are onboarding to AWS.  Alternative formatted document
