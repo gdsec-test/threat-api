@@ -344,6 +344,7 @@ Resources:
   ThreatManagerRole:
     DependsOn:
       - ThreatPolicyDynamoDB
+      - ThreatPolicySecretsManager
       - ThreatPolicySNS
     Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
     Properties:
@@ -363,6 +364,7 @@ Resources:
               - arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole
               - !Sub arn:aws:iam::${AWS::AccountId}:policy/GD-AWS-KMS-USER
               - !Sub arn:aws:iam::${AWS::AccountId}:policy/${DevelopmentTeam}-custom-ThreatPolicyDynamoDB
+              - !Sub arn:aws:iam::${AWS::AccountId}:policy/${DevelopmentTeam}-custom-ThreatPolicySecretsManager
               - !Sub arn:aws:iam::${AWS::AccountId}:policy/${DevelopmentTeam}-custom-ThreatPolicySNS
         - Key: AssumingServices
           Value: lambda.amazonaws.com
@@ -373,6 +375,7 @@ Resources:
   ThreatResponseProcessorRole:
     DependsOn:
       - ThreatPolicyDynamoDB
+      - ThreatPolicySecretsManager
     Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
     Properties:
       ProductName: IAMRole
@@ -391,6 +394,7 @@ Resources:
               - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
               - !Sub arn:aws:iam::${AWS::AccountId}:policy/GD-AWS-KMS-USER
               - !Sub arn:aws:iam::${AWS::AccountId}:policy/${DevelopmentTeam}-custom-ThreatPolicyDynamoDB
+              - !Sub arn:aws:iam::${AWS::AccountId}:policy/${DevelopmentTeam}-custom-ThreatPolicySecretsManager
         - Key: AssumingServices
           Value: lambda.amazonaws.com
       Tags:
