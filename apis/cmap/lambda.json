@@ -9,7 +9,7 @@
     ],
     "actions": {
       "Run": {
-        "requiredADGroups": ["Eng-ThreatResearch"]
+        "requiredADGroups": ["ENG-Threat Research"]
       }
     }
   }

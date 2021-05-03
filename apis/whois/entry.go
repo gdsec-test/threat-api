@@ -13,7 +13,7 @@ import (
 var tb *toolbox.Toolbox
 
 func handler(ctx context.Context, request events.SNSEvent) ([]*common.CompletedJobData, error) {
-	tb := toolbox.GetToolbox()
+	tb = toolbox.GetToolbox()
 	defer tb.Close(ctx)
 
 	// Super simple code to convert our interface to the legacy one
