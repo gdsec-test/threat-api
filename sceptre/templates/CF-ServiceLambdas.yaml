@@ -22,10 +22,6 @@ Parameters:
     Type: String
     Description: SHA1 hash of the splunk lambda source
     Default: ""
-  tester1SHA1:
-    Type: String
-    Description: SHA1 hash of the tester1 lambda source
-    Default: ""
   urlhausSHA1:
     Type: String
     Description: SHA1 hash of the urlhaus lambda source
@@ -289,56 +285,6 @@ Resources:
       Name: /ThreatTools/Modules/splunk
       Type: String
       Value: '{"supportedIOCTypes": ["GODADDY_USERNAME", "IP", "CVE", "AWSHOSTNAME"], "actions": {"ReadSplunk": {"requiredADGroups": ["ENG-Threat Research"]}}}'
-
-  tester1LambdaFunction:
-    Type: AWS::Lambda::Function
-    Properties:
-      Code:
-        S3Bucket: !Sub gd-threattools-${AWS::AccountId}-code-bucket
-        S3Key: !Sub tester1/${tester1SHA1}
-      Description: !Sub tester1 lambda (${tester1SHA1})
-      FunctionName: tester1
-      Handler: tester1.handler
-      MemorySize: 128
-      Role: !Sub arn:aws:iam::${AWS::AccountId}:role/threattools-custom-ThreatRole
-      Runtime: python3.7
-      Timeout: 15
-
-  tester1LambdaPermission:
-    DependsOn: tester1LambdaFunction
-    Type: AWS::Lambda::Permission
-    Properties:
-      Action: lambda:InvokeFunction
-      FunctionName: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:tester1
-      Principal: sns.amazonaws.com
-      SourceArn: !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:JobRequests
-
-  tester1SNSSubscription:
-    DependsOn: tester1LambdaFunction
-    Type: AWS::SNS::Subscription
-    Properties:
-      Endpoint: !GetAtt tester1LambdaFunction.Arn
-      Protocol: lambda
-      TopicArn: !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:JobRequests
-
-  tester1LambdaEventInvokeConfig:
-    DependsOn: tester1LambdaFunction
-    Type: AWS::Lambda::EventInvokeConfig
-    Properties:
-      DestinationConfig:
-        OnSuccess:
-          Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobResponses
-        OnFailure:
-          Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobFailures
-      FunctionName: tester1
-      Qualifier: $LATEST
-
-  tester1LambdaMetadata:
-    Type: AWS::SSM::Parameter
-    Properties:
-      Name: /ThreatTools/Modules/tester1
-      Type: String
-      Value: '{"supportedIOCTypes": ["DOMAIN", "IP", "UNKNOWN"]}'
 
   urlhausLambdaFunction:
     Type: AWS::Lambda::Function

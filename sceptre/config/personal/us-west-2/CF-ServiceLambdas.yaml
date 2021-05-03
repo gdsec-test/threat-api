@@ -7,7 +7,6 @@ parameters:
   recordedfutureSHA1: !file_contents resources/recordedfuture.sha1
   shodanSHA1: !file_contents resources/shodan.sha1
   splunkSHA1: !file_contents resources/splunk.sha1
-  tester1SHA1: !file_contents resources/tester1.sha1
   urlhausSHA1: !file_contents resources/urlhaus.sha1
   virustotalSHA1: !file_contents resources/virustotal.sha1
   whoisSHA1: !file_contents resources/whois.sha1
