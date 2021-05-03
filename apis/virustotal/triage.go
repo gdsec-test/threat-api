@@ -37,7 +37,7 @@ func (m *TriageModule) Supports() []triage.IOCType {
 	}
 }
 
-func (m *TriageModule) ProcessRequest(triageRequest *triage.Request, apiKey string) (*triage.Data, error) {
+func (m *TriageModule) ProcessRequest(ctx context.Context, triageRequest *triage.Request, apiKey string) (*triage.Data, error) {
 	triageData := &triage.Data{
 		Title:    "VirusTotal",
 		Metadata: []string{},
@@ -49,7 +49,7 @@ func (m *TriageModule) ProcessRequest(triageRequest *triage.Request, apiKey stri
 		triageData.Title = "Analyses of previously seen hashes"
 		entries := make([]*vt.Object, len(triageRequest.IOCs))
 		for i, ioc := range triageRequest.IOCs {
-			entry, err := virusTotal.GetHash(nil, ioc)
+			entry, err := virusTotal.GetHash(ctx, ioc)
 			if err != nil {
 				fmt.Println(err)
 				continue
@@ -61,7 +61,7 @@ func (m *TriageModule) ProcessRequest(triageRequest *triage.Request, apiKey stri
 		triageData.Title = "Analyses of previously seen domain names"
 		entries := make([]*vt.Object, len(triageRequest.IOCs))
 		for i, ioc := range triageRequest.IOCs {
-			entry, err := virusTotal.GetDomain(nil, ioc)
+			entry, err := virusTotal.GetDomain(ctx, ioc)
 			if err != nil {
 				fmt.Println(err)
 				continue
@@ -73,7 +73,7 @@ func (m *TriageModule) ProcessRequest(triageRequest *triage.Request, apiKey stri
 		triageData.Title = "Analyses of previously seen IP addresses"
 		entries := make([]*vt.Object, len(triageRequest.IOCs))
 		for i, ioc := range triageRequest.IOCs {
-			entry, err := virusTotal.GetAddress(nil, ioc)
+			entry, err := virusTotal.GetAddress(ctx, ioc)
 			if err != nil {
 				fmt.Println(err)
 				continue
@@ -85,7 +85,7 @@ func (m *TriageModule) ProcessRequest(triageRequest *triage.Request, apiKey stri
 		triageData.Title = "Analyses of previously seen URLs"
 		entries := make([]*vt.Object, len(triageRequest.IOCs))
 		for i, ioc := range triageRequest.IOCs {
-			entry, err := virusTotal.GetURL(nil, ioc)
+			entry, err := virusTotal.GetURL(ctx, ioc)
 			if err != nil {
 				fmt.Println(err)
 				continue
@@ -122,7 +122,7 @@ func (m *TriageModule) Triage(ctx context.Context, triageRequest *triage.Request
 
 	// Process the request by querying each API endpoint per IoC type
 	span, _ = tb.TracerLogger.StartSpan(ctx, "ProcessRequest", "virustotal", "", "processrequest")
-	data, err := m.ProcessRequest(triageRequest, apiKey)
+	data, err := m.ProcessRequest(ctx, triageRequest, apiKey)
 	if err != nil {
 		span.AddError(err)
 		span.End(ctx)
