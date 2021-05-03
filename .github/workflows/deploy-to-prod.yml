@@ -19,6 +19,8 @@ name: ThreatAPI Deployment (PROD)
 
 on:
   workflow_dispatch:
+  push:
+    branches: [ main ] # Trigger workflow on all pushes to main branch
 
 jobs:
   deploy_to_prod:

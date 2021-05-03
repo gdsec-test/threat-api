@@ -20,7 +20,7 @@ name: ThreatAPI Deployment (DEV)
 on:
   workflow_dispatch:
   push:
-    branches: [ main ] # Trigger workflow on all pushes to main branch
+    branches: [ develop ] # Trigger workflow on all pushes to develop branch
 
 jobs:
   deploy_to_dev:
