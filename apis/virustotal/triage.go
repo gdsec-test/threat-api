@@ -13,8 +13,11 @@ import (
 	"github.com/gdcorp-infosec/threat-api/lambdas/common/triagelegacyconnector/triage"
 )
 
+//rf "github.com/gdcorp-infosec/threat-api/apis/recordedfuture/recordedfutureLibrary"
+
 const (
-	secretID = "/ThreatTools/Integrations/virustotal"
+	triageModuleName = "virustotal"
+	secretID         = "/ThreatTools/Integrations/virustotal"
 )
 
 // Triage module
