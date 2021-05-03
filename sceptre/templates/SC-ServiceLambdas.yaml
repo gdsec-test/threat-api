@@ -160,7 +160,7 @@ Resources:
     Properties:
       Name: /ThreatTools/Modules/cmap
       Type: String
-      Value: '{"supportedIOCTypes": ["DOMAIN"], "actions": {"Run": {"requiredADGroups": ["Eng-ThreatIntel"]}}}'
+      Value: '{"supportedIOCTypes": ["DOMAIN"], "actions": {"Run": {"requiredADGroups": ["Eng-ThreatResearch"]}}}'
 
   geoipLambdaFunction:
     Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
