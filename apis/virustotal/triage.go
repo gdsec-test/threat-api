@@ -9,12 +9,14 @@ import (
 	"time"
 
 	vt "github.com/VirusTotal/vt-go"
+	vtlib "github.com/gdcorp-infosec/threat-api/apis/virustotal/virustotalLibrary"
 	"github.com/gdcorp-infosec/threat-api/lambdas/common/toolbox/appsectracing"
 	"github.com/gdcorp-infosec/threat-api/lambdas/common/triagelegacyconnector/triage"
 )
 
 const (
-	secretID = "/ThreatTools/Integrations/virustotal"
+	triageModuleName = "virustotal"
+	secretID         = "/ThreatTools/Integrations/virustotal"
 )
 
 // Triage module
@@ -42,7 +44,7 @@ func (m *TriageModule) ProcessRequest(ctx context.Context, triageRequest *triage
 		Title:    "VirusTotal",
 		Metadata: []string{},
 	}
-	virusTotal := NewVirusTotal(apiKey)
+	virusTotal := vtlib.NewVirusTotal(tb, apiKey)
 
 	switch triageRequest.IOCsType {
 	case triage.MD5Type, triage.SHA256Type:

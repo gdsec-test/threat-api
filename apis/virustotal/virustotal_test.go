@@ -41,7 +41,7 @@ func TestWebQueries(t *testing.T) {
 		fmt.Printf("Triage request test %d\n", i)
 
 		triageModule := TriageModule{}
-		triageResult, err := triageModule.ProcessRequest(triageRequest, apiKey)
+		triageResult, err := triageModule.ProcessRequest(ctx, triageRequest, apiKey)
 		if err != nil {
 			t.Fatal(err)
 		}
