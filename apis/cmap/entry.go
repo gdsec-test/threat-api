@@ -19,7 +19,7 @@ const (
 var tb *toolbox.Toolbox
 
 func handler(ctx context.Context, request events.SNSEvent) ([]*common.CompletedJobData, error) {
-	tb := toolbox.GetToolbox()
+	tb = toolbox.GetToolbox()
 	defer tb.Close(ctx)
 
 	cmapModule, err := initCMAPModule(ctx)

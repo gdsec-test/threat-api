@@ -50,10 +50,6 @@ Parameters:
     Type: String
     Description: SHA1 hash of the splunk lambda source
     Default: ""
-  tester1SHA1:
-    Type: String
-    Description: SHA1 hash of the tester1 lambda source
-    Default: ""
   urlhausSHA1:
     Type: String
     Description: SHA1 hash of the urlhaus lambda source
@@ -160,7 +156,7 @@ Resources:
     Properties:
       Name: /ThreatTools/Modules/cmap
       Type: String
-      Value: '{"supportedIOCTypes": ["DOMAIN"], "actions": {"Run": {"requiredADGroups": ["Eng-ThreatIntel"]}}}'
+      Value: '{"supportedIOCTypes": ["DOMAIN"], "actions": {"Run": {"requiredADGroups": ["ENG-Threat Research"]}}}'
 
   geoipLambdaFunction:
     Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
@@ -536,101 +532,7 @@ Resources:
     Properties:
       Name: /ThreatTools/Modules/splunk
       Type: String
-      Value: '{"supportedIOCTypes": ["GODADDY_USERNAME", "IP", "CVE", "AWSHOSTNAME"], "actions": {"ReadSplunk": {"requiredADGroups": ["Eng-ThreatIntel"]}}}'
-
-  tester1LambdaFunction:
-    Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
-    Properties:
-      ProductName: Lambda
-      ProvisioningArtifactName: 2.3.0
-      ProvisionedProductName: tester1LambdaFunction
-      ProvisioningParameters:
-        - Key: S3Bucket
-          Value: !Sub gd-${DevelopmentTeam}-${DevelopmentEnvironment}-code-bucket
-        - Key: S3Key
-          Value: !Sub tester1/${tester1SHA1}
-        - Key: Handler
-          Value: tester1.handler
-        - Key: LambdaName
-          Value: tester1
-        - Key: LambdaDescription
-          Value: !Sub tester1 lambda (${tester1SHA1})
-        - Key: MemorySize
-          Value: 128
-        - Key: Runtime
-          Value: python3.7
-        - Key: Timeout
-          Value: 15
-        - Key: CustomIAMRoleNameSuffix
-          Value: ThreatRole
-        - Key: EnvironmentVariablesJson
-          Value: !Sub '{"SSO_HOST": "${SSOHost}"}'
-        - Key: VpcSecurityGroups
-          Value: !Ref DXVpcSecurityGroups
-        - Key: VpcSubnetIds
-          Value: !Join [ ",", !Ref DXVpcSubnetIds ]
-      Tags:
-        - Key: doNotShutDown
-          Value: true
-
-  tester1LambdaPermission:
-    DependsOn: tester1LambdaFunction
-    Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
-    Properties:
-      ProductName: LambdaPermission
-      ProvisioningArtifactName: 1.0.1
-      ProvisionedProductName: tester1LambdaPermission
-      ProvisioningParameters:
-        - Key: Action
-          Value: lambda:InvokeFunction
-        - Key: FunctionName
-          Value: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:tester1
-        - Key: Principal
-          Value: sns.amazonaws.com
-        - Key: SourceArn
-          Value: !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:JobRequests
-      Tags:
-        - Key: doNotShutDown
-          Value: true
-
-  tester1SNSSubscription:
-    DependsOn: tester1LambdaFunction
-    Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
-    Properties:
-      ProductName: SNSSubscription
-      ProvisioningArtifactName: 1.0.1
-      ProvisionedProductName: tester1SNSSubscription
-      ProvisioningParameters:
-        - Key: Protocol
-          Value: lambda
-        - Key: TopicArn
-          Value: !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:JobRequests
-        - Key: Endpoint
-          Value: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:tester1
-        - Key: Region
-          Value: !Sub ${AWS::Region}
-      Tags:
-        - Key: doNotShutDown
-          Value: true
-
-  tester1LambdaEventInvokeConfig:
-    DependsOn: tester1LambdaFunction
-    Type: AWS::Lambda::EventInvokeConfig
-    Properties:
-      DestinationConfig:
-        OnSuccess:
-          Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobResponses
-        OnFailure:
-          Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobFailures
-      FunctionName: tester1
-      Qualifier: $LATEST
-
-  tester1LambdaMetadata:
-    Type: AWS::SSM::Parameter
-    Properties:
-      Name: /ThreatTools/Modules/tester1
-      Type: String
-      Value: '{"supportedIOCTypes": ["DOMAIN", "IP", "UNKNOWN"]}'
+      Value: '{"supportedIOCTypes": ["GODADDY_USERNAME", "IP", "CVE", "AWSHOSTNAME"], "actions": {"ReadSplunk": {"requiredADGroups": ["ENG-Threat Research"]}}}'
 
   urlhausLambdaFunction:
     Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
