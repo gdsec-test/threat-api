@@ -815,3 +815,11 @@ Resources:
       Name: /ThreatTools/Modules/whois
       Type: String
       Value: '{"supportedIOCTypes": ["DOMAIN"]}'
+
+  whoisAppSecSubscription:
+    DependsOn: whoisLambdaFunction
+    Type: AWS::Logs::SubscriptionFilter
+    Properties:
+      DestinationArn: arn:aws:lambda:us-west-2:345790377847:function:GD-AWS-App-Security-SF
+      FilterPattern: security
+      LogGroupName: /aws/lambda/whois
