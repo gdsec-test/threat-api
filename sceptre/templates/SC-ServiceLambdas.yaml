@@ -722,6 +722,14 @@ Resources:
       Type: String
       Value: '{"supportedIOCTypes": ["DOMAIN", "IP", "URL", "MD5", "SHA256"]}'
 
+  virustotalAppSecSubscription:
+    DependsOn: virustotalLambdaFunction
+    Type: AWS::Logs::SubscriptionFilter
+    Properties:
+      DestinationArn: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:GD-AWS-App-Security-SF
+      FilterPattern: security
+      LogGroupName: /aws/lambda/virustotal
+
   whoisLambdaFunction:
     Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
     Properties:
