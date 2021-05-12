@@ -158,6 +158,14 @@ Resources:
       Type: String
       Value: '{"supportedIOCTypes": ["DOMAIN"], "actions": {"Run": {"requiredADGroups": ["ENG-Threat Research"]}}}'
 
+  cmapAppSecSubscription:
+    DependsOn: cmapLambdaFunction
+    Type: AWS::Logs::SubscriptionFilter
+    Properties:
+      DestinationArn: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:GD-AWS-App-Security-SF
+      FilterPattern: security
+      LogGroupName: /aws/lambda/cmap
+
   geoipLambdaFunction:
     Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
     Properties:
@@ -251,6 +259,14 @@ Resources:
       Name: /ThreatTools/Modules/geoip
       Type: String
       Value: '{"supportedIOCTypes": ["IP"]}'
+
+  geoipAppSecSubscription:
+    DependsOn: geoipLambdaFunction
+    Type: AWS::Logs::SubscriptionFilter
+    Properties:
+      DestinationArn: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:GD-AWS-App-Security-SF
+      FilterPattern: security
+      LogGroupName: /aws/lambda/geoip
 
   recordedfutureLambdaFunction:
     Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
@@ -346,6 +362,14 @@ Resources:
       Type: String
       Value: '{"supportedIOCTypes": ["CVE", "IP"]}'
 
+  recordedfutureAppSecSubscription:
+    DependsOn: recordedfutureLambdaFunction
+    Type: AWS::Logs::SubscriptionFilter
+    Properties:
+      DestinationArn: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:GD-AWS-App-Security-SF
+      FilterPattern: security
+      LogGroupName: /aws/lambda/recordedfuture
+
   shodanLambdaFunction:
     Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
     Properties:
@@ -439,6 +463,14 @@ Resources:
       Name: /ThreatTools/Modules/shodan
       Type: String
       Value: '{"supportedIOCTypes": ["DOMAIN", "IP"]}'
+
+  shodanAppSecSubscription:
+    DependsOn: shodanLambdaFunction
+    Type: AWS::Logs::SubscriptionFilter
+    Properties:
+      DestinationArn: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:GD-AWS-App-Security-SF
+      FilterPattern: security
+      LogGroupName: /aws/lambda/shodan
 
   splunkLambdaFunction:
     Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
@@ -534,6 +566,14 @@ Resources:
       Type: String
       Value: '{"supportedIOCTypes": ["GODADDY_USERNAME", "IP", "CVE", "AWSHOSTNAME"], "actions": {"ReadSplunk": {"requiredADGroups": ["ENG-Threat Research"]}}}'
 
+  splunkAppSecSubscription:
+    DependsOn: splunkLambdaFunction
+    Type: AWS::Logs::SubscriptionFilter
+    Properties:
+      DestinationArn: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:GD-AWS-App-Security-SF
+      FilterPattern: security
+      LogGroupName: /aws/lambda/splunk
+
   urlhausLambdaFunction:
     Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
     Properties:
@@ -627,6 +667,14 @@ Resources:
       Name: /ThreatTools/Modules/urlhaus
       Type: String
       Value: '{"supportedIOCTypes": ["DOMAIN", "IP", "URL", "MD5", "SHA256"]}'
+
+  urlhausAppSecSubscription:
+    DependsOn: urlhausLambdaFunction
+    Type: AWS::Logs::SubscriptionFilter
+    Properties:
+      DestinationArn: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:GD-AWS-App-Security-SF
+      FilterPattern: security
+      LogGroupName: /aws/lambda/urlhaus
 
   virustotalLambdaFunction:
     Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
@@ -828,6 +876,6 @@ Resources:
     DependsOn: whoisLambdaFunction
     Type: AWS::Logs::SubscriptionFilter
     Properties:
-      DestinationArn: arn:aws:lambda:us-west-2:345790377847:function:GD-AWS-App-Security-SF
+      DestinationArn: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:GD-AWS-App-Security-SF
       FilterPattern: security
       LogGroupName: /aws/lambda/whois

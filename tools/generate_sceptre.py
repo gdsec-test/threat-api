@@ -261,6 +261,14 @@ SC_RESOURCES_BLOCK = dedent(
         Name: /ThreatTools/Modules/__NAME__
         Type: String
         Value: '__METADATA__'
+    
+    __NAME__AppSecSubscription:
+      DependsOn: __NAME__LambdaFunction
+      Type: AWS::Logs::SubscriptionFilter
+      Properties:
+        DestinationArn: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:GD-AWS-App-Security-SF
+        FilterPattern: security
+        LogGroupName: /aws/lambda/__NAME__
     """
 )
 
