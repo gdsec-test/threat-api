@@ -84,9 +84,6 @@ func getIOCsTypes(iocs []string) map[triage.IOCType][]string {
 			triageType = triage.CAPECType
 		case ioc.CPE:
 			triageType = triage.CPEType
-		}
-		// Try to parse it ourself
-		switch {
 		case awsHostnameRegex.MatchString(iocInput):
 			triageType = triage.AWSHostnameType
 			// Use the raw input as the recognized input from the ioc library
@@ -115,6 +112,36 @@ func getIOCsTypes(iocs []string) map[triage.IOCType][]string {
 			triageType = triage.HostnameType
 			triageContent = iocInput
 		}
+		//// Try to parse it ourself
+		//switch {
+		//	case awsHostnameRegex.MatchString(iocInput):
+		//		triageType = triage.AWSHostnameType
+		//		// Use the raw input as the recognized input from the ioc library
+		//		// will not be accurate
+		//		triageContent = iocInput
+		//	case mitreRegex.MatchString(iocInput):
+		//		regResult := mitreRegex.FindStringSubmatch(iocInput)
+		//		if len(regResult) > 2 {
+		//			switch regResult[1] {
+		//				case "T":
+		//					if regResult[len(regResult)-1] == "." {
+		//					triageType = triage.MitreSubTechniqueType
+		//					} else {
+		//					triageType = triage.MitreTechniqueType
+		//					}
+		//				case "TA":
+		//					triageType = triage.MitreTacticType
+		//				case "M":
+		//					triageType = triage.MitreMitigationType
+		//			}
+		//
+		//			triageContent = regResult[0]
+		//		}
+		//	case godaddyHostnameRegex.MatchString(iocInput):
+		//		// TODO: Instead just look up using GoDaddy DNS server
+		//		triageType = triage.HostnameType
+		//		triageContent = iocInput
+		//}
 		if triageType == triage.UnknownType {
 			iocsMap[triageType] = append(iocsMap[triageType], iocInput)
 			continue
