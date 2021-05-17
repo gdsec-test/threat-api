@@ -10,12 +10,9 @@ import (
 	"github.com/gdcorp-infosec/threat-api/lambdas/common/triagelegacyconnector"
 )
 
-var tb *toolbox.Toolbox
-
 func handler(ctx context.Context, request events.SNSEvent) ([]*common.CompletedJobData, error) {
 	// Super simple code to convert our interface to the legacy one
-	tb = toolbox.GetToolbox()
-	defer tb.Close(ctx)
+	tb := toolbox.GetToolbox()
 	// and return the results
 	virusTotalTriageModule := TriageModule{}
 	return triagelegacyconnector.AWSToTriage(ctx, tb, &virusTotalTriageModule, request)

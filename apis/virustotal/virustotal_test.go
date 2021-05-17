@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"io/ioutil"
 	"testing"
 
 	"github.com/gdcorp-infosec/threat-api/lambdas/common/toolbox"
@@ -36,7 +37,12 @@ func TestWebQueries(t *testing.T) {
 		IOCsType: triage.IPType,
 	})
 
-	apiKey := "..."
+	data, err := ioutil.ReadFile("vtapi.txt")
+	if err != nil {
+		panic(err)
+	}
+	apiKey := string(data)
+
 	for i, triageRequest := range triageRequests {
 		fmt.Printf("Triage request test %d\n", i)
 
@@ -46,6 +52,6 @@ func TestWebQueries(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		fmt.Println(triageResult.Title)
+		fmt.Println(triageResult.Data)
 	}
 }

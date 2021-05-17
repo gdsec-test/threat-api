@@ -10,6 +10,7 @@ import (
 
 	vt "github.com/VirusTotal/vt-go"
 	vtlib "github.com/gdcorp-infosec/threat-api/apis/virustotal/virustotalLibrary"
+	"github.com/gdcorp-infosec/threat-api/lambdas/common/toolbox"
 	"github.com/gdcorp-infosec/threat-api/lambdas/common/toolbox/appsectracing"
 	"github.com/gdcorp-infosec/threat-api/lambdas/common/triagelegacyconnector/triage"
 )
@@ -44,6 +45,7 @@ func (m *TriageModule) ProcessRequest(ctx context.Context, triageRequest *triage
 		Title:    "VirusTotal",
 		Metadata: []string{},
 	}
+	tb := toolbox.GetToolbox()
 	virusTotal := vtlib.NewVirusTotal(tb, apiKey)
 
 	switch triageRequest.IOCsType {
@@ -101,6 +103,8 @@ func (m *TriageModule) ProcessRequest(ctx context.Context, triageRequest *triage
 }
 
 func (m *TriageModule) Triage(ctx context.Context, triageRequest *triage.Request) ([]*triage.Data, error) {
+	tb := toolbox.GetToolbox()
+	defer tb.Close(ctx)
 	var span *appsectracing.Span
 	span, ctx = tb.TracerLogger.StartSpan(ctx, "TriageVT", "virustotal", "", "triage")
 	defer span.End(ctx)
