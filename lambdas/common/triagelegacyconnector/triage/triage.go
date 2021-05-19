@@ -57,10 +57,13 @@ const (
 	// GoDaddy username
 	GoDaddyUsernameType IOCType = "GODADDY_USERNAME"
 	// Mitre IOCs
+	MitreMatrixType       IOCType = "MITRE_MATRIX"
 	MitreTacticType       IOCType = "MITRE_TACTIC"
-	MitreTechniqueType    IOCType = "MITRE_TECHNIQUE"
 	MitreSubTechniqueType IOCType = "MITRE_SUBTECHNIQUE"
+	MitreTechniqueType    IOCType = "MITRE_TECHNIQUE"
 	MitreMitigationType   IOCType = "MITRE_MITIGATION"
+	MitreGroupType        IOCType = "MITRE_GROUP"
+	MitreSoftwareType     IOCType = "MITRE_SOFTWARE"
 )
 
 type IOCTypes []IOCType
