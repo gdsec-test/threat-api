@@ -114,8 +114,8 @@ func getIOCsTypes(iocs []string) map[triage.IOCType][]string {
 						case "software":
 							triageType = triage.MitreSoftwareType
 						}
+						triageContent = regResult[0]
 					}
-					triageContent = regResult[0]
 				}
 			case godaddyHostnameRegex.MatchString(iocInput):
 				// TODO: Instead just look up using GoDaddy DNS server
