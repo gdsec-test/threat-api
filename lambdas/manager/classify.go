@@ -18,7 +18,8 @@ var (
 	awsHostnameRegex     = regexp.MustCompile(`ip-(\d+-)+\d+.*internal`)
 	godaddyHostnameRegex = regexp.MustCompile(`((\w|-)+\.?)+\.gdg`)
 
-	mitreRegex = regexp.MustCompile(`(?P<matrix>^MA\d+)|(?P<tactic>^TA\d+)|(?P<subtechnique>^T\d+[.]\d+)|(?P<technique>^T\d+)|(?P<mitigation>^M\d+)|(?P<group>^G\d+)|(?P<software>^S\d+)`)
+	mitreRegex = regexp.MustCompile("^(?P<concept>M(A)?|T(A)?|G|S)\\d{4}(\\.\\d{3})?$")
+	//mitreRegex = regexp.MustCompile(`(?P<matrix>^MA\d+)|(?P<tactic>^TA\d+)|(?P<subtechnique>^T\d+[.]\d+)|(?P<technique>^T\d+)|(?P<mitigation>^M\d+)|(?P<group>^G\d+)|(?P<software>^S\d+)`)
 )
 
 // ClassifyRequest is the body of a request to classify IOCs
@@ -95,26 +96,26 @@ func getIOCsTypes(iocs []string) map[triage.IOCType][]string {
 				triageContent = iocInput
 			case mitreRegex.MatchString(iocInput) && len(iocInput) >= 5:
 				regResult := mitreRegex.FindStringSubmatch(iocInput)
-				for i, name := range mitreRegex.SubexpNames() {
-					if i != 0 && regResult[i] != "" {
-						switch name {
-						case "matrix":
-							triageType = triage.MitreMatrixType
-						case "tactic":
-							triageType = triage.MitreTacticType
-						case "subtechnique":
+				if len(regResult) >= 2 {
+					switch regResult[1] {
+					case "MA":
+						triageType = triage.MitreMatrixType
+					case "TA":
+						triageType = triage.MitreTacticType
+					case "T":
+						if regResult[4] != "" {
 							triageType = triage.MitreSubTechniqueType
-						case "technique":
+						} else {
 							triageType = triage.MitreTechniqueType
-						case "mitigation":
-							triageType = triage.MitreMitigationType
-						case "group":
-							triageType = triage.MitreGroupType
-						case "software":
-							triageType = triage.MitreSoftwareType
 						}
-						triageContent = regResult[0]
+					case "M":
+						triageType = triage.MitreMitigationType
+					case "G":
+						triageType = triage.MitreGroupType
+					case "S":
+						triageType = triage.MitreSoftwareType
 					}
+					triageContent = regResult[0]
 				}
 			case godaddyHostnameRegex.MatchString(iocInput):
 				// TODO: Instead just look up using GoDaddy DNS server
