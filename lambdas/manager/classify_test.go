@@ -9,7 +9,7 @@ import (
 
 func TestGetIOCsTypes(t *testing.T) {
 	tests := map[triage.IOCType][]string{
-		triage.URLType:               {"https://test.net/click?upn=2O3VkQHsxfsYUWZiYC6-2Bl8IM6", "https://test.net/click?upn=2O3VkQHsxfsYUWZiYC6-2Bl8I"},
+		triage.URLType:               {"https://test.net/click?upn=2O3VkQHsxfsYUWZiYC6-2Bl8IM6", "https://test.net/click?upn=2O3VkQHsxfsYUWZiYC6-M1015"},
 		triage.MitreMatrixType:       {"MA1056"},
 		triage.MitreTacticType:       {"TA0043"},
 		triage.MitreTechniqueType:    {"T1548"},
@@ -17,6 +17,7 @@ func TestGetIOCsTypes(t *testing.T) {
 		triage.MitreMitigationType:   {"M1015"},
 		triage.MitreGroupType:        {"G0130"},
 		triage.MitreSoftwareType:     {"S0066"},
+		triage.DomainType:            {"TA0043.004.com"},
 		triage.UnknownType:           {"M6"},
 	}
 
@@ -28,6 +29,6 @@ func TestGetIOCsTypes(t *testing.T) {
 	results := getIOCsTypes(testIOCs)
 
 	if !reflect.DeepEqual(tests, results) {
-		t.Fatal("results don't match")
+		t.Fatal("results don't match test cases")
 	}
 }

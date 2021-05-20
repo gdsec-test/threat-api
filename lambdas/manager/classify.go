@@ -19,7 +19,7 @@ var (
 	godaddyHostnameRegex = regexp.MustCompile(`((\w|-)+\.?)+\.gdg`)
 
 	//mitreRegex = regexp.MustCompile(`(M|T|TA)(\d+)(([.])\d+)?`)
-	mitreRegex = regexp.MustCompile(`(?P<matrix>MA\d+)|(?P<tactic>TA\d+)|(?P<subtechnique>T\d+[.]\d+)|(?P<technique>T\d+)|(?P<mitigation>M\d+)|(?P<group>G\d+)|(?P<software>S\d+)`)
+	mitreRegex = regexp.MustCompile(`(?P<matrix>^MA\d+)|(?P<tactic>^TA\d+)|(?P<subtechnique>^T\d+[.]\d+)|(?P<technique>^T\d+)|(?P<mitigation>^M\d+)|(?P<group>^G\d+)|(?P<software>^S\d+)`)
 )
 
 // ClassifyRequest is the body of a request to classify IOCs
@@ -117,22 +117,6 @@ func getIOCsTypes(iocs []string) map[triage.IOCType][]string {
 					}
 					triageContent = regResult[0]
 				}
-				//if len(regResult) > 2 {
-				//switch regResult[1] {
-				//case "T":
-				//	if regResult[len(regResult)-1] == "." {
-				//		triageType = triage.MitreSubTechniqueType
-				//	} else {
-				//		triageType = triage.MitreTechniqueType
-				//	}
-				//case "TA":
-				//	triageType = triage.MitreTacticType
-				//case "M":
-				//	triageType = triage.MitreMitigationType
-				//}
-
-				triageContent = regResult[0]
-				//}
 			case godaddyHostnameRegex.MatchString(iocInput):
 				// TODO: Instead just look up using GoDaddy DNS server
 				triageType = triage.HostnameType
