@@ -1,34 +1,34 @@
 package main
 
 import (
+	"reflect"
 	"testing"
+
+	"github.com/gdcorp-infosec/threat-api/lambdas/common/triagelegacyconnector/triage"
 )
 
 func TestGetIOCsTypes(t *testing.T) {
-	//  TODO-regex-fix:Adding test case just for ThreatAPI failure for now
-	testIocs := []string{
-		"https://test.test.test.net/ls/click?upn=2O3VkQHsxfse2LMs-2FwziFzRIfeYUWZiYC6-2Bl8IM6",
-		"https://test.test.test.net/ls/click?upn=2O3VkQHsxfse2LMs-2FwziFzRIfeYUWZiYC6-2Bl8I",
-		"M6",
+	tests := map[triage.IOCType][]string{
+		triage.URLType:               {"https://test.net/click?upn=2O3VkQHsxfsYUWZiYC6-2Bl8IM6", "https://test.net/click?upn=2O3VkQHsxfsYUWZiYC6-M1015"},
+		triage.MitreMatrixType:       {"MA1056"},
+		triage.MitreTacticType:       {"TA0043"},
+		triage.MitreTechniqueType:    {"T1548"},
+		triage.MitreSubTechniqueType: {"T1548.004"},
+		triage.MitreMitigationType:   {"M1015"},
+		triage.MitreGroupType:        {"G0130"},
+		triage.MitreSoftwareType:     {"S0066"},
+		triage.DomainType:            {"TA0043.004.com"},
+		triage.UnknownType:           {"M6"},
 	}
 
-	testIOCTypes := getIOCsTypes(testIocs)
-
-	if len(testIOCTypes) == 0 {
-		t.Fatal("no result returned")
+	var testIOCs []string
+	for _, test := range tests {
+		testIOCs = append(testIOCs, test...)
 	}
 
-	if len(testIOCTypes) != 2 {
-		t.Fatal("unexpected results")
-	}
+	results := getIOCsTypes(testIOCs)
 
-	// TODO-regex-fix: Improve on the assert structure
-	for iocType, iocs := range testIOCTypes {
-		if iocType == "MITRE_MITIGATION" {
-			if iocs[0] != "M6" {
-				t.Fatal("MIRE_MITIGATION classified wrong")
-			}
-		}
+	if !reflect.DeepEqual(tests, results) {
+		t.Fatal("results don't match test cases")
 	}
-
 }
