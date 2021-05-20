@@ -18,7 +18,6 @@ var (
 	awsHostnameRegex     = regexp.MustCompile(`ip-(\d+-)+\d+.*internal`)
 	godaddyHostnameRegex = regexp.MustCompile(`((\w|-)+\.?)+\.gdg`)
 
-	//mitreRegex = regexp.MustCompile(`(M|T|TA)(\d+)(([.])\d+)?`)
 	mitreRegex = regexp.MustCompile(`(?P<matrix>^MA\d+)|(?P<tactic>^TA\d+)|(?P<subtechnique>^T\d+[.]\d+)|(?P<technique>^T\d+)|(?P<mitigation>^M\d+)|(?P<group>^G\d+)|(?P<software>^S\d+)`)
 )
 
