@@ -1,6 +1,14 @@
 Before creating this PR, please check the following:
 
-* [ ] Github Action: `ThreatAPI Deployment (DEV)` is successful, after the merge from your branch to `develop` branch
-* [ ] The change works as intended in AWS Dev Environment
+### Merging to develop branch ?
 
-Tag @cfalk @pkanniappanmurt for reviews
+* [ ] Github Action: `Code quality check`is successful
+* [ ] Github Action: `ThreatAPI Deployment (DEV-PRIVATE)`is successful
+* [ ] The change works as intended in AWS Dev-Private Environment
+* [ ] Tests (if applicable)
+* [ ] Documentation (if applicable)
+
+### Merging to main branch ?
+
+* [ ] Github Action: `ThreatAPI Deployment (DEV)`is successful after merge from your branch to `develop`
+* [ ] The change works as intended in AWS Dev Environment

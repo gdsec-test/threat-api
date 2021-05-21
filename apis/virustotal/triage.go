@@ -9,12 +9,15 @@ import (
 	"time"
 
 	vt "github.com/VirusTotal/vt-go"
+	vtlib "github.com/gdcorp-infosec/threat-api/apis/virustotal/virustotalLibrary"
+	"github.com/gdcorp-infosec/threat-api/lambdas/common/toolbox"
 	"github.com/gdcorp-infosec/threat-api/lambdas/common/toolbox/appsectracing"
 	"github.com/gdcorp-infosec/threat-api/lambdas/common/triagelegacyconnector/triage"
 )
 
 const (
-	secretID = "/ThreatTools/Integrations/virustotal"
+	triageModuleName = "virustotal"
+	secretID         = "/ThreatTools/Integrations/virustotal"
 )
 
 // Triage module
@@ -37,19 +40,20 @@ func (m *TriageModule) Supports() []triage.IOCType {
 	}
 }
 
-func (m *TriageModule) ProcessRequest(triageRequest *triage.Request, apiKey string) (*triage.Data, error) {
+func (m *TriageModule) ProcessRequest(ctx context.Context, triageRequest *triage.Request, apiKey string) (*triage.Data, error) {
 	triageData := &triage.Data{
 		Title:    "VirusTotal",
 		Metadata: []string{},
 	}
-	virusTotal := NewVirusTotal(apiKey)
+	tb := toolbox.GetToolbox()
+	virusTotal := vtlib.NewVirusTotal(tb, apiKey)
 
 	switch triageRequest.IOCsType {
 	case triage.MD5Type, triage.SHA256Type:
 		triageData.Title = "Analyses of previously seen hashes"
 		entries := make([]*vt.Object, len(triageRequest.IOCs))
 		for i, ioc := range triageRequest.IOCs {
-			entry, err := virusTotal.GetHash(nil, ioc)
+			entry, err := virusTotal.GetHash(ctx, ioc)
 			if err != nil {
 				fmt.Println(err)
 				continue
@@ -61,7 +65,7 @@ func (m *TriageModule) ProcessRequest(triageRequest *triage.Request, apiKey stri
 		triageData.Title = "Analyses of previously seen domain names"
 		entries := make([]*vt.Object, len(triageRequest.IOCs))
 		for i, ioc := range triageRequest.IOCs {
-			entry, err := virusTotal.GetDomain(nil, ioc)
+			entry, err := virusTotal.GetDomain(ctx, ioc)
 			if err != nil {
 				fmt.Println(err)
 				continue
@@ -73,7 +77,7 @@ func (m *TriageModule) ProcessRequest(triageRequest *triage.Request, apiKey stri
 		triageData.Title = "Analyses of previously seen IP addresses"
 		entries := make([]*vt.Object, len(triageRequest.IOCs))
 		for i, ioc := range triageRequest.IOCs {
-			entry, err := virusTotal.GetAddress(nil, ioc)
+			entry, err := virusTotal.GetAddress(ctx, ioc)
 			if err != nil {
 				fmt.Println(err)
 				continue
@@ -85,7 +89,7 @@ func (m *TriageModule) ProcessRequest(triageRequest *triage.Request, apiKey stri
 		triageData.Title = "Analyses of previously seen URLs"
 		entries := make([]*vt.Object, len(triageRequest.IOCs))
 		for i, ioc := range triageRequest.IOCs {
-			entry, err := virusTotal.GetURL(nil, ioc)
+			entry, err := virusTotal.GetURL(ctx, ioc)
 			if err != nil {
 				fmt.Println(err)
 				continue
@@ -99,6 +103,8 @@ func (m *TriageModule) ProcessRequest(triageRequest *triage.Request, apiKey stri
 }
 
 func (m *TriageModule) Triage(ctx context.Context, triageRequest *triage.Request) ([]*triage.Data, error) {
+	tb := toolbox.GetToolbox()
+	defer tb.Close(ctx)
 	var span *appsectracing.Span
 	span, ctx = tb.TracerLogger.StartSpan(ctx, "TriageVT", "virustotal", "", "triage")
 	defer span.End(ctx)
@@ -122,7 +128,7 @@ func (m *TriageModule) Triage(ctx context.Context, triageRequest *triage.Request
 
 	// Process the request by querying each API endpoint per IoC type
 	span, _ = tb.TracerLogger.StartSpan(ctx, "ProcessRequest", "virustotal", "", "processrequest")
-	data, err := m.ProcessRequest(triageRequest, apiKey)
+	data, err := m.ProcessRequest(ctx, triageRequest, apiKey)
 	if err != nil {
 		span.AddError(err)
 		span.End(ctx)

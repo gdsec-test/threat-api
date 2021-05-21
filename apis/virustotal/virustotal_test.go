@@ -2,25 +2,30 @@ package main
 
 import (
 	"context"
+	"encoding/csv"
 	"fmt"
+	"io/ioutil"
+	"strings"
 	"testing"
 
 	"github.com/gdcorp-infosec/threat-api/lambdas/common/toolbox"
 	"github.com/gdcorp-infosec/threat-api/lambdas/common/triagelegacyconnector/triage"
 )
 
-func TestWebQueries(t *testing.T) {
+func TestWebQueriesResults(t *testing.T) {
 	ctx := context.Background()
 	tb := toolbox.GetToolbox()
 	defer tb.Close(ctx)
 
 	var triageRequests []*triage.Request
 	triageRequests = append(triageRequests, &triage.Request{
-		IOCs:     []string{"f3a5fdb1e0e62eda7501823a97240e11"},
+		// Confickr
+		IOCs:     []string{"574cf0062911c8c4eca2156187b8207d"},
 		IOCsType: triage.MD5Type,
 	})
 	triageRequests = append(triageRequests, &triage.Request{
-		IOCs:     []string{"f9311bfd0670d076900dd05f76dd9c1221904cda0e5b2e4d38d6b8656c8b7851"},
+		// Confickr
+		IOCs:     []string{"1023aeeee1dd4ca115fcb8e4882f9d5a1815dcecd2d7f35042110f96957127a0"},
 		IOCsType: triage.SHA256Type,
 	})
 	triageRequests = append(triageRequests, &triage.Request{
@@ -36,16 +41,83 @@ func TestWebQueries(t *testing.T) {
 		IOCsType: triage.IPType,
 	})
 
-	apiKey := "..."
+	// this test expects the API key to be the online line in a
+	// test file named "vtapi.txt" in the same directory as this
+	// code
+	data, err := ioutil.ReadFile("vtapi.txt")
+	if err != nil {
+		panic(err)
+	}
+	apiKey := string(data)
+
 	for i, triageRequest := range triageRequests {
 		fmt.Printf("Triage request test %d\n", i)
 
 		triageModule := TriageModule{}
-		triageResult, err := triageModule.ProcessRequest(triageRequest, apiKey)
+		triageResult, err := triageModule.ProcessRequest(ctx, triageRequest, apiKey)
 		if err != nil {
 			t.Fatal(err)
 		}
 
-		fmt.Println(triageResult.Title)
+		csv := csv.NewReader(strings.NewReader(triageResult.Data))
+		records, _ := csv.ReadAll()
+		// the header always counts as one record
+		if len(records) < 2 {
+			t.Fail()
+		}
+	}
+}
+
+func TestWebQueriesNoResults(t *testing.T) {
+	ctx := context.Background()
+	tb := toolbox.GetToolbox()
+	defer tb.Close(ctx)
+
+	var triageRequests []*triage.Request
+	triageRequests = append(triageRequests, &triage.Request{
+		IOCs:     []string{"574cf0062911c8c4eca2156187b8207F"},
+		IOCsType: triage.MD5Type,
+	})
+	triageRequests = append(triageRequests, &triage.Request{
+		IOCs:     []string{"1023aeeee1dd4ca115fcb8e4882f9d5a1815dcecd2d7f35042110f96957127aF"},
+		IOCsType: triage.SHA256Type,
+	})
+	triageRequests = append(triageRequests, &triage.Request{
+		IOCs:     []string{"http://sskymedia.com/VMYB-ht_JAQo-gi/INV/99401FORPO/20673114777/US/nosuchpage/"},
+		IOCsType: triage.URLType,
+	})
+	triageRequests = append(triageRequests, &triage.Request{
+		IOCs:     []string{"nositehere.zzz"},
+		IOCsType: triage.DomainType,
+	})
+	triageRequests = append(triageRequests, &triage.Request{
+		IOCs:     []string{"127.0.0.1"},
+		IOCsType: triage.IPType,
+	})
+
+	// this test expects the API key to be the online line in a
+	// test file named "vtapi.txt" in the same directory as this
+	// code
+	data, err := ioutil.ReadFile("vtapi.txt")
+	if err != nil {
+		panic(err)
+	}
+	apiKey := string(data)
+
+	for i, triageRequest := range triageRequests {
+		fmt.Printf("Triage request test %d\n", i)
+
+		triageModule := TriageModule{}
+		triageResult, err := triageModule.ProcessRequest(ctx, triageRequest, apiKey)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		csv := csv.NewReader(strings.NewReader(triageResult.Data))
+		records, _ := csv.ReadAll()
+		// the header always counts as one record
+		if len(records) > 2 {
+			t.Fail()
+		}
 	}
 }

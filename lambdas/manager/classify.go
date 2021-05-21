@@ -18,7 +18,8 @@ var (
 	awsHostnameRegex     = regexp.MustCompile(`ip-(\d+-)+\d+.*internal`)
 	godaddyHostnameRegex = regexp.MustCompile(`((\w|-)+\.?)+\.gdg`)
 
-	mitreRegex = regexp.MustCompile(`(M|T|TA)(\d+)(([.])\d+)?`)
+	mitreRegex = regexp.MustCompile("^(?P<concept>M(A)?|T(A)?|G|S)\\d{4}(\\.\\d{3})?$")
+	//mitreRegex = regexp.MustCompile(`(?P<matrix>^MA\d+)|(?P<tactic>^TA\d+)|(?P<subtechnique>^T\d+[.]\d+)|(?P<technique>^T\d+)|(?P<mitigation>^M\d+)|(?P<group>^G\d+)|(?P<software>^S\d+)`)
 )
 
 // ClassifyRequest is the body of a request to classify IOCs
@@ -85,36 +86,44 @@ func getIOCsTypes(iocs []string) map[triage.IOCType][]string {
 		case ioc.CPE:
 			triageType = triage.CPEType
 		}
-		// Try to parse it ourself
-		switch {
-		case awsHostnameRegex.MatchString(iocInput):
-			triageType = triage.AWSHostnameType
-			// Use the raw input as the recognized input from the ioc library
-			// will not be accurate
-			triageContent = iocInput
-		case mitreRegex.MatchString(iocInput):
-			regResult := mitreRegex.FindStringSubmatch(iocInput)
-			if len(regResult) > 2 {
-				switch regResult[1] {
-				case "T":
-					if regResult[len(regResult)-1] == "." {
-						triageType = triage.MitreSubTechniqueType
-					} else {
-						triageType = triage.MitreTechniqueType
+		// Try to parse it ourself if the triagetype is still unknown. If it's already assigned go with that as it's prior to this classification
+		if triageType == triage.UnknownType {
+			switch {
+			case awsHostnameRegex.MatchString(iocInput):
+				triageType = triage.AWSHostnameType
+				// Use the raw input as the recognized input from the ioc library
+				// will not be accurate
+				triageContent = iocInput
+			case mitreRegex.MatchString(iocInput) && len(iocInput) >= 5:
+				regResult := mitreRegex.FindStringSubmatch(iocInput)
+				if len(regResult) >= 2 {
+					switch regResult[1] {
+					case "MA":
+						triageType = triage.MitreMatrixType
+					case "TA":
+						triageType = triage.MitreTacticType
+					case "T":
+						if regResult[4] != "" {
+							triageType = triage.MitreSubTechniqueType
+						} else {
+							triageType = triage.MitreTechniqueType
+						}
+					case "M":
+						triageType = triage.MitreMitigationType
+					case "G":
+						triageType = triage.MitreGroupType
+					case "S":
+						triageType = triage.MitreSoftwareType
 					}
-				case "TA":
-					triageType = triage.MitreTacticType
-				case "M":
-					triageType = triage.MitreMitigationType
+					triageContent = regResult[0]
 				}
-
-				triageContent = regResult[0]
+			case godaddyHostnameRegex.MatchString(iocInput):
+				// TODO: Instead just look up using GoDaddy DNS server
+				triageType = triage.HostnameType
+				triageContent = iocInput
 			}
-		case godaddyHostnameRegex.MatchString(iocInput):
-			// TODO: Instead just look up using GoDaddy DNS server
-			triageType = triage.HostnameType
-			triageContent = iocInput
 		}
+
 		if triageType == triage.UnknownType {
 			iocsMap[triageType] = append(iocsMap[triageType], iocInput)
 			continue

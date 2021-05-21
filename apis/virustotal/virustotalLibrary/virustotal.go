@@ -1,4 +1,4 @@
-package main
+package virustotal
 
 import (
 	"context"
@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	vt "github.com/VirusTotal/vt-go"
+	"github.com/gdcorp-infosec/threat-api/lambdas/common/toolbox"
 )
 
 const (
@@ -17,19 +18,21 @@ const (
 )
 
 type VirusTotal struct {
+	tb     *toolbox.Toolbox
 	apiKey string
 	client *vt.Client
 }
 
-func NewVirusTotal(apiKey string) *VirusTotal {
+func NewVirusTotal(tb *toolbox.Toolbox, apiKey string) *VirusTotal {
 	virusTotal := new(VirusTotal)
+	virusTotal.tb = tb
 	virusTotal.apiKey = apiKey
 	virusTotal.client = vt.NewClient(apiKey)
 	return virusTotal
 }
 
 func (m *VirusTotal) GetHash(ctx context.Context, hash string) (*vt.Object, error) {
-	span, spanCtx := tb.TracerLogger.StartSpan(ctx, "VirustotalLookup", "virustotal", "", "hashEnrich")
+	span, spanCtx := m.tb.TracerLogger.StartSpan(ctx, "VirustotalLookup", "virustotal", "", "hashEnrich")
 	defer span.End(spanCtx)
 
 	url := vt.URL(hashPath, hash)
@@ -42,7 +45,7 @@ func (m *VirusTotal) GetHash(ctx context.Context, hash string) (*vt.Object, erro
 }
 
 func (m *VirusTotal) GetURL(ctx context.Context, _url string) (*vt.Object, error) {
-	span, spanCtx := tb.TracerLogger.StartSpan(ctx, "VirustotalLookup", "virustotal", "", "urlEnrich")
+	span, spanCtx := m.tb.TracerLogger.StartSpan(ctx, "VirustotalLookup", "virustotal", "", "urlEnrich")
 	defer span.End(spanCtx)
 
 	hashedUrl := sha256.Sum256([]byte(_url))
@@ -57,7 +60,7 @@ func (m *VirusTotal) GetURL(ctx context.Context, _url string) (*vt.Object, error
 }
 
 func (m *VirusTotal) GetDomain(ctx context.Context, domain string) (*vt.Object, error) {
-	span, spanCtx := tb.TracerLogger.StartSpan(ctx, "VirustotalLookup", "virustotal", "", "domainEnrich")
+	span, spanCtx := m.tb.TracerLogger.StartSpan(ctx, "VirustotalLookup", "virustotal", "", "domainEnrich")
 	defer span.End(spanCtx)
 
 	url := vt.URL(domainPath, domain)
@@ -70,7 +73,7 @@ func (m *VirusTotal) GetDomain(ctx context.Context, domain string) (*vt.Object, 
 }
 
 func (m *VirusTotal) GetAddress(ctx context.Context, ip string) (*vt.Object, error) {
-	span, spanCtx := tb.TracerLogger.StartSpan(ctx, "VirustotalLookup", "virustotal", "", "addressEnrich")
+	span, spanCtx := m.tb.TracerLogger.StartSpan(ctx, "VirustotalLookup", "virustotal", "", "addressEnrich")
 	defer span.End(spanCtx)
 
 	url := vt.URL(ipPath, ip)
