@@ -2,7 +2,7 @@ package main
 
 import (
 	"encoding/json"
-
+	"fmt"
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/gdcorp-infosec/threat-api/lambdas/common"
 )
@@ -39,6 +39,13 @@ func (l *CompletedJobDataList) UnmarshalJSON(data []byte) error {
 	err := json.Unmarshal(data, &completedJobs)
 	if err != nil {
 		return nil
+	}
+	fmt.Println("Check on returned data")
+	for i, job := range completedJobs {
+		fmt.Println(i)
+		fmt.Println(job.JobID)
+		fmt.Println(job.Response)
+		fmt.Println(job.ModuleName)
 	}
 	*l = CompletedJobDataList(completedJobs)
 	return nil
