@@ -142,10 +142,12 @@ func triageSNSEvent(ctx context.Context, t *toolbox.Toolbox, module triage.Modul
 	span.LogKV("ourModuleMentioned", ourModuleMentionedOut)
 	span.LogKV("weSupportThisIOC", weSupportThisIOCTypeOut)
 	if !ourModuleMentionedOut || !weSupportThisIOCTypeOut {
-		// TODO: Change this to something else?
+		// TODO-876: Change this to something else? Handle this for better result handling
 		// For now just return nothing
 		fmt.Printf("Not processing, mentioned %v, support this IOC type: %v\n", ourModuleMentionedOut, weSupportThisIOCTypeOut)
-		return response, nil
+		// TODO-876: Return an error for not handling the ioc ? Technically its not an error, better way to handle it ?
+		err = fmt.Errorf("module doesn't support this ioc")
+		return nil, err
 	}
 
 	// Convert request to triage.TriageRequest
