@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/gdcorp-infosec/threat-api/lambdas/common/triagelegacyconnector"
 	"net/http"
 	"time"
 
@@ -91,13 +90,13 @@ func createJob(ctx context.Context, request events.APIGatewayProxyRequest) (even
 
 	_, err = dynamoDBClient.PutItem(&dynamodb.PutItemInput{
 		Item: map[string]*dynamodb.AttributeValue{
-			jobIDKey:       {S: &jobID},
-			usernameKey:    {S: &jwt.BaseToken.AccountName},
-			"startTime":    {N: aws.String(fmt.Sprintf("%d", time.Now().Unix()))},
-			"ttl":          {N: aws.String(fmt.Sprintf("%d", time.Now().Add(time.Hour*24*30).Unix()))},
-			"submission":   encryptedDataMarshalled,
-			"responses":    {M: map[string]*dynamodb.AttributeValue{}},
-			"totalModules": {N: aws.String(fmt.Sprintf("%d", len(jobSubmission.Modules)))},
+			jobIDKey:           {S: &jobID},
+			usernameKey:        {S: &jwt.BaseToken.AccountName},
+			"startTime":        {N: aws.String(fmt.Sprintf("%d", time.Now().Unix()))},
+			"ttl":              {N: aws.String(fmt.Sprintf("%d", time.Now().Add(time.Hour*24*30).Unix()))},
+			"submission":       encryptedDataMarshalled,
+			"responses":        {M: map[string]*dynamodb.AttributeValue{}},
+			"requestedModules": {N: aws.String(fmt.Sprintf("%d", len(jobSubmission.Modules)))},
 		},
 		TableName: &to.JobDBTableName,
 	})
@@ -335,14 +334,15 @@ func getJobs(ctx context.Context, request events.APIGatewayProxyRequest) (events
 
 // getJobProgress takes a job entry and finds out it's completion state.  It will find out if the job is complete,
 // or we are still waiting on modules to finish.  It will also compute the percentage complete of the job
-// as len(responses) / len(modules subscribed to SNS topic)
+// as len(responses) / len(modules requested by the user)
 func getJobProgress(ctx context.Context, jobEntry *common.JobDBEntry) (JobStatus, float64, error) {
 	span, ctx := to.TracerLogger.StartSpan(ctx, "GetJobProgress", "job", "manager", "getprogress")
 	defer span.End(ctx)
 
 	jobStatus := JobInProgress
 	switch {
-	case len(jobEntry.DecryptedResponses) == jobEntry.TotalModules:
+	//TODO-876: Check if this calculation is correct
+	case len(jobEntry.DecryptedResponses) == jobEntry.RequestedModules:
 		// Job has finished all modules
 		jobStatus = JobCompleted
 	case time.Unix(int64(jobEntry.StartTime), 0).Before(time.Now().Add(-time.Minute * 15)):
@@ -350,15 +350,7 @@ func getJobProgress(ctx context.Context, jobEntry *common.JobDBEntry) (JobStatus
 		jobStatus = JobIncomplete
 	}
 
-	jobPercentage := float64(float64(len(jobEntry.DecryptedResponses)) / float64(8-triagelegacyconnector.UnSupportedModules))
-	fmt.Println("Percentage from reducing the supported modules")
-	fmt.Println(jobPercentage)
-
-	jobPercentage1 := float64(float64(len(jobEntry.DecryptedResponses)) / float64(jobEntry.TotalModules))
-	fmt.Println("Percentage from saving it to DB")
-	fmt.Println(jobPercentage1)
-	// change the total modules to the list of modules requested by the user
-	//jobPercentage := float64(float64(len(jobEntry.DecryptedResponses)) / float64(5))
+	jobPercentage := float64(float64(len(jobEntry.DecryptedResponses)) / float64(jobEntry.RequestedModules))
 
 	span.LogKV("JobStatus", jobStatus)
 	span.LogKV("JobPercentage", jobPercentage)

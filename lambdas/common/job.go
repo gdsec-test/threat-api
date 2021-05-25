@@ -34,7 +34,7 @@ type JobDBEntry struct {
 	// Epoch start time
 	StartTime float64 `dynamodbav:"startTime" json:"startTime"`
 	// Count of total modules that should be run from this submission
-	TotalModules int `dynamodbav:"totalModules" json:"totalModules"`
+	RequestedModules int `dynamodbav:"requestedModules" json:"requestedModules"`
 
 	// Decrypted data
 	// The ignore tags in dynamodbav are to prevent the json tags

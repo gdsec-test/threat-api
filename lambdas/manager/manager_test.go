@@ -100,9 +100,9 @@ func TestJobWork(t *testing.T) {
 			t.Errorf("did not get original request/submission we made (was it not decrypted correctly?). Expected %s got %s", testBody, string(submissionBytes))
 		}
 
-		// Check to make sure TotalModules > 0
-		if response.TotalModules == 0 {
-			t.Errorf("Returned 0 total modules, probably expecting this to be more than 0")
+		// Check to make sure RequestedModules > 0
+		if response.RequestedModules == 0 {
+			t.Errorf("Returned 0 requested modules, probably expecting this to be more than 0")
 		}
 
 		// Wait a bit and check if the job completed
