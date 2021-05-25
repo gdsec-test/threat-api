@@ -15,6 +15,8 @@ import (
 	"github.com/gdcorp-infosec/threat-api/lambdas/common/triagelegacyconnector/triage"
 )
 
+var UnSupportedModules int
+
 const (
 	// This limit sets the time limit for an old module before canceling it's context.
 	// The previous framework operated such that each module could run as long as it wants,
@@ -142,8 +144,8 @@ func triageSNSEvent(ctx context.Context, t *toolbox.Toolbox, module triage.Modul
 	span.LogKV("ourModuleMentioned", ourModuleMentionedOut)
 	span.LogKV("weSupportThisIOC", weSupportThisIOCTypeOut)
 	if !ourModuleMentionedOut || !weSupportThisIOCTypeOut {
+		UnSupportedModules += 1
 		// TODO-876: Change this to something else? Handle this for better result handling
-		// For now just return nothing
 		fmt.Printf("Not processing, mentioned %v, support this IOC type: %v\n", ourModuleMentionedOut, weSupportThisIOCTypeOut)
 		// TODO-876: Return an error for not handling the ioc ? Technically its not an error, better way to handle it ?
 		err = fmt.Errorf("module doesn't support this ioc")

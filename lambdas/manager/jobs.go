@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/gdcorp-infosec/threat-api/lambdas/common/triagelegacyconnector"
 	"net/http"
 	"time"
 
@@ -86,6 +87,8 @@ func createJob(ctx context.Context, request events.APIGatewayProxyRequest) (even
 	span, ctx = to.TracerLogger.StartSpan(ctx, "StoreJob", "job", "manager", "store")
 	span.LogKV("jobId", jobID)
 
+	jobSubmission, err := common.GetJobSubmission(request)
+
 	_, err = dynamoDBClient.PutItem(&dynamodb.PutItemInput{
 		Item: map[string]*dynamodb.AttributeValue{
 			jobIDKey:       {S: &jobID},
@@ -94,7 +97,7 @@ func createJob(ctx context.Context, request events.APIGatewayProxyRequest) (even
 			"ttl":          {N: aws.String(fmt.Sprintf("%d", time.Now().Add(time.Hour*24*30).Unix()))},
 			"submission":   encryptedDataMarshalled,
 			"responses":    {M: map[string]*dynamodb.AttributeValue{}},
-			"totalModules": {N: aws.String(fmt.Sprintf("%d", totalModuleCount))},
+			"totalModules": {N: aws.String(fmt.Sprintf("%d", len(jobSubmission.Modules)))},
 		},
 		TableName: &to.JobDBTableName,
 	})
@@ -347,8 +350,15 @@ func getJobProgress(ctx context.Context, jobEntry *common.JobDBEntry) (JobStatus
 		jobStatus = JobIncomplete
 	}
 
-	//todo-876 //jobPercentage := float64(float64(len(jobEntry.DecryptedResponses)) / float64(jobEntry.TotalModules))
-	jobPercentage := float64(float64(len(jobEntry.DecryptedResponses)) / float64(5))
+	jobPercentage := float64(float64(len(jobEntry.DecryptedResponses)) / float64(8-triagelegacyconnector.UnSupportedModules))
+	fmt.Println("Percentage from reducing the supported modules")
+	fmt.Println(jobPercentage)
+
+	jobPercentage1 := float64(float64(len(jobEntry.DecryptedResponses)) / float64(jobEntry.TotalModules))
+	fmt.Println("Percentage from saving it to DB")
+	fmt.Println(jobPercentage1)
+	// change the total modules to the list of modules requested by the user
+	//jobPercentage := float64(float64(len(jobEntry.DecryptedResponses)) / float64(5))
 
 	span.LogKV("JobStatus", jobStatus)
 	span.LogKV("JobPercentage", jobPercentage)
