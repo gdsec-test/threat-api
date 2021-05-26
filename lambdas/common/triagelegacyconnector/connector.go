@@ -170,7 +170,8 @@ func triageSNSEvent(ctx context.Context, t *toolbox.Toolbox, module triage.Modul
 		err = fmt.Errorf("this module had an error processing this request: %s", err)
 		span.AddError(err)
 		response.Response = err.Error()
-		return response, nil
+		//return response, nil
+		return response, err
 	}
 
 	// Combine the triage data list into a single CompletedJobData.  For now just marshal it
