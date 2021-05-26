@@ -37,12 +37,15 @@ func AWSToTriage(ctx context.Context, t *toolbox.Toolbox, module triage.Module, 
 	jobErrors := make(chan error) // Channel to capture any error
 	jobsCtx, jobsCancel := context.WithCancel(ctx)
 	for _, event := range request.Records {
+		fmt.Println(event)
 		wg.Add(1)
 		// Spawn thread to handle this job
 		go func(event events.SNSEventRecord) {
 			defer wg.Done()
 
 			completedJobData, err := triageSNSEvent(jobsCtx, t, module, event)
+			fmt.Println("Error:", err)
+			fmt.Println(completedJobData.ModuleName)
 			if err != nil {
 				// Alert the other thread about this error to cancel everything
 				jobErrors <- fmt.Errorf("error processing event: %w", err)
