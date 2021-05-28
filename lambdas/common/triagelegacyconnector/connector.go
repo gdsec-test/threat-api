@@ -171,18 +171,18 @@ func triageSNSEvent(ctx context.Context, t *toolbox.Toolbox, module triage.Modul
 	if err != nil {
 		err = fmt.Errorf("this module had an error processing this request: %s", err)
 		span.AddError(err)
-		response.Response = err.Error()
+		//response.Response = err.Error()
 		//return response, nil
-		return response, err
+		return nil, err
 	}
 
 	// Combine the triage data list into a single CompletedJobData.  For now just marshal it
 	triageDataMarshal, err := json.Marshal(triageDatas)
 	if err != nil {
 		err = fmt.Errorf("error marshalling the triage data: %w", err)
-		response.Response = err.Error()
+		//response.Response = err.Error()
 		span.AddError(err)
-		return response, err
+		return nil, err
 	}
 	response.Response = string(triageDataMarshal)
 
