@@ -44,6 +44,9 @@ func AWSToTriage(ctx context.Context, t *toolbox.Toolbox, module triage.Module, 
 			defer wg.Done()
 
 			completedJobData, err := triageSNSEvent(jobsCtx, t, module, event)
+			if completedJobData != nil {
+				ret = append(ret, completedJobData)
+			}
 			fmt.Println("Error:", err)
 			fmt.Println(completedJobData.ModuleName)
 			if err != nil {
@@ -52,13 +55,14 @@ func AWSToTriage(ctx context.Context, t *toolbox.Toolbox, module triage.Module, 
 				return
 			}
 			// TODO: check if the returned data is too large for SNS, and therefore needs to be put in a S3 or something.
-			ret = append(ret, completedJobData)
+
 		}(event)
 	}
 
 	// Start thread to wait for all jobs to be done
 	allJobsDone := make(chan struct{})
 	go func() {
+		// block until the WaitGroup counter goes back to 0
 		wg.Wait()
 		// Signal that all jobs are done, or if we are
 		// dealing with a different scenario, do nothing so this go routine
@@ -72,10 +76,11 @@ func AWSToTriage(ctx context.Context, t *toolbox.Toolbox, module triage.Module, 
 	// Wait for either each job to finish, or time to run out!
 	select {
 	case jobError := <-jobErrors: // A job had an error, cancel everything and return the error
+		fmt.Println("inside error thread select... ", jobError)
 		jobsCancel()
 		wg.Wait()
 
-		return nil, jobError
+		return nil, jobError // TODO- 876: check for the return response
 	case <-time.After(moduleTimeLimit): // Out of time!  We need to wrap up!
 		// Cancel the context, this should cause all jobs to "wrap up"
 		// and return partial results (see the comments on the module.Triage interface)
@@ -145,11 +150,8 @@ func triageSNSEvent(ctx context.Context, t *toolbox.Toolbox, module triage.Modul
 	span.LogKV("ourModuleMentioned", ourModuleMentionedOut)
 	span.LogKV("weSupportThisIOC", weSupportThisIOCTypeOut)
 	if !ourModuleMentionedOut || !weSupportThisIOCTypeOut {
-		// TODO-876: Change this to something else? Handle this for better result handling
 		fmt.Printf("Not processing, mentioned %v, support this IOC type: %v\n", ourModuleMentionedOut, weSupportThisIOCTypeOut)
-		// TODO-876: Return an error for not handling the ioc ? Technically its not an error, better way to handle it ?
-		err = fmt.Errorf("module doesn't support this ioc")
-		return nil, err
+		return nil, nil
 	}
 
 	// Convert request to triage.TriageRequest

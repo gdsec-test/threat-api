@@ -350,6 +350,9 @@ func getJobProgress(ctx context.Context, jobEntry *common.JobDBEntry) (JobStatus
 		jobStatus = JobIncomplete
 	}
 
+	fmt.Println("What's in decrypted responses")
+	fmt.Println(jobEntry.DecryptedResponses)
+
 	jobPercentage := float64(float64(len(jobEntry.DecryptedResponses)) / float64(jobEntry.RequestedModules))
 
 	span.LogKV("JobStatus", jobStatus)
