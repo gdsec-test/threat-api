@@ -379,7 +379,8 @@ func getJobProgress(ctx context.Context, jobEntry *common.JobDBEntry) (JobStatus
 	case (success + failure) == len(jobEntry.RequestedModules):
 		jobStatus = JobCompleted
 	case time.Unix(int64(jobEntry.StartTime), 0).Before(time.Now().Add(-time.Minute * 15)):
-		// Jobs have timed out at this point, job is timed out
+		// Jobs have timed out at this point, job is timed out, assign the rest modules as failure
+		failure = len(jobEntry.RequestedModules) - success
 		jobStatus = JobIncomplete
 	}
 
