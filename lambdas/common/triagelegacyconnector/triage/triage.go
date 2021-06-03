@@ -88,6 +88,9 @@ var AllIOCTypes = IOCTypes{
 	MitreTechniqueType,
 	MitreSubTechniqueType,
 	MitreMitigationType,
+	MitreMatrixType,
+	MitreGroupType,
+	MitreSoftwareType,
 }
 
 // IOCTypes.ToString() returns the human-readable strings for all supported IOCs.

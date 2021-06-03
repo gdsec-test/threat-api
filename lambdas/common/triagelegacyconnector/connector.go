@@ -43,19 +43,23 @@ func AWSToTriage(ctx context.Context, t *toolbox.Toolbox, module triage.Module, 
 			defer wg.Done()
 
 			completedJobData, err := triageSNSEvent(jobsCtx, t, module, event)
+			if completedJobData != nil {
+				ret = append(ret, completedJobData)
+			}
 			if err != nil {
 				// Alert the other thread about this error to cancel everything
 				jobErrors <- fmt.Errorf("error processing event: %w", err)
 				return
 			}
 			// TODO: check if the returned data is too large for SNS, and therefore needs to be put in a S3 or something.
-			ret = append(ret, completedJobData)
+
 		}(event)
 	}
 
 	// Start thread to wait for all jobs to be done
 	allJobsDone := make(chan struct{})
 	go func() {
+		// block until the WaitGroup counter goes back to 0
 		wg.Wait()
 		// Signal that all jobs are done, or if we are
 		// dealing with a different scenario, do nothing so this go routine
@@ -142,10 +146,8 @@ func triageSNSEvent(ctx context.Context, t *toolbox.Toolbox, module triage.Modul
 	span.LogKV("ourModuleMentioned", ourModuleMentionedOut)
 	span.LogKV("weSupportThisIOC", weSupportThisIOCTypeOut)
 	if !ourModuleMentionedOut || !weSupportThisIOCTypeOut {
-		// TODO: Change this to something else?
-		// For now just return nothing
 		fmt.Printf("Not processing, mentioned %v, support this IOC type: %v\n", ourModuleMentionedOut, weSupportThisIOCTypeOut)
-		return response, nil
+		return nil, nil
 	}
 
 	// Convert request to triage.TriageRequest
@@ -166,7 +168,7 @@ func triageSNSEvent(ctx context.Context, t *toolbox.Toolbox, module triage.Modul
 		err = fmt.Errorf("this module had an error processing this request: %s", err)
 		span.AddError(err)
 		response.Response = err.Error()
-		return response, nil
+		return nil, err
 	}
 
 	// Combine the triage data list into a single CompletedJobData.  For now just marshal it
@@ -175,7 +177,7 @@ func triageSNSEvent(ctx context.Context, t *toolbox.Toolbox, module triage.Modul
 		err = fmt.Errorf("error marshalling the triage data: %w", err)
 		response.Response = err.Error()
 		span.AddError(err)
-		return response, err
+		return nil, err
 	}
 	response.Response = string(triageDataMarshal)
 
