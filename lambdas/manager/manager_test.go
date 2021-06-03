@@ -102,7 +102,7 @@ func TestJobWork(t *testing.T) {
 
 		// Check to make sure number of RequestedModules > 0
 		if len(response.RequestedModules) == 0 {
-			t.Errorf("Returned 0 requested modules, probably expecting this to be more than 0")
+			t.Errorf("Requested 0 modules when a valid request must have 1 or more modules")
 		}
 
 		// Wait a bit and check if the job completed
