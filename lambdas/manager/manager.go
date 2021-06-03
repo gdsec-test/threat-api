@@ -35,13 +35,12 @@ const (
 	JobInProgress JobStatus = "InProgress"
 	JobIncomplete JobStatus = "Incomplete"
 	JobCompleted  JobStatus = "Completed"
-	JobTimeOut    JobStatus = "JobTimeOut"
 )
 
 // Lambda function to retrieve job status and output for ThreatTools API
 func handler(ctx context.Context, request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
 	// Get the toolbox
-	// This helps standardize things accross services
+	// This helps standardize things across services
 	to = toolbox.GetToolbox()
 	defer to.Close(ctx)
 

@@ -76,7 +76,7 @@ func AWSToTriage(ctx context.Context, t *toolbox.Toolbox, module triage.Module, 
 		jobsCancel()
 		wg.Wait()
 
-		return nil, jobError // TODO- 876: check for the return response
+		return nil, jobError
 	case <-time.After(moduleTimeLimit): // Out of time!  We need to wrap up!
 		// Cancel the context, this should cause all jobs to "wrap up"
 		// and return partial results (see the comments on the module.Triage interface)
@@ -167,8 +167,7 @@ func triageSNSEvent(ctx context.Context, t *toolbox.Toolbox, module triage.Modul
 	if err != nil {
 		err = fmt.Errorf("this module had an error processing this request: %s", err)
 		span.AddError(err)
-		//response.Response = err.Error()
-		//return response, nil
+		response.Response = err.Error()
 		return nil, err
 	}
 
@@ -176,7 +175,7 @@ func triageSNSEvent(ctx context.Context, t *toolbox.Toolbox, module triage.Modul
 	triageDataMarshal, err := json.Marshal(triageDatas)
 	if err != nil {
 		err = fmt.Errorf("error marshalling the triage data: %w", err)
-		//response.Response = err.Error()
+		response.Response = err.Error()
 		span.AddError(err)
 		return nil, err
 	}

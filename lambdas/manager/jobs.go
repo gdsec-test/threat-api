@@ -358,9 +358,6 @@ func getJobProgress(ctx context.Context, jobEntry *common.JobDBEntry) (JobStatus
 
 	//Calculate the job succeed failure for counting below
 	for module, responseData := range jobEntry.DecryptedResponses {
-		fmt.Println("Module --- ", module)
-		fmt.Println("responseData ---", responseData)
-
 		if stringInSlice(module, jobEntry.RequestedModules) {
 			respDataSlice := reflect.ValueOf(responseData)
 			if moduleError(respDataSlice) {
@@ -371,8 +368,6 @@ func getJobProgress(ctx context.Context, jobEntry *common.JobDBEntry) (JobStatus
 
 		}
 	}
-	fmt.Println("Success ----", success)
-	fmt.Println("Failure ----", failure)
 
 	jobStatus := JobInProgress
 	switch {
@@ -384,10 +379,7 @@ func getJobProgress(ctx context.Context, jobEntry *common.JobDBEntry) (JobStatus
 		jobStatus = JobIncomplete
 	}
 
-	jobPercentage := float64(success+failure) / float64(len(jobEntry.RequestedModules))
-
-	fmt.Println("JobStatus ----", jobStatus)
-	fmt.Println("JobPercentage ----", jobPercentage)
+	jobPercentage := float64(float64(success+failure) / float64(len(jobEntry.RequestedModules)))
 
 	span.LogKV("JobStatus", jobStatus)
 	span.LogKV("JobPercentage", jobPercentage)

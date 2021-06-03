@@ -17,7 +17,7 @@ import (
 )
 
 const (
-	secretID = "/ThreatTools/Integrations/shoda"
+	secretID = "/ThreatTools/Integrations/shodan"
 )
 
 // TriageModule triage module
