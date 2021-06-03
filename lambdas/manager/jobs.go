@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"reflect"
 	"time"
 
 	"github.com/aws/aws-lambda-go/events"
@@ -87,6 +88,19 @@ func createJob(ctx context.Context, request events.APIGatewayProxyRequest) (even
 	span.LogKV("jobId", jobID)
 
 	jobSubmission, err := common.GetJobSubmission(request)
+	if err != nil {
+		span.LogKV("error", fmt.Errorf("error getting the jobSubmission: %w", err))
+		span.End(ctx)
+		return events.APIGatewayProxyResponse{StatusCode: 500}, nil
+	}
+
+	// Marshaling requestedModules slice into dynamodbattribute for storage
+	requestedModules, err := dynamodbattribute.Marshal(jobSubmission.Modules)
+	if err != nil {
+		span.LogKV("error", err)
+		span.End(ctx)
+		return events.APIGatewayProxyResponse{StatusCode: 500}, fmt.Errorf("error marshalling requestedModules: %w", err)
+	}
 
 	_, err = dynamoDBClient.PutItem(&dynamodb.PutItemInput{
 		Item: map[string]*dynamodb.AttributeValue{
@@ -96,7 +110,7 @@ func createJob(ctx context.Context, request events.APIGatewayProxyRequest) (even
 			"ttl":              {N: aws.String(fmt.Sprintf("%d", time.Now().Add(time.Hour*24*30).Unix()))},
 			"submission":       encryptedDataMarshalled,
 			"responses":        {M: map[string]*dynamodb.AttributeValue{}},
-			"requestedModules": {N: aws.String(fmt.Sprintf("%d", len(jobSubmission.Modules)))},
+			"requestedModules": requestedModules,
 		},
 		TableName: &to.JobDBTableName,
 	})
@@ -339,24 +353,71 @@ func getJobProgress(ctx context.Context, jobEntry *common.JobDBEntry) (JobStatus
 	span, ctx := to.TracerLogger.StartSpan(ctx, "GetJobProgress", "job", "manager", "getprogress")
 	defer span.End(ctx)
 
+	success := 0
+	failure := 0
+
+	//Calculate the job succeed failure for counting below
+	for module, responseData := range jobEntry.DecryptedResponses {
+		fmt.Println("Module --- ", module)
+		fmt.Println("responseData ---", responseData)
+
+		if stringInSlice(module, jobEntry.RequestedModules) {
+			respDataSlice := reflect.ValueOf(responseData)
+			if moduleError(respDataSlice) {
+				failure += 1
+			} else {
+				success += 1
+			}
+
+		}
+	}
+	fmt.Println("Success ----", success)
+	fmt.Println("Failure ----", failure)
+
 	jobStatus := JobInProgress
 	switch {
-	//TODO-876: Check if this calculation is correct
-	case len(jobEntry.DecryptedResponses) == jobEntry.RequestedModules:
-		// Job has finished all modules
+	case (success + failure) == len(jobEntry.RequestedModules):
 		jobStatus = JobCompleted
 	case time.Unix(int64(jobEntry.StartTime), 0).Before(time.Now().Add(-time.Minute * 15)):
 		// Jobs have timed out at this point, job is timed out
 		jobStatus = JobIncomplete
 	}
 
-	fmt.Println("What's in decrypted responses")
-	fmt.Println(jobEntry.DecryptedResponses)
+	jobPercentage := float64(success+failure) / float64(len(jobEntry.RequestedModules))
 
-	jobPercentage := float64(float64(len(jobEntry.DecryptedResponses)) / float64(jobEntry.RequestedModules))
+	fmt.Println("JobStatus ----", jobStatus)
+	fmt.Println("JobPercentage ----", jobPercentage)
 
 	span.LogKV("JobStatus", jobStatus)
 	span.LogKV("JobPercentage", jobPercentage)
 
 	return jobStatus, jobPercentage, nil
+}
+
+func stringInSlice(a string, list []string) bool {
+	for _, b := range list {
+		if b == a {
+			return true
+		}
+	}
+	return false
+}
+
+func moduleError(respDataSlice reflect.Value) bool {
+	for i := 0; i < respDataSlice.Len(); i++ {
+		triageResultMap := respDataSlice.Index(i).Interface()
+
+		// Inside this is a map safe to type cast
+		responseDataMap, ok := triageResultMap.(map[string]interface{})
+		if !ok {
+			continue
+		}
+
+		for key, _ := range responseDataMap {
+			if key == "error" {
+				return true
+			}
+		}
+	}
+	return false
 }

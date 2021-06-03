@@ -33,8 +33,8 @@ type JobDBEntry struct {
 	Submission appencryption.DataRowRecord            `dynamodbav:"submission" json:"-"`
 	// Epoch start time
 	StartTime float64 `dynamodbav:"startTime" json:"startTime"`
-	// Count of total modules that should be run from this submission
-	RequestedModules int `dynamodbav:"requestedModules" json:"requestedModules"`
+	// Array of requested modules
+	RequestedModules []string `dynamodbav:"requestedModules" json:"requestedModules"`
 
 	// Decrypted data
 	// The ignore tags in dynamodbav are to prevent the json tags

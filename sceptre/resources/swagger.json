@@ -325,7 +325,7 @@
           "type": "number"
         },
         "requestedModules": {
-          "type": "number"
+          "type": "array"
         },
         "jobStatus": {
           "type": "string",
@@ -342,7 +342,7 @@
       "example": {
         "jobId": "11111",
         "startTime": 1610000000,
-        "requestedModules": 2,
+        "requestedModules": ["whois"],
         "submission": {
           "iocType": "DOMAIN",
           "iocs": [

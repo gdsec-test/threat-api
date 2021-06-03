@@ -35,6 +35,7 @@ const (
 	JobInProgress JobStatus = "InProgress"
 	JobIncomplete JobStatus = "Incomplete"
 	JobCompleted  JobStatus = "Completed"
+	JobTimeOut    JobStatus = "JobTimeOut"
 )
 
 // Lambda function to retrieve job status and output for ThreatTools API
