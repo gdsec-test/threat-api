@@ -292,7 +292,14 @@ func getJobs(ctx context.Context, request events.APIGatewayProxyRequest) (events
 	}
 
 	// Build modified / simplified JobDBEntry for each job
-	response := []common.JobDBEntry{}
+	// Adding jobpercentage to the returned data for UI calculations
+	type ResponseData struct {
+		JobDB         common.JobDBEntry
+		JobPercentage float64 `json:"jobPercentage"`
+	}
+
+	response := []ResponseData{}
+
 	err = dynamoDBClient.ScanPages(&dynamodb.ScanInput{
 		ExpressionAttributeNames:  expr.Names(),
 		ExpressionAttributeValues: expr.Values(),
@@ -311,6 +318,14 @@ func getJobs(ctx context.Context, request events.APIGatewayProxyRequest) (events
 			// Decrypt because we need the original request to pull out metadata if it's there
 			jobDB.Decrypt(ctx, to)
 
+			// get the jobPercentage completion for UI
+			_, jobPercentage, _ := getJobProgress(ctx, &jobDB)
+
+			//TODO-ui-fix: Remove this code before production or after the data is expired
+			if jobPercentage != float64(1) {
+				jobPercentage = 0.95
+			}
+
 			// Remove submission data except metadata and modules list
 			for key := range jobDB.DecryptedSubmission {
 				switch key {
@@ -328,7 +343,12 @@ func getJobs(ctx context.Context, request events.APIGatewayProxyRequest) (events
 				jobDB.DecryptedResponses[moduleName] = nil
 			}
 
-			response = append(response, jobDB)
+			thisModuleResponse := ResponseData{
+				JobDB:         jobDB,
+				JobPercentage: jobPercentage * 100,
+			}
+
+			response = append(response, thisModuleResponse)
 		}
 		// Always get the next page
 		return true
@@ -339,7 +359,13 @@ func getJobs(ctx context.Context, request events.APIGatewayProxyRequest) (events
 		return events.APIGatewayProxyResponse{StatusCode: 500}, err
 	}
 
-	responseBytes, _ := json.Marshal(response)
+	responseBytes, err := json.Marshal(response)
+	if err != nil {
+		err = fmt.Errorf("error marshalling the response: %w", err)
+		span.LogKV("error", err)
+		return events.APIGatewayProxyResponse{StatusCode: 500}, err
+	}
+
 	return events.APIGatewayProxyResponse{
 		StatusCode: 200,
 		Body:       string(responseBytes),
