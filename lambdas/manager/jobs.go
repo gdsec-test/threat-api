@@ -320,7 +320,14 @@ func getJobs(ctx context.Context, request events.APIGatewayProxyRequest) (events
 			jobDB.Decrypt(ctx, to)
 
 			// get the jobPercentage completion for UI
-			_, jobPercentage, _ := getJobProgress(ctx, &jobDB)
+			_, jobPercentage, err := getJobProgress(ctx, &jobDB)
+			if err != nil {
+				// error handles the percentage to 0,set it if not and just log it
+				if jobPercentage != 0 {
+					jobPercentage = 0
+				}
+				span.LogKV("error", err)
+			}
 
 			// Remove submission data except metadata and modules list
 			for key := range jobDB.DecryptedSubmission {
@@ -407,7 +414,7 @@ func getJobProgress(ctx context.Context, jobEntry *common.JobDBEntry) (JobStatus
 	span.LogKV("JobPercentage", jobPercentage)
 
 	if math.IsNaN(jobPercentage) {
-		err := fmt.Errorf("error in percentage calculation leading to NaN")
+		err := fmt.Errorf("error in percentage calculation leading to NaN, defaulting to 0 percent complete")
 		span.LogKV("error", err)
 		return JobIncomplete, 0, err
 	}
