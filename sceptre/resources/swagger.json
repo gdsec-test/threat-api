@@ -367,10 +367,24 @@
         "jobPercentage": 100
       }
     },
+    "JobsInfoPercentage": {
+      "type": "object",
+      "properties": {
+        "job": {
+          "type": "object",
+          "items": {
+            "$ref": "#/definitions/Job"
+          }
+        },
+        "jobPercentage": {
+          "type": "number"
+        }
+      }
+    },
     "JobList": {
       "type": "array",
       "items": {
-        "$ref": "#/definitions/Job"
+        "$ref": "#/definitions/JobsInfoPercentage"
       },
       "example": [
         {

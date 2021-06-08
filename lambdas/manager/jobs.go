@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"math"
 	"net/http"
 	"reflect"
 	"time"
@@ -292,7 +293,14 @@ func getJobs(ctx context.Context, request events.APIGatewayProxyRequest) (events
 	}
 
 	// Build modified / simplified JobDBEntry for each job
-	response := []common.JobDBEntry{}
+	// Adding jobpercentage to the returned data for UI calculations
+	type ResponseData struct {
+		JobDB         common.JobDBEntry
+		JobPercentage float64 `json:"jobPercentage"`
+	}
+
+	response := []ResponseData{}
+
 	err = dynamoDBClient.ScanPages(&dynamodb.ScanInput{
 		ExpressionAttributeNames:  expr.Names(),
 		ExpressionAttributeValues: expr.Values(),
@@ -311,6 +319,16 @@ func getJobs(ctx context.Context, request events.APIGatewayProxyRequest) (events
 			// Decrypt because we need the original request to pull out metadata if it's there
 			jobDB.Decrypt(ctx, to)
 
+			// get the jobPercentage completion for UI
+			_, jobPercentage, err := getJobProgress(ctx, &jobDB)
+			if err != nil {
+				// error handles the percentage to 0,set it if not and just log it
+				if jobPercentage != 0 {
+					jobPercentage = 0
+				}
+				span.LogKV("error", err)
+			}
+
 			// Remove submission data except metadata and modules list
 			for key := range jobDB.DecryptedSubmission {
 				switch key {
@@ -328,7 +346,12 @@ func getJobs(ctx context.Context, request events.APIGatewayProxyRequest) (events
 				jobDB.DecryptedResponses[moduleName] = nil
 			}
 
-			response = append(response, jobDB)
+			thisModuleResponse := ResponseData{
+				JobDB:         jobDB,
+				JobPercentage: jobPercentage * 100,
+			}
+
+			response = append(response, thisModuleResponse)
 		}
 		// Always get the next page
 		return true
@@ -339,7 +362,13 @@ func getJobs(ctx context.Context, request events.APIGatewayProxyRequest) (events
 		return events.APIGatewayProxyResponse{StatusCode: 500}, err
 	}
 
-	responseBytes, _ := json.Marshal(response)
+	responseBytes, err := json.Marshal(response)
+	if err != nil {
+		err = fmt.Errorf("error marshalling the response: %w", err)
+		span.LogKV("error", err)
+		return events.APIGatewayProxyResponse{StatusCode: 500}, err
+	}
+
 	return events.APIGatewayProxyResponse{
 		StatusCode: 200,
 		Body:       string(responseBytes),
@@ -383,6 +412,12 @@ func getJobProgress(ctx context.Context, jobEntry *common.JobDBEntry) (JobStatus
 
 	span.LogKV("JobStatus", jobStatus)
 	span.LogKV("JobPercentage", jobPercentage)
+
+	if math.IsNaN(jobPercentage) {
+		err := fmt.Errorf("error in percentage calculation leading to NaN, defaulting to 0 percent complete")
+		span.LogKV("error", err)
+		return JobIncomplete, 0, err
+	}
 
 	return jobStatus, jobPercentage, nil
 }
