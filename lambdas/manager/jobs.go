@@ -409,7 +409,7 @@ func getJobProgress(ctx context.Context, jobEntry *common.JobDBEntry) (JobStatus
 	if math.IsNaN(jobPercentage) {
 		err := fmt.Errorf("error in percentage calculation leading to NaN")
 		span.LogKV("error", err)
-		return jobStatus, 0, err
+		return JobIncomplete, 0, err
 	}
 
 	return jobStatus, jobPercentage, nil
