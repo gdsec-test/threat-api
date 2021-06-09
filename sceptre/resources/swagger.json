@@ -324,8 +324,8 @@
         "startTime": {
           "type": "number"
         },
-        "totalModules": {
-          "type": "number"
+        "requestedModules": {
+          "type": "array"
         },
         "jobStatus": {
           "type": "string",
@@ -342,7 +342,7 @@
       "example": {
         "jobId": "11111",
         "startTime": 1610000000,
-        "totalModules": 2,
+        "requestedModules": ["whois"],
         "submission": {
           "iocType": "DOMAIN",
           "iocs": [
@@ -367,16 +367,30 @@
         "jobPercentage": 100
       }
     },
+    "JobsInfoPercentage": {
+      "type": "object",
+      "properties": {
+        "job": {
+          "type": "object",
+          "items": {
+            "$ref": "#/definitions/Job"
+          }
+        },
+        "jobPercentage": {
+          "type": "number"
+        }
+      }
+    },
     "JobList": {
       "type": "array",
       "items": {
-        "$ref": "#/definitions/Job"
+        "$ref": "#/definitions/JobsInfoPercentage"
       },
       "example": [
         {
           "jobId": "11111",
           "startTime": 1610000000,
-          "totalModules": 2,
+          "jobPercentage": 2,
           "submission": {},
           "responses": {
             "geoip": null,
@@ -386,7 +400,7 @@
         {
           "jobId": "22222",
           "startTime": 1620000000,
-          "totalModules": 2,
+          "jobPercentage": 2,
           "submission": {},
           "responses": {
             "geoip": null,
@@ -396,7 +410,7 @@
         {
           "jobId": "33333",
           "startTime": 1630000000,
-          "totalModules": 2,
+          "jobPercentage": 2,
           "submission": {},
           "responses": {
             "geoip": null,
