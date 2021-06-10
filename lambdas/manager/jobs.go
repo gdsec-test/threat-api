@@ -397,6 +397,9 @@ func getJobProgress(ctx context.Context, jobEntry *common.JobDBEntry) (JobStatus
 				}
 
 			}
+		} else {
+			err := fmt.Errorf("response from module %s is still unavailable", module)
+			span.LogKV("error", err)
 		}
 	}
 
