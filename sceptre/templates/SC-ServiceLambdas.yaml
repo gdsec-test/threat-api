@@ -156,7 +156,7 @@ Resources:
     Properties:
       Name: /ThreatTools/Modules/cmap
       Type: String
-      Value: '{"supportedIOCTypes": ["DOMAIN"], "actions": {"Run": {"requiredADGroups": ["ENG-Threat Research"]}}}'
+      Value: '{"supportedIOCTypes": ["DOMAIN"], "actions": {"Run": {"requiredADGroups": ["ENG-Threat Research"]}, "ViewPII": {"requiredADGroups": ["ENG-Threat Research"]}}}'
 
   cmapAppSecSubscription:
     DependsOn: cmapLambdaFunction

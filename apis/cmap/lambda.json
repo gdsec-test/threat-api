@@ -10,6 +10,9 @@
     "actions": {
       "Run": {
         "requiredADGroups": ["ENG-Threat Research"]
+      },
+      "ViewPII": {
+        "requiredADGroups": ["ENG-Threat Research"]
       }
     }
   }
