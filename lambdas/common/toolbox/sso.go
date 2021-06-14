@@ -69,7 +69,7 @@ func (t *Toolbox) Authorize(ctx context.Context, jwt, action, resource string) (
 		}
 	}
 	if flag == 0 {
-		return false, fmt.Errorf("not in any required group")
+		return false, nil
 	}
 
 	// They pass all checks for this action, they are good!
