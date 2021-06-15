@@ -22,3 +22,4 @@ popd
 rm -rf swagger-ui-bucket
 
 aws s3 cp resources/swagger.json s3://${BUCKET}/swagger.json
+echo "Code executed"
