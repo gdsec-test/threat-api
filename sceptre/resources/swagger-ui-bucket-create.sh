@@ -16,10 +16,9 @@ pushd swagger-ui-bucket
     sed -i 's#https://petstore.swagger.io/v2/swagger.json#swagger.json#g' index.html
     aws s3 sync . s3://${BUCKET}
 
-  popd
+  popds
 
 popd
 rm -rf swagger-ui-bucket
 
 aws s3 cp resources/swagger.json s3://${BUCKET}/swagger.json
-echo "Code executed"
