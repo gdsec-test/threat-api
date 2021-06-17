@@ -92,5 +92,5 @@ jobs:
       - name: Update swagger
         run: |
           source venv/bin/activate
-          cd ./sceptre/resources
-          ./swagger-ui-bucket-create.sh
+          cd sceptre
+          ./resources/swagger-ui-bucket-create.sh
