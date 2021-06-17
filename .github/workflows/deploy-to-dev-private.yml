@@ -88,3 +88,9 @@ jobs:
           source venv/bin/activate
           cd sceptre
           sceptre launch -y dev-private/us-west-2
+
+      - name: Update swagger
+        run: |
+          source venv/bin/activate
+          cd ./sceptre/resources
+          ./swagger-ui-bucket-create.sh
