@@ -86,13 +86,11 @@ jobs:
       - name: Run sceptre
         run: |
           source venv/bin/activate
-          pwd
           cd sceptre
           sceptre launch -y dev-private/us-west-2
 
       - name: Update swagger
         run: |
           source venv/bin/activate
-          pwd
-          cd sceptre/resources
+          cd sceptre
           ./swagger-ui-bucket-create.sh
