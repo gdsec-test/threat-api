@@ -387,14 +387,19 @@ func getJobProgress(ctx context.Context, jobEntry *common.JobDBEntry) (JobStatus
 
 	//Calculate the job succeed failure for counting below
 	for module, responseData := range jobEntry.DecryptedResponses {
-		if stringInSlice(module, jobEntry.RequestedModules) {
-			respDataSlice := reflect.ValueOf(responseData)
-			if moduleError(respDataSlice) {
-				failure += 1
-			} else {
-				success += 1
-			}
+		if responseData != nil {
+			if stringInSlice(module, jobEntry.RequestedModules) {
+				respDataSlice := reflect.ValueOf(responseData)
+				if moduleError(respDataSlice) {
+					failure += 1
+				} else {
+					success += 1
+				}
 
+			}
+		} else {
+			err := fmt.Errorf("response from module %s is still unavailable", module)
+			span.LogKV("error", err)
 		}
 	}
 
