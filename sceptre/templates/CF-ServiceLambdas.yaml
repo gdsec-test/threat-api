@@ -84,7 +84,7 @@ Resources:
     Properties:
       Name: /ThreatTools/Modules/cmap
       Type: String
-      Value: '{"supportedIOCTypes": ["DOMAIN"], "actions": {"Run": {"requiredADGroups": ["ENG-Threat Research"]}, "ViewPII": {"requiredADGroups": ["ENG-Threat Research"]}}}'
+      Value: '{"supportedIOCTypes": ["DOMAIN"], "actions": {"Run": {"requiredADGroups": ["ENG-Threat Research", "END-DCU"]}, "ViewPII": {"requiredADGroups": ["ENG-Threat Research", "END-DCU"]}}}'
 
   geoipLambdaFunction:
     Type: AWS::Lambda::Function
@@ -284,7 +284,7 @@ Resources:
     Properties:
       Name: /ThreatTools/Modules/splunk
       Type: String
-      Value: '{"supportedIOCTypes": ["GODADDY_USERNAME", "IP", "CVE", "AWSHOSTNAME"], "actions": {"ReadSplunk": {"requiredADGroups": ["ENG-Threat Research"]}}}'
+      Value: '{"supportedIOCTypes": ["GODADDY_USERNAME", "IP", "CVE", "AWSHOSTNAME"], "actions": {"ReadSplunk": {"requiredADGroups": ["ENG-Threat Research", "END-DCU"]}}}'
 
   urlhausLambdaFunction:
     Type: AWS::Lambda::Function
