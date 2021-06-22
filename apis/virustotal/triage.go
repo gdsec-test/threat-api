@@ -50,53 +50,53 @@ func (m *TriageModule) ProcessRequest(ctx context.Context, triageRequest *triage
 
 	switch triageRequest.IOCsType {
 	case triage.MD5Type, triage.SHA256Type:
-		triageData.Title = "Analyses of previously seen hashes"
-		entries := make([]*vt.Object, len(triageRequest.IOCs))
-		for i, ioc := range triageRequest.IOCs {
+		var entries []*vt.Object
+		for _, ioc := range triageRequest.IOCs {
 			entry, err := virusTotal.GetHash(ctx, ioc)
 			if err != nil {
 				fmt.Println(err)
 				continue
 			}
-			entries[i] = entry
+			entries = append(entries, entry)
 		}
 		triageData.Data = HashesToCsv(entries)
+		triageData.Metadata = []string{fmt.Sprintf("Found %d matching %s hashes", len(entries), triageRequest.IOCsType)}
 	case triage.DomainType:
-		triageData.Title = "Analyses of previously seen domain names"
-		entries := make([]*vt.Object, len(triageRequest.IOCs))
-		for i, ioc := range triageRequest.IOCs {
+		var entries []*vt.Object
+		for _, ioc := range triageRequest.IOCs {
 			entry, err := virusTotal.GetDomain(ctx, ioc)
 			if err != nil {
 				fmt.Println(err)
 				continue
 			}
-			entries[i] = entry
+			entries = append(entries, entry)
 		}
 		triageData.Data = DomainsToCsv(entries)
+		triageData.Metadata = []string{fmt.Sprintf("Found %d matching domains", len(entries))}
 	case triage.IPType:
-		triageData.Title = "Analyses of previously seen IP addresses"
-		entries := make([]*vt.Object, len(triageRequest.IOCs))
-		for i, ioc := range triageRequest.IOCs {
+		var entries []*vt.Object
+		for _, ioc := range triageRequest.IOCs {
 			entry, err := virusTotal.GetAddress(ctx, ioc)
 			if err != nil {
 				fmt.Println(err)
 				continue
 			}
-			entries[i] = entry
+			entries = append(entries, entry)
 		}
 		triageData.Data = IpsToCsv(entries)
+		triageData.Metadata = []string{fmt.Sprintf("Found %d matching IP address", len(entries))}
 	case triage.URLType:
-		triageData.Title = "Analyses of previously seen URLs"
-		entries := make([]*vt.Object, len(triageRequest.IOCs))
-		for i, ioc := range triageRequest.IOCs {
+		var entries []*vt.Object
+		for _, ioc := range triageRequest.IOCs {
 			entry, err := virusTotal.GetURL(ctx, ioc)
 			if err != nil {
 				fmt.Println(err)
 				continue
 			}
-			entries[i] = entry
+			entries = append(entries, entry)
 		}
 		triageData.Data = UrlsToCsv(entries)
+		triageData.Metadata = []string{fmt.Sprintf("Found %d matching URLs", len(entries))}
 	}
 
 	return triageData, nil
@@ -137,6 +137,7 @@ func (m *TriageModule) Triage(ctx context.Context, triageRequest *triage.Request
 	span.End(ctx)
 
 	// Return the data
+	data.DataType = triage.CSVType
 	return []*triage.Data{data}, nil
 }
 
