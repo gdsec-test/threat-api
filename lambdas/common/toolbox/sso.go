@@ -60,11 +60,16 @@ func (t *Toolbox) Authorize(ctx context.Context, jwt, action, resource string) (
 	if !ok {
 		return false, fmt.Errorf("action not found")
 	}
-	// Check required groups
+
+	// Check required groups, flag with any group match
+	flag := 0
 	for _, requiredGroup := range actionObj.RequiredADGroups {
-		if _, ok := groupsMap[requiredGroup]; !ok {
-			return false, fmt.Errorf("not in required group %s.  user is in groups: %v", requiredGroup, groups)
+		if _, ok := groupsMap[requiredGroup]; ok {
+			flag += 1
 		}
+	}
+	if flag == 0 {
+		return false, nil
 	}
 
 	// They pass all checks for this action, they are good!
