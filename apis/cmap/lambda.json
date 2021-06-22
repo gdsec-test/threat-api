@@ -9,10 +9,10 @@
     ],
     "actions": {
       "Run": {
-        "requiredADGroups": ["ENG-Threat Research", "END-DCU"]
+        "requiredADGroups": ["ENG-Threat Research", "ENG-DCU"]
       },
       "ViewPII": {
-        "requiredADGroups": ["ENG-Threat Research", "END-DCU"]
+        "requiredADGroups": ["ENG-Threat Research", "ENG-DCU"]
       }
     }
   }
