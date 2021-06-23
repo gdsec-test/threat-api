@@ -156,7 +156,7 @@ Resources:
     Properties:
       Name: /ThreatTools/Modules/cmap
       Type: String
-      Value: '{"supportedIOCTypes": ["DOMAIN"], "actions": {"Run": {"requiredADGroups": ["ENG-Threat Research"]}, "ViewPII": {"requiredADGroups": ["ENG-Threat Research"]}}}'
+      Value: '{"supportedIOCTypes": ["DOMAIN"], "actions": {"Run": {"requiredADGroups": ["ENG-Threat Research", "ENG-DCU"]}, "ViewPII": {"requiredADGroups": ["ENG-Threat Research", "ENG-DCU"]}}}'
 
   cmapAppSecSubscription:
     DependsOn: cmapLambdaFunction
@@ -564,7 +564,7 @@ Resources:
     Properties:
       Name: /ThreatTools/Modules/splunk
       Type: String
-      Value: '{"supportedIOCTypes": ["GODADDY_USERNAME", "IP", "CVE", "AWSHOSTNAME"], "actions": {"ReadSplunk": {"requiredADGroups": ["ENG-Threat Research"]}}}'
+      Value: '{"supportedIOCTypes": ["GODADDY_USERNAME", "IP", "CVE", "AWSHOSTNAME"], "actions": {"ReadSplunk": {"requiredADGroups": ["ENG-Threat Research", "ENG-DCU"]}}}'
 
   splunkAppSecSubscription:
     DependsOn: splunkLambdaFunction

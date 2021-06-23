@@ -12,7 +12,7 @@
     ],
     "actions": {
       "ReadSplunk": {
-        "requiredADGroups": ["ENG-Threat Research"]
+        "requiredADGroups": ["ENG-Threat Research", "ENG-DCU"]
       }
     }
   }
