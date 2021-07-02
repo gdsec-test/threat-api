@@ -10,6 +10,10 @@ Parameters:
     Type: String
     Description: SHA1 hash of the geoip lambda source
     Default: ""
+  passivetotalSHA1:
+    Type: String
+    Description: SHA1 hash of the passivetotal lambda source
+    Default: ""
   recordedfutureSHA1:
     Type: String
     Description: SHA1 hash of the recordedfuture lambda source
@@ -135,6 +139,56 @@ Resources:
       Name: /ThreatTools/Modules/geoip
       Type: String
       Value: '{"supportedIOCTypes": ["IP"]}'
+
+  passivetotalLambdaFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      Code:
+        S3Bucket: !Sub gd-threattools-${AWS::AccountId}-code-bucket
+        S3Key: !Sub passivetotal/${passivetotalSHA1}
+      Description: !Sub passivetotal lambda (${passivetotalSHA1})
+      FunctionName: passivetotal
+      Handler: passivetotal
+      MemorySize: 256
+      Role: !Sub arn:aws:iam::${AWS::AccountId}:role/threattools-custom-ThreatRole
+      Runtime: go1.x
+      Timeout: 15
+
+  passivetotalLambdaPermission:
+    DependsOn: passivetotalLambdaFunction
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:passivetotal
+      Principal: sns.amazonaws.com
+      SourceArn: !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:JobRequests
+
+  passivetotalSNSSubscription:
+    DependsOn: passivetotalLambdaFunction
+    Type: AWS::SNS::Subscription
+    Properties:
+      Endpoint: !GetAtt passivetotalLambdaFunction.Arn
+      Protocol: lambda
+      TopicArn: !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:JobRequests
+
+  passivetotalLambdaEventInvokeConfig:
+    DependsOn: passivetotalLambdaFunction
+    Type: AWS::Lambda::EventInvokeConfig
+    Properties:
+      DestinationConfig:
+        OnSuccess:
+          Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobResponses
+        OnFailure:
+          Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobFailures
+      FunctionName: passivetotal
+      Qualifier: $LATEST
+
+  passivetotalLambdaMetadata:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: /ThreatTools/Modules/passivetotal
+      Type: String
+      Value: '{"supportedIOCTypes": ["DOMAIN", "IP"]}'
 
   recordedfutureLambdaFunction:
     Type: AWS::Lambda::Function
