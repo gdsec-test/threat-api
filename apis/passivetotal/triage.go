@@ -2,12 +2,12 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"github.com/gdcorp-infosec/threat-api/lambdas/common/toolbox"
 	"github.com/gdcorp-infosec/threat-api/lambdas/common/toolbox/appsectracing"
 	"github.com/gdcorp-infosec/threat-api/lambdas/common/triagelegacyconnector/triage"
 	"net/http"
-	"strings"
 )
 
 const (
@@ -50,16 +50,22 @@ func (m *TriageModule) Triage(ctx context.Context, triageRequest *triage.Request
 	secret, err := tb.GetFromCredentialsStore(ctx, secretID, nil)
 	if err != nil {
 		triageDataPTData.Data = fmt.Sprintf("error in retrieving secrets: %s", err)
-		return []*triage.Data{triageDataPTData}, err
+		triageDataPTUniqueData.Data = fmt.Sprintf("error in retrieving secrets: %s", err)
+		return []*triage.Data{triageDataPTData, triageDataPTUniqueData}, err
 	}
 
-	// secrets as returned as a string of key value pairs with API key at 0 and username at 1
-	secretPairs := strings.Split(*secret.SecretString, ",")
-	m.PTKey = strings.Split(secretPairs[0], ":")[1]
-	m.PTUser = strings.Split(secretPairs[1], ":")[1]
+	secretMap := map[string]string{}
+	if err := json.Unmarshal([]byte(*secret.SecretString), &secretMap); err != nil {
+		triageDataPTData.Data = fmt.Sprintf("error in unmarshaling secrets: %s", err)
+		triageDataPTUniqueData.Data = fmt.Sprintf("error in unmarshaling secrets: %s", err)
+		return []*triage.Data{triageDataPTData, triageDataPTUniqueData}, err
+	}
+
 	if m.PTClient == nil {
 		m.PTClient = http.DefaultClient
 	}
+	m.PTKey = secretMap["key"]
+	m.PTUser = secretMap["user"]
 
 	var span *appsectracing.Span
 	span, ctx = tb.TracerLogger.StartSpan(ctx, "PassiveTotal", "passivetotal", "services", "get")

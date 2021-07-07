@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"testing"
 
 	"github.com/gdcorp-infosec/threat-api/lambdas/common/toolbox"
@@ -16,8 +17,8 @@ func TestEnrichCVE(t *testing.T) {
 
 	var triageRequests []*triage.Request
 	triageRequests = append(triageRequests, &triage.Request{
-		IOCs:     []string{"CVE-2014-0160", "CVE-2010-2568"},
-		IOCsType: triage.CVEType,
+		IOCs:     []string{"propelltherapy.com"},
+		IOCsType: triage.DomainType,
 	})
 
 	for _, triageRequest := range triageRequests {
@@ -33,6 +34,13 @@ func TestEnrichCVE(t *testing.T) {
 		if triageResult[0].Data == "" {
 			t.Fatal("first data element empty ")
 		}
+
+		fmt.Println("===============================================================")
+		for _, result := range triageResult {
+			fmt.Println(result.Title)
+			fmt.Println(result.Data)
+		}
+		fmt.Println("===============================================================")
 	}
 
 }
