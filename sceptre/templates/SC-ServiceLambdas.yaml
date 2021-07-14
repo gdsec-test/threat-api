@@ -38,6 +38,10 @@ Parameters:
     Type: String
     Description: SHA1 hash of the geoip lambda source
     Default: ""
+  passivetotalSHA1:
+    Type: String
+    Description: SHA1 hash of the passivetotal lambda source
+    Default: ""
   recordedfutureSHA1:
     Type: String
     Description: SHA1 hash of the recordedfuture lambda source
@@ -267,6 +271,108 @@ Resources:
       DestinationArn: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:GD-AWS-App-Security-SF
       FilterPattern: security
       LogGroupName: /aws/lambda/geoip
+
+  passivetotalLambdaFunction:
+    Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
+    Properties:
+      ProductName: Lambda
+      ProvisioningArtifactName: 2.3.0
+      ProvisionedProductName: passivetotalLambdaFunction
+      ProvisioningParameters:
+        - Key: S3Bucket
+          Value: !Sub gd-${DevelopmentTeam}-${DevelopmentEnvironment}-code-bucket
+        - Key: S3Key
+          Value: !Sub passivetotal/${passivetotalSHA1}
+        - Key: Handler
+          Value: passivetotal
+        - Key: LambdaName
+          Value: passivetotal
+        - Key: LambdaDescription
+          Value: !Sub passivetotal lambda (${passivetotalSHA1})
+        - Key: MemorySize
+          Value: 256
+        - Key: Runtime
+          Value: go1.x
+        - Key: Timeout
+          Value: 15
+        - Key: CustomIAMRoleNameSuffix
+          Value: ThreatRole
+        - Key: EnvironmentVariablesJson
+          Value: !Sub '{"SSO_HOST": "${SSOHost}"}'
+        - Key: VpcSecurityGroups
+          Value: !Ref DXVpcSecurityGroups
+        - Key: VpcSubnetIds
+          Value: !Join [ ",", !Ref DXVpcSubnetIds ]
+      Tags:
+        - Key: doNotShutDown
+          Value: true
+
+  passivetotalLambdaPermission:
+    DependsOn: passivetotalLambdaFunction
+    Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
+    Properties:
+      ProductName: LambdaPermission
+      ProvisioningArtifactName: 1.0.1
+      ProvisionedProductName: passivetotalLambdaPermission
+      ProvisioningParameters:
+        - Key: Action
+          Value: lambda:InvokeFunction
+        - Key: FunctionName
+          Value: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:passivetotal
+        - Key: Principal
+          Value: sns.amazonaws.com
+        - Key: SourceArn
+          Value: !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:JobRequests
+      Tags:
+        - Key: doNotShutDown
+          Value: true
+
+  passivetotalSNSSubscription:
+    DependsOn: passivetotalLambdaFunction
+    Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
+    Properties:
+      ProductName: SNSSubscription
+      ProvisioningArtifactName: 1.0.1
+      ProvisionedProductName: passivetotalSNSSubscription
+      ProvisioningParameters:
+        - Key: Protocol
+          Value: lambda
+        - Key: TopicArn
+          Value: !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:JobRequests
+        - Key: Endpoint
+          Value: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:passivetotal
+        - Key: Region
+          Value: !Sub ${AWS::Region}
+      Tags:
+        - Key: doNotShutDown
+          Value: true
+
+  passivetotalLambdaEventInvokeConfig:
+    DependsOn: passivetotalLambdaFunction
+    Type: AWS::Lambda::EventInvokeConfig
+    Properties:
+      DestinationConfig:
+        OnSuccess:
+          Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobResponses
+        OnFailure:
+          Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobFailures
+      FunctionName: passivetotal
+      Qualifier: $LATEST
+
+  passivetotalLambdaMetadata:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: /ThreatTools/Modules/passivetotal
+      Type: String
+      Value: '{"supportedIOCTypes": ["DOMAIN", "IP"]}'
+
+  passivetotalAppSecSubscription:
+    DependsOn: passivetotalLambdaFunction
+    Type: AWS::Logs::SubscriptionFilter
+    Properties:
+      DestinationArn: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:GD-AWS-App-Security-SF
+      FilterPattern: security
+      LogGroupName: /aws/lambda/passivetotal
 
   recordedfutureLambdaFunction:
     Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
