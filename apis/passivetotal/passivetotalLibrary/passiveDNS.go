@@ -76,7 +76,7 @@ func GetPassiveDNS(ctx context.Context, ioc string, user string, key string, PTC
 
 //EnrichCVE  performs a CVE search with RecordedFuture
 func GetUniquePassiveDNS(ctx context.Context, ioc string, user string, key string, PTClient *http.Client) (*PDNSUniqueReport, error) {
-	// TODO: When the rate limits are high, this can be calculated by ourself by processing the above results
+	// When the rate limits are high, this function can be calculated by ourself by processing the results from GetPassiveDNS
 	// Build URL
 	values := url.Values{}
 	values.Add("query", ioc)

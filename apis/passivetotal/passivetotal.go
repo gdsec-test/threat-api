@@ -41,7 +41,6 @@ func (m *TriageModule) GetPassiveDNS(ctx context.Context, triageRequest *triage.
 				<-threadLimit
 				wg.Done()
 			}()
-			// Calling RF API with metadata switched off
 			pdnsResult, err := pt.GetPassiveDNS(ctx, ioc, m.PTUser, m.PTKey, m.PTClient)
 			if err != nil {
 				span.AddError(err)
@@ -87,7 +86,6 @@ func (m *TriageModule) GetUniquePassiveDNS(ctx context.Context, triageRequest *t
 				<-threadLimit
 				wg.Done()
 			}()
-			// Calling RF API with metadata switched off
 			pdnsUniqueResult, err := pt.GetUniquePassiveDNS(ctx, ioc, m.PTUser, m.PTKey, m.PTClient)
 			if err != nil {
 				span.AddError(err)

@@ -46,7 +46,6 @@ func (m *TriageModule) Triage(ctx context.Context, triageRequest *triage.Request
 	tb = toolbox.GetToolbox()
 	defer tb.Close(ctx)
 
-	//TODO-pt: Retrieve the email id too for user
 	secret, err := tb.GetFromCredentialsStore(ctx, secretID, nil)
 	if err != nil {
 		triageDataPTData.Data = fmt.Sprintf("error in retrieving secrets: %s", err)
@@ -76,7 +75,6 @@ func (m *TriageModule) Triage(ctx context.Context, triageRequest *triage.Request
 	if err != nil {
 		triageDataPTData.Data = fmt.Sprintf("error from passivetotal: %s", err)
 	} else {
-		// TODO-pt : Metadata ??
 		//Dump data as csv
 		triageDataPTData.DataType = triage.CSVType
 		triageDataPTData.Data = dumpPDNSCSV(passiveDNSresults)
@@ -87,7 +85,6 @@ func (m *TriageModule) Triage(ctx context.Context, triageRequest *triage.Request
 	if err != nil {
 		triageDataPTUniqueData.Data = fmt.Sprintf("error from passivetotal: %s", err)
 	} else {
-		// TODO-pt : Metadata ??
 		//Dump data as csv
 		triageDataPTUniqueData.DataType = triage.CSVType
 		triageDataPTUniqueData.Data = dumpUniquePDNSCSV(passiveDNSUniqueresults)
