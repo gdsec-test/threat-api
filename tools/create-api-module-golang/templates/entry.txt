@@ -16,8 +16,8 @@ func handler(ctx context.Context, request events.SNSEvent) ([]*common.CompletedJ
 	tb = toolbox.GetToolbox()
 	defer tb.Close(ctx)
 
-	exampleTriageModule := TriageModule{}
-	return triagelegacyconnector.AWSToTriage(ctx, tb, &exampleTriageModule, request)
+	{{ module }}TriageModule := TriageModule{}
+	return triagelegacyconnector.AWSToTriage(ctx, tb, &{{ module }}TriageModule, request)
 }
 
 func main() {

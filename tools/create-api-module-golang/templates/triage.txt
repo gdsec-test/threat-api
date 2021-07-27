@@ -11,21 +11,22 @@ import (
 	"github.com/gdcorp-infosec/threat-api/lambdas/common/triagelegacyconnector/triage"
 )
 
+//TODO: Manage secrets according to the API service
 const (
-	secretID         = "/ThreatTools/Integrations/example"
-	triageModuleName = "example"
+	secretID         = "/ThreatTools/Integrations/{{ module }}"
+	triageModuleName = "{{ module }}"
 )
 
-// TriageModule triage module
+// TriageModule triage module TODO: Change struct based on needs from secrets
 type TriageModule struct {
 	ExampleKey  string
 	ExampleUser string
-	PTClient    *http.Client
+	ExampleClient    *http.Client
 }
 
-// GetDocs of this module TODO: Example in detail
+// GetDocs of this module TODO: Explain Example service in detail
 func (m *TriageModule) GetDocs() *triage.Doc {
-	return &triage.Doc{Name: triageModuleName, Description: "What your example module does"}
+	return &triage.Doc{Name: triageModuleName, Description: "What your example module does"} // TODO: Change description
 }
 
 // Supports returns true of we support this ioc type
@@ -33,10 +34,10 @@ func (m *TriageModule) Supports() []triage.IOCType {
 	return []triage.IOCType{} // TODO:Add the supported IoC modules
 }
 
-// Triage retrieves data from example service
+// Triage retrieves data from {{ module }} service TODO: Explain in detail
 func (m *TriageModule) Triage(ctx context.Context, triageRequest *triage.Request) ([]*triage.Data, error) {
-	triageDataPTData := &triage.Data{
-		Title:    "Data from Example",
+	triageExampleData := &triage.Data{
+		Title:    "Data from {{ module }}",
 		Metadata: []string{},
 	}
 
@@ -47,18 +48,18 @@ func (m *TriageModule) Triage(ctx context.Context, triageRequest *triage.Request
 
 	secret, err := tb.GetFromCredentialsStore(ctx, secretID, nil)
 	if err != nil {
-		triageDataPTData.Data = fmt.Sprintf("error in retrieving secrets: %s", err)
-		return []*triage.Data{triageDataPTData}, err
+		triageExampleData.Data = fmt.Sprintf("error in retrieving secrets: %s", err)
+		return []*triage.Data{triageExampleData}, err
 	}
 
 	secretMap := map[string]string{}
 	if err := json.Unmarshal([]byte(*secret.SecretString), &secretMap); err != nil {
-		triageDataPTData.Data = fmt.Sprintf("error in unmarshaling secrets: %s", err)
-		return []*triage.Data{triageDataPTData}, err
+		triageExampleData.Data = fmt.Sprintf("error in unmarshaling secrets: %s", err)
+		return []*triage.Data{triageExampleData}, err
 	}
 
-	if m.PTClient == nil {
-		m.PTClient = http.DefaultClient
+	if m.ExampleClient == nil {
+		m.ExampleClient = http.DefaultClient
 	}
 
 	// TODO: If you have 2 secrets in the secrets manager. Else directly assign the returned secret as the API key
@@ -73,14 +74,14 @@ func (m *TriageModule) Triage(ctx context.Context, triageRequest *triage.Request
 	//get the example data that service offers
 	egDataResults, err := m.GetExampleData(ctx, triageRequest)
 	if err != nil {
-		triageDataPTData.Data = fmt.Sprintf("error from passivetotal: %s", err)
+		triageExampleData.Data = fmt.Sprintf("error from passivetotal: %s", err)
 	} else {
 		//Dump data as csv
-		triageDataPTData.DataType = triage.CSVType
-		triageDataPTData.Data = dumpCSV(egDataResults)
+		triageExampleData.DataType = triage.CSVType
+		triageExampleData.Data = dumpCSV(egDataResults)
 	}
 
 	// TODO: Expand the above code block for different IoC's your module is supporting
 
-	return []*triage.Data{triageDataPTData}, nil
+	return []*triage.Data{triageExampleData}, nil
 }

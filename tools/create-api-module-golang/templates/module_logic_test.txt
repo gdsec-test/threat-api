@@ -9,7 +9,7 @@ import (
 	"github.com/gdcorp-infosec/threat-api/lambdas/common/triagelegacyconnector/triage"
 )
 
-func TestGetServicesForIPs(t *testing.T) {
+func TestGetExampleData(t *testing.T) {
 
 	ctx := context.Background()
 	tb = toolbox.GetToolbox()

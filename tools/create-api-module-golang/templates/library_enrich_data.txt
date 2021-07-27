@@ -10,7 +10,7 @@ import (
 
 const (
 	// TODO: Add endpoints as offered by your service API
-	egEndpoint = ""
+	{{ module }}Endpoint = ""
 )
 
 type EgReport struct {
@@ -21,7 +21,7 @@ func GetExampleIoCEnrich(ctx context.Context, ioc string, user string, key strin
 	// Build URL
 	values := url.Values{}
 	values.Add("query", ioc) // TODO: Add anymore key value pairs for query to build URL
-	URL := fmt.Sprintf("%s?%s", egEndpoint, values.Encode())
+	URL := fmt.Sprintf("%s?%s", {{ module }}Endpoint, values.Encode())
 
 	// Build request
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, URL, nil)
