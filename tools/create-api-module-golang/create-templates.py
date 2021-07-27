@@ -52,7 +52,7 @@ if __name__ == "__main__":
         new_module_path, "build.sh", "build_script.txt", context
     )  # build script
     # Give execute permissions for build script created for sceptre to pick it up
-    os.chmod(os.path.join(new_module_path, new_module_path, "build.sh"), 0o777)
+    os.chmod(os.path.join(new_module_path, new_module_path, "build.sh"), 0o755)
     create_file_content(
         new_module_path, "update-lambda.sh", "update_script.txt", context
     )  # update lambda script
