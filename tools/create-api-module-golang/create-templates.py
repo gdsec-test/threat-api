@@ -51,8 +51,8 @@ if __name__ == "__main__":
     create_file_content(
         new_module_path, "build.sh", "build_script.txt", context
     )  # build script
-    # Give execute permissions for sceptre to pick it up, tagging with nosec for bandit
-    os.chmod(os.path.join(new_module_path, new_module_path, "build.sh"), 0o755)  # nosec
+    # Give execute permissions for sceptre to pick it up, tagging with nosec for bandit # nosec
+    os.chmod(os.path.join(new_module_path, new_module_path, "build.sh"), 0o744)
     create_file_content(
         new_module_path, "update-lambda.sh", "update_script.txt", context
     )  # update lambda script
