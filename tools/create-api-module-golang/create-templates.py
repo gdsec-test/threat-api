@@ -9,7 +9,7 @@ ROOT_THREAT_API = str(Path(PATH).parents[1])
 PATH_API = os.path.join(ROOT_THREAT_API, "apis")
 
 TEMPLATE_ENVIRONMENT = Environment(
-    autoescape=False,
+    autoescape=True,
     loader=FileSystemLoader(os.path.join(PATH, "templates")),
     trim_blocks=False,
 )
