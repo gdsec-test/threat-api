@@ -12,10 +12,6 @@ import (
 	"github.com/gdcorp-infosec/threat-api/lambdas/common/triagelegacyconnector/triage"
 )
 
-const (
-	maxThreadCount = 5
-)
-
 //hashReportCreate generates a map of HASHReport from RF API
 func (m *TriageModule) hashReportCreate(ctx context.Context, triageRequest *triage.Request) (map[string]*rf.HASHReport, error) {
 	rfHASHResults := make(map[string]*rf.HASHReport)
@@ -65,7 +61,6 @@ func (m *TriageModule) hashReportCreate(ctx context.Context, triageRequest *tria
 func hashMetaDataExtract(rfHASHResults map[string]*rf.HASHReport) []string {
 	var triageMetaData []string
 	riskHASH := 0
-	
 
 	for hash, data := range rfHASHResults {
 		if data == nil {

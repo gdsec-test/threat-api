@@ -26,7 +26,13 @@ func (m *TriageModule) GetDocs() *triage.Doc {
 
 // Supports returns true of we support this ioc type
 func (m *TriageModule) Supports() []triage.IOCType {
-	return []triage.IOCType{triage.CVEType, triage.IPType}
+	return []triage.IOCType{
+		triage.CVEType,
+		triage.IPType,
+		triage.MD5Type,
+		triage.SHA1Type,
+		triage.SHA256Type,
+	}
 }
 
 // Triage pulls information from RecordedFuture ConnectAPI
