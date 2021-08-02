@@ -10,12 +10,8 @@ import (
 	"time"
 )
 
-const (
-	vulnerabilityEndpoint = "https://api.recordedfuture.com/v2/hash/"
-)
-
 // HASHReportFields are the fields to submit to RF API to get a standard HASH report
-var HASHReportFields = []string{"analystNotes", "counts", "enterpriseLists", "entity", "fileHashes", "hashAlgorithm", "intelCard", "links" , "metrics", "relatedEntities", "risk", "riskMapping", "sightings", "threatLists", "timestamps"}
+var HASHReportFields = []string{"analystNotes", "counts", "enterpriseLists", "entity", "fileHashes", "hashAlgorithm", "intelCard", "links", "metrics", "relatedEntities", "risk", "riskMapping", "sightings", "threatLists", "timestamps"}
 
 // HASHReport is a sample report that recorded future returns when enriching a HASH
 // if you request the fields HASHReportFields
@@ -64,8 +60,13 @@ type HASHReport struct {
 			FirstSeen time.Time `json:"firstSeen"`
 			LastSeen  time.Time `json:"lastSeen"`
 		} `json:"timestamps"`
-		ThreatLists []interface{} `json:"threatLists"`
-		Risk        struct {
+		ThreatLists []struct {
+			ID          string `json:"id"`
+			Name        string `json:"name"`
+			Type        string `json:"type"`
+			Description string `json:"description"`
+		} `json:"threatLists"`
+		Risk struct {
 			CriticalityLabel string `json:"criticalityLabel"`
 			Score            int    `json:"score"`
 			EvidenceDetails  []struct {
@@ -183,7 +184,7 @@ func EnrichHASH(ctx context.Context, RFKey string, RFClient *http.Client, hash s
 	values := url.Values{}
 	values.Add("fields", strings.Join(fields, ","))
 	values.Add("metadata", fmt.Sprintf("%v", metadata))
-	//Converting hash ToUpper as RF throws error if its in smaller case 
+	//Converting hash ToUpper as RF throws error if its in smaller case
 	URL := fmt.Sprintf("%s%v?%s", vulnerabilityEndpoint, strings.ToUpper(hash), values.Encode())
 
 	// Build request
