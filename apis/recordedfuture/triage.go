@@ -86,11 +86,11 @@ func (m *TriageModule) Triage(ctx context.Context, triageRequest *triage.Request
 		triageData.Data = dumpIPCSV(rfIPResults)
 	}
 
-	if triageRequest.IOCsType == triage.MD5Type {
+	if (triageRequest.IOCsType == triage.MD5Type) || (triageRequest.IOCsType == triage.SHA1Type) || (triageRequest.IOCsType == triage.SHA256Type) {
 		// retrieve results
 		rfMD5Results, err := m.hashReportCreate(ctx, triageRequest)
 		if err != nil {
-			triageData.Data = fmt.Sprintf("Error calling RecordedFuture API for a MD5 hash: %s", err)
+			triageData.Data = fmt.Sprintf("Error calling RecordedFuture API for hash: %s", err)
 			return []*triage.Data{triageData}, err
 		}
 
@@ -100,38 +100,6 @@ func (m *TriageModule) Triage(ctx context.Context, triageRequest *triage.Request
 		// dump data in CSV format
 		triageData.DataType = triage.CSVType
 		triageData.Data = dumpHASHCSV(rfMD5Results)
-	}
-
-	if triageRequest.IOCsType == triage.SHA1Type {
-		// retrieve results
-		rfSHA1Results, err := m.hashReportCreate(ctx, triageRequest)
-		if err != nil {
-			triageData.Data = fmt.Sprintf("Error calling RecordedFuture API for a SHA2 hash: %s", err)
-			return []*triage.Data{triageData}, err
-		}
-
-		// calculate and add the metadata
-		triageData.Metadata = hashMetaDataExtract(rfSHA1Results)
-
-		// dump data in CSV format
-		triageData.DataType = triage.CSVType
-		triageData.Data = dumpHASHCSV(rfSHA1Results)
-	}
-
-	if triageRequest.IOCsType == triage.SHA256Type {
-		// retrieve results
-		rfSHA256Results, err := m.hashReportCreate(ctx, triageRequest)
-		if err != nil {
-			triageData.Data = fmt.Sprintf("Error calling RecordedFuture API for a SHA256 hash: %s", err)
-			return []*triage.Data{triageData}, err
-		}
-
-		// calculate and add the metadata
-		triageData.Metadata = hashMetaDataExtract(rfSHA256Results)
-
-		// dump data in CSV format
-		triageData.DataType = triage.CSVType
-		triageData.Data = dumpHASHCSV(rfSHA256Results)
 	}
 
 	return []*triage.Data{triageData}, nil

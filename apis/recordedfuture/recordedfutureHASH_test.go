@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"testing"
 
 	"github.com/gdcorp-infosec/threat-api/lambdas/common/toolbox"
@@ -17,8 +16,12 @@ func TestEnrichHASH(t *testing.T) {
 
 	var triageRequests []*triage.Request
 	triageRequests = append(triageRequests, &triage.Request{
-		IOCs:     []string{"c625ff97e147e897468204e0e6ccd1aa", "938079b196c598bc43f97e0ecf128e77", "854c46dc5add43e52fce685c7bd4cde7"},
+		IOCs:     []string{"c625ff97e147e897468204e0e6ccd1aa", "938079b196c598bc43f97e0ecf128e77"},
 		IOCsType: triage.MD5Type,
+	})
+	triageRequests = append(triageRequests, &triage.Request{
+		IOCs:     []string{"daed41395ba663bef2c52e3d1723ac46253a9008b582bb8d9da9cb0044991720"},
+		IOCsType: triage.SHA256Type,
 	})
 
 	for _, triageRequest := range triageRequests {
@@ -33,11 +36,6 @@ func TestEnrichHASH(t *testing.T) {
 		}
 		if triageResult[0].Data == "" {
 			t.Fatal("first data element empty ")
-		}
-
-		for i, result := range triageResult {
-			fmt.Println("-------------", i, "--------------")
-			fmt.Println(result.Data)
 		}
 	}
 }
