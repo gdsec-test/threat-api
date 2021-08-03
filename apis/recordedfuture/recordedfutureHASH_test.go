@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"testing"
 
 	"github.com/gdcorp-infosec/threat-api/lambdas/common/toolbox"
@@ -32,6 +33,11 @@ func TestEnrichHASH(t *testing.T) {
 		}
 		if triageResult[0].Data == "" {
 			t.Fatal("first data element empty ")
+		}
+
+		for i, result := range triageResult {
+			fmt.Println("-------------", i, "--------------")
+			fmt.Println(result.Data)
 		}
 	}
 }

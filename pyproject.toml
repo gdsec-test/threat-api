@@ -6,6 +6,9 @@ exclude-signatures = [
 "01d47b5b5cb3a504912028ad93004d5d20aa1ccb88a95dfa4e62479d1ca866e0", # Hash in URLHaus test cases
 "63d35e0fec52b9d99aaa3552e54a80bd943df660d3edf41e7b6dbb8ab43687f0", # Hash in URLHaus test cases
 "9d8796389b3346824afbb4dc1cc36184e58349c4915ba13b0dd6935a0afe9667", # Hash in SNow library test cases
+"0e0320c9793521f51ce637a6ab73b98988d5b01020b01b34e60776857ef7a65b", # Hash in RF test cases
+"796e17d1f95c95aa7bda5703b4315e29fbe7f0504ed42e1fe0a86dcbe1bd95c6", # Hash in RF test cases
+"690a025f5b6a0c25440f108e5a89077e13a911c7b9681adac96a73f8a642ec8f", # Hash in RF test cases
 ]
 json = false
 regex = true

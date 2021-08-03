@@ -10,6 +10,10 @@ import (
 	"time"
 )
 
+const (
+	hashEndpoint = "https://api.recordedfuture.com/v2/hash/"
+)
+
 // HASHReportFields are the fields to submit to RF API to get a standard HASH report
 var HASHReportFields = []string{"analystNotes", "counts", "enterpriseLists", "entity", "fileHashes", "hashAlgorithm", "intelCard", "links", "metrics", "relatedEntities", "risk", "riskMapping", "sightings", "threatLists", "timestamps"}
 
@@ -184,8 +188,7 @@ func EnrichHASH(ctx context.Context, RFKey string, RFClient *http.Client, hash s
 	values := url.Values{}
 	values.Add("fields", strings.Join(fields, ","))
 	values.Add("metadata", fmt.Sprintf("%v", metadata))
-	//Converting hash ToUpper as RF throws error if its in smaller case
-	URL := fmt.Sprintf("%s%v?%s", vulnerabilityEndpoint, strings.ToUpper(hash), values.Encode())
+	URL := fmt.Sprintf("%s%v?%s", hashEndpoint, hash, values.Encode())
 
 	// Build request
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, URL, nil)
