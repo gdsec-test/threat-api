@@ -121,7 +121,7 @@ func dumpHASHCSV(rfHASHResults map[string]*rf.HashReport) string {
 			data.Data.Timestamps.LastSeen.String(),
 			data.Data.HashAlgorithm,
 			strings.Join(threatLists, " "),
-			strings.Join(fileHashes, " "),
+			strings.Join(fileHashes, "/"),
 		}
 		csv.Write(cols)
 	}
