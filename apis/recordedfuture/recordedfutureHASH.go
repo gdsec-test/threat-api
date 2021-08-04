@@ -12,13 +12,9 @@ import (
 	"github.com/gdcorp-infosec/threat-api/lambdas/common/triagelegacyconnector/triage"
 )
 
-const (
-	maxThreadCount = 5
-)
-
 //hashReportCreate generates a map of HASHReport from RF API
-func (m *TriageModule) hashReportCreate(ctx context.Context, triageRequest *triage.Request) (map[string]*rf.HASHReport, error) {
-	rfHASHResults := make(map[string]*rf.HASHReport)
+func (m *TriageModule) hashReportCreate(ctx context.Context, triageRequest *triage.Request) (map[string]*rf.HashReport, error) {
+	rfHASHResults := make(map[string]*rf.HashReport)
 
 	wg := sync.WaitGroup{}
 	rfHASHResultsLock := sync.Mutex{}
@@ -62,10 +58,9 @@ func (m *TriageModule) hashReportCreate(ctx context.Context, triageRequest *tria
 }
 
 //hashMetaDataExtract gets the high level insights for HASH
-func hashMetaDataExtract(rfHASHResults map[string]*rf.HASHReport) []string {
+func hashMetaDataExtract(rfHASHResults map[string]*rf.HashReport) []string {
 	var triageMetaData []string
 	riskHASH := 0
-	
 
 	for hash, data := range rfHASHResults {
 		if data == nil {
@@ -88,7 +83,7 @@ func hashMetaDataExtract(rfHASHResults map[string]*rf.HASHReport) []string {
 }
 
 //dumpHASHCSV dumps the triage data to CSV
-func dumpHASHCSV(rfHASHResults map[string]*rf.HASHReport) string {
+func dumpHASHCSV(rfHASHResults map[string]*rf.HashReport) string {
 	//Dump data as csv
 	resp := bytes.Buffer{}
 	csv := csv.NewWriter(&resp)
@@ -100,18 +95,21 @@ func dumpHASHCSV(rfHASHResults map[string]*rf.HASHReport) string {
 		"CriticalityLabel",
 		"First Seen",
 		"Last Seen",
+		"HashAlgorithm",
 		"ThreatLists",
+		"FileHashes",
 	})
 	for _, data := range rfHASHResults {
 		if data == nil {
-			cols := []string{"", "", "", "", "", "", ""}
-			csv.Write(cols)
 			continue
 		}
 		// Processing few non string data before adding to CSV
-		var threatLists []string
+		var threatLists, fileHashes []string
 		for _, threatlist := range data.Data.ThreatLists {
 			threatLists = append(threatLists, threatlist.Name)
+		}
+		for _, hash := range data.Data.FileHashes {
+			fileHashes = append(fileHashes, hash)
 		}
 
 		cols := []string{
@@ -121,7 +119,9 @@ func dumpHASHCSV(rfHASHResults map[string]*rf.HASHReport) string {
 			data.Data.Risk.CriticalityLabel,
 			data.Data.Timestamps.FirstSeen.String(),
 			data.Data.Timestamps.LastSeen.String(),
+			data.Data.HashAlgorithm,
 			strings.Join(threatLists, " "),
+			strings.Join(fileHashes, "/"),
 		}
 		csv.Write(cols)
 	}
