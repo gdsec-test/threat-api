@@ -6,6 +6,7 @@ parameters:
   geoipSHA1: !file_contents resources/geoip.sha1
   passivetotalSHA1: !file_contents resources/passivetotal.sha1
   recordedfutureSHA1: !file_contents resources/recordedfuture.sha1
+  servicenowSHA1: !file_contents resources/servicenow.sha1
   shodanSHA1: !file_contents resources/shodan.sha1
   splunkSHA1: !file_contents resources/splunk.sha1
   urlhausSHA1: !file_contents resources/urlhaus.sha1

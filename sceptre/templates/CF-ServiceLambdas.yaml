@@ -18,6 +18,10 @@ Parameters:
     Type: String
     Description: SHA1 hash of the recordedfuture lambda source
     Default: ""
+  servicenowSHA1:
+    Type: String
+    Description: SHA1 hash of the servicenow lambda source
+    Default: ""
   shodanSHA1:
     Type: String
     Description: SHA1 hash of the shodan lambda source
@@ -239,6 +243,56 @@ Resources:
       Name: /ThreatTools/Modules/recordedfuture
       Type: String
       Value: '{"supportedIOCTypes": ["CVE", "IP", "MD5", "SHA1", "SHA256"]}'
+
+  servicenowLambdaFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      Code:
+        S3Bucket: !Sub gd-threattools-${AWS::AccountId}-code-bucket
+        S3Key: !Sub servicenow/${servicenowSHA1}
+      Description: !Sub servicenow lambda (${servicenowSHA1})
+      FunctionName: servicenow
+      Handler: servicenow
+      MemorySize: 256
+      Role: !Sub arn:aws:iam::${AWS::AccountId}:role/threattools-custom-ThreatRole
+      Runtime: go1.x
+      Timeout: 15
+
+  servicenowLambdaPermission:
+    DependsOn: servicenowLambdaFunction
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:servicenow
+      Principal: sns.amazonaws.com
+      SourceArn: !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:JobRequests
+
+  servicenowSNSSubscription:
+    DependsOn: servicenowLambdaFunction
+    Type: AWS::SNS::Subscription
+    Properties:
+      Endpoint: !GetAtt servicenowLambdaFunction.Arn
+      Protocol: lambda
+      TopicArn: !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:JobRequests
+
+  servicenowLambdaEventInvokeConfig:
+    DependsOn: servicenowLambdaFunction
+    Type: AWS::Lambda::EventInvokeConfig
+    Properties:
+      DestinationConfig:
+        OnSuccess:
+          Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobResponses
+        OnFailure:
+          Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobFailures
+      FunctionName: servicenow
+      Qualifier: $LATEST
+
+  servicenowLambdaMetadata:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: /ThreatTools/Modules/servicenow
+      Type: String
+      Value: '{"supportedIOCTypes": ["HOSTNAME"]}'
 
   shodanLambdaFunction:
     Type: AWS::Lambda::Function
