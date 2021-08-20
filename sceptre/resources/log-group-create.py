@@ -3,12 +3,6 @@
 import os
 import boto3
 
-from pathlib2 import Path
-
-PATH = os.path.dirname(os.path.abspath(__file__))
-ROOT_THREAT_API = str(Path(PATH).parents[1])
-PATH_API = os.path.join(ROOT_THREAT_API, "apis")
-
 
 def create_log_group(log_group_name):
     logs_client = boto3.client("logs")
@@ -46,8 +40,12 @@ def put_retention_policy(log_group_name, retention_policy):
 
 
 def create_log_groups_all_apis():
-    for subdir, _, _ in os.walk(PATH_API):
-        if (subdir.split("/")[-1] == "apis") or ("Library" in subdir):
+    for subdir, _, _ in os.walk("../apis/"):
+        if (
+            (subdir.split("/")[-1] == "apis")
+            or ("Library" in subdir)
+            or (subdir.split("/")[-1] == "")
+        ):
             continue
         log_group_name = "/aws/lambda/" + subdir.split("/")[-1]
         print("------> " + log_group_name)
