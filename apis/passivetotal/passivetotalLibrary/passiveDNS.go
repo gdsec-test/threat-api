@@ -46,7 +46,6 @@ func GetPassiveDNS(ctx context.Context, ioc string, user string, key string, PTC
 	values := url.Values{}
 	values.Add("query", ioc)
 	URL := fmt.Sprintf("%s?%s", passiveDNSEndpoint, values.Encode())
-	fmt.Println(URL)
 
 	// Build request
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, URL, nil)
