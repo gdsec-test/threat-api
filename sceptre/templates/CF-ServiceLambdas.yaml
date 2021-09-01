@@ -10,6 +10,10 @@ Parameters:
     Type: String
     Description: SHA1 hash of the geoip lambda source
     Default: ""
+  nvdSHA1:
+    Type: String
+    Description: SHA1 hash of the nvd lambda source
+    Default: ""
   passivetotalSHA1:
     Type: String
     Description: SHA1 hash of the passivetotal lambda source
@@ -143,6 +147,56 @@ Resources:
       Name: /ThreatTools/Modules/geoip
       Type: String
       Value: '{"supportedIOCTypes": ["IP"]}'
+
+  nvdLambdaFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      Code:
+        S3Bucket: !Sub gd-threattools-${AWS::AccountId}-code-bucket
+        S3Key: !Sub nvd/${nvdSHA1}
+      Description: !Sub nvd lambda (${nvdSHA1})
+      FunctionName: nvd
+      Handler: nvd
+      MemorySize: 256
+      Role: !Sub arn:aws:iam::${AWS::AccountId}:role/threattools-custom-ThreatRole
+      Runtime: go1.x
+      Timeout: 15
+
+  nvdLambdaPermission:
+    DependsOn: nvdLambdaFunction
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:nvd
+      Principal: sns.amazonaws.com
+      SourceArn: !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:JobRequests
+
+  nvdSNSSubscription:
+    DependsOn: nvdLambdaFunction
+    Type: AWS::SNS::Subscription
+    Properties:
+      Endpoint: !GetAtt nvdLambdaFunction.Arn
+      Protocol: lambda
+      TopicArn: !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:JobRequests
+
+  nvdLambdaEventInvokeConfig:
+    DependsOn: nvdLambdaFunction
+    Type: AWS::Lambda::EventInvokeConfig
+    Properties:
+      DestinationConfig:
+        OnSuccess:
+          Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobResponses
+        OnFailure:
+          Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobFailures
+      FunctionName: nvd
+      Qualifier: $LATEST
+
+  nvdLambdaMetadata:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: /ThreatTools/Modules/nvd
+      Type: String
+      Value: '{"supportedIOCTypes": ["CVE"]}'
 
   passivetotalLambdaFunction:
     Type: AWS::Lambda::Function
