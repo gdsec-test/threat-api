@@ -90,7 +90,6 @@ func dumpCSV(nvdNVDResults map[string]*nvd.NVDReport) string {
 				fmt.Sprintf("%f\n", result.Impact.BaseMetricV3.CvssV3.BaseScore),
 			}
 			csv.Write(cols)
-			fmt.Println(cve)
 		}
 	}
 	csv.Flush()
