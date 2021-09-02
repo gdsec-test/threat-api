@@ -17,9 +17,11 @@ parameters:
 hooks:
   before_create:
     - !cmd resources/build-service-lambdas.sh
+    - !cmd resources/log-group-create.py
   after_create:
     - !cmd rm -f resources/*.sha1
   before_update:
     - !cmd resources/build-service-lambdas.sh
+    - !cmd resources/log-group-create.py
   after_update:
     - !cmd rm -f resources/*.sha1

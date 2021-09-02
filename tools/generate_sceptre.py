@@ -44,10 +44,12 @@ CONFIG_END = dedent(
     hooks:
       before_create:
         - !cmd resources/build-service-lambdas.sh
+        - !cmd resources/log-group-create.py
       after_create:
         - !cmd rm -f resources/*.sha1
       before_update:
         - !cmd resources/build-service-lambdas.sh
+        - !cmd resources/log-group-create.py
       after_update:
         - !cmd rm -f resources/*.sha1
     """
@@ -262,13 +264,19 @@ SC_RESOURCES_BLOCK = dedent(
         Type: String
         Value: '__METADATA__'
 
-    __NAME__AppSecSubscription:
+    __NAME__AppSecSubscriptionFilter:
       DependsOn: __NAME__LambdaFunction
-      Type: AWS::Logs::SubscriptionFilter
+      Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
       Properties:
-        DestinationArn: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:GD-AWS-App-Security-SF
-        FilterPattern: security
-        LogGroupName: /aws/lambda/__NAME__
+        ProductName: SubscriptionFilterAppSecurity
+        ProvisionedProductName: __NAME__AppSecSubscriptionFilter
+        ProvisioningArtifactName: 1.0.1
+        ProvisioningParameters:
+            - Key: CloudWatchLogGroup
+              Value: /aws/lambda/__NAME__
+        Tags:
+            - Key: doNotShutDown
+              Value: "true"
     """
 )
 
