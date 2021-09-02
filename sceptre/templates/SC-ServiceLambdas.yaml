@@ -386,13 +386,19 @@ Resources:
       Type: String
       Value: '{"supportedIOCTypes": ["CVE"]}'
 
-  nvdAppSecSubscription:
+  nvdAppSecSubscriptionFilter:
     DependsOn: nvdLambdaFunction
-    Type: AWS::Logs::SubscriptionFilter
+    Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
     Properties:
-      DestinationArn: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:GD-AWS-App-Security-SF
-      FilterPattern: security
-      LogGroupName: /aws/lambda/nvd
+      ProductName: SubscriptionFilterAppSecurity
+      ProvisionedProductName: nvdAppSecSubscriptionFilter
+      ProvisioningArtifactName: 1.0.1
+      ProvisioningParameters:
+          - Key: CloudWatchLogGroup
+            Value: /aws/lambda/nvd
+      Tags:
+          - Key: doNotShutDown
+            Value: "true"
 
   passivetotalLambdaFunction:
     Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
