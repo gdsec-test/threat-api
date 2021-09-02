@@ -34,7 +34,6 @@ func (m *TriageModule) GetNVDData(ctx context.Context, triageRequest *triage.Req
 		default:
 		}
 
-		// TODO: Assign operationNAme, operationType, operationSubtype, operationAction properly by the naming standards of Elastic APM
 		span, spanCtx := tb.TracerLogger.StartSpan(ctx, "NVDLookup", "nvd", "", "nvdCVELookup")
 
 		go func(cve string) {
@@ -46,7 +45,7 @@ func (m *TriageModule) GetNVDData(ctx context.Context, triageRequest *triage.Req
 			if err != nil {
 				span.AddError(err)
 				nvdLock.Lock()
-				nvdResults[cve] = nil // TODO:nil value according to your return data, "", 0 etc
+				nvdResults[cve] = nil
 				nvdLock.Unlock()
 				return
 			}

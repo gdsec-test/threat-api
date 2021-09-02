@@ -10,7 +10,7 @@ import (
 	"github.com/gdcorp-infosec/threat-api/lambdas/common/triagelegacyconnector/triage"
 )
 
-// TriageModule triage modulego ru
+// TriageModule triage module
 type TriageModule struct {
 	NVDClient *http.Client
 }

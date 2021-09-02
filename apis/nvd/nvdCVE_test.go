@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	//"fmt"
 	"testing"
 
 	"github.com/gdcorp-infosec/threat-api/lambdas/common/toolbox"
@@ -21,8 +20,6 @@ func TestCVE(t *testing.T) {
 		IOCsType: triage.CVEType,
 	})
 
-	// TODO: Extend to the IoCs supported by your module
-
 	for _, triageRequest := range triageRequests {
 		triageModule := TriageModule{}
 		triageResult, err := triageModule.Triage(ctx, triageRequest)
@@ -36,9 +33,6 @@ func TestCVE(t *testing.T) {
 		if triageResult[0].Data == "" {
 			t.Fatal("first data element empty ")
 		}
-		// for _, data := range triageResult[0].Data {
-		// 	fmt.Println(data)
-		// }
 
 	}
 }

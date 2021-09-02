@@ -123,7 +123,6 @@ func GetNVD(ctx context.Context, ioc string, NVDClient *http.Client) (*NVDReport
 	}
 	u.Path = path.Join(u.Path, ioc)
 	URL := u.String()
-	//fmt.Println(URL)
 
 	// Build request
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, URL, nil)
