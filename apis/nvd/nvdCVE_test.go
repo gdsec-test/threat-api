@@ -16,7 +16,7 @@ func TestCVE(t *testing.T) {
 
 	var triageRequests []*triage.Request
 	triageRequests = append(triageRequests, &triage.Request{
-		IOCs:     []string{"CVE-2021-34527"},
+		IOCs:     []string{"CVE-2021-34527", "CVE-2021-30120"},
 		IOCsType: triage.CVEType,
 	})
 

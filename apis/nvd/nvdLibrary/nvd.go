@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 	"net/url"
 	"path"
@@ -118,9 +117,9 @@ func GetNVD(ctx context.Context, ioc string, NVDClient *http.Client) (*NVDReport
 	// Build URL
 	u, err := url.Parse(NVDEndpoint)
 	if err != nil {
-		log.Fatal("Could not connect to NVDEndpoint:", err)
 		return nil, err
 	}
+
 	u.Path = path.Join(u.Path, ioc)
 	URL := u.String()
 

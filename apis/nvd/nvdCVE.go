@@ -61,6 +61,32 @@ func (m *TriageModule) GetNVDData(ctx context.Context, triageRequest *triage.Req
 	return nvdResults, nil
 }
 
+//cveMetaDataExtract gets the high level insights for CVE
+func cveMetaDataExtract(nvdResults map[string]*nvd.NVDReport) []string {
+	var triageMetaData []string
+	riskCVE := 0
+
+	for cve, data := range nvdResults {
+		if data == nil {
+			triageMetaData = append(triageMetaData, fmt.Sprintf("data doesnt't exist for this cve %s", cve))
+			continue
+		}
+
+		// Calculate on risk score
+		if data.Result.CVEItems[0].Impact.BaseMetricV3.CvssV3.BaseScore >= 7.0 {
+			riskCVE += 1
+		}
+
+	}
+
+	if riskCVE > 0 {
+		triageMetaData = append(triageMetaData, fmt.Sprintf("%d CVE's have a base score > 7.0, implying high or critical severity", riskCVE))
+	}
+
+	//fmt.Println(triageMetaData)
+	return triageMetaData
+}
+
 //dumpCSV dumps the triage data to CSV
 func dumpCSV(nvdNVDResults map[string]*nvd.NVDReport) string {
 	//Dump data as csv
@@ -71,7 +97,7 @@ func dumpCSV(nvdNVDResults map[string]*nvd.NVDReport) string {
 		"CVE",
 		"Date Published",
 		"Associated CWEs",
-		"CVssV3 String",
+		"CVSS v3 String",
 		"Severity Score",
 	})
 	for cve, data := range nvdNVDResults {
@@ -86,7 +112,7 @@ func dumpCSV(nvdNVDResults map[string]*nvd.NVDReport) string {
 				result.PublishedDate,
 				result.Cve.Problemtype.ProblemtypeData[0].Description[0].Value,
 				result.Impact.BaseMetricV3.CvssV3.VectorString,
-				fmt.Sprintf("%f\n", result.Impact.BaseMetricV3.CvssV3.BaseScore),
+				fmt.Sprintf("%f", result.Impact.BaseMetricV3.CvssV3.BaseScore),
 			}
 			csv.Write(cols)
 		}

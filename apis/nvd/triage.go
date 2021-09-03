@@ -54,8 +54,12 @@ func (m *TriageModule) Triage(ctx context.Context, triageRequest *triage.Request
 	} else {
 		//Dump data as csv
 		triageNVDData.DataType = triage.CSVType
+		//calculate and add the metadata
+		triageNVDData.Metadata = cveMetaDataExtract(NVDResults)
 		triageNVDData.Data = dumpCSV(NVDResults)
 	}
+
+
 
 	return []*triage.Data{triageNVDData}, nil
 }
