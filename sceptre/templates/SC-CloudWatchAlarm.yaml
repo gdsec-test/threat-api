@@ -54,3 +54,97 @@ Resources:
       Statistic: Average
       Threshold: 1
       Unit: Count
+  
+  DynamoDBUserErrors:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmActions:
+        - !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:warning-moog-${DevelopmentTeam}-${DevelopmentEnvironment}
+        - !Sub ${SlackSnsTopicName}
+      OKActions:
+        - !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:warning-moog-${DevelopmentTeam}-${DevelopmentEnvironment}
+        - !Sub ${SlackSnsTopicName}
+      AlarmDescription: !Sub Requests that generate an HTTP 400 status code during the specified time period to DynamoDB
+      AlarmName: !Sub "${ProjectCode}: 400 Errors from DynamoDB ${DevelopmentEnvironment}"
+      ComparisonOperator: GreaterThanThreshold
+      DatapointsToAlarm: 1
+      EvaluationPeriods: 10
+      MetricName: 'UserError'
+      Namespace: 'AWS/DynamoDB'
+      Period: 60
+      Statistic: Sum
+      Threshold: 0
+      Unit: Count
+
+  DynamoDBSystemErrors:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmActions:
+        - !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:warning-moog-${DevelopmentTeam}-${DevelopmentEnvironment}
+        - !Sub ${SlackSnsTopicName}
+      OKActions:
+        - !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:warning-moog-${DevelopmentTeam}-${DevelopmentEnvironment}
+        - !Sub ${SlackSnsTopicName}
+      AlarmDescription: !Sub Requests that generate an HTTP 5XX status code during the specified time period to DynamoDB
+      AlarmName: !Sub "${ProjectCode}: System Errors from DynamoDB ${DevelopmentEnvironment}"
+      ComparisonOperator: GreaterThanThreshold
+      DatapointsToAlarm: 1
+      EvaluationPeriods: 10
+      MetricName: 'SystemErrors'
+      Namespace: 'AWS/DynamoDB'
+      Dimensions: 
+        - Name: 'TableName'
+          Value: 'jobs'
+      Period: 60
+      Statistic: Sum
+      Threshold: 0
+      Unit: Count
+
+  DynamoDBConsumedReadCapacityUnits:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmActions:
+        - !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:warning-moog-${DevelopmentTeam}-${DevelopmentEnvironment}
+        - !Sub ${SlackSnsTopicName}
+      OKActions:
+        - !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:warning-moog-${DevelopmentTeam}-${DevelopmentEnvironment}
+        - !Sub ${SlackSnsTopicName}
+      AlarmDescription: !Sub Alarm when read capacity reaches 80% of my provisioned read capacity
+      AlarmName: !Sub "${ProjectCode}: Read Capacity to DynamoDB ${DevelopmentEnvironment}"
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      DatapointsToAlarm: 1
+      EvaluationPeriods: 10
+      MetricName: 'ConsumedReadCapacityUnits'
+      Namespace: 'AWS/DynamoDB'
+      Dimensions: 
+        - Name: 'TableName'
+          Value: 'jobs'
+      Period: 60
+      Statistic: Sum
+      Threshold: 240
+      Unit: Count
+
+  DynamoDBConsumedWriteCapacityUnits:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmActions:
+        - !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:warning-moog-${DevelopmentTeam}-${DevelopmentEnvironment}
+        - !Sub ${SlackSnsTopicName}
+      OKActions:
+        - !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:warning-moog-${DevelopmentTeam}-${DevelopmentEnvironment}
+        - !Sub ${SlackSnsTopicName}
+      AlarmDescription: !Sub Alarm when write capacity reaches 80% of my provisioned read capacity
+      AlarmName: !Sub "${ProjectCode}: Write Capacity to DynamoDB ${DevelopmentEnvironment}"
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      DatapointsToAlarm: 1
+      EvaluationPeriods: 10
+      MetricName: 'ConsumedWriteCapacityUnits'
+      Namespace: 'AWS/DynamoDB'
+      Dimensions: 
+        - Name: 'TableName'
+          Value: 'jobs'
+      Period: 60
+      Statistic: Sum
+      Threshold: 240
+      Unit: Count
+
