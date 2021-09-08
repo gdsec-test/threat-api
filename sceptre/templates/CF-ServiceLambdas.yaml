@@ -34,6 +34,10 @@ Parameters:
     Type: String
     Description: SHA1 hash of the splunk lambda source
     Default: ""
+  trustarSHA1:
+    Type: String
+    Description: SHA1 hash of the trustar lambda source
+    Default: ""
   urlhausSHA1:
     Type: String
     Description: SHA1 hash of the urlhaus lambda source
@@ -447,6 +451,56 @@ Resources:
       Name: /ThreatTools/Modules/splunk
       Type: String
       Value: '{"supportedIOCTypes": ["GODADDY_USERNAME", "IP", "CVE", "AWSHOSTNAME"], "actions": {"ReadSplunk": {"requiredADGroups": ["ENG-Threat Research", "ENG-DCU", "infosec_response"]}}}'
+
+  trustarLambdaFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      Code:
+        S3Bucket: !Sub gd-threattools-${AWS::AccountId}-code-bucket
+        S3Key: !Sub trustar/${trustarSHA1}
+      Description: !Sub trustar lambda (${trustarSHA1})
+      FunctionName: trustar
+      Handler: trustar-isac.handler
+      MemorySize: 128
+      Role: !Sub arn:aws:iam::${AWS::AccountId}:role/threattools-custom-ThreatRole
+      Runtime: python3.8
+      Timeout: 15
+
+  trustarLambdaPermission:
+    DependsOn: trustarLambdaFunction
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:trustar
+      Principal: sns.amazonaws.com
+      SourceArn: !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:JobRequests
+
+  trustarSNSSubscription:
+    DependsOn: trustarLambdaFunction
+    Type: AWS::SNS::Subscription
+    Properties:
+      Endpoint: !GetAtt trustarLambdaFunction.Arn
+      Protocol: lambda
+      TopicArn: !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:JobRequests
+
+  trustarLambdaEventInvokeConfig:
+    DependsOn: trustarLambdaFunction
+    Type: AWS::Lambda::EventInvokeConfig
+    Properties:
+      DestinationConfig:
+        OnSuccess:
+          Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobResponses
+        OnFailure:
+          Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobFailures
+      FunctionName: trustar
+      Qualifier: $LATEST
+
+  trustarLambdaMetadata:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: /ThreatTools/Modules/trustar
+      Type: String
+      Value: '{"supportedIOCTypes": ["DOMAIN", "IP", "MD5", "SHA1", "SHA256", "URL", "CVE", "EMAIL"]}'
 
   urlhausLambdaFunction:
     Type: AWS::Lambda::Function

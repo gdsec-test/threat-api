@@ -40,7 +40,7 @@ def put_retention_policy(log_group_name, retention_policy):
 
 
 def create_log_groups_all_apis():
-    for subdir, _, _ in os.walk("../apis/"):
+    for subdir in os.listdir("../apis/"):
         if (
             (subdir.split("/")[-1] == "apis")
             or ("Library" in subdir)

@@ -36,6 +36,7 @@ func handler(ctx context.Context, request events.SQSEvent) (string, error) {
 	// Process each SQS record
 	for _, sqsRecord := range request.Records {
 		span, ctx = t.TracerLogger.StartSpan(ctx, "ProcessSQSEvent", "jobs", "sqsevent", "process")
+
 		// Try to unmarshal body
 		completedLambdaData := LambdaDestination{}
 		err := json.Unmarshal([]byte(sqsRecord.Body), &completedLambdaData)
@@ -122,6 +123,7 @@ func handler(ctx context.Context, request events.SQSEvent) (string, error) {
 		}
 		span.End(ctx)
 	}
+
 	return "", nil
 }
 

@@ -62,6 +62,10 @@ Parameters:
     Type: String
     Description: SHA1 hash of the splunk lambda source
     Default: ""
+  trustarSHA1:
+    Type: String
+    Description: SHA1 hash of the trustar lambda source
+    Default: ""
   urlhausSHA1:
     Type: String
     Description: SHA1 hash of the urlhaus lambda source
@@ -936,6 +940,114 @@ Resources:
       ProvisioningParameters:
           - Key: CloudWatchLogGroup
             Value: /aws/lambda/splunk
+      Tags:
+          - Key: doNotShutDown
+            Value: "true"
+
+  trustarLambdaFunction:
+    Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
+    Properties:
+      ProductName: Lambda
+      ProvisioningArtifactName: 2.3.0
+      ProvisionedProductName: trustarLambdaFunction
+      ProvisioningParameters:
+        - Key: S3Bucket
+          Value: !Sub gd-${DevelopmentTeam}-${DevelopmentEnvironment}-code-bucket
+        - Key: S3Key
+          Value: !Sub trustar/${trustarSHA1}
+        - Key: Handler
+          Value: trustar-isac.handler
+        - Key: LambdaName
+          Value: trustar
+        - Key: LambdaDescription
+          Value: !Sub trustar lambda (${trustarSHA1})
+        - Key: MemorySize
+          Value: 128
+        - Key: Runtime
+          Value: python3.8
+        - Key: Timeout
+          Value: 15
+        - Key: CustomIAMRoleNameSuffix
+          Value: ThreatRole
+        - Key: EnvironmentVariablesJson
+          Value: !Sub '{"SSO_HOST": "${SSOHost}"}'
+        - Key: VpcSecurityGroups
+          Value: !Ref DXVpcSecurityGroups
+        - Key: VpcSubnetIds
+          Value: !Join [ ",", !Ref DXVpcSubnetIds ]
+      Tags:
+        - Key: doNotShutDown
+          Value: true
+
+  trustarLambdaPermission:
+    DependsOn: trustarLambdaFunction
+    Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
+    Properties:
+      ProductName: LambdaPermission
+      ProvisioningArtifactName: 1.0.1
+      ProvisionedProductName: trustarLambdaPermission
+      ProvisioningParameters:
+        - Key: Action
+          Value: lambda:InvokeFunction
+        - Key: FunctionName
+          Value: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:trustar
+        - Key: Principal
+          Value: sns.amazonaws.com
+        - Key: SourceArn
+          Value: !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:JobRequests
+      Tags:
+        - Key: doNotShutDown
+          Value: true
+
+  trustarSNSSubscription:
+    DependsOn: trustarLambdaFunction
+    Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
+    Properties:
+      ProductName: SNSSubscription
+      ProvisioningArtifactName: 1.0.1
+      ProvisionedProductName: trustarSNSSubscription
+      ProvisioningParameters:
+        - Key: Protocol
+          Value: lambda
+        - Key: TopicArn
+          Value: !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:JobRequests
+        - Key: Endpoint
+          Value: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:trustar
+        - Key: Region
+          Value: !Sub ${AWS::Region}
+      Tags:
+        - Key: doNotShutDown
+          Value: true
+
+  trustarLambdaEventInvokeConfig:
+    DependsOn: trustarLambdaFunction
+    Type: AWS::Lambda::EventInvokeConfig
+    Properties:
+      DestinationConfig:
+        OnSuccess:
+          Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobResponses
+        OnFailure:
+          Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobFailures
+      FunctionName: trustar
+      Qualifier: $LATEST
+
+  trustarLambdaMetadata:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: /ThreatTools/Modules/trustar
+      Type: String
+      Value: '{"supportedIOCTypes": ["DOMAIN", "IP", "MD5", "SHA1", "SHA256", "URL", "CVE", "EMAIL"]}'
+
+  trustarAppSecSubscriptionFilter:
+    DependsOn: trustarLambdaFunction
+    Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
+    Properties:
+      ProductName: SubscriptionFilterAppSecurity
+      ProvisionedProductName: trustarAppSecSubscriptionFilter
+      ProvisioningArtifactName: 1.0.1
+      ProvisioningParameters:
+          - Key: CloudWatchLogGroup
+            Value: /aws/lambda/trustar
       Tags:
           - Key: doNotShutDown
             Value: "true"

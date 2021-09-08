@@ -390,12 +390,11 @@ func getJobProgress(ctx context.Context, jobEntry *common.JobDBEntry) (JobStatus
 		if responseData != nil {
 			if stringInSlice(module, jobEntry.RequestedModules) {
 				respDataSlice := reflect.ValueOf(responseData)
-				if moduleError(respDataSlice) {
+				if moduleError(ctx, respDataSlice) {
 					failure += 1
 				} else {
 					success += 1
 				}
-
 			}
 		} else {
 			err := fmt.Errorf("response from module %s is still unavailable", module)
@@ -436,7 +435,10 @@ func stringInSlice(a string, list []string) bool {
 	return false
 }
 
-func moduleError(respDataSlice reflect.Value) bool {
+func moduleError(ctx context.Context, respDataSlice reflect.Value) bool {
+	span, ctx := to.TracerLogger.StartSpan(ctx, "ModuleErrorCheck", "job", "manager", "moduleerror")
+	defer span.End(ctx)
+
 	for i := 0; i < respDataSlice.Len(); i++ {
 		triageResultMap := respDataSlice.Index(i).Interface()
 
