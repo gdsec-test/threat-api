@@ -133,7 +133,7 @@ Resources:
       OKActions:
         - !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:warning-moog-${DevelopmentTeam}-${DevelopmentEnvironment}
         - !Sub ${SlackSnsTopicName}
-      AlarmDescription: !Sub Alarm when write capacity reaches 80% of my provisioned read capacity
+      AlarmDescription: !Sub Alarm when write capacity reaches 80% of my provisioned write capacity
       AlarmName: !Sub "${ProjectCode}: Write Capacity to DynamoDB ${DevelopmentEnvironment}"
       ComparisonOperator: GreaterThanOrEqualToThreshold
       DatapointsToAlarm: 1
@@ -148,3 +148,28 @@ Resources:
       Threshold: 240
       Unit: Count
 
+  DynamoDBThrottledRequestsPutItem:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmActions:
+        - !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:warning-moog-${DevelopmentTeam}-${DevelopmentEnvironment}
+        - !Sub ${SlackSnsTopicName}
+      OKActions:
+        - !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:warning-moog-${DevelopmentTeam}-${DevelopmentEnvironment}
+        - !Sub ${SlackSnsTopicName}
+      AlarmDescription: !Sub Throttled Requests for PutItems on DynamoDB
+      AlarmName: !Sub "${ProjectCode}: ThrottledRequests PutItem ${DevelopmentEnvironment}"
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      DatapointsToAlarm: 1
+      EvaluationPeriods: 10
+      MetricName: 'ThrottledRequests'
+      Namespace: 'AWS/DynamoDB'
+      Dimensions: 
+        - Name: 'TableName'
+          Value: 'jobs'
+        - Name: 'Opertaion'
+          Value: 'PutItem'
+      Period: 60
+      Statistic: Sum
+      Threshold: 240
+      Unit: Count
