@@ -10,9 +10,21 @@ Parameters:
     Type: String
     Description: SHA1 hash of the geoip lambda source
     Default: ""
+  nvdSHA1:
+    Type: String
+    Description: SHA1 hash of the nvd lambda source
+    Default: ""
+  passivetotalSHA1:
+    Type: String
+    Description: SHA1 hash of the passivetotal lambda source
+    Default: ""
   recordedfutureSHA1:
     Type: String
     Description: SHA1 hash of the recordedfuture lambda source
+    Default: ""
+  servicenowSHA1:
+    Type: String
+    Description: SHA1 hash of the servicenow lambda source
     Default: ""
   shodanSHA1:
     Type: String
@@ -21,6 +33,10 @@ Parameters:
   splunkSHA1:
     Type: String
     Description: SHA1 hash of the splunk lambda source
+    Default: ""
+  trustarSHA1:
+    Type: String
+    Description: SHA1 hash of the trustar lambda source
     Default: ""
   urlhausSHA1:
     Type: String
@@ -84,7 +100,7 @@ Resources:
     Properties:
       Name: /ThreatTools/Modules/cmap
       Type: String
-      Value: '{"supportedIOCTypes": ["DOMAIN"], "actions": {"Run": {"requiredADGroups": ["ENG-Threat Research"]}, "ViewPII": {"requiredADGroups": ["ENG-Threat Research"]}}}'
+      Value: '{"supportedIOCTypes": ["DOMAIN"], "actions": {"Run": {"requiredADGroups": ["ENG-Threat Research", "ENG-DCU"]}, "ViewPII": {"requiredADGroups": ["ENG-Threat Research", "ENG-DCU"]}}}'
 
   geoipLambdaFunction:
     Type: AWS::Lambda::Function
@@ -136,6 +152,106 @@ Resources:
       Type: String
       Value: '{"supportedIOCTypes": ["IP"]}'
 
+  nvdLambdaFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      Code:
+        S3Bucket: !Sub gd-threattools-${AWS::AccountId}-code-bucket
+        S3Key: !Sub nvd/${nvdSHA1}
+      Description: !Sub nvd lambda (${nvdSHA1})
+      FunctionName: nvd
+      Handler: nvd
+      MemorySize: 256
+      Role: !Sub arn:aws:iam::${AWS::AccountId}:role/threattools-custom-ThreatRole
+      Runtime: go1.x
+      Timeout: 15
+
+  nvdLambdaPermission:
+    DependsOn: nvdLambdaFunction
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:nvd
+      Principal: sns.amazonaws.com
+      SourceArn: !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:JobRequests
+
+  nvdSNSSubscription:
+    DependsOn: nvdLambdaFunction
+    Type: AWS::SNS::Subscription
+    Properties:
+      Endpoint: !GetAtt nvdLambdaFunction.Arn
+      Protocol: lambda
+      TopicArn: !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:JobRequests
+
+  nvdLambdaEventInvokeConfig:
+    DependsOn: nvdLambdaFunction
+    Type: AWS::Lambda::EventInvokeConfig
+    Properties:
+      DestinationConfig:
+        OnSuccess:
+          Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobResponses
+        OnFailure:
+          Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobFailures
+      FunctionName: nvd
+      Qualifier: $LATEST
+
+  nvdLambdaMetadata:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: /ThreatTools/Modules/nvd
+      Type: String
+      Value: '{"supportedIOCTypes": ["CVE"]}'
+
+  passivetotalLambdaFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      Code:
+        S3Bucket: !Sub gd-threattools-${AWS::AccountId}-code-bucket
+        S3Key: !Sub passivetotal/${passivetotalSHA1}
+      Description: !Sub passivetotal lambda (${passivetotalSHA1})
+      FunctionName: passivetotal
+      Handler: passivetotal
+      MemorySize: 256
+      Role: !Sub arn:aws:iam::${AWS::AccountId}:role/threattools-custom-ThreatRole
+      Runtime: go1.x
+      Timeout: 15
+
+  passivetotalLambdaPermission:
+    DependsOn: passivetotalLambdaFunction
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:passivetotal
+      Principal: sns.amazonaws.com
+      SourceArn: !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:JobRequests
+
+  passivetotalSNSSubscription:
+    DependsOn: passivetotalLambdaFunction
+    Type: AWS::SNS::Subscription
+    Properties:
+      Endpoint: !GetAtt passivetotalLambdaFunction.Arn
+      Protocol: lambda
+      TopicArn: !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:JobRequests
+
+  passivetotalLambdaEventInvokeConfig:
+    DependsOn: passivetotalLambdaFunction
+    Type: AWS::Lambda::EventInvokeConfig
+    Properties:
+      DestinationConfig:
+        OnSuccess:
+          Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobResponses
+        OnFailure:
+          Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobFailures
+      FunctionName: passivetotal
+      Qualifier: $LATEST
+
+  passivetotalLambdaMetadata:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: /ThreatTools/Modules/passivetotal
+      Type: String
+      Value: '{"supportedIOCTypes": ["DOMAIN", "IP"]}'
+
   recordedfutureLambdaFunction:
     Type: AWS::Lambda::Function
     Properties:
@@ -184,7 +300,57 @@ Resources:
     Properties:
       Name: /ThreatTools/Modules/recordedfuture
       Type: String
-      Value: '{"supportedIOCTypes": ["CVE", "IP"]}'
+      Value: '{"supportedIOCTypes": ["CVE", "IP", "MD5", "SHA1", "SHA256"]}'
+
+  servicenowLambdaFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      Code:
+        S3Bucket: !Sub gd-threattools-${AWS::AccountId}-code-bucket
+        S3Key: !Sub servicenow/${servicenowSHA1}
+      Description: !Sub servicenow lambda (${servicenowSHA1})
+      FunctionName: servicenow
+      Handler: servicenow
+      MemorySize: 256
+      Role: !Sub arn:aws:iam::${AWS::AccountId}:role/threattools-custom-ThreatRole
+      Runtime: go1.x
+      Timeout: 15
+
+  servicenowLambdaPermission:
+    DependsOn: servicenowLambdaFunction
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:servicenow
+      Principal: sns.amazonaws.com
+      SourceArn: !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:JobRequests
+
+  servicenowSNSSubscription:
+    DependsOn: servicenowLambdaFunction
+    Type: AWS::SNS::Subscription
+    Properties:
+      Endpoint: !GetAtt servicenowLambdaFunction.Arn
+      Protocol: lambda
+      TopicArn: !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:JobRequests
+
+  servicenowLambdaEventInvokeConfig:
+    DependsOn: servicenowLambdaFunction
+    Type: AWS::Lambda::EventInvokeConfig
+    Properties:
+      DestinationConfig:
+        OnSuccess:
+          Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobResponses
+        OnFailure:
+          Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobFailures
+      FunctionName: servicenow
+      Qualifier: $LATEST
+
+  servicenowLambdaMetadata:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: /ThreatTools/Modules/servicenow
+      Type: String
+      Value: '{"supportedIOCTypes": ["HOSTNAME"]}'
 
   shodanLambdaFunction:
     Type: AWS::Lambda::Function
@@ -284,7 +450,57 @@ Resources:
     Properties:
       Name: /ThreatTools/Modules/splunk
       Type: String
-      Value: '{"supportedIOCTypes": ["GODADDY_USERNAME", "IP", "CVE", "AWSHOSTNAME"], "actions": {"ReadSplunk": {"requiredADGroups": ["ENG-Threat Research"]}}}'
+      Value: '{"supportedIOCTypes": ["GODADDY_USERNAME", "IP", "CVE", "AWSHOSTNAME"], "actions": {"ReadSplunk": {"requiredADGroups": ["ENG-Threat Research", "ENG-DCU", "infosec_response"]}}}'
+
+  trustarLambdaFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      Code:
+        S3Bucket: !Sub gd-threattools-${AWS::AccountId}-code-bucket
+        S3Key: !Sub trustar/${trustarSHA1}
+      Description: !Sub trustar lambda (${trustarSHA1})
+      FunctionName: trustar
+      Handler: trustar-isac.handler
+      MemorySize: 128
+      Role: !Sub arn:aws:iam::${AWS::AccountId}:role/threattools-custom-ThreatRole
+      Runtime: python3.8
+      Timeout: 15
+
+  trustarLambdaPermission:
+    DependsOn: trustarLambdaFunction
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:trustar
+      Principal: sns.amazonaws.com
+      SourceArn: !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:JobRequests
+
+  trustarSNSSubscription:
+    DependsOn: trustarLambdaFunction
+    Type: AWS::SNS::Subscription
+    Properties:
+      Endpoint: !GetAtt trustarLambdaFunction.Arn
+      Protocol: lambda
+      TopicArn: !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:JobRequests
+
+  trustarLambdaEventInvokeConfig:
+    DependsOn: trustarLambdaFunction
+    Type: AWS::Lambda::EventInvokeConfig
+    Properties:
+      DestinationConfig:
+        OnSuccess:
+          Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobResponses
+        OnFailure:
+          Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobFailures
+      FunctionName: trustar
+      Qualifier: $LATEST
+
+  trustarLambdaMetadata:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: /ThreatTools/Modules/trustar
+      Type: String
+      Value: '{"supportedIOCTypes": ["DOMAIN", "IP", "MD5", "SHA1", "SHA256", "URL", "CVE", "EMAIL"]}'
 
   urlhausLambdaFunction:
     Type: AWS::Lambda::Function

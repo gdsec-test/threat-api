@@ -1,5 +1,18 @@
 # Miscellaneous Tools
 
+### Create api module golang
+* `create-templates.py`
+
+  Python script using jinja2 to generate the templates for triage modules. Enter
+  the module name on inout prompt and the boiler plate code structures are generated.
+
+  The script is for ease of use and gives an easier starting point. It is encouraged to
+  not depend on the script on the whole as the module depends a lot on service you are writing.
+
+* `templates`
+  The folder contains all the templates required for jinja2 and a generic threat module code
+
+
 ### JWT-related
 
 * `jwt.py`

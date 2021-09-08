@@ -1,0 +1,18 @@
+{
+  "handler": "trustar-isac.handler",
+  "memory-size": "128",
+  "runtime": "python3.8",
+  "timeout": "15",
+  "metadata": {
+    "supportedIOCTypes": [
+      "DOMAIN",
+      "IP",
+      "MD5",
+      "SHA1",
+      "SHA256",
+      "URL",
+      "CVE",
+      "EMAIL"
+    ]
+  }
+}

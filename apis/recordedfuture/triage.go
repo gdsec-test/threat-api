@@ -26,7 +26,13 @@ func (m *TriageModule) GetDocs() *triage.Doc {
 
 // Supports returns true of we support this ioc type
 func (m *TriageModule) Supports() []triage.IOCType {
-	return []triage.IOCType{triage.CVEType, triage.IPType}
+	return []triage.IOCType{
+		triage.CVEType,
+		triage.IPType,
+		triage.MD5Type,
+		triage.SHA1Type,
+		triage.SHA256Type,
+	}
 }
 
 // Triage pulls information from RecordedFuture ConnectAPI
@@ -78,6 +84,22 @@ func (m *TriageModule) Triage(ctx context.Context, triageRequest *triage.Request
 		//dump data as csv
 		triageData.DataType = triage.CSVType
 		triageData.Data = dumpIPCSV(rfIPResults)
+	}
+
+	if (triageRequest.IOCsType == triage.MD5Type) || (triageRequest.IOCsType == triage.SHA1Type) || (triageRequest.IOCsType == triage.SHA256Type) {
+		// retrieve results
+		rfMD5Results, err := m.hashReportCreate(ctx, triageRequest)
+		if err != nil {
+			triageData.Data = fmt.Sprintf("Error calling RecordedFuture API for hash: %s", err)
+			return []*triage.Data{triageData}, err
+		}
+
+		// calculate and add the metadata
+		triageData.Metadata = hashMetaDataExtract(rfMD5Results)
+
+		// dump data in CSV format
+		triageData.DataType = triage.CSVType
+		triageData.Data = dumpHASHCSV(rfMD5Results)
 	}
 
 	return []*triage.Data{triageData}, nil

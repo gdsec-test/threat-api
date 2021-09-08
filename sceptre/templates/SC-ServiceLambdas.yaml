@@ -38,9 +38,21 @@ Parameters:
     Type: String
     Description: SHA1 hash of the geoip lambda source
     Default: ""
+  nvdSHA1:
+    Type: String
+    Description: SHA1 hash of the nvd lambda source
+    Default: ""
+  passivetotalSHA1:
+    Type: String
+    Description: SHA1 hash of the passivetotal lambda source
+    Default: ""
   recordedfutureSHA1:
     Type: String
     Description: SHA1 hash of the recordedfuture lambda source
+    Default: ""
+  servicenowSHA1:
+    Type: String
+    Description: SHA1 hash of the servicenow lambda source
     Default: ""
   shodanSHA1:
     Type: String
@@ -49,6 +61,10 @@ Parameters:
   splunkSHA1:
     Type: String
     Description: SHA1 hash of the splunk lambda source
+    Default: ""
+  trustarSHA1:
+    Type: String
+    Description: SHA1 hash of the trustar lambda source
     Default: ""
   urlhausSHA1:
     Type: String
@@ -156,15 +172,21 @@ Resources:
     Properties:
       Name: /ThreatTools/Modules/cmap
       Type: String
-      Value: '{"supportedIOCTypes": ["DOMAIN"], "actions": {"Run": {"requiredADGroups": ["ENG-Threat Research"]}, "ViewPII": {"requiredADGroups": ["ENG-Threat Research"]}}}'
+      Value: '{"supportedIOCTypes": ["DOMAIN"], "actions": {"Run": {"requiredADGroups": ["ENG-Threat Research", "ENG-DCU"]}, "ViewPII": {"requiredADGroups": ["ENG-Threat Research", "ENG-DCU"]}}}'
 
-  cmapAppSecSubscription:
+  cmapAppSecSubscriptionFilter:
     DependsOn: cmapLambdaFunction
-    Type: AWS::Logs::SubscriptionFilter
+    Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
     Properties:
-      DestinationArn: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:GD-AWS-App-Security-SF
-      FilterPattern: security
-      LogGroupName: /aws/lambda/cmap
+      ProductName: SubscriptionFilterAppSecurity
+      ProvisionedProductName: cmapAppSecSubscriptionFilter
+      ProvisioningArtifactName: 1.0.1
+      ProvisioningParameters:
+          - Key: CloudWatchLogGroup
+            Value: /aws/lambda/cmap
+      Tags:
+          - Key: doNotShutDown
+            Value: "true"
 
   geoipLambdaFunction:
     Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
@@ -260,13 +282,235 @@ Resources:
       Type: String
       Value: '{"supportedIOCTypes": ["IP"]}'
 
-  geoipAppSecSubscription:
+  geoipAppSecSubscriptionFilter:
     DependsOn: geoipLambdaFunction
-    Type: AWS::Logs::SubscriptionFilter
+    Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
     Properties:
-      DestinationArn: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:GD-AWS-App-Security-SF
-      FilterPattern: security
-      LogGroupName: /aws/lambda/geoip
+      ProductName: SubscriptionFilterAppSecurity
+      ProvisionedProductName: geoipAppSecSubscriptionFilter
+      ProvisioningArtifactName: 1.0.1
+      ProvisioningParameters:
+          - Key: CloudWatchLogGroup
+            Value: /aws/lambda/geoip
+      Tags:
+          - Key: doNotShutDown
+            Value: "true"
+
+  nvdLambdaFunction:
+    Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
+    Properties:
+      ProductName: Lambda
+      ProvisioningArtifactName: 2.3.0
+      ProvisionedProductName: nvdLambdaFunction
+      ProvisioningParameters:
+        - Key: S3Bucket
+          Value: !Sub gd-${DevelopmentTeam}-${DevelopmentEnvironment}-code-bucket
+        - Key: S3Key
+          Value: !Sub nvd/${nvdSHA1}
+        - Key: Handler
+          Value: nvd
+        - Key: LambdaName
+          Value: nvd
+        - Key: LambdaDescription
+          Value: !Sub nvd lambda (${nvdSHA1})
+        - Key: MemorySize
+          Value: 256
+        - Key: Runtime
+          Value: go1.x
+        - Key: Timeout
+          Value: 15
+        - Key: CustomIAMRoleNameSuffix
+          Value: ThreatRole
+        - Key: EnvironmentVariablesJson
+          Value: !Sub '{"SSO_HOST": "${SSOHost}"}'
+        - Key: VpcSecurityGroups
+          Value: !Ref DXVpcSecurityGroups
+        - Key: VpcSubnetIds
+          Value: !Join [ ",", !Ref DXVpcSubnetIds ]
+      Tags:
+        - Key: doNotShutDown
+          Value: true
+
+  nvdLambdaPermission:
+    DependsOn: nvdLambdaFunction
+    Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
+    Properties:
+      ProductName: LambdaPermission
+      ProvisioningArtifactName: 1.0.1
+      ProvisionedProductName: nvdLambdaPermission
+      ProvisioningParameters:
+        - Key: Action
+          Value: lambda:InvokeFunction
+        - Key: FunctionName
+          Value: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:nvd
+        - Key: Principal
+          Value: sns.amazonaws.com
+        - Key: SourceArn
+          Value: !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:JobRequests
+      Tags:
+        - Key: doNotShutDown
+          Value: true
+
+  nvdSNSSubscription:
+    DependsOn: nvdLambdaFunction
+    Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
+    Properties:
+      ProductName: SNSSubscription
+      ProvisioningArtifactName: 1.0.1
+      ProvisionedProductName: nvdSNSSubscription
+      ProvisioningParameters:
+        - Key: Protocol
+          Value: lambda
+        - Key: TopicArn
+          Value: !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:JobRequests
+        - Key: Endpoint
+          Value: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:nvd
+        - Key: Region
+          Value: !Sub ${AWS::Region}
+      Tags:
+        - Key: doNotShutDown
+          Value: true
+
+  nvdLambdaEventInvokeConfig:
+    DependsOn: nvdLambdaFunction
+    Type: AWS::Lambda::EventInvokeConfig
+    Properties:
+      DestinationConfig:
+        OnSuccess:
+          Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobResponses
+        OnFailure:
+          Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobFailures
+      FunctionName: nvd
+      Qualifier: $LATEST
+
+  nvdLambdaMetadata:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: /ThreatTools/Modules/nvd
+      Type: String
+      Value: '{"supportedIOCTypes": ["CVE"]}'
+
+  nvdAppSecSubscriptionFilter:
+    DependsOn: nvdLambdaFunction
+    Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
+    Properties:
+      ProductName: SubscriptionFilterAppSecurity
+      ProvisionedProductName: nvdAppSecSubscriptionFilter
+      ProvisioningArtifactName: 1.0.1
+      ProvisioningParameters:
+          - Key: CloudWatchLogGroup
+            Value: /aws/lambda/nvd
+      Tags:
+          - Key: doNotShutDown
+            Value: "true"
+
+  passivetotalLambdaFunction:
+    Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
+    Properties:
+      ProductName: Lambda
+      ProvisioningArtifactName: 2.3.0
+      ProvisionedProductName: passivetotalLambdaFunction
+      ProvisioningParameters:
+        - Key: S3Bucket
+          Value: !Sub gd-${DevelopmentTeam}-${DevelopmentEnvironment}-code-bucket
+        - Key: S3Key
+          Value: !Sub passivetotal/${passivetotalSHA1}
+        - Key: Handler
+          Value: passivetotal
+        - Key: LambdaName
+          Value: passivetotal
+        - Key: LambdaDescription
+          Value: !Sub passivetotal lambda (${passivetotalSHA1})
+        - Key: MemorySize
+          Value: 256
+        - Key: Runtime
+          Value: go1.x
+        - Key: Timeout
+          Value: 15
+        - Key: CustomIAMRoleNameSuffix
+          Value: ThreatRole
+        - Key: EnvironmentVariablesJson
+          Value: !Sub '{"SSO_HOST": "${SSOHost}"}'
+        - Key: VpcSecurityGroups
+          Value: !Ref DXVpcSecurityGroups
+        - Key: VpcSubnetIds
+          Value: !Join [ ",", !Ref DXVpcSubnetIds ]
+      Tags:
+        - Key: doNotShutDown
+          Value: true
+
+  passivetotalLambdaPermission:
+    DependsOn: passivetotalLambdaFunction
+    Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
+    Properties:
+      ProductName: LambdaPermission
+      ProvisioningArtifactName: 1.0.1
+      ProvisionedProductName: passivetotalLambdaPermission
+      ProvisioningParameters:
+        - Key: Action
+          Value: lambda:InvokeFunction
+        - Key: FunctionName
+          Value: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:passivetotal
+        - Key: Principal
+          Value: sns.amazonaws.com
+        - Key: SourceArn
+          Value: !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:JobRequests
+      Tags:
+        - Key: doNotShutDown
+          Value: true
+
+  passivetotalSNSSubscription:
+    DependsOn: passivetotalLambdaFunction
+    Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
+    Properties:
+      ProductName: SNSSubscription
+      ProvisioningArtifactName: 1.0.1
+      ProvisionedProductName: passivetotalSNSSubscription
+      ProvisioningParameters:
+        - Key: Protocol
+          Value: lambda
+        - Key: TopicArn
+          Value: !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:JobRequests
+        - Key: Endpoint
+          Value: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:passivetotal
+        - Key: Region
+          Value: !Sub ${AWS::Region}
+      Tags:
+        - Key: doNotShutDown
+          Value: true
+
+  passivetotalLambdaEventInvokeConfig:
+    DependsOn: passivetotalLambdaFunction
+    Type: AWS::Lambda::EventInvokeConfig
+    Properties:
+      DestinationConfig:
+        OnSuccess:
+          Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobResponses
+        OnFailure:
+          Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobFailures
+      FunctionName: passivetotal
+      Qualifier: $LATEST
+
+  passivetotalLambdaMetadata:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: /ThreatTools/Modules/passivetotal
+      Type: String
+      Value: '{"supportedIOCTypes": ["DOMAIN", "IP"]}'
+
+  passivetotalAppSecSubscriptionFilter:
+    DependsOn: passivetotalLambdaFunction
+    Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
+    Properties:
+      ProductName: SubscriptionFilterAppSecurity
+      ProvisionedProductName: passivetotalAppSecSubscriptionFilter
+      ProvisioningArtifactName: 1.0.1
+      ProvisioningParameters:
+          - Key: CloudWatchLogGroup
+            Value: /aws/lambda/passivetotal
+      Tags:
+          - Key: doNotShutDown
+            Value: "true"
 
   recordedfutureLambdaFunction:
     Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
@@ -360,15 +604,129 @@ Resources:
     Properties:
       Name: /ThreatTools/Modules/recordedfuture
       Type: String
-      Value: '{"supportedIOCTypes": ["CVE", "IP"]}'
+      Value: '{"supportedIOCTypes": ["CVE", "IP", "MD5", "SHA1", "SHA256"]}'
 
-  recordedfutureAppSecSubscription:
+  recordedfutureAppSecSubscriptionFilter:
     DependsOn: recordedfutureLambdaFunction
-    Type: AWS::Logs::SubscriptionFilter
+    Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
     Properties:
-      DestinationArn: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:GD-AWS-App-Security-SF
-      FilterPattern: security
-      LogGroupName: /aws/lambda/recordedfuture
+      ProductName: SubscriptionFilterAppSecurity
+      ProvisionedProductName: recordedfutureAppSecSubscriptionFilter
+      ProvisioningArtifactName: 1.0.1
+      ProvisioningParameters:
+          - Key: CloudWatchLogGroup
+            Value: /aws/lambda/recordedfuture
+      Tags:
+          - Key: doNotShutDown
+            Value: "true"
+
+  servicenowLambdaFunction:
+    Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
+    Properties:
+      ProductName: Lambda
+      ProvisioningArtifactName: 2.3.0
+      ProvisionedProductName: servicenowLambdaFunction
+      ProvisioningParameters:
+        - Key: S3Bucket
+          Value: !Sub gd-${DevelopmentTeam}-${DevelopmentEnvironment}-code-bucket
+        - Key: S3Key
+          Value: !Sub servicenow/${servicenowSHA1}
+        - Key: Handler
+          Value: servicenow
+        - Key: LambdaName
+          Value: servicenow
+        - Key: LambdaDescription
+          Value: !Sub servicenow lambda (${servicenowSHA1})
+        - Key: MemorySize
+          Value: 256
+        - Key: Runtime
+          Value: go1.x
+        - Key: Timeout
+          Value: 15
+        - Key: CustomIAMRoleNameSuffix
+          Value: ThreatRole
+        - Key: EnvironmentVariablesJson
+          Value: !Sub '{"SSO_HOST": "${SSOHost}"}'
+        - Key: VpcSecurityGroups
+          Value: !Ref DXVpcSecurityGroups
+        - Key: VpcSubnetIds
+          Value: !Join [ ",", !Ref DXVpcSubnetIds ]
+      Tags:
+        - Key: doNotShutDown
+          Value: true
+
+  servicenowLambdaPermission:
+    DependsOn: servicenowLambdaFunction
+    Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
+    Properties:
+      ProductName: LambdaPermission
+      ProvisioningArtifactName: 1.0.1
+      ProvisionedProductName: servicenowLambdaPermission
+      ProvisioningParameters:
+        - Key: Action
+          Value: lambda:InvokeFunction
+        - Key: FunctionName
+          Value: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:servicenow
+        - Key: Principal
+          Value: sns.amazonaws.com
+        - Key: SourceArn
+          Value: !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:JobRequests
+      Tags:
+        - Key: doNotShutDown
+          Value: true
+
+  servicenowSNSSubscription:
+    DependsOn: servicenowLambdaFunction
+    Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
+    Properties:
+      ProductName: SNSSubscription
+      ProvisioningArtifactName: 1.0.1
+      ProvisionedProductName: servicenowSNSSubscription
+      ProvisioningParameters:
+        - Key: Protocol
+          Value: lambda
+        - Key: TopicArn
+          Value: !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:JobRequests
+        - Key: Endpoint
+          Value: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:servicenow
+        - Key: Region
+          Value: !Sub ${AWS::Region}
+      Tags:
+        - Key: doNotShutDown
+          Value: true
+
+  servicenowLambdaEventInvokeConfig:
+    DependsOn: servicenowLambdaFunction
+    Type: AWS::Lambda::EventInvokeConfig
+    Properties:
+      DestinationConfig:
+        OnSuccess:
+          Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobResponses
+        OnFailure:
+          Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobFailures
+      FunctionName: servicenow
+      Qualifier: $LATEST
+
+  servicenowLambdaMetadata:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: /ThreatTools/Modules/servicenow
+      Type: String
+      Value: '{"supportedIOCTypes": ["HOSTNAME"]}'
+
+  servicenowAppSecSubscriptionFilter:
+    DependsOn: servicenowLambdaFunction
+    Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
+    Properties:
+      ProductName: SubscriptionFilterAppSecurity
+      ProvisionedProductName: servicenowAppSecSubscriptionFilter
+      ProvisioningArtifactName: 1.0.1
+      ProvisioningParameters:
+          - Key: CloudWatchLogGroup
+            Value: /aws/lambda/servicenow
+      Tags:
+          - Key: doNotShutDown
+            Value: "true"
 
   shodanLambdaFunction:
     Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
@@ -464,13 +822,19 @@ Resources:
       Type: String
       Value: '{"supportedIOCTypes": ["DOMAIN", "IP"]}'
 
-  shodanAppSecSubscription:
+  shodanAppSecSubscriptionFilter:
     DependsOn: shodanLambdaFunction
-    Type: AWS::Logs::SubscriptionFilter
+    Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
     Properties:
-      DestinationArn: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:GD-AWS-App-Security-SF
-      FilterPattern: security
-      LogGroupName: /aws/lambda/shodan
+      ProductName: SubscriptionFilterAppSecurity
+      ProvisionedProductName: shodanAppSecSubscriptionFilter
+      ProvisioningArtifactName: 1.0.1
+      ProvisioningParameters:
+          - Key: CloudWatchLogGroup
+            Value: /aws/lambda/shodan
+      Tags:
+          - Key: doNotShutDown
+            Value: "true"
 
   splunkLambdaFunction:
     Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
@@ -564,15 +928,129 @@ Resources:
     Properties:
       Name: /ThreatTools/Modules/splunk
       Type: String
-      Value: '{"supportedIOCTypes": ["GODADDY_USERNAME", "IP", "CVE", "AWSHOSTNAME"], "actions": {"ReadSplunk": {"requiredADGroups": ["ENG-Threat Research"]}}}'
+      Value: '{"supportedIOCTypes": ["GODADDY_USERNAME", "IP", "CVE", "AWSHOSTNAME"], "actions": {"ReadSplunk": {"requiredADGroups": ["ENG-Threat Research", "ENG-DCU", "infosec_response"]}}}'
 
-  splunkAppSecSubscription:
+  splunkAppSecSubscriptionFilter:
     DependsOn: splunkLambdaFunction
-    Type: AWS::Logs::SubscriptionFilter
+    Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
     Properties:
-      DestinationArn: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:GD-AWS-App-Security-SF
-      FilterPattern: security
-      LogGroupName: /aws/lambda/splunk
+      ProductName: SubscriptionFilterAppSecurity
+      ProvisionedProductName: splunkAppSecSubscriptionFilter
+      ProvisioningArtifactName: 1.0.1
+      ProvisioningParameters:
+          - Key: CloudWatchLogGroup
+            Value: /aws/lambda/splunk
+      Tags:
+          - Key: doNotShutDown
+            Value: "true"
+
+  trustarLambdaFunction:
+    Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
+    Properties:
+      ProductName: Lambda
+      ProvisioningArtifactName: 2.3.0
+      ProvisionedProductName: trustarLambdaFunction
+      ProvisioningParameters:
+        - Key: S3Bucket
+          Value: !Sub gd-${DevelopmentTeam}-${DevelopmentEnvironment}-code-bucket
+        - Key: S3Key
+          Value: !Sub trustar/${trustarSHA1}
+        - Key: Handler
+          Value: trustar-isac.handler
+        - Key: LambdaName
+          Value: trustar
+        - Key: LambdaDescription
+          Value: !Sub trustar lambda (${trustarSHA1})
+        - Key: MemorySize
+          Value: 128
+        - Key: Runtime
+          Value: python3.8
+        - Key: Timeout
+          Value: 15
+        - Key: CustomIAMRoleNameSuffix
+          Value: ThreatRole
+        - Key: EnvironmentVariablesJson
+          Value: !Sub '{"SSO_HOST": "${SSOHost}"}'
+        - Key: VpcSecurityGroups
+          Value: !Ref DXVpcSecurityGroups
+        - Key: VpcSubnetIds
+          Value: !Join [ ",", !Ref DXVpcSubnetIds ]
+      Tags:
+        - Key: doNotShutDown
+          Value: true
+
+  trustarLambdaPermission:
+    DependsOn: trustarLambdaFunction
+    Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
+    Properties:
+      ProductName: LambdaPermission
+      ProvisioningArtifactName: 1.0.1
+      ProvisionedProductName: trustarLambdaPermission
+      ProvisioningParameters:
+        - Key: Action
+          Value: lambda:InvokeFunction
+        - Key: FunctionName
+          Value: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:trustar
+        - Key: Principal
+          Value: sns.amazonaws.com
+        - Key: SourceArn
+          Value: !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:JobRequests
+      Tags:
+        - Key: doNotShutDown
+          Value: true
+
+  trustarSNSSubscription:
+    DependsOn: trustarLambdaFunction
+    Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
+    Properties:
+      ProductName: SNSSubscription
+      ProvisioningArtifactName: 1.0.1
+      ProvisionedProductName: trustarSNSSubscription
+      ProvisioningParameters:
+        - Key: Protocol
+          Value: lambda
+        - Key: TopicArn
+          Value: !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:JobRequests
+        - Key: Endpoint
+          Value: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:trustar
+        - Key: Region
+          Value: !Sub ${AWS::Region}
+      Tags:
+        - Key: doNotShutDown
+          Value: true
+
+  trustarLambdaEventInvokeConfig:
+    DependsOn: trustarLambdaFunction
+    Type: AWS::Lambda::EventInvokeConfig
+    Properties:
+      DestinationConfig:
+        OnSuccess:
+          Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobResponses
+        OnFailure:
+          Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobFailures
+      FunctionName: trustar
+      Qualifier: $LATEST
+
+  trustarLambdaMetadata:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: /ThreatTools/Modules/trustar
+      Type: String
+      Value: '{"supportedIOCTypes": ["DOMAIN", "IP", "MD5", "SHA1", "SHA256", "URL", "CVE", "EMAIL"]}'
+
+  trustarAppSecSubscriptionFilter:
+    DependsOn: trustarLambdaFunction
+    Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
+    Properties:
+      ProductName: SubscriptionFilterAppSecurity
+      ProvisionedProductName: trustarAppSecSubscriptionFilter
+      ProvisioningArtifactName: 1.0.1
+      ProvisioningParameters:
+          - Key: CloudWatchLogGroup
+            Value: /aws/lambda/trustar
+      Tags:
+          - Key: doNotShutDown
+            Value: "true"
 
   urlhausLambdaFunction:
     Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
@@ -668,13 +1146,19 @@ Resources:
       Type: String
       Value: '{"supportedIOCTypes": ["DOMAIN", "IP", "URL", "MD5", "SHA256"]}'
 
-  urlhausAppSecSubscription:
+  urlhausAppSecSubscriptionFilter:
     DependsOn: urlhausLambdaFunction
-    Type: AWS::Logs::SubscriptionFilter
+    Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
     Properties:
-      DestinationArn: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:GD-AWS-App-Security-SF
-      FilterPattern: security
-      LogGroupName: /aws/lambda/urlhaus
+      ProductName: SubscriptionFilterAppSecurity
+      ProvisionedProductName: urlhausAppSecSubscriptionFilter
+      ProvisioningArtifactName: 1.0.1
+      ProvisioningParameters:
+          - Key: CloudWatchLogGroup
+            Value: /aws/lambda/urlhaus
+      Tags:
+          - Key: doNotShutDown
+            Value: "true"
 
   virustotalLambdaFunction:
     Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
@@ -770,13 +1254,19 @@ Resources:
       Type: String
       Value: '{"supportedIOCTypes": ["DOMAIN", "IP", "URL", "MD5", "SHA256"]}'
 
-  virustotalAppSecSubscription:
+  virustotalAppSecSubscriptionFilter:
     DependsOn: virustotalLambdaFunction
-    Type: AWS::Logs::SubscriptionFilter
+    Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
     Properties:
-      DestinationArn: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:GD-AWS-App-Security-SF
-      FilterPattern: security
-      LogGroupName: /aws/lambda/virustotal
+      ProductName: SubscriptionFilterAppSecurity
+      ProvisionedProductName: virustotalAppSecSubscriptionFilter
+      ProvisioningArtifactName: 1.0.1
+      ProvisioningParameters:
+          - Key: CloudWatchLogGroup
+            Value: /aws/lambda/virustotal
+      Tags:
+          - Key: doNotShutDown
+            Value: "true"
 
   whoisLambdaFunction:
     Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
@@ -872,10 +1362,16 @@ Resources:
       Type: String
       Value: '{"supportedIOCTypes": ["DOMAIN"]}'
 
-  whoisAppSecSubscription:
+  whoisAppSecSubscriptionFilter:
     DependsOn: whoisLambdaFunction
-    Type: AWS::Logs::SubscriptionFilter
+    Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
     Properties:
-      DestinationArn: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:GD-AWS-App-Security-SF
-      FilterPattern: security
-      LogGroupName: /aws/lambda/whois
+      ProductName: SubscriptionFilterAppSecurity
+      ProvisionedProductName: whoisAppSecSubscriptionFilter
+      ProvisioningArtifactName: 1.0.1
+      ProvisioningParameters:
+          - Key: CloudWatchLogGroup
+            Value: /aws/lambda/whois
+      Tags:
+          - Key: doNotShutDown
+            Value: "true"

@@ -5,18 +5,24 @@ parameters:
   SSOHost: {{sso_host}}
   cmapSHA1: !file_contents resources/cmap.sha1
   geoipSHA1: !file_contents resources/geoip.sha1
+  nvdSHA1: !file_contents resources/nvd.sha1
+  passivetotalSHA1: !file_contents resources/passivetotal.sha1
   recordedfutureSHA1: !file_contents resources/recordedfuture.sha1
+  servicenowSHA1: !file_contents resources/servicenow.sha1
   shodanSHA1: !file_contents resources/shodan.sha1
   splunkSHA1: !file_contents resources/splunk.sha1
+  trustarSHA1: !file_contents resources/trustar.sha1
   urlhausSHA1: !file_contents resources/urlhaus.sha1
   virustotalSHA1: !file_contents resources/virustotal.sha1
   whoisSHA1: !file_contents resources/whois.sha1
 hooks:
   before_create:
     - !cmd resources/build-service-lambdas.sh
+    - !cmd resources/log-group-create.py
   after_create:
     - !cmd rm -f resources/*.sha1
   before_update:
     - !cmd resources/build-service-lambdas.sh
+    - !cmd resources/log-group-create.py
   after_update:
     - !cmd rm -f resources/*.sha1
