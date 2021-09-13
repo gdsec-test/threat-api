@@ -9,9 +9,9 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/gdcorp-infosec/cmap-go/cmap"
 	"github.com/gdcorp-infosec/threat-api/lambdas/common/toolbox/appsectracing"
 	"github.com/gdcorp-infosec/threat-api/lambdas/common/triagelegacyconnector/triage"
-	"github.secureserver.net/clake1/cmap-go/cmap"
 	"github.secureserver.net/go/sso-client/sso"
 )
 
@@ -37,7 +37,7 @@ func (m *TriageModule) Supports() []triage.IOCType {
 }
 
 // Triage Uses DCU's CMAP service to enrich shopper information about a GoDaddy domain
-// It uses this library: https://github.secureserver.net/clake1/cmap-go
+// It uses this library: https://github.com/gdcorp-infosec/cmap-go
 func (m *TriageModule) Triage(ctx context.Context, triageRequest *triage.Request) ([]*triage.Data, error) {
 	triageData := &triage.Data{
 		Title:    "GoDaddy Shopper Data",

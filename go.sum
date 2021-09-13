@@ -65,6 +65,12 @@ github.com/elastic/go-windows v1.0.0 h1:qLURgZFkkrYyTTkvYpsZIgf83AUsdIHfvlJaqaZ7
 github.com/elastic/go-windows v1.0.0/go.mod h1:TsU0Nrp7/y3+VwE82FoZF8gC/XFg/Elz6CcloAxnPgU=
 github.com/fsnotify/fsnotify v1.4.7 h1:IXs+QLmnXW2CcXuY+8Mzv/fWEsPGWxqefPtCP5CnV9I=
 github.com/fsnotify/fsnotify v1.4.7/go.mod h1:jwhsz4b93w/PPRr/qN1Yymfu8t87LnFCMoQvtojpjFo=
+github.com/gdcorp-infosec/cmap-go v0.0.0-20210910163959-e930e925499f h1:m8uvLmGa/WGLeziarwtDA+6D+RPaXYs0dCxetNbMsps=
+github.com/gdcorp-infosec/cmap-go v0.0.0-20210910163959-e930e925499f/go.mod h1:zRxWCzFrwMYoqRcTqlnpar/ZxPFlHyOn34lUWoV4Z0Q=
+github.com/gdcorp-infosec/cmap-go v0.0.0-20210910182121-5c1da57f0f6a h1:Jen/Ws/gvHFlIXWVmSluztR9yjPc+Zh0mMkOr2PscdI=
+github.com/gdcorp-infosec/cmap-go v0.0.0-20210910182121-5c1da57f0f6a/go.mod h1:zRxWCzFrwMYoqRcTqlnpar/ZxPFlHyOn34lUWoV4Z0Q=
+github.com/gdcorp-infosec/cmap-go v0.0.0-20210910182244-ffed93b0c375 h1:1wBBapIPU7B0PS9jQjoM+TkyidditXXHxFsa80//inE=
+github.com/gdcorp-infosec/cmap-go v0.0.0-20210910182244-ffed93b0c375/go.mod h1:zRxWCzFrwMYoqRcTqlnpar/ZxPFlHyOn34lUWoV4Z0Q=
 github.com/gdcorp-infosec/go-ioc v0.0.0-20210201161615-55598c0a06df h1:JRtavUPU4pzgWhnnnpI+QSy+T8G8uPmh/PWv8hoBYi0=
 github.com/gdcorp-infosec/go-ioc v0.0.0-20210201161615-55598c0a06df/go.mod h1:fi8vnUB1K/g97dG5NsnwV/aRFb8LA10Cg7Nr81PFIVI=
 github.com/ghodss/yaml v1.0.0/go.mod h1:4dBDuWmgqj2HViK6kFavaiC9ZROes6MMH2rRYeMEF04=
@@ -266,8 +272,6 @@ github.com/xordataexchange/crypt v0.0.3-0.20170626215501-b2862e3d0a77/go.mod h1:
 github.com/yuin/goldmark v1.1.27/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=
 github.secureserver.net/auth-contrib/go-auth v1.2.1 h1:Bb7sojPpx0yftwcowFFTYrZ7XdMF6wJDRtTKYXPj4Ek=
 github.secureserver.net/auth-contrib/go-auth v1.2.1/go.mod h1:AzLUi56S3nSh/vK+IGtTkgTd/Qd/rEF8aRSd0WNC/8k=
-github.secureserver.net/clake1/cmap-go v0.0.0-20200512164520-f1fa9adb4895 h1:wFHCUJ9FNg1Fhg5lgAnQky0kYylOCD0AS4mw9aFSMAk=
-github.secureserver.net/clake1/cmap-go v0.0.0-20200512164520-f1fa9adb4895/go.mod h1:LdIuSpcfYD2cbKPFoWhRZ6KYRPM4VYFQEjC/6f18Su4=
 github.secureserver.net/go/sso-client v0.0.1 h1:Wcw37QbIQjyMAjwqyspzCs56F2DLVGPl3kxa+F66gPU=
 github.secureserver.net/go/sso-client v0.0.1/go.mod h1:kQ2libP+lxTthjItGO/a65YcWRVAswwR84MGAOfeB+g=
 github.secureserver.net/threat/go-ldap v0.0.0-20201017001259-d06e7b5f7252 h1:bIUX4Cw94igHxeSu6Yl44a/9VRO1BKfUuBv8JtbadO0=
