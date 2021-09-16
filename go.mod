@@ -16,6 +16,7 @@ require (
 	github.com/ns3777k/go-shodan/v4 v4.2.0
 	github.com/oschwald/geoip2-golang v1.4.0
 	github.com/sirupsen/logrus v1.7.0
+	github.com/stretchr/testify v1.6.1
 	github.com/thedevsaddam/gojsonq v2.3.0+incompatible // indirect
 	github.com/vertoforce/go-splunk v0.0.0-20201016180916-bf97db989317
 	github.com/vertoforce/regexgrouphelp v0.1.1

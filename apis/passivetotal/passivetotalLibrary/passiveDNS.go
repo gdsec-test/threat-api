@@ -9,7 +9,8 @@ import (
 )
 
 const (
-	passiveDNSEndpoint = "https://api.passivetotal.org/v2/dns/passive"
+	PassiveDNSPath       = "/v2/dns/passive"
+	UniquePassiveDNSPath = "/v2/dns/passive/unique"
 )
 
 type PDNSReport struct {
@@ -41,11 +42,11 @@ type PDNSUniqueReport struct {
 	QueryType  string          `json:"queryType"`
 }
 
-func GetPassiveDNS(ctx context.Context, ioc string, user string, key string, PTClient *http.Client) (*PDNSReport, error) {
+func GetPassiveDNS(ctx context.Context, ptUrl string, ioc string, user string, key string, PTClient *http.Client) (*PDNSReport, error) {
 	// Build URL
 	values := url.Values{}
 	values.Add("query", ioc)
-	URL := fmt.Sprintf("%s?%s", passiveDNSEndpoint, values.Encode())
+	URL := fmt.Sprintf("%s%s?%s", ptUrl, PassiveDNSPath, values.Encode())
 
 	// Build request
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, URL, nil)
@@ -73,14 +74,13 @@ func GetPassiveDNS(ctx context.Context, ioc string, user string, key string, PTC
 	return reportHolder, nil
 }
 
-//EnrichCVE  performs a CVE search with RecordedFuture
-func GetUniquePassiveDNS(ctx context.Context, ioc string, user string, key string, PTClient *http.Client) (*PDNSUniqueReport, error) {
+//GetUniquePassiveDNS gets the unique passiveDNS results
+func GetUniquePassiveDNS(ctx context.Context, ptUrl string, ioc string, user string, key string, PTClient *http.Client) (*PDNSUniqueReport, error) {
 	// When the rate limits are high, this function can be calculated by ourself by processing the results from GetPassiveDNS
 	// Build URL
 	values := url.Values{}
 	values.Add("query", ioc)
-	URL := fmt.Sprintf("%s%s?%s", passiveDNSEndpoint, "/unique", values.Encode())
-	fmt.Println(URL)
+	URL := fmt.Sprintf("%s%s?%s", ptUrl, UniquePassiveDNSPath, values.Encode())
 
 	// Build request
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, URL, nil)
