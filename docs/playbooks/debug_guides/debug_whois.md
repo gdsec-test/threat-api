@@ -135,7 +135,7 @@ dial tcp 192.0.32.59:43: i/o timeout,,,,,,,,,,
 ```
 We realized that perhaps the issue is blocking TCP traffic to a specific port. We need
 to use the Threat Tools Dev Private Power User Account, and specifically visit
-Cloudwatch > Log Groups > search for "whois"  > choose "/aws/lambda/whois".
+VPC > Security > Network ACLs, choose nacl-public and navigate to Outbound Rules.
 
 [[https://github.com/gdcorp-infosec/threat-api/blob/develop/docs/playbooks/
 debug_guides/debug_images/whois/outbound_rules.png]]
