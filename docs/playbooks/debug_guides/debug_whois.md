@@ -61,11 +61,9 @@ Account, and specifically visit Cloudwatch > Log Groups > search for "whois"  > 
 Assuming our test was the latest, choose the top result. Through inspecting the logs
 we can see that this is an issue related to the AWS Lamba:
 
-![logevents](https://github.com/gdcorp-infosec/threat-api/blob/develop/docs/playbooks/
-debug_guides/debug_images/whois/logevents.png)
+![logevents](https://github.com/gdcorp-infosec/threat-api/blob/develop/docs/playbooks/debug_guides/debug_images/whois/logevents.png)
 
-![error](https://github.com/gdcorp-infosec/threat-api/blob/develop/docs/playbooks/
-debug_guides/debug_images/whois/error.png)
+![error](https://github.com/gdcorp-infosec/threat-api/blob/develop/docs/playbooks/debug_guides/debug_images/whois/error.png)
 
 To further investigate the issue, we can look at whether or not there is a firewall/
 WAF block. In the same account, search for "WAF & Shield" and then "Web ACLs" from the
@@ -73,8 +71,7 @@ menu on the left. Ensure you're in the US West (Oregon) region and choose
 Threat-Regional-WebACL. Search for "BLOCKED" in the sample requests field at the
 bottom. In this case, there were no results yielded so we know it is not a WAF issue:
 
-![blocked](https://github.com/gdcorp-infosec/threat-api/blob/develop/docs/playbooks/
-debug_guides/debug_images/whois/blocked.png)
+![blocked](https://github.com/gdcorp-infosec/threat-api/blob/develop/docs/playbooks/debug_guides/debug_images/whois/blocked.png)
 
 
 ## Use Splunk Queries for Additional Insight
@@ -88,8 +85,7 @@ index="aws_vpc_flowlogs" product=threattools 192.0.32.59
 
 This results in the following logs
 
-![splunk logs](https://github.com/gdcorp-infosec/threat-api/blob/develop/docs/playbooks/
-debug_guides/debug_images/whois/splunklogs_one.png)
+![splunk logs](https://github.com/gdcorp-infosec/threat-api/blob/develop/docs/playbooks/debug_guides/debug_images/whois/splunklogs_one.png)
 
 We can see that all the reject messages are coming from the source: 10.119.177.8. Sowe
 can use the following Splunk query to further investigate
@@ -98,8 +94,7 @@ can use the following Splunk query to further investigate
 index="aws_vpc_flowlogs" 10.119.177.8
 ```
 
-![splunk logs](https://github.com/gdcorp-infosec/threat-api/blob/develop/docs/playbooks/
-debug_guides/debug_images/whois/splunklogs_two.png)
+![splunk logs](https://github.com/gdcorp-infosec/threat-api/blob/develop/docs/playbooks/debug_guides/debug_images/whois/splunklogs_two.png)
 
 ## Potential Solutions
 
@@ -138,8 +133,7 @@ We realized that perhaps the issue is blocking TCP traffic to a specific port. W
 to use the Threat Tools Dev Private Power User Account, and specifically visit
 VPC > Security > Network ACLs, choose nacl-public and navigate to Outbound Rules.
 
-![outbound rules](https://github.com/gdcorp-infosec/threat-api/blob/develop/docs/playbooks/
-debug_guides/debug_images/whois/outbound_rules.png)
+![outbound rules](https://github.com/gdcorp-infosec/threat-api/blob/develop/docs/playbooks/debug_guides/debug_images/whois/outbound_rules.png)
 
 The "Deny" message in rule 170 of our Outbound Rules shows that rule 170 is blocking
 TCP traffic to all ports.
@@ -148,7 +142,6 @@ TCP traffic to all ports.
 
 We need a custom rule that will allow TCP traffic to port 43.
 
-![custom tcp](https://github.com/gdcorp-infosec/threat-api/blob/develop/docs/playbooks/
-debug_guides/debug_images/whois/customtcp.png)
+![custom tcp](https://github.com/gdcorp-infosec/threat-api/blob/develop/docs/playbooks/debug_guides/debug_images/whois/customtcp.png)
 
 Problem Solved! Since these changes were only applied in the DEV-Private Account, we must use an account with elevated access to make the same changes in our DEV and PROD accounts and ensure a smooth CICD process.
