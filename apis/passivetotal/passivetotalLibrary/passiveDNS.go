@@ -80,6 +80,7 @@ func GetUniquePassiveDNS(ctx context.Context, ptUrl string, ioc string, user str
 	// Build URL
 	values := url.Values{}
 	values.Add("query", ioc)
+
 	URL := fmt.Sprintf("%s%s?%s", ptUrl, UniquePassiveDNSPath, values.Encode())
 
 	// Build request
