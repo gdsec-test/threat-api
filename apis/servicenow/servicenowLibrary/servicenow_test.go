@@ -1,3 +1,5 @@
+// +build !runTests
+
 package servicenowLibrary
 
 import (

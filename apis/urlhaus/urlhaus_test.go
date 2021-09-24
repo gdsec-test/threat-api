@@ -11,7 +11,7 @@ import (
 func TestGetServicesForIPs(t *testing.T) {
 
 	ctx := context.Background()
-	tb := toolbox.GetToolbox()
+	tb = toolbox.GetToolbox()
 	defer tb.Close(ctx)
 
 	var triageRequests []*triage.Request

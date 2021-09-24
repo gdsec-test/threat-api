@@ -59,7 +59,5 @@ func (m *TriageModule) Triage(ctx context.Context, triageRequest *triage.Request
 		triageNVDData.Data = dumpCSV(NVDResults)
 	}
 
-
-
 	return []*triage.Data{triageNVDData}, nil
 }

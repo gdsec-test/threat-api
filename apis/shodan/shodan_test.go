@@ -1,3 +1,5 @@
+// +build !runTests
+
 package main
 
 import (
