@@ -54,3 +54,289 @@ Resources:
       Statistic: Average
       Threshold: 1
       Unit: Count
+  
+  DynamoDBUserErrors:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmActions:
+        - !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:warning-moog-${DevelopmentTeam}-${DevelopmentEnvironment}
+        - !Sub ${SlackSnsTopicName}
+      OKActions:
+        - !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:warning-moog-${DevelopmentTeam}-${DevelopmentEnvironment}
+        - !Sub ${SlackSnsTopicName}
+      AlarmDescription: !Sub Requests that generate an HTTP 400 status code during the specified time period to DynamoDB
+      AlarmName: !Sub "${ProjectCode}: User Errors from DynamoDB ${DevelopmentEnvironment}"
+      ComparisonOperator: GreaterThanThreshold
+      DatapointsToAlarm: 1
+      EvaluationPeriods: 10
+      MetricName: 'UserError'
+      Namespace: 'AWS/DynamoDB'
+      # setting as notBreaching so that the alarm state is OK since there shouldnt be any data
+      TreatMissingData: "notBreaching"
+      Period: 60
+      Statistic: Sum
+      Threshold: 0
+      Unit: Count
+
+  DynamoDBSystemErrors:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmActions:
+        - !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:warning-moog-${DevelopmentTeam}-${DevelopmentEnvironment}
+        - !Sub ${SlackSnsTopicName}
+      OKActions:
+        - !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:warning-moog-${DevelopmentTeam}-${DevelopmentEnvironment}
+        - !Sub ${SlackSnsTopicName}
+      AlarmDescription: !Sub Requests that generate an HTTP 5XX status code during the specified time period to DynamoDB
+      AlarmName: !Sub "${ProjectCode}: System Errors from DynamoDB ${DevelopmentEnvironment}"
+      ComparisonOperator: GreaterThanThreshold
+      DatapointsToAlarm: 1
+      EvaluationPeriods: 10
+      MetricName: 'SystemErrors'
+      Namespace: 'AWS/DynamoDB'
+      # setting as notBreaching so that the alarm state is OK since there shouldnt be any data
+      TreatMissingData: "notBreaching"
+      Dimensions: 
+        - Name: 'TableName'
+          Value: 'jobs'
+      Period: 60
+      Statistic: Sum
+      Threshold: 0
+      Unit: Count
+
+  DynamoDBConsumedReadCapacityUnits:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmActions:
+        - !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:warning-moog-${DevelopmentTeam}-${DevelopmentEnvironment}
+        - !Sub ${SlackSnsTopicName}
+      OKActions:
+        - !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:warning-moog-${DevelopmentTeam}-${DevelopmentEnvironment}
+        - !Sub ${SlackSnsTopicName}
+      AlarmDescription: !Sub Alarm when read capacity reaches 80% of my provisioned read capacity
+      AlarmName: !Sub "${ProjectCode}: Read Capacity to DynamoDB ${DevelopmentEnvironment}"
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      DatapointsToAlarm: 1
+      EvaluationPeriods: 10
+      MetricName: 'ConsumedReadCapacityUnits'
+      Namespace: 'AWS/DynamoDB'
+      Dimensions: 
+        - Name: 'TableName'
+          Value: 'jobs'
+      Period: 60
+      Statistic: Sum
+      Threshold: 240
+      Unit: Count
+
+  DynamoDBConsumedWriteCapacityUnits:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmActions:
+        - !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:warning-moog-${DevelopmentTeam}-${DevelopmentEnvironment}
+        - !Sub ${SlackSnsTopicName}
+      OKActions:
+        - !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:warning-moog-${DevelopmentTeam}-${DevelopmentEnvironment}
+        - !Sub ${SlackSnsTopicName}
+      AlarmDescription: !Sub Alarm when write capacity reaches 80% of my provisioned write capacity
+      AlarmName: !Sub "${ProjectCode}: Write Capacity to DynamoDB ${DevelopmentEnvironment}"
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      DatapointsToAlarm: 1
+      EvaluationPeriods: 10
+      MetricName: 'ConsumedWriteCapacityUnits'
+      Namespace: 'AWS/DynamoDB'
+      Dimensions: 
+        - Name: 'TableName'
+          Value: 'jobs'
+      Period: 60
+      Statistic: Sum
+      Threshold: 240
+      Unit: Count
+
+  DynamoDBThrottledRequestsPutItem:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmActions:
+        - !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:warning-moog-${DevelopmentTeam}-${DevelopmentEnvironment}
+        - !Sub ${SlackSnsTopicName}
+      OKActions:
+        - !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:warning-moog-${DevelopmentTeam}-${DevelopmentEnvironment}
+        - !Sub ${SlackSnsTopicName}
+      AlarmDescription: !Sub Throttled Requests for PutItems on DynamoDB
+      AlarmName: !Sub "${ProjectCode}: ThrottledRequests PutItem ${DevelopmentEnvironment}"
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      EvaluationPeriods: 1
+      MetricName: 'ThrottledRequests'
+      Namespace: 'AWS/DynamoDB'
+      # setting as notBreaching so that the alarm state is OK since there shouldnt be any data
+      TreatMissingData: "notBreaching"
+      Dimensions: 
+        - Name: 'TableName'
+          Value: 'jobs'
+        - Name: 'Opertaion'
+          Value: 'PutItem'
+      Period: 300
+      Statistic: Sum
+      Threshold: 0
+      Unit: Count
+
+  DynamoDBThrottledRequestsDeleteItem:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmActions:
+        - !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:warning-moog-${DevelopmentTeam}-${DevelopmentEnvironment}
+        - !Sub ${SlackSnsTopicName}
+      OKActions:
+        - !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:warning-moog-${DevelopmentTeam}-${DevelopmentEnvironment}
+        - !Sub ${SlackSnsTopicName}
+      AlarmDescription: !Sub Throttled Requests for DeleteItem on DynamoDB
+      AlarmName: !Sub "${ProjectCode}: ThrottledRequests DeleteItem ${DevelopmentEnvironment}"
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      EvaluationPeriods: 1
+      MetricName: 'ThrottledRequests'
+      Namespace: 'AWS/DynamoDB'
+      # setting as notBreaching so that the alarm state is OK since there shouldnt be any data
+      TreatMissingData: "notBreaching"
+      Dimensions: 
+        - Name: 'TableName'
+          Value: 'jobs'
+        - Name: 'Opertaion'
+          Value: 'DeleteItem'
+      Period: 300
+      Statistic: Sum
+      Threshold: 0
+      Unit: Count
+
+  DynamoDBThrottledRequestsUpdateItem:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmActions:
+        - !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:warning-moog-${DevelopmentTeam}-${DevelopmentEnvironment}
+        - !Sub ${SlackSnsTopicName}
+      OKActions:
+        - !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:warning-moog-${DevelopmentTeam}-${DevelopmentEnvironment}
+        - !Sub ${SlackSnsTopicName}
+      AlarmDescription: !Sub Throttled Requests for UpdateItem on DynamoDB
+      AlarmName: !Sub "${ProjectCode}: ThrottledRequests UpdateItem ${DevelopmentEnvironment}"
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      EvaluationPeriods: 1
+      MetricName: 'ThrottledRequests'
+      Namespace: 'AWS/DynamoDB'
+      # setting as notBreaching so that the alarm state is OK since there shouldnt be any data
+      TreatMissingData: "notBreaching"
+      Dimensions: 
+        - Name: 'TableName'
+          Value: 'jobs'
+        - Name: 'Opertaion'
+          Value: 'UpdateItem'
+      Period: 300
+      Statistic: Sum
+      Threshold: 0
+      Unit: Count
+
+  DynamoDBThrottledRequestsGetItem:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmActions:
+        - !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:warning-moog-${DevelopmentTeam}-${DevelopmentEnvironment}
+        - !Sub ${SlackSnsTopicName}
+      OKActions:
+        - !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:warning-moog-${DevelopmentTeam}-${DevelopmentEnvironment}
+        - !Sub ${SlackSnsTopicName}
+      AlarmDescription: !Sub Throttled Requests for GetItem on DynamoDB
+      AlarmName: !Sub "${ProjectCode}: ThrottledRequests GetItem ${DevelopmentEnvironment}"
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      EvaluationPeriods: 1
+      MetricName: 'ThrottledRequests'
+      Namespace: 'AWS/DynamoDB'
+      # setting as notBreaching so that the alarm state is OK since there shouldnt be any data
+      TreatMissingData: "notBreaching"
+      Dimensions: 
+        - Name: 'TableName'
+          Value: 'jobs'
+        - Name: 'Opertaion'
+          Value: 'GetItem'
+      Period: 300
+      Statistic: Sum
+      Threshold: 0
+      Unit: Count
+
+  DynamoDBThrottledRequestsBatchGetItem:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmActions:
+        - !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:warning-moog-${DevelopmentTeam}-${DevelopmentEnvironment}
+        - !Sub ${SlackSnsTopicName}
+      OKActions:
+        - !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:warning-moog-${DevelopmentTeam}-${DevelopmentEnvironment}
+        - !Sub ${SlackSnsTopicName}
+      AlarmDescription: !Sub Throttled Requests for BatchGetItem on DynamoDB
+      AlarmName: !Sub "${ProjectCode}: ThrottledRequests BatchGetItem ${DevelopmentEnvironment}"
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      EvaluationPeriods: 1
+      MetricName: 'ThrottledRequests'
+      Namespace: 'AWS/DynamoDB'
+      # setting as notBreaching so that the alarm state is OK since there shouldnt be any data
+      TreatMissingData: "notBreaching"
+      Dimensions: 
+        - Name: 'TableName'
+          Value: 'jobs'
+        - Name: 'Opertaion'
+          Value: 'BatchGetItem'
+      Period: 300
+      Statistic: Sum
+      Threshold: 0
+      Unit: Count
+
+  DynamoDBThrottledRequestsQuery:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmActions:
+        - !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:warning-moog-${DevelopmentTeam}-${DevelopmentEnvironment}
+        - !Sub ${SlackSnsTopicName}
+      OKActions:
+        - !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:warning-moog-${DevelopmentTeam}-${DevelopmentEnvironment}
+        - !Sub ${SlackSnsTopicName}
+      AlarmDescription: !Sub Throttled Requests for Query on DynamoDB
+      AlarmName: !Sub "${ProjectCode}: ThrottledRequests Query ${DevelopmentEnvironment}"
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      EvaluationPeriods: 1
+      MetricName: 'ThrottledRequests'
+      Namespace: 'AWS/DynamoDB'
+      # setting as notBreaching so that the alarm state is OK since there shouldnt be any data
+      TreatMissingData: "notBreaching"
+      Dimensions: 
+        - Name: 'TableName'
+          Value: 'jobs'
+        - Name: 'Opertaion'
+          Value: 'Query'
+      Period: 300
+      Statistic: Sum
+      Threshold: 0
+      Unit: Count
+
+  DynamoDBThrottledBatchWriteItem:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmActions:
+        - !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:warning-moog-${DevelopmentTeam}-${DevelopmentEnvironment}
+        - !Sub ${SlackSnsTopicName}
+      OKActions:
+        - !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:warning-moog-${DevelopmentTeam}-${DevelopmentEnvironment}
+        - !Sub ${SlackSnsTopicName}
+      AlarmDescription: !Sub Throttled Requests for BatchWriteItem on DynamoDB
+      AlarmName: !Sub "${ProjectCode}: ThrottledRequests BatchWriteItem ${DevelopmentEnvironment}"
+      ComparisonOperator: GreaterThanThreshold
+      EvaluationPeriods: 1
+      MetricName: 'ThrottledRequests'
+      Namespace: 'AWS/DynamoDB'
+      # setting as notBreaching so that the alarm state is OK since there shouldnt be any data
+      TreatMissingData: "notBreaching"
+      Dimensions: 
+        - Name: 'TableName'
+          Value: 'jobs'
+        - Name: 'Opertaion'
+          Value: 'BatchWriteItem'
+      Period: 300
+      Statistic: Sum
+      Threshold: 0
+      Unit: Count

@@ -41,7 +41,8 @@ func (m *TriageModule) GetPassiveDNS(ctx context.Context, triageRequest *triage.
 				<-threadLimit
 				wg.Done()
 			}()
-			pdnsResult, err := pt.GetPassiveDNS(ctx, ioc, m.PTUser, m.PTKey, m.PTClient)
+
+			pdnsResult, err := pt.GetPassiveDNS(ctx, passiveDNSURL, ioc, m.PTUser, m.PTKey, m.PTClient)
 			if err != nil {
 				span.AddError(err)
 				pdnsLock.Lock()
@@ -86,7 +87,9 @@ func (m *TriageModule) GetUniquePassiveDNS(ctx context.Context, triageRequest *t
 				<-threadLimit
 				wg.Done()
 			}()
-			pdnsUniqueResult, err := pt.GetUniquePassiveDNS(ctx, ioc, m.PTUser, m.PTKey, m.PTClient)
+
+			pdnsUniqueResult, err := pt.GetUniquePassiveDNS(ctx, passiveDNSURL, ioc, m.PTUser, m.PTKey, m.PTClient)
+
 			if err != nil {
 				span.AddError(err)
 				pdnsLock.Lock()

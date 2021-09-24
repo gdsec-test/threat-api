@@ -3,7 +3,7 @@ package main
 import (
 	"strconv"
 
-	"github.secureserver.net/clake1/cmap-go/cmap"
+	"github.com/gdcorp-infosec/cmap-go/cmap"
 )
 
 // Sort interface for cmapresults to sort by shopper id

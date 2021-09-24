@@ -13,12 +13,14 @@ import (
 const (
 	secretID         = "/ThreatTools/Integrations/passivetotal"
 	triageModuleName = "passivetotal"
+	passiveDNSURL    = "https://api.passivetotal.org"
 )
 
 // TriageModule triage module
 type TriageModule struct {
 	PTKey    string
 	PTUser   string
+	PTURL    string
 	PTClient *http.Client
 }
 
@@ -65,6 +67,7 @@ func (m *TriageModule) Triage(ctx context.Context, triageRequest *triage.Request
 	}
 	m.PTKey = secretMap["key"]
 	m.PTUser = secretMap["user"]
+	m.PTURL = passiveDNSURL
 
 	var span *appsectracing.Span
 	span, ctx = tb.TracerLogger.StartSpan(ctx, "PassiveTotal", "passivetotal", "services", "get")
