@@ -24,7 +24,6 @@ func TestGetExampleData(t *testing.T) {
 		IOCs:     []string{"IoCs"},
 		IOCsType: triage.DomainType,
 	})
-	// TODO: Extend to the IoCs supported by your module
 
 	for _, triageRequest := range triageRequests {
 		triageModule := TriageModule{}
@@ -42,8 +41,6 @@ func TestGetExampleData(t *testing.T) {
 		for _, data := range triageResult[0].Metadata {
 			fmt.Println(data)
 		}
-
-		// TODO: Unit tests, mocks can be extended as needed
 
 	}
 }
