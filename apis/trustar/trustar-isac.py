@@ -161,15 +161,8 @@ def process(job_request: Dict[str, str]) -> Dict[str, str]:
     ioc_type = job_request_body.get("iocType", "")
     ioc_list = job_request_body.get("iocs", list())
     module_requested = job_request_body.get("modules", "")
-    # if module_requested != "trustar":
-    #    return None
-    print("LOOK HERE")
-    print(" \n")
-    print(job_request_body)
-    print("LOOK HERE 1")
-    print(module_requested)
-    print("LOOK HERE 2")
-    print("last one")
+    if module_requested != "trustar":
+        return None
     ioc_dict = dict()
     if ioc_type == "DOMAIN":
         log.info("Processing {} domain artifact(s)".format(len(ioc_list)))
