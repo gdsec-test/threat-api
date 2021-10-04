@@ -161,8 +161,8 @@ def process(job_request: Dict[str, str]) -> Dict[str, str]:
     ioc_type = job_request_body.get("iocType", "")
     ioc_list = job_request_body.get("iocs", list())
     module_requested = job_request_body.get("requestedModules", "")
-    if module_requested != "trustar":
-        return None
+    # if module_requested != "trustar":
+    #    return None
     print("LOOK HERE")
     print(" \n")
     print(job_request_body)
