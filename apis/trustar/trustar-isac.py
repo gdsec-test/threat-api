@@ -222,7 +222,7 @@ def process(job_request: Dict[str, str]) -> Dict[str, str]:
     }
 
     if module_requested != "trustar":
-        return None
+        response_message = {}
 
     log.info("Response: " + str(response_message))
     return response_message
