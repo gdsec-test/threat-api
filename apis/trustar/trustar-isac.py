@@ -221,7 +221,7 @@ def process(job_request: Dict[str, str]) -> Dict[str, str]:
     }
 
     # trustar bug fix
-    if module_requested != "trustar":
+    if "trustar" not in module_requested:
         response_message = {}
 
     log.info("Response: " + str(response_message))
