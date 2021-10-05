@@ -161,8 +161,9 @@ def process(job_request: Dict[str, str]) -> Dict[str, str]:
     ioc_type = job_request_body.get("iocType", "")
     ioc_list = job_request_body.get("iocs", list())
     module_requested = job_request_body.get("modules", "")
-    if module_requested != "trustar":
-        return None
+    print("REQUESTED MODULES")
+    print(module_requested)
+
     ioc_dict = dict()
     if ioc_type == "DOMAIN":
         log.info("Processing {} domain artifact(s)".format(len(ioc_list)))
@@ -219,6 +220,9 @@ def process(job_request: Dict[str, str]) -> Dict[str, str]:
             ]
         ),
     }
+
+    if module_requested != "trustar":
+        return None
 
     log.info("Response: " + str(response_message))
     return response_message
