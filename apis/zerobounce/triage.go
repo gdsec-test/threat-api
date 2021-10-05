@@ -35,7 +35,7 @@ func (m *TriageModule) Supports() []triage.IOCType {
 // Triage retrieves data from zerobounce email validation API
 func (m *TriageModule) Triage(ctx context.Context, triageRequest *triage.Request) ([]*triage.Data, error) {
 	triageData := &triage.Data{
-		Title:    "Email Validation data from ZeroBounce",
+		Title:    "Email Validation data from Zerobounce",
 		Metadata: []string{},
 	}
 
@@ -71,6 +71,8 @@ func (m *TriageModule) Triage(ctx context.Context, triageRequest *triage.Request
 	} else {
 		//Dump data as csv
 		triageData.DataType = triage.CSVType
+		//Calculate and add total number of valid or invalid emails
+		triageData.Metadata = zerobounceMetaDataExtract(ZeroBounceResults)
 		triageData.Data = DumpCSV(ZeroBounceResults)
 	}
 

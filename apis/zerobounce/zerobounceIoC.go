@@ -61,6 +61,29 @@ func (m *TriageModule) GetZeroBounceData(ctx context.Context, triageRequest *tri
 	return zerobounceResults, nil
 }
 
+func zerobounceMetaDataExtract(zerobounceResults map[string]*zb.ZeroBounceReport) []string {
+	var triageMetaData []string
+	var validEmails, invalidEmails = 0, 0
+
+	for _, data := range zerobounceResults {
+		if data == nil {
+			triageMetaData = append(triageMetaData, fmt.Sprintf("NA"))
+			continue
+		}
+
+		// Count total number of valid and invalid emails
+		if data.MxFound == "true" {
+			validEmails += 1
+			invalidEmails += 1
+		}
+
+	}
+
+	triageMetaData = append(triageMetaData, fmt.Sprintf("%d valid emails and %d invalid emails found", validEmails, invalidEmails))
+
+	return triageMetaData
+}
+
 //dumpCSV dumps the triage data to CSV
 func DumpCSV(zerobounceResults map[string]*zb.ZeroBounceReport) string {
 	//Dump data as csv

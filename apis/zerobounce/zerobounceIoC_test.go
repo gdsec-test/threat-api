@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"testing"
 
 	"github.com/gdcorp-infosec/threat-api/lambdas/common/toolbox"
@@ -38,9 +37,5 @@ func TestGetExampleData(t *testing.T) {
 		if triageResult[0].Data == "" {
 			t.Fatal("first data element empty ")
 		}
-		for _, data := range triageResult[0].Metadata {
-			fmt.Println(data)
-		}
-
 	}
 }
