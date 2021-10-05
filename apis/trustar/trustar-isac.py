@@ -160,7 +160,6 @@ def process(job_request: Dict[str, str]) -> Dict[str, str]:
 
     ioc_type = job_request_body.get("iocType", "")
     ioc_list = job_request_body.get("iocs", list())
-    # trustar bug fix
     module_requested = job_request_body.get("modules", "")
 
     ioc_dict = dict()
@@ -220,7 +219,6 @@ def process(job_request: Dict[str, str]) -> Dict[str, str]:
         ),
     }
 
-    # trustar bug fix
     if "trustar" not in module_requested:
         response_message = {}
 
