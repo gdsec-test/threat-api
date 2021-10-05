@@ -160,9 +160,8 @@ def process(job_request: Dict[str, str]) -> Dict[str, str]:
 
     ioc_type = job_request_body.get("iocType", "")
     ioc_list = job_request_body.get("iocs", list())
+    # trustar bug fix
     module_requested = job_request_body.get("modules", "")
-    print("REQUESTED MODULES")
-    print(module_requested)
 
     ioc_dict = dict()
     if ioc_type == "DOMAIN":
@@ -221,8 +220,9 @@ def process(job_request: Dict[str, str]) -> Dict[str, str]:
         ),
     }
 
-    # if module_requested != "trustar":
-    #    response_message = {}
+    # trustar bug fix
+    if module_requested != "trustar":
+        response_message = {}
 
     log.info("Response: " + str(response_message))
     return response_message
