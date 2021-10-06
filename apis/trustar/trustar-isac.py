@@ -152,6 +152,10 @@ def process(job_request: Dict[str, str]) -> Dict[str, str]:
         job_id = "UNKNOWN"
         job_request_body = {}
 
+    module_requested = job_request_body.get("modules", "")
+    if "trustar" not in module_requested:
+        response_message = {}
+
     ts = configureTrustar()
     if ts is None:
         log.error("Failed to instantiate the TruSTAR object")
@@ -160,10 +164,6 @@ def process(job_request: Dict[str, str]) -> Dict[str, str]:
 
     ioc_type = job_request_body.get("iocType", "")
     ioc_list = job_request_body.get("iocs", list())
-    module_requested = job_request_body.get("modules", "")
-
-    if "trustar" not in module_requested:
-        response_message = {}
 
     ioc_dict = dict()
     if ioc_type == "DOMAIN":
