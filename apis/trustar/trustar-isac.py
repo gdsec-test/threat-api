@@ -162,6 +162,9 @@ def process(job_request: Dict[str, str]) -> Dict[str, str]:
     ioc_list = job_request_body.get("iocs", list())
     module_requested = job_request_body.get("modules", "")
 
+    if "trustar" not in module_requested:
+        response_message = {}
+
     ioc_dict = dict()
     if ioc_type == "DOMAIN":
         log.info("Processing {} domain artifact(s)".format(len(ioc_list)))
@@ -218,9 +221,6 @@ def process(job_request: Dict[str, str]) -> Dict[str, str]:
             ]
         ),
     }
-
-    if "trustar" not in module_requested:
-        response_message = {}
 
     log.info("Response: " + str(response_message))
     return response_message
