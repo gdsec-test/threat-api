@@ -67,13 +67,14 @@ func zerobounceMetaDataExtract(zerobounceResults map[string]*zb.ZeroBounceReport
 
 	for _, data := range zerobounceResults {
 		if data == nil {
-			triageMetaData = append(triageMetaData, fmt.Sprintf("NA"))
+			triageMetaData = append(triageMetaData, fmt.Sprintf("data not found"))
 			continue
 		}
 
 		// Count total number of valid and invalid emails
 		if data.MxFound == "true" {
 			validEmails += 1
+		} else {
 			invalidEmails += 1
 		}
 
@@ -122,7 +123,7 @@ func DumpCSV(zerobounceResults map[string]*zb.ZeroBounceReport) string {
 			data.Domain,
 			data.DomainAgeDays,
 			data.SmtpProvider,
-			fmt.Sprint(data.MxFound),
+			data.MxFound,
 			data.MxRecord,
 			data.ProcessedAt,
 		}
