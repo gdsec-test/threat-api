@@ -80,7 +80,7 @@ func zerobounceMetaDataExtract(zerobounceResults map[string]*zb.ZeroBounceReport
 
 	}
 
-	triageMetaData = append(triageMetaData, fmt.Sprintf("%d valid emails and %d invalid emails found", validEmails, invalidEmails))
+	triageMetaData = append(triageMetaData, fmt.Sprintf("%d valid email(s) and %d invalid email(s) found", validEmails, invalidEmails))
 
 	return triageMetaData
 }
