@@ -50,6 +50,10 @@ Parameters:
     Type: String
     Description: SHA1 hash of the whois lambda source
     Default: ""
+  zerobounceSHA1:
+    Type: String
+    Description: SHA1 hash of the zerobounce lambda source
+    Default: ""
 
 Resources:
   cmapLambdaFunction:
@@ -651,3 +655,53 @@ Resources:
       Name: /ThreatTools/Modules/whois
       Type: String
       Value: '{"supportedIOCTypes": ["DOMAIN"]}'
+
+  zerobounceLambdaFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      Code:
+        S3Bucket: !Sub gd-threattools-${AWS::AccountId}-code-bucket
+        S3Key: !Sub zerobounce/${zerobounceSHA1}
+      Description: !Sub zerobounce lambda (${zerobounceSHA1})
+      FunctionName: zerobounce
+      Handler: zerobounce
+      MemorySize: 256
+      Role: !Sub arn:aws:iam::${AWS::AccountId}:role/threattools-custom-ThreatRole
+      Runtime: go1.x
+      Timeout: 15
+
+  zerobounceLambdaPermission:
+    DependsOn: zerobounceLambdaFunction
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:zerobounce
+      Principal: sns.amazonaws.com
+      SourceArn: !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:JobRequests
+
+  zerobounceSNSSubscription:
+    DependsOn: zerobounceLambdaFunction
+    Type: AWS::SNS::Subscription
+    Properties:
+      Endpoint: !GetAtt zerobounceLambdaFunction.Arn
+      Protocol: lambda
+      TopicArn: !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:JobRequests
+
+  zerobounceLambdaEventInvokeConfig:
+    DependsOn: zerobounceLambdaFunction
+    Type: AWS::Lambda::EventInvokeConfig
+    Properties:
+      DestinationConfig:
+        OnSuccess:
+          Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobResponses
+        OnFailure:
+          Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobFailures
+      FunctionName: zerobounce
+      Qualifier: $LATEST
+
+  zerobounceLambdaMetadata:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: /ThreatTools/Modules/zerobounce
+      Type: String
+      Value: '{"supportedIOCTypes": ["EMAIL"]}'
