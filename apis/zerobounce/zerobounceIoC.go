@@ -63,24 +63,37 @@ func (m *TriageModule) GetZeroBounceData(ctx context.Context, triageRequest *tri
 
 func zerobounceMetaDataExtract(zerobounceResults map[string]*zb.ZeroBounceReport) []string {
 	var triageMetaData []string
-	var validEmails, invalidEmails = 0, 0
+	var validAccounts, invalidAccounts, catchAllAccounts, spamtrapAccounts, abuseAccounts, doNotMailAccounts, unknownAccounts = 0, 0, 0, 0, 0, 0, 0
 
 	for _, data := range zerobounceResults {
 		if data == nil {
-			triageMetaData = append(triageMetaData, fmt.Sprintf("data not found"))
+			triageMetaData = append(triageMetaData, fmt.Sprintf("Data not found"))
 			continue
 		}
 
-		// Count total number of valid and invalid emails
-		if data.MxFound == "true" {
-			validEmails += 1
-		} else {
-			invalidEmails += 1
+		// Count the total number of email acocunt types found
+		switch {
+		case data.Status == "valid":
+			validAccounts++
+		case data.Status == "invalid":
+			invalidAccounts++
+		case data.Status == "catch-all":
+			catchAllAccounts++
+		case data.Status == "spamtrap":
+			spamtrapAccounts++
+		case data.Status == "abuse":
+			abuseAccounts++
+		case data.Status == "do_not_mail":
+			doNotMailAccounts++
+		case data.Status == "unknown":
+			unknownAccounts++
 		}
 
 	}
 
-	triageMetaData = append(triageMetaData, fmt.Sprintf("%d valid email(s) and %d invalid email(s) found", validEmails, invalidEmails))
+	triageMetaData = append(triageMetaData, fmt.Sprintf("Valid account(s): %d, Invalid account(s): %d, Catch-all account(s): %d,"+
+		" Spamtrap account(s): %d, Abuse account(s): %d, Do_not_mail account(s): %d, Unkown account(s): %d",
+		validAccounts, invalidAccounts, catchAllAccounts, spamtrapAccounts, abuseAccounts, doNotMailAccounts, unknownAccounts))
 
 	return triageMetaData
 }
