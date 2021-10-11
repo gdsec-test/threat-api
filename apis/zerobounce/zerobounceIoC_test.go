@@ -16,7 +16,7 @@ func TestGetExampleData(t *testing.T) {
 
 	var triageRequests []*triage.Request
 	triageRequests = append(triageRequests, &triage.Request{
-		IOCs:     []string{"johnsmith@gmail.com"},
+		IOCs:     []string{"primary@amazon.com", "test@gmail.com"},
 		IOCsType: triage.EmailType,
 	})
 	triageRequests = append(triageRequests, &triage.Request{

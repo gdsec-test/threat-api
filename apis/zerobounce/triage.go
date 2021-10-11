@@ -35,7 +35,7 @@ func (m *TriageModule) Supports() []triage.IOCType {
 // Triage retrieves data from zerobounce email validation API
 func (m *TriageModule) Triage(ctx context.Context, triageRequest *triage.Request) ([]*triage.Data, error) {
 	triageData := &triage.Data{
-		Title:    "Email Validation data from Zerobounce",
+		Title:    "Email validation data from Zerobounce",
 		Metadata: []string{},
 	}
 
@@ -50,7 +50,7 @@ func (m *TriageModule) Triage(ctx context.Context, triageRequest *triage.Request
 
 	secretMap := map[string]string{}
 	if err := json.Unmarshal([]byte(*secret.SecretString), &secretMap); err != nil {
-		triageData.Data = fmt.Sprintf("error in unmarshaling secrets: %s", err)
+		triageData.Data = fmt.Sprintf("error in unmarshalling secrets: %s", err)
 		return []*triage.Data{triageData}, err
 	}
 
