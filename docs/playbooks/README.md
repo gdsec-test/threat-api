@@ -8,5 +8,4 @@ These playbooks serve as our plans to detect and respond to incidents with the s
 
 Other threat tools include any other service we own and operate.  This can include but is not limited to
 
-* [GoPhish](GOPHISH.md)
 * [Cuckoo](CUCKOO.md)
