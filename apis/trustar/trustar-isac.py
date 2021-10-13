@@ -152,9 +152,12 @@ def process(job_request: Dict[str, str]) -> Dict[str, str]:
         job_id = "UNKNOWN"
         job_request_body = {}
 
-    module_requested = job_request_body.get("modules", "")
-    if "trustar" not in module_requested:
+    modules_requested = job_request_body.get("modules", list())
+    print('Module list: ' + str(modules_requested))
+    if MODULE_NAME not in modules_requested:
+        print('No trustar module')
         return {}
+    print('Going ahead like trustar is good')
 
     ts = configureTrustar()
     if ts is None:
