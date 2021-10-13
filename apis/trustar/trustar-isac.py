@@ -213,10 +213,10 @@ def process(job_request: Dict[str, str]) -> Dict[str, str]:
         "response": json.dumps(
             [
                 {
-                    "title": "TruSTAR/ISAC Query",
-                    "metadata": metadata,
-                    "dataType": "csv",
-                    "data": convertToCsv(ioc_dict),
+                    "Title": "TruSTAR/ISAC Query",
+                    "Metadata": metadata,
+                    "DataType": "csv",
+                    "Data": convertToCsv(ioc_dict),
                 }
             ]
         ),
