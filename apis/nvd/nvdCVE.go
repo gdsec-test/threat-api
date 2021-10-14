@@ -108,7 +108,6 @@ func dumpCSV(nvdNVDResults map[string]*nvd.NVDReport) string {
 		for _, result := range data.Result.CVEItems {
 			cols := []string{
 				cve,
-				result.Cve.CVEDataMeta.ID,
 				result.PublishedDate,
 				result.Cve.Problemtype.ProblemtypeData[0].Description[0].Value,
 				result.Impact.BaseMetricV3.CvssV3.VectorString,
