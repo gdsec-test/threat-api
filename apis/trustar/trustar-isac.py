@@ -152,8 +152,8 @@ def process(job_request: Dict[str, str]) -> Dict[str, str]:
         job_id = "UNKNOWN"
         job_request_body = {}
 
-    module_requested = job_request_body.get("modules", "")
-    if "trustar" not in module_requested:
+    modules_requested = job_request_body.get("modules", list())
+    if MODULE_NAME not in modules_requested:
         return {}
 
     ts = configureTrustar()
