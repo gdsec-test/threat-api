@@ -24,8 +24,8 @@ require (
 	github.secureserver.net/go/sso-client v0.0.1
 	github.secureserver.net/threat/go-ldap v0.0.0-20201017001259-d06e7b5f7252
 	go.elastic.co/apm v1.11.0
-	go.elastic.co/apm/module/apmhttp v1.9.0
-	go.elastic.co/apm/module/apmlambda v1.8.0
+	go.elastic.co/apm/module/apmhttp v1.11.0
+	go.elastic.co/apm/module/apmlambda v1.11.0
 	go.elastic.co/ecszap v1.0.0
 	go.uber.org/zap v1.14.0
 	golang.org/x/crypto v0.0.0-20200622213623-75b288015ac9 // indirect
