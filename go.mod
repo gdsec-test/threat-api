@@ -10,12 +10,12 @@ require (
 	github.com/gdcorp-infosec/go-ioc v0.0.0-20210201161615-55598c0a06df
 	github.com/godaddy/asherah/go/appencryption v0.1.5
 	github.com/gorilla/mux v1.7.4 // indirect
-	github.com/kr/pretty v0.2.0 // indirect
 	github.com/likexian/whois v1.12.1
 	github.com/likexian/whois-parser v1.20.3
 	github.com/ns3777k/go-shodan/v4 v4.2.0
+	github.com/opencontainers/runc v1.0.2 // indirect
 	github.com/oschwald/geoip2-golang v1.4.0
-	github.com/sirupsen/logrus v1.7.0
+	github.com/sirupsen/logrus v1.8.1
 	github.com/stretchr/testify v1.6.1
 	github.com/thedevsaddam/gojsonq v2.3.0+incompatible // indirect
 	github.com/vertoforce/go-splunk v0.0.0-20201016180916-bf97db989317
