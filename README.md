@@ -23,7 +23,7 @@ To access the links below, you will need to be on the VPN, and be in the `PaloAl
 
 ### Documentation
 
-* [API Usage](docs/USAGE.md)
+* [API Usage](docs/IOCTYPES.md.md)
 * [Development Guidelines](docs/development/threat-developer-guide.md)
 * [Repository Organization](docs/ORGANIZATION.md)
 * [Sceptre Configuration](sceptre/README.md)
@@ -32,7 +32,3 @@ To access the links below, you will need to be on the VPN, and be in the `PaloAl
 ### Tools
 
 * [Miscellaneous Tools](tools/README.md)
-
-### Links
-
-* Add links (Confluence, GitHub repos) here

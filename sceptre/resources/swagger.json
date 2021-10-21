@@ -1,7 +1,7 @@
 {
   "swagger": "2.0",
   "info": {
-    "description": "Threat Tools Platform API. See [documentation](https://github.com/gdcorp-infosec/threat-api/blob/main/docs/USAGE.md) available in our [GitHub repository](https://github.com/gdcorp-infosec/threat-api) for more information.",
+    "description": "Threat Tools Platform API. See [documentation](https://github.com/gdcorp-infosec/threat-api/blob/main/docs/IOCTYPES.md) available in our [GitHub repository](https://github.com/gdcorp-infosec/threat-api) for more information.",
     "version": "2.0.0",
     "title": "ThreatAPI",
     "contact": {
