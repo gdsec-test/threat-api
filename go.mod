@@ -14,8 +14,9 @@ require (
 	github.com/likexian/whois v1.12.1
 	github.com/likexian/whois-parser v1.20.3
 	github.com/ns3777k/go-shodan/v4 v4.2.0
+	github.com/opencontainers/runc v1.0.2 // indirect
 	github.com/oschwald/geoip2-golang v1.4.0
-	github.com/sirupsen/logrus v1.7.0
+	github.com/sirupsen/logrus v1.8.1
 	github.com/stretchr/testify v1.6.1
 	github.com/thedevsaddam/gojsonq v2.3.0+incompatible // indirect
 	github.com/vertoforce/go-splunk v0.0.0-20201016180916-bf97db989317
@@ -24,8 +25,8 @@ require (
 	github.secureserver.net/go/sso-client v0.0.1
 	github.secureserver.net/threat/go-ldap v0.0.0-20201017001259-d06e7b5f7252
 	go.elastic.co/apm v1.11.0
-	go.elastic.co/apm/module/apmhttp v1.9.0
-	go.elastic.co/apm/module/apmlambda v1.8.0
+	go.elastic.co/apm/module/apmhttp v1.11.0
+	go.elastic.co/apm/module/apmlambda v1.11.0
 	go.elastic.co/ecszap v1.0.0
 	go.uber.org/zap v1.14.0
 	golang.org/x/crypto v0.0.0-20200622213623-75b288015ac9 // indirect

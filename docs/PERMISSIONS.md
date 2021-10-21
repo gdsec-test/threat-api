@@ -1,5 +1,6 @@
 # Triage Module Permissions
 
+### All these permissions are written while architecting. For the current implementation, refer to each module folder in /apis/
 We currently will check JOMAX AD groups.  In the future GoDaddy will use a new RBAC system.  To allow a smooth transition, we will create a utility function to check a user's groups, making a functionality change easy to perform in a single place.
 
 ## Temporary documented permissions

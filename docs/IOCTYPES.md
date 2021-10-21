@@ -1,4 +1,4 @@
-# Threat API Usage
+# IoC Type Supported
 
 ## IOC Types
 

@@ -19,18 +19,18 @@ Uptime Requirement - Our service shall comply with the targets assigned in the a
 
 Our Architecture is made up of both API and UI components. We will monitor the following aspects of each in compliance with availability and monitoring standards:
 * API
-  * Dead Letter Queue for Lambda Jobs to monitor end-user experience - Jira story to complete (https://jira.godaddy.com/browse/THREAT-672)
+  * Dead Letter Queue for Lambda Jobs to monitor end-user experience
   * APM metrics to trace all API requests. Instructions below in this page.
-  * API Gateway cloudwatch alarms with Moogsoft integration - Jira story to complete (https://jira.godaddy.com/browse/THREAT-721)
-  * DynamoDB job results troubleshooting (jobs not listed in DynamoDB) - Jira story to complete (https://jira.godaddy.com/browse/THREAT-722)
-  * Cloudwatch & Cloudtrail logs for other errors that show up: including Lambda failures - Jira story to complete ((https://jira.godaddy.com/browse/THREAT-645)
+  * API Gateway cloudwatch alarms with Moogsoft integration
+  * DynamoDB job results troubleshooting (jobs not listed in DynamoDB)
+  * Cloudwatch & Cloudtrail logs for other errors that show up: including Lambda failures - Jira story to complete
 * UI
   * Site24x7 for UI health status - https://ui.threat.int.gdcorp.tools/healthcheck - Prod Jira story to complete (https://jira.godaddy.com/browse/PRODUCTSEC-1301)
   * Fargate container failure Cloudwatch alarm with Moogsoft integration - Prod Jira story to complete https://jira.godaddy.com/browse/PRODUCTSEC-1304)
   * ALB cloudwatch alarms with Moogsoft integration - Prod Jira story t complete https://jira.godaddy.com/browse/PRODUCTSEC-1304)
 * General Logging
   * Application Logs will be sent to ESSP stack - https://threattools-non-prod.kibana.int.gdcorp.tools/app/home#/
-  * Application Security Event Logs will be sent to security logging pipeline per the application logging standard at x.co/appseclog. - Jira story to complete (https://jira.godaddy.com/browse/THREAT-444)
+  * Application Security Event Logs will be sent to security logging pipeline per the application logging standard at x.co/appseclog
     * Events going to the application security logging stream will include AuthZ events, and Job submission metadata
 
 
@@ -53,6 +53,13 @@ From there you can click in to an individual service and view traces (example TO
 
 </details>
 
+<details>
+<summary>Cloudwatch Logs</summary>
+- For specific lambda's errors - check the corresponding log group (`/aws/lambda/lambdaName`) in AWS Cloudwatch
+- If the specific lambda doesn't have errors, check log groups of `/aws/lambda/manager` and `/aws/lambda/responseprocessor` for more info
+
+</details>
+
 ## Threat UI Tenet Troubleshooting
 
 Please review additional troubleshooting steps at - https://github.com/gdcorp-infosec/threat-ui-tenet/blob/main/TROUBLESHOOT.md
@@ -63,7 +70,10 @@ Check the connection and permissions from the gateway to the lambda.  This will 
 
 ## Lambda is not being run
 
-If you notice that your lambda is not being run, it is most likely a problem with the connection to the SNS topic.  Currently, on every job triggering, each lambda should trigger.  And it's up to the lambda to determine if it should run and generate results.  So if you lambda is not running, it is not listening to the SNS topic properly.
+If you notice that your lambda is not being run, it is most likely a problem with the connection to the SNS topic.
+Currently, on every job triggering, each lambda should trigger.
+And it's up to the lambda to determine if it should run and generate results.
+So if you lambda is not running, it is not listening to the SNS topic properly.
 
 Make sure the lambda is set up to be triggered from the proper SNS topic, and review the sceptre files for this.
 ![sns JobRequests](../diagrams/sns_lambdas.png)
@@ -78,8 +88,10 @@ The problem is most likely directly between your lambda and Dynamodb.  Check out
 
 1. First check to make sure the response processor is picking up on your result.  Your lambda should be sending the results to the SQS queue that then is processed by the response processor.  Check to make sure your lambda has this destination set up as shown below.
 ![lambda SQS connections](../diagrams/lambda_sqs.png)
-1. Next check the logs of the response processor, this is the most likely place of error.  If your results are sent in the wrong format, the response processor will log it. Check input format for response processor [here](../DEVELOPMENT.md#output)
+1. Next check the logs of the response processor, this is the most likely place of error.  If your results are sent in the wrong format, the response processor will log it. Check input format for response processor [here](../development/threat-developer-guide.md#output)
 1. Next check if the result is being populated to DynamoDB.
 ![dynamoDB_joblists](../diagrams/dynamodb_joblists.png)
 If it is, great, it's likely just the manager lambda not properly decrypting and returning the results via the API. If not, it's worth doing deeper debugging in the response processor to check for code bugs or other errors.  See APM Instructions.
 1. If you check all these spots, but none show an indication of failure, it's probably worth doing deeper debugging in the code of the [response processor](../../lambdas/responseprocessor), and [manager lambda](../../lambdas/manager), depending on what is not working.
+
+### For specific use case errors refer [debug_guides](debug-guides)

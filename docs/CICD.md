@@ -24,39 +24,31 @@
 ### Github Actions code
 - All workflows `.yml` must be placed under `.github/workflows` directory
 - `dependabot.yml` lives in `.github/` and creates a PR if any new SHA is found on dependencies
+- `pull_request_template.md` gives the standard check in pre-reqs before creating a PR
 
 ##### code-check.yml
-- Triggers on every Pull Request made to `main` branch
+- Triggers on every Pull Request made to `develop` branch
 - Runs Tartufo as the first check
-- On success of Tartufo triggers jobs `python-code-check`,  `go-code-check`, `go-code-check-lambdas`
-- `go-code-check` triggers for every module in `/apis`
-- `go-code-check-lambdas` triggers for every infrastructure lambdas mentioned in the strategy matrix as shown below.
-
-```yaml
-go-code-check-lambdas:
-    needs: tartufo
-    runs-on: self-hosted
-
-    strategy:
-      matrix:
-        go-lambdas: [manager] # Add golang infrastructure lambdas here
-```
+- On success of Tartufo triggers other subsequent jobs
 
 ##### deploy-role-secrets-sync.yml
 - Runs a cron job scheduled weekly at 00:00 on Sunday UTC
-- Can also be manually triggered if a sync is needed. Choose `main` to run from
+- Can also be manually triggered if a sync is needed. Choose `develop` to run from
 - Sync happens across all environments - dev-private, dev, production
 
 ##### deploy-to-dev-private.yml
-- Manually triggered
+- Manually triggered and not part of any CICD
 - Make sure you choose your branch to trigger the deployment from
   ![workflow_dispatch](./diagrams/workflow_dispatch.png)
 
 ##### deploy-to-dev.yml
-- Triggered on every merge into `main`
+- Triggered on every merge into `develop`
 - Can also be manually triggered via `workflow_dispatch`
-  - Make sure you choose `main` to trigger the deployment from
+  - Make sure you choose `develop` to trigger the deployment from
+  - Refrain from pushing from other branches. If you do push, please run from `develop` again to remain consistent
 
 ##### deploy-to-prod.yml
-- Manually triggered
-- Make sure you choose `main` to trigger the deployment from
+- PR from `develop` to `main` is merged
+- Can also be manually trigerred via `workflow_dispatch`
+  - Make sure you choose `main` to trigger the deployment from
+  - Refrain from pushing from other branches. If you do push, please run from `main` again to remain consistent
