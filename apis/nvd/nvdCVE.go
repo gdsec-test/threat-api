@@ -100,18 +100,27 @@ func dumpCSV(nvdNVDResults map[string]*nvd.NVDReport) string {
 		"CVSS v3 String",
 		"Severity Score",
 	})
-	for cve, data := range nvdNVDResults {
+
+	for _, data := range nvdNVDResults {
 		if data == nil {
 			continue
 		}
 
 		for _, result := range data.Result.CVEItems {
+			var cpes string
+			for _, node := range result.Configurations.Nodes {
+				for _, cpe := range node.CpeMatch {
+					cpes = cpes + cpe.Cpe23URI + " "
+				}
+			}
+
 			cols := []string{
-				cve,
+				result.Cve.CVEDataMeta.ID,
 				result.PublishedDate,
 				result.Cve.Problemtype.ProblemtypeData[0].Description[0].Value,
 				result.Impact.BaseMetricV3.CvssV3.VectorString,
 				fmt.Sprintf("%f", result.Impact.BaseMetricV3.CvssV3.BaseScore),
+				cpes,
 			}
 			csv.Write(cols)
 		}
