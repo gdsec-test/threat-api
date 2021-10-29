@@ -99,6 +99,7 @@ func dumpCSV(nvdNVDResults map[string]*nvd.NVDReport) string {
 		"Associated CWEs",
 		"CVSS v3 String",
 		"Severity Score",
+		"CPEs",
 	})
 
 	for _, data := range nvdNVDResults {
