@@ -29,10 +29,10 @@ jobs:
           aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $ECR_REGISTRY
 
       - name: Checkout Current Repo to be Scanned
-        uses: actions/checkout@1e204e9a9253d643386038d443f96446fa156a97
+        uses: actions/checkout@ec3a7ce113134d7a93b817d10a8272cb61118579
 
       - name: Checkout Tartufo Repo
-        uses: actions/checkout@1e204e9a9253d643386038d443f96446fa156a97
+        uses: actions/checkout@ec3a7ce113134d7a93b817d10a8272cb61118579
         with:
           repository: gdcorp-actions/tartufo
           token: ${{ secrets.REPO_CLONE_TOKEN_SA_PAT }} # PAT with read access to gdcorp-actions/tartufo
@@ -50,7 +50,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@1e204e9a9253d643386038d443f96446fa156a97
+        uses: actions/checkout@ec3a7ce113134d7a93b817d10a8272cb61118579
 
       - name: Set up Python 3.9.0
         uses: actions/setup-python@dc73133d4da04e56a135ae2246682783cc7c7cb6
@@ -103,7 +103,7 @@ jobs:
         run: |
           rm -f $HOME/.gitconfig
       - name: Checkout this repository
-        uses: actions/checkout@1e204e9a9253d643386038d443f96446fa156a97
+        uses: actions/checkout@ec3a7ce113134d7a93b817d10a8272cb61118579
 
 #      TODO: Remove this actual AWS access once we have dependency injection
       - name: Configure AWS credentials
