@@ -19,12 +19,12 @@ name: ThreatAPI Deployment (PROD)
 
 on:
   workflow_dispatch:
-    branches: [ main ]
   push:
     branches: [ main ] # Trigger workflow on all pushes to main branch
 
 jobs:
   deploy_to_prod:
+    if: github.ref == 'refs/heads/main'
     runs-on: self-hosted
 
     steps:
