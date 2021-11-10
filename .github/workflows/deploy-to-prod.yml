@@ -18,15 +18,14 @@ name: ThreatAPI Deployment (PROD)
 # See: https://github.com/golang/go/issues/38964
 
 on:
-  workflow_dispatch:
   push:
     branches: [ main ] # Trigger workflow on all pushes to main branch
+  workflow_dispatch:
 
 jobs:
   deploy_to_prod:
-    if: github.ref == 'refs/heads/main'
     runs-on: self-hosted
-
+    if: github.ref == 'refs/heads/main'
     steps:
       - name: Reset gitconfig
         run: |

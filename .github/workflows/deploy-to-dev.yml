@@ -18,21 +18,21 @@ name: ThreatAPI Deployment (DEV)
 # See: https://github.com/golang/go/issues/38964
 
 on:
-  workflow_dispatch:
   push:
     branches: [ develop ] # Trigger workflow on all pushes to develop branch
+  workflow_dispatch:
 
 jobs:
   deploy_to_dev:
-    if: github.ref == 'refs/heads/develop'
     runs-on: self-hosted
+    if: github.ref == 'refs/heads/develop'
     steps:
       - name: Reset gitconfig
         run: |
           rm -f $HOME/.gitconfig
 
       - name: Checkout
-        uses: actions/checkout@ec3a7ce113134d7a93b817d10a8272cb61118579
+        uses: actions/checkout@1e204e9a9253d643386038d443f96446fa156a97
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@0d9a5be0dceea74e09396820e1e522ba4a110d2f
