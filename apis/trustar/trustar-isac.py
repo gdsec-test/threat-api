@@ -13,13 +13,17 @@ import trustar
 from enums import EventKind, EventCategory, EventType, EventOutcome
 from event import Event
 from logger import AppSecFormatter, AppSecLogger
+from apm import initAPMClient
 
 AWS_REGION = "us-west-2"
 MODULE_NAME = "trustar"
 SECRETS_MANAGER_ID = "/ThreatTools/Integrations/trustar"
 
+apm = initAPMClient(MODULE_NAME)
+
 
 def initAppSecHandler() -> logging.StreamHandler:
+    apm.begin_transaction("appsec_handler")
     """Initialize the custom AppSecLogging Handler object"""
     handler = logging.StreamHandler()
     cloud_account_id = boto3.client("sts").get_caller_identity()["Account"]
@@ -30,6 +34,7 @@ def initAppSecHandler() -> logging.StreamHandler:
         "threat-api", "prod", ["threat-intel"], cloud_account_id, cloud_instance_id
     )
     handler.setFormatter(formatter)
+    apm.end_transaction("appsec_handler")
     return handler
 
 
@@ -40,6 +45,7 @@ log.addHandler(initAppSecHandler())
 
 
 def retrieveSecrets() -> Dict[str, str]:
+    apm.begin_transaction("aws.secret.get")
     """Retrieve the API information from Secrets Manager"""
     sm_client = boto3.client("secretsmanager")
 
@@ -59,6 +65,7 @@ def retrieveSecrets() -> Dict[str, str]:
         )
         return None
 
+    apm.end_transaction("aws.secret.get")
     return json.loads(secret["SecretString"])
 
 
@@ -166,6 +173,7 @@ def process(job_request: Dict[str, str]) -> Dict[str, str]:
     ioc_list = job_request_body.get("iocs", list())
 
     ioc_dict = dict()
+    apm.begin_transaction("process ioc")
     if ioc_type == "DOMAIN":
         log.info("Processing {} domain artifact(s)".format(len(ioc_list)))
         ioc_dict = {
@@ -223,6 +231,7 @@ def process(job_request: Dict[str, str]) -> Dict[str, str]:
     }
 
     log.info("Response: " + str(response_message))
+    apm.end_transaction(ioc_type)
     return response_message
 
 

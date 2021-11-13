@@ -18,3 +18,7 @@ trustar==0.3.35
 tzlocal==2.1
 unicodecsv==0.14.1
 urllib3==1.26.6
+elastic-apm==6.5.0
+pre-commit
+starlette
+psutil
