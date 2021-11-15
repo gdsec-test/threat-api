@@ -35,7 +35,13 @@ func createJob(ctx context.Context, request events.APIGatewayProxyRequest) (even
 	if err != nil {
 		return events.APIGatewayProxyResponse{StatusCode: 401}, err
 	}
-	span.LogKV("username", jwt.BaseToken.AccountName)
+	originRequester := toolbox.GetOriginalRequester(request)
+	if originRequester != "" {
+		span.LogKV("username", originRequester + "-proxy")
+	} else {
+		span.LogKV("username", jwt.BaseToken.AccountName)
+	}
+
 
 	// TODO: If we want the default behavior on blank `modules` list to be launching all modules, we need to
 	// check the job request and add the list of all modules if it is blank.
@@ -102,17 +108,20 @@ func createJob(ctx context.Context, request events.APIGatewayProxyRequest) (even
 		span.End(ctx)
 		return events.APIGatewayProxyResponse{StatusCode: 500}, fmt.Errorf("error marshalling requestedModules: %w", err)
 	}
-
+	Item := map[string]*dynamodb.AttributeValue{
+		jobIDKey:           {S: &jobID},
+		usernameKey:        {S: &jwt.BaseToken.AccountName},
+		"startTime":        {N: aws.String(fmt.Sprintf("%d", time.Now().Unix()))},
+		"ttl":              {N: aws.String(fmt.Sprintf("%d", time.Now().Add(time.Hour*24*30).Unix()))},
+		"submission":       encryptedDataMarshalled,
+		"responses":        {M: map[string]*dynamodb.AttributeValue{}},
+		"requestedModules": requestedModules,
+	}
+	if originRequester != "" {
+		Item[originRequesterKey] =  &dynamodb.AttributeValue{S: &originRequester}
+	}
 	_, err = dynamoDBClient.PutItem(&dynamodb.PutItemInput{
-		Item: map[string]*dynamodb.AttributeValue{
-			jobIDKey:           {S: &jobID},
-			usernameKey:        {S: &jwt.BaseToken.AccountName},
-			"startTime":        {N: aws.String(fmt.Sprintf("%d", time.Now().Unix()))},
-			"ttl":              {N: aws.String(fmt.Sprintf("%d", time.Now().Add(time.Hour*24*30).Unix()))},
-			"submission":       encryptedDataMarshalled,
-			"responses":        {M: map[string]*dynamodb.AttributeValue{}},
-			"requestedModules": requestedModules,
-		},
+		Item: Item,
 		TableName: &to.JobDBTableName,
 	})
 	if err != nil {

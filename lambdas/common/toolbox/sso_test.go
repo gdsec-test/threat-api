@@ -27,7 +27,7 @@ func TestSSOGroups(t *testing.T) {
 	}
 }
 
-func TestParseCookies(t *testing.T) {
+func TestParseQueryParams(t *testing.T) {
 	tests := []struct {
 		Input  string
 		Output map[string]string
@@ -40,7 +40,7 @@ func TestParseCookies(t *testing.T) {
 
 	for i, test := range tests {
 		t.Run(fmt.Sprintf("test %d", i), func(t *testing.T) {
-			cookies := parseCookies(test.Input)
+			cookies := parseQueryParams(test.Input)
 			if !reflect.DeepEqual(cookies, test.Output) {
 				t.Errorf("expected %v but got %v", test.Output, cookies)
 				t.Fail()

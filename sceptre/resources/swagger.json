@@ -50,6 +50,15 @@
               "$ref": "#/definitions/JobCreate"
             },
             "required": true
+          },
+          {
+            "name": "Forwarded",
+            "in": "header",
+            "description": "Example: for=username. Optional param to identify original user to request job if job created by proxy authenticated user (e.g. service account)",
+            "schema": {
+              "type": "string"
+            },
+            "required": false
           }
         ],
         "responses": {
