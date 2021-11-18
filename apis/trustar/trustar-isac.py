@@ -19,11 +19,8 @@ AWS_REGION = "us-west-2"
 MODULE_NAME = "trustar"
 SECRETS_MANAGER_ID = "/ThreatTools/Integrations/trustar"
 
-apm = initAPMClient(MODULE_NAME)
-
 
 def initAppSecHandler() -> logging.StreamHandler:
-    apm.begin_transaction("appsec_handler")
     """Initialize the custom AppSecLogging Handler object"""
     handler = logging.StreamHandler()
     cloud_account_id = boto3.client("sts").get_caller_identity()["Account"]
@@ -34,7 +31,6 @@ def initAppSecHandler() -> logging.StreamHandler:
         "threat-api", "prod", ["threat-intel"], cloud_account_id, cloud_instance_id
     )
     handler.setFormatter(formatter)
-    apm.end_transaction("appsec_handler")
     return handler
 
 
@@ -45,7 +41,6 @@ log.addHandler(initAppSecHandler())
 
 
 def retrieveSecrets() -> Dict[str, str]:
-    apm.begin_transaction("aws.secret.get")
     """Retrieve the API information from Secrets Manager"""
     sm_client = boto3.client("secretsmanager")
 
@@ -64,8 +59,7 @@ def retrieveSecrets() -> Dict[str, str]:
             )
         )
         return None
-
-    apm.end_transaction("aws.secret.get")
+    
     return json.loads(secret["SecretString"])
 
 
@@ -173,7 +167,6 @@ def process(job_request: Dict[str, str]) -> Dict[str, str]:
     ioc_list = job_request_body.get("iocs", list())
 
     ioc_dict = dict()
-    apm.begin_transaction("process ioc")
     if ioc_type == "DOMAIN":
         log.info("Processing {} domain artifact(s)".format(len(ioc_list)))
         ioc_dict = {
@@ -231,12 +224,13 @@ def process(job_request: Dict[str, str]) -> Dict[str, str]:
     }
 
     log.info("Response: " + str(response_message))
-    apm.end_transaction(ioc_type)
     return response_message
 
 
 # pylint: disable=unused-argument
 def handler(event: Dict[str, Any], context) -> List[Dict[str, str]]:
+    apm = initAPMClient(MODULE_NAME)
+    apm.begin_transaction('trustar..lookup')
     """Route the request to the right function for processing"""
 
     # event has JWT; don't log
@@ -244,13 +238,14 @@ def handler(event: Dict[str, Any], context) -> List[Dict[str, str]]:
 
     # The input event from SNS contains a list of records, so call process()
     # for each one and return a list of the results.
-
+    
     try:
         return [
             process(json.loads(record["Sns"]["Message"])) for record in event["Records"]
         ]
     except Exception:
         log.exception("Unable to parse event body")
+    apm.end_transaction('trustar..lookup')
 
 
 if __name__ == "__main__":
