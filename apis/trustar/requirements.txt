@@ -22,3 +22,4 @@ elastic-apm==6.5.0
 pre-commit
 starlette
 psutil
+typing==3.7.4.3
