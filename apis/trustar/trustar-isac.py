@@ -13,11 +13,16 @@ import trustar
 from enums import EventKind, EventCategory, EventType, EventOutcome
 from event import Event
 from logger import AppSecFormatter, AppSecLogger
-from apm import initAPMClient
+from botocore.exceptions import ClientError
+from elasticapm import Client
+from starlette.applications import Starlette
+from elasticapm.contrib.starlette import make_apm_client, ElasticAPM
 
 AWS_REGION = "us-west-2"
 MODULE_NAME = "trustar"
 SECRETS_MANAGER_ID = "/ThreatTools/Integrations/trustar"
+APM_SERVER_URL = "/ThreatTools/Integrations/ELASTIC_APM_SERVER_URL"  # nosec
+APM_TOKEN = "/ThreatTools/Integrations/ELASTIC_APM_SECRET_TOKEN"  # nosec
 
 
 def initAppSecHandler() -> logging.StreamHandler:
@@ -226,10 +231,30 @@ def process(job_request: Dict[str, str]) -> Dict[str, str]:
     log.info("Response: " + str(response_message))
     return response_message
 
+def get_secret(name, region_name):  # nosec
+    session = boto3.session.Session()
+    client = session.client(service_name="secretsmanager", region_name=region_name)
+    try:
+        get_secret_value_response = client.get_secret_value(SecretId=name)
+    except ClientError as e:
+            print("An error occurred on service side")
+    else:
+        return get_secret_value_response
 
 # pylint: disable=unused-argument
 def handler(event: Dict[str, Any], context) -> List[Dict[str, str]]:
-    apm = initAPMClient(MODULE_NAME)
+    apm_secret_token = get_secret(APM_TOKEN, AWS_REGION)["SecretString"]  # nosec
+    apm_server_url = get_secret(APM_SERVER_URL, AWS_REGION)["SecretString"]  # nosec
+    app = Starlette()
+    apm = make_apm_client(
+        {
+            "SERVICE_NAME": MODULE_NAME,
+            "SERVER_URL": apm_server_url,
+            "SECRET_TOKEN": apm_secret_token,
+            "CAPTURE_BODY": "all",
+        }
+    )
+    app.add_middleware(ElasticAPM, client=apm)
     apm.begin_transaction('trustar..lookup')
     """Route the request to the right function for processing"""
 
