@@ -243,6 +243,18 @@ def get_secret(name, region_name):  # nosec
 # pylint: disable=unused-argument
 def handler(event: Dict[str, Any], context) -> List[Dict[str, str]]:
     """Route the request to the right function for processing"""
+    session = boto3.session.Session()
+    client = session.client(service_name="secretsmanager", region_name=AWS_REGION)
+    try:
+        get_secret_value_response = client.get_secret_value(SecretId=APM_TOKEN)
+        apm_secret_token = get_secret_value_response["SecretString"] #nosec
+        get_secret_value_response = client.get_secret_value(SecretId=APM_SERVER_URL)
+        apm_server_url = get_secret_value_response["SecretString"] #nosec
+        apm = Client(service_name=MODULE_NAME, server_url=apm_server_url, secret_token=apm_secret_token)
+        apm.begin_transaction("trustar..lookup")
+        apm.end_transaction("trustar..lookup")
+    except ClientError as e:
+            print("An error occurred on service side")
 
     # event has JWT; don't log
     # log.info("Event: %s", json.dumps(event))
@@ -259,11 +271,7 @@ def handler(event: Dict[str, Any], context) -> List[Dict[str, str]]:
 
 if __name__ == "__main__":
     # Enable debug level logging for CLI usage
-    apm_secret_token = get_secret(APM_TOKEN, AWS_REGION)["SecretString"]  # nosec
-    apm_server_url = get_secret(APM_SERVER_URL, AWS_REGION)["SecretString"]  # nosec
-    client = Client(service_name=MODULE_NAME, server_url=apm_server_url, secret_token=apm_secret_token)
-    client.begin_transaction("trustar..lookup")
-
+    
     log_handler = logging.StreamHandler()
     log_handler.setFormatter(
         logging.Formatter("[%(levelname)s]\t%(asctime)s.%(msecs)dZ\t%(message)s")
@@ -275,5 +283,3 @@ if __name__ == "__main__":
     if len(sys.argv) == 2:
         test_event = json.loads(open(sys.argv[1]))
         handler(test_event, None)
-    
-    client.end_transaction("trustar..lookup")
