@@ -15,7 +15,7 @@ from event import Event
 from logger import AppSecFormatter, AppSecLogger
 from botocore.exceptions import ClientError
 from elasticapm import Client
-from elasticapm.contrib.starlette import make_apm_client, ElasticAPM
+#from elasticapm.contrib.starlette import make_apm_client, ElasticAPM
 
 AWS_REGION = "us-west-2"
 MODULE_NAME = "trustar"
@@ -240,13 +240,8 @@ def get_secret(name, region_name):  # nosec
     else:
         return get_secret_value_response
 
-
 # pylint: disable=unused-argument
 def handler(event: Dict[str, Any], context) -> List[Dict[str, str]]:
-    apm_secret_token = get_secret(APM_TOKEN, AWS_REGION)["SecretString"]  # nosec
-    apm_server_url = get_secret(APM_SERVER_URL, AWS_REGION)["SecretString"]  # nosec
-    client = Client(service_name=MODULE_NAME, server_url=apm_server_url, secret_token=apm_secret_token)
-    client.begin_transaction("trustar..lookup")
     """Route the request to the right function for processing"""
 
     # event has JWT; don't log
@@ -254,18 +249,20 @@ def handler(event: Dict[str, Any], context) -> List[Dict[str, str]]:
 
     # The input event from SNS contains a list of records, so call process()
     # for each one and return a list of the results.
-    
     try:
         return [
             process(json.loads(record["Sns"]["Message"])) for record in event["Records"]
         ]
     except Exception:
         log.exception("Unable to parse event body")
-    client.end_transaction("trustar..lookup")
 
 
 if __name__ == "__main__":
     # Enable debug level logging for CLI usage
+    apm_secret_token = get_secret(APM_TOKEN, AWS_REGION)["SecretString"]  # nosec
+    apm_server_url = get_secret(APM_SERVER_URL, AWS_REGION)["SecretString"]  # nosec
+    client = Client(service_name=MODULE_NAME, server_url=apm_server_url, secret_token=apm_secret_token)
+    client.begin_transaction("trustar..lookup")
 
     log_handler = logging.StreamHandler()
     log_handler.setFormatter(
@@ -278,3 +275,5 @@ if __name__ == "__main__":
     if len(sys.argv) == 2:
         test_event = json.loads(open(sys.argv[1]))
         handler(test_event, None)
+    
+    client.end_transaction("trustar..lookup")
