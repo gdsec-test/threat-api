@@ -15,8 +15,8 @@ from event import Event
 from logger import AppSecFormatter, AppSecLogger
 from botocore.exceptions import ClientError
 from elasticapm import Client
-from starlette.applications import Starlette
-from elasticapm.contrib.starlette import make_apm_client, ElasticAPM
+#from starlette.applications import Starlette
+#from elasticapm.contrib.starlette import make_apm_client, ElasticAPM
 
 AWS_REGION = "us-west-2"
 MODULE_NAME = "trustar"
@@ -241,21 +241,24 @@ def get_secret(name, region_name):  # nosec
     else:
         return get_secret_value_response
 
+
 # pylint: disable=unused-argument
 def handler(event: Dict[str, Any], context) -> List[Dict[str, str]]:
     apm_secret_token = get_secret(APM_TOKEN, AWS_REGION)["SecretString"]  # nosec
     apm_server_url = get_secret(APM_SERVER_URL, AWS_REGION)["SecretString"]  # nosec
-    app = Starlette()
-    apm = make_apm_client(
-        {
-            "SERVICE_NAME": MODULE_NAME,
-            "SERVER_URL": apm_server_url,
-            "SECRET_TOKEN": apm_secret_token,
-            "CAPTURE_BODY": "all",
-        }
-    )
-    app.add_middleware(ElasticAPM, client=apm)
-    apm.begin_transaction('trustar..lookup')
+    #app = Starlette()
+
+    #apm = make_apm_client(
+    #    {
+    #        "SERVICE_NAME": MODULE_NAME,
+    #        "SERVER_URL": apm_server_url,
+    #        "SECRET_TOKEN": apm_secret_token,
+    #        "CAPTURE_BODY": "all",
+    #    }
+    #)
+    #app.add_middleware(ElasticAPM, client=apm)
+    #apm.begin_transaction("trustar..lookup")
+    #apm.end_transaction("trustar..lookup")
     """Route the request to the right function for processing"""
 
     # event has JWT; don't log
@@ -270,7 +273,6 @@ def handler(event: Dict[str, Any], context) -> List[Dict[str, str]]:
         ]
     except Exception:
         log.exception("Unable to parse event body")
-    apm.end_transaction('trustar..lookup')
 
 
 if __name__ == "__main__":
