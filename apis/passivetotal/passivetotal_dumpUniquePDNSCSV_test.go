@@ -2,14 +2,14 @@ package main
 
 import (
 	"bytes"
-	"encoding/json"
-	"reflect"
-	"testing"
 	"encoding/csv"
-	"io"
+	"encoding/json"
 	. "github.com/agiledragon/gomonkey/v2"
 	pt "github.com/gdcorp-infosec/threat-api/apis/passivetotal/passivetotalLibrary"
 	. "github.com/smartystreets/goconvey/convey"
+	"io"
+	"reflect"
+	"testing"
 )
 
 func TestDumpUniquePDNSCSV(t *testing.T) {
@@ -27,12 +27,16 @@ func TestDumpUniquePDNSCSV(t *testing.T) {
 		// stub Write method of csv.Writer to prevent it to be called and fake it, use "reflect" to get to it's signature
 		var count = 0
 		var actualCSVHeaders []string
-		patches = append(patches, ApplyMethod(reflect.TypeOf(&csv.Writer{}), "Write", func(_ *csv.Writer, headers  []string) error {
+		var csvResultsRow []string
+		patches = append(patches, ApplyMethod(reflect.TypeOf(&csv.Writer{}), "Write", func(_ *csv.Writer, rowValues []string) error {
 			if count == 0 {
-				actualCSVHeaders = make([]string, len(headers))
-  			copy(actualCSVHeaders, headers) // trying to catch headers to test them later
-				count++
+				actualCSVHeaders = make([]string, len(rowValues))
+				copy(actualCSVHeaders, rowValues) // trying to catch headers to test them later
+			} else {
+				csvResultsRow = make([]string, len(rowValues))
+				copy(csvResultsRow, rowValues) // trying to catch csvResults row to test them later
 			}
+			count++
 			return nil
 		}))
 		// stub Flush method of csv.Writer to prevent it to be called and fake it, use "reflect" to get to it's signature
@@ -41,8 +45,8 @@ func TestDumpUniquePDNSCSV(t *testing.T) {
 			actualCSVResp.WriteString(expectedResult)
 		}))
 
-		Reset(func () {
-		// deferred reset all stubs\mocks after every test suite running
+		Reset(func() {
+			// deferred reset all stubs\mocks after every test suite running
 			for _, patch := range patches {
 				patch.Reset()
 			}
@@ -52,9 +56,9 @@ func TestDumpUniquePDNSCSV(t *testing.T) {
 		byt := []byte(`{
 			"total": 1,
 			"frequency": [[1, 2], [3, 4]],
-			"results": [ "result1", "result2" ],
-			"queryType": "queryType",
-			"queryValue": "queryValue"
+			"results": [ "result1456", "result762" ],
+			"queryType": "I_AM_queryType4234",
+			"queryValue": "I_AM_queryValue695"
 		}`)
 		var pdnsReport pt.PDNSUniqueReport
 		err := json.Unmarshal(byt, &pdnsReport)
@@ -80,5 +84,17 @@ func TestDumpUniquePDNSCSV(t *testing.T) {
 			}
 			So(actualCSVHeaders, ShouldResemble, expectedHeaders)
 		})
+
+		Convey("should set proper results in CSV Rows for output", func() {
+			// call actual function under test
+			dumpUniquePDNSCSV(ptPDNSResults)
+			expectedCsvResultsRow := []string{
+				"record1",
+				"3",
+				"4",
+			}
+			So(csvResultsRow, ShouldResemble, expectedCsvResultsRow)
+		})
+
 	})
 }
