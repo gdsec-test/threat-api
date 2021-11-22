@@ -31,6 +31,7 @@ require (
 require (
 	github.com/BurntSushi/toml v0.3.1 // indirect
 	github.com/PuerkitoBio/goquery v1.5.1 // indirect
+	github.com/agiledragon/gomonkey/v2 v2.2.0 // indirect
 	github.com/andybalholm/cascadia v1.1.0 // indirect
 	github.com/armon/go-radix v1.0.0 // indirect
 	github.com/awnumar/memcall v0.0.0-20190930130926-11bbaffc6c8f // indirect
@@ -44,8 +45,10 @@ require (
 	github.com/godaddy/asherah/go/securememory v0.1.2 // indirect
 	github.com/google/go-cmp v0.5.6 // indirect
 	github.com/google/go-querystring v1.0.0 // indirect
+	github.com/gopherjs/gopherjs v0.0.0-20181017120253-0766667cb4d1 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/joeshaw/multierror v0.0.0-20140124173710-69b34d4ec901 // indirect
+	github.com/jtolds/gls v4.20.0+incompatible // indirect
 	github.com/kr/pretty v0.2.1 // indirect
 	github.com/likexian/gokit v0.25.0 // indirect
 	github.com/magefile/mage v1.9.0 // indirect
@@ -60,6 +63,8 @@ require (
 	github.com/rcrowley/go-metrics v0.0.0-20181016184325-3113b8401b8a // indirect
 	github.com/santhosh-tekuri/jsonschema v1.2.4 // indirect
 	github.com/shurcooL/graphql v0.0.0-20181231061246-d48a9a75455f // indirect
+	github.com/smartystreets/assertions v1.2.0 // indirect
+	github.com/smartystreets/goconvey v1.7.2 // indirect
 	github.com/thedevsaddam/gojsonq v2.3.0+incompatible // indirect
 	github.com/vertoforce/multiregex v0.0.0-20200305221808-10dce2b47221 // indirect
 	github.com/vertoforce/streamregex v0.0.0-20200126210557-5b6afd4f6723 // indirect

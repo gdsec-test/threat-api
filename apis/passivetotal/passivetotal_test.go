@@ -1,38 +1,103 @@
 package main
 
 import (
-	"context"
+	"bytes"
+	"encoding/json"
+	"reflect"
 	"testing"
+	"encoding/csv"
+	"io"
 
-	"github.com/gdcorp-infosec/threat-api/lambdas/common/toolbox"
-	"github.com/gdcorp-infosec/threat-api/lambdas/common/triagelegacyconnector/triage"
+	. "github.com/agiledragon/gomonkey/v2"
+	pt "github.com/gdcorp-infosec/threat-api/apis/passivetotal/passivetotalLibrary"
+	. "github.com/smartystreets/goconvey/convey"
 )
 
-func TestEnrichCVE(t *testing.T) {
+func TestDumpPDNSCSV(t *testing.T) {
 
-	ctx := context.Background()
-	tb = toolbox.GetToolbox()
-	defer tb.Close(ctx)
+	Convey("dumpPDNSCSV", t, func() {
+		// setup stubs\mocks
+		patches := []*Patches{}
+		actualCSVResp := &bytes.Buffer{}
 
-	var triageRequests []*triage.Request
-	triageRequests = append(triageRequests, &triage.Request{
-		IOCs:     []string{"propelltherapy.com"},
-		IOCsType: triage.DomainType,
-	})
+		// stub csv.Writer instance creation and point to it, cause it is needed to manipulate in tests
+		patches = append(patches, ApplyFunc(csv.NewWriter, func(w io.Writer) *csv.Writer {
+			actualCSVResp = w.(*bytes.Buffer)
+			return nil
+		}))
+		// stub Write method of csv.Writer to prevent it to be called and fake it, use "reflect" to get to it's signature
+		var count = 0
+		var actualCSVHeaders []string
+		patches = append(patches, ApplyMethod(reflect.TypeOf(&csv.Writer{}), "Write", func(_ *csv.Writer, headers  []string) error {
+			if count == 0 {
+				actualCSVHeaders = make([]string, len(headers))
+  			copy(actualCSVHeaders, headers) // trying to catch headers to test them later
+				count++
+			}
+			return nil
+		}))
+		// stub Flush method of csv.Writer to prevent it to be called and fake it, use "reflect" to get to it's signature
+		expectedResult := "I_am_result_of_dumpPDNSCSV"
+		patches = append(patches, ApplyMethod(reflect.TypeOf(&csv.Writer{}), "Flush", func(_ *csv.Writer) {
+			actualCSVResp.WriteString(expectedResult)
+		}))
 
-	for _, triageRequest := range triageRequests {
-		triageModule := TriageModule{}
-		triageResult, err := triageModule.Triage(ctx, triageRequest)
+		// deferred reset all stubs\mocks after every test suite running
+		for _, patch := range patches {
+			defer patch.Reset()
+		}
+
+
+		// prepare big input data for function under testing
+		byt := []byte(`{
+			"totalRecords": 1,
+			"firstSeen": "firstSeen",
+			"lastSeen": "lastSeen",
+			"results": [
+				{
+					"firstSeen": "firstSeen",
+					"lastSeen": "lastSeen",
+					"resolveType": "resolveType",
+					"value": "value",
+					"recordHash": "recordHash",
+					"resolve": "resolve",
+					"source": ["source1", "source2"],
+					"recordType": "recordType",
+					"collected": "collected"
+				}
+			],
+			"queryType": "queryType",
+			"queryValue": "queryValue"
+		}`)
+		var pdnsReport pt.PDNSReport
+		err := json.Unmarshal(byt, &pdnsReport)
 		if err != nil {
-			t.Fatal(err)
+			panic(err)
 		}
+		ptPDNSResults := map[string]*pt.PDNSReport{}
+		ptPDNSResults["record1"] = &pdnsReport
 
-		if len(triageResult) == 0 {
-			t.Fatal("len 0")
-		}
-		if triageResult[0].Data == "" {
-			t.Fatal("first data element empty ")
-		}
-	}
+		// call actual function under test
+		result := dumpPDNSCSV(ptPDNSResults)
 
+		Convey("should return correct output of formatted report", func() {
+			So(result, ShouldEqual, actualCSVResp.String())
+		})
+
+		Convey("should set proper headers for CSV output", func() {
+			expectedHeaders := []string{
+				"Domain/IP",
+				"FirstSeen",
+				"ResolveType",
+				"Value",
+				"RecordHash",
+				"LastSeen",
+				"Resolve",
+				"Source",
+				"RecordType",
+				"Collected",
+			}
+			So(actualCSVHeaders, ShouldResemble, expectedHeaders)
+		})
+	})
 }
