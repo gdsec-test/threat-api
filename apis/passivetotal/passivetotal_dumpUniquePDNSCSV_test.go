@@ -12,9 +12,9 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 )
 
-func TestDumpPDNSCSV(t *testing.T) {
+func TestDumpUniquePDNSCSV(t *testing.T) {
 
-	Convey("dumpPDNSCSV", t, func() {
+	Convey("dumpUniquePDNSCSV", t, func() {
 		// setup stubs\mocks
 		patches := []*Patches{}
 		actualCSVResp := &bytes.Buffer{}
@@ -36,7 +36,7 @@ func TestDumpPDNSCSV(t *testing.T) {
 			return nil
 		}))
 		// stub Flush method of csv.Writer to prevent it to be called and fake it, use "reflect" to get to it's signature
-		expectedResult := "I_am_result_of_dumpPDNSCSV"
+		expectedResult := "I_am_result_of_dumpUniquePDNSCSV"
 		patches = append(patches, ApplyMethod(reflect.TypeOf(&csv.Writer{}), "Flush", func(_ *csv.Writer) {
 			actualCSVResp.WriteString(expectedResult)
 		}))
@@ -50,53 +50,33 @@ func TestDumpPDNSCSV(t *testing.T) {
 
 		// prepare big input data for function under testing
 		byt := []byte(`{
-			"totalRecords": 1,
-			"firstSeen": "firstSeen",
-			"lastSeen": "lastSeen",
-			"results": [
-				{
-					"firstSeen": "firstSeen",
-					"lastSeen": "lastSeen",
-					"resolveType": "resolveType",
-					"value": "value",
-					"recordHash": "recordHash",
-					"resolve": "resolve",
-					"source": ["source1", "source2"],
-					"recordType": "recordType",
-					"collected": "collected"
-				}
-			],
+			"total": 1,
+			"frequency": [[1, 2], [3, 4]],
+			"results": [ "result1", "result2" ],
 			"queryType": "queryType",
 			"queryValue": "queryValue"
 		}`)
-		var pdnsReport pt.PDNSReport
+		var pdnsReport pt.PDNSUniqueReport
 		err := json.Unmarshal(byt, &pdnsReport)
 		if err != nil {
 			panic(err)
 		}
-		ptPDNSResults := map[string]*pt.PDNSReport{}
+		ptPDNSResults := map[string]*pt.PDNSUniqueReport{}
 		ptPDNSResults["record1"] = &pdnsReport
 
 		Convey("should return correct output of formatted report", func() {
 			// call actual function under test
-			result := dumpPDNSCSV(ptPDNSResults)
+			result := dumpUniquePDNSCSV(ptPDNSResults)
 			So(result, ShouldEqual, actualCSVResp.String())
 		})
 
 		Convey("should set proper headers for CSV output", func() {
 			// call actual function under test
-			dumpPDNSCSV(ptPDNSResults)
+			dumpUniquePDNSCSV(ptPDNSResults)
 			expectedHeaders := []string{
 				"Domain/IP",
-				"FirstSeen",
-				"ResolveType",
-				"Value",
-				"RecordHash",
-				"LastSeen",
-				"Resolve",
-				"Source",
-				"RecordType",
-				"Collected",
+				"Result",
+				"Frequency",
 			}
 			So(actualCSVHeaders, ShouldResemble, expectedHeaders)
 		})
