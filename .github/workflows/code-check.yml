@@ -140,7 +140,7 @@ jobs:
           go build ./...
       - name: Running go tests
         run: |
-          go test ./... -tags runTests -cover
+          go test ./... -tags runTests -gcflags=all=-l -cover
 
 # List of tests skipped due to using real objects where mocks are required. To be later refined in unit test revamping.
 #

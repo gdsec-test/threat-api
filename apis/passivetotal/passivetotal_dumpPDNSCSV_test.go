@@ -74,10 +74,7 @@ func TestDumpPDNSCSV(t *testing.T) {
 			"queryValue": "queryValue"
 		}`)
 		var pdnsReport pt.PDNSReport
-		err := json.Unmarshal(byt, &pdnsReport)
-		if err != nil {
-			panic(err)
-		}
+		json.Unmarshal(byt, &pdnsReport)
 		ptPDNSResults := map[string]*pt.PDNSReport{}
 		ptPDNSResults["record1"] = &pdnsReport
 
