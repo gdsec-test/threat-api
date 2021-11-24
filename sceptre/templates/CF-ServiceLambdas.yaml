@@ -34,6 +34,10 @@ Parameters:
     Type: String
     Description: SHA1 hash of the splunk lambda source
     Default: ""
+  sucuriSHA1:
+    Type: String
+    Description: SHA1 hash of the sucuri lambda source
+    Default: ""
   trustarSHA1:
     Type: String
     Description: SHA1 hash of the trustar lambda source
@@ -455,6 +459,56 @@ Resources:
       Name: /ThreatTools/Modules/splunk
       Type: String
       Value: '{"supportedIOCTypes": ["GODADDY_USERNAME", "IP", "CVE", "AWSHOSTNAME"], "actions": {"ReadSplunk": {"requiredADGroups": ["ENG-Threat Research", "ENG-DCU", "infosec_response"]}}}'
+
+  sucuriLambdaFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      Code:
+        S3Bucket: !Sub gd-threattools-${AWS::AccountId}-code-bucket
+        S3Key: !Sub sucuri/${sucuriSHA1}
+      Description: !Sub sucuri lambda (${sucuriSHA1})
+      FunctionName: sucuri
+      Handler: sucuri
+      MemorySize: 256
+      Role: !Sub arn:aws:iam::${AWS::AccountId}:role/threattools-custom-ThreatRole
+      Runtime: go1.x
+      Timeout: 15
+
+  sucuriLambdaPermission:
+    DependsOn: sucuriLambdaFunction
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:sucuri
+      Principal: sns.amazonaws.com
+      SourceArn: !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:JobRequests
+
+  sucuriSNSSubscription:
+    DependsOn: sucuriLambdaFunction
+    Type: AWS::SNS::Subscription
+    Properties:
+      Endpoint: !GetAtt sucuriLambdaFunction.Arn
+      Protocol: lambda
+      TopicArn: !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:JobRequests
+
+  sucuriLambdaEventInvokeConfig:
+    DependsOn: sucuriLambdaFunction
+    Type: AWS::Lambda::EventInvokeConfig
+    Properties:
+      DestinationConfig:
+        OnSuccess:
+          Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobResponses
+        OnFailure:
+          Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobFailures
+      FunctionName: sucuri
+      Qualifier: $LATEST
+
+  sucuriLambdaMetadata:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: /ThreatTools/Modules/sucuri
+      Type: String
+      Value: '{"supportedIOCTypes": ["DOMAIN"]}'
 
   trustarLambdaFunction:
     Type: AWS::Lambda::Function
