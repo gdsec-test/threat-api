@@ -273,6 +273,8 @@ github.com/stretchr/testify v1.5.1/go.mod h1:5W2xD1RspED5o8YsWQXVCued0rvSQ+mT+I5
 github.com/stretchr/testify v1.6.1 h1:hDPOHmpOpP40lSULcqw7IrRb/u7w6RpDC9399XyoNd0=
 github.com/stretchr/testify v1.6.1/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/h/Wwjteg=
 github.com/syndtr/gocapability v0.0.0-20200815063812-42c35b437635/go.mod h1:hkRG7XYTFWNJGYcbNJQlaLq0fg1yr4J4t/NcTQtrfww=
+github.com/techoner/gophp v0.2.0 h1:vVFoS2XC/NZariagUOhAGqC8p/Ws8R8ARYpj/9lTIAo=
+github.com/techoner/gophp v0.2.0/go.mod h1:NOxB/qoTl4+G82CkQp60T18Az5rOTufCqm83x9i/u7M=
 github.com/testcontainers/testcontainers-go v0.7.0 h1:IaAsq5JY49GhDgCUKY87mo6JeOLOwp321iEP/SQjJKE=
 github.com/testcontainers/testcontainers-go v0.7.0/go.mod h1:4dloDPrC94+8ebXA+Iei3Jy+gxF6uHQssJkB3mlP9Rg=
 github.com/thedevsaddam/gojsonq v2.3.0+incompatible h1:i2lFTvGY4LvoZ2VUzedsFlRiyaWcJm3Uh6cQ9+HyQA8=
