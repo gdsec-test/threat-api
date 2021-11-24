@@ -6,6 +6,7 @@ import (
 	"encoding/csv"
 	"fmt"
 	"sync"
+	"time"
 
 	zb "github.com/gdcorp-infosec/threat-api/apis/zerobounce/zerobounceLibrary"
 	"github.com/gdcorp-infosec/threat-api/lambdas/common/triagelegacyconnector/triage"
@@ -23,39 +24,47 @@ func (m *TriageModule) GetZeroBounceData(ctx context.Context, triageRequest *tri
 	wg := sync.WaitGroup{}
 	zerobounceLock := sync.Mutex{}
 	threadLimit := make(chan int, maxThreadCount)
+	ioc_list := "\"email_batch\":["
 
 	for _, ioc := range triageRequest.IOCs {
-		// Check context
-		select {
-		case <-ctx.Done():
-			break
-		case threadLimit <- 1:
-			wg.Add(1)
-		default:
+		ioc_list += "{\"email_address\": \"" + ioc + "\"},"
+	}
+	ioc_list += "]"
+
+	//for _, ioc := range triageRequest.IOCs {
+	// Check context
+	select {
+	case <-ctx.Done():
+		break
+	case threadLimit <- 1:
+		wg.Add(1)
+	default:
+	}
+
+	span, spanCtx := tb.TracerLogger.StartSpan(ctx, "EmailLookup", "zerobounce", "", "zerobounceEmailLookup")
+
+	go func(ioc_list string) {
+		defer func() {
+			<-threadLimit
+			wg.Done()
+		}()
+		zerobounceResult, err := zb.GetZeroBounce(ctx, ioc_list, "", m.ZeroBounceKey, m.ZeroBounceClient)
+		if err != nil {
+			span.AddError(err)
+			zerobounceLock.Lock()
+			zerobounceResults[ioc_list] = nil
+			zerobounceLock.Unlock()
+			return
 		}
 
-		span, spanCtx := tb.TracerLogger.StartSpan(ctx, "EmailLookup", "zerobounce", "", "zerobounceEmailLookup")
+		zerobounceLock.Lock()
+		zerobounceResults[ioc_list] = zerobounceResult
+		zerobounceLock.Unlock()
 
-		go func(ioc string) {
-			defer func() {
-				<-threadLimit
-				wg.Done()
-			}()
-			zerobounceResult, err := zb.GetZeroBounce(ctx, ioc, "", m.ZeroBounceKey, m.ZeroBounceClient)
-			if err != nil {
-				span.AddError(err)
-				zerobounceLock.Lock()
-				zerobounceResults[ioc] = nil
-				zerobounceLock.Unlock()
-				return
-			}
-
-			zerobounceLock.Lock()
-			zerobounceResults[ioc] = zerobounceResult
-			zerobounceLock.Unlock()
-		}(ioc)
-		span.End(spanCtx)
-	}
+		time.Sleep(2 * time.Second)
+	}(ioc_list)
+	span.End(spanCtx)
+	//}
 
 	wg.Wait()
 	return zerobounceResults, nil
@@ -65,35 +74,37 @@ func zerobounceMetaDataExtract(zerobounceResults map[string]*zb.ZeroBounceReport
 	var triageMetaData []string
 	var validAccounts, invalidAccounts, catchAllAccounts, spamtrapAccounts, abuseAccounts, doNotMailAccounts, unknownAccounts = 0, 0, 0, 0, 0, 0, 0
 
-	for _, data := range zerobounceResults {
-		if data == nil {
-			triageMetaData = append(triageMetaData, fmt.Sprintf("Data not found"))
+	for _, response := range zerobounceResults {
+		if response == nil {
+			triageMetaData = append(triageMetaData, "Data not found")
 			continue
 		}
 
-		// Count the total number of email acocunt types found
-		switch {
-		case data.Status == "valid":
-			validAccounts++
-		case data.Status == "invalid":
-			invalidAccounts++
-		case data.Status == "catch-all":
-			catchAllAccounts++
-		case data.Status == "spamtrap":
-			spamtrapAccounts++
-		case data.Status == "abuse":
-			abuseAccounts++
-		case data.Status == "do_not_mail":
-			doNotMailAccounts++
-		case data.Status == "unknown":
-			unknownAccounts++
+		for _, data := range response.EmailBatch {
+			// Count the total number of email acocunt types found
+			switch {
+			case data.Status == "valid":
+				validAccounts++
+			case data.Status == "invalid":
+				invalidAccounts++
+			case data.Status == "catch-all":
+				catchAllAccounts++
+			case data.Status == "spamtrap":
+				spamtrapAccounts++
+			case data.Status == "abuse":
+				abuseAccounts++
+			case data.Status == "do_not_mail":
+				doNotMailAccounts++
+			case data.Status == "unknown":
+				unknownAccounts++
+			}
 		}
-
 	}
 
 	triageMetaData = append(triageMetaData, fmt.Sprintf("Valid account(s): %d, Invalid account(s): %d, Catch-all account(s): %d,"+
 		" Spamtrap account(s): %d, Abuse account(s): %d, Do_not_mail account(s): %d, Unkown account(s): %d",
 		validAccounts, invalidAccounts, catchAllAccounts, spamtrapAccounts, abuseAccounts, doNotMailAccounts, unknownAccounts))
+	triageMetaData = append(triageMetaData, "\nThe Zerobounce Batch API is rate-limited to allow 5 requests per minute with a maximum of 100 emails per request. In case no data is found, the rate limit has been exceeded. Try again in 10 minutes.")
 
 	return triageMetaData
 }
@@ -118,32 +129,34 @@ func DumpCSV(zerobounceResults map[string]*zb.ZeroBounceReport) string {
 		"MX Record",
 		"Processed At",
 	})
+
 	for _, data := range zerobounceResults {
 		if data == nil {
-			cols := []string{"", "", "", "", "", "", ""}
+			cols := []string{"", "", "", "", "", "", "", "", "", "", "", ""}
 			csv.Write(cols)
 			continue
 		}
 
-		// Convert results to string
-		cols := []string{
-			data.Email,
-			data.Status,
-			data.SubStatus,
-			fmt.Sprint(data.FreeEmail),
-			fmt.Sprint(data.DidYouMean),
-			data.Account,
-			data.Domain,
-			data.DomainAgeDays,
-			data.SmtpProvider,
-			data.MxFound,
-			data.MxRecord,
-			data.ProcessedAt,
+		for _, email := range data.EmailBatch {
+			// Convert results to string
+			cols := []string{
+				email.Address,
+				email.Status,
+				email.SubStatus,
+				fmt.Sprint(email.FreeEmail),
+				fmt.Sprint(email.DidYouMean),
+				email.Account,
+				email.Domain,
+				email.DomainAgeDays,
+				email.SMTPProvider,
+				email.MxFound,
+				email.MxRecord,
+				email.ProcessedAt,
+			}
+			csv.Write(cols)
 		}
-		csv.Write(cols)
 
 	}
 	csv.Flush()
-
 	return resp.String()
 }
