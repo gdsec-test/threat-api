@@ -8,11 +8,13 @@ import (
 	"io"
 
 	"github.com/techoner/gophp"
+	"github.com/gdcorp-infosec/threat-api/lambdas/common/toolbox"
 )
 
+var tb *toolbox.Toolbox
+
 const (
-	//Cannot add due to secret
-	SucuriEndpoint = "https://monitor22.sucuri.net/scan-api.php?k=key&a=scan"
+	SucuriEndpoint = "https://monitor22.sucuri.net/scan-api.php?"
 )
 
 type SucuriReport struct {
@@ -43,8 +45,18 @@ type SucuriReport struct {
 
 func GetSucuri(ctx context.Context, ioc string, SucuriClient *http.Client) (*SucuriReport, error) {
 	// Build URL
-	URL := SucuriEndpoint + "&host=" + ioc + "&format=serialized"
+	tb = toolbox.GetToolbox()
+	defer tb.Close(ctx)
+
+	SucuriKey, err := tb.GetFromCredentialsStore(ctx, "ThreatTools/Integrations/sucuri", nil)
+	if err != nil {
+		return nil, fmt.Errorf("error getting sucuri credentials: %w", err)
+	}
+
+	secret := *SucuriKey.SecretString
+	URL := SucuriEndpoint + "k=" + secret +  "&a=scan" + "&host=" + ioc + "&format=serialized"
 	URL = string(URL)
+
 
 	// Build request
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, URL, nil)
@@ -64,14 +76,14 @@ func GetSucuri(ctx context.Context, ioc string, SucuriClient *http.Client) (*Suc
 	bodyBytes, _ := io.ReadAll(resp.Body)
 	bodyString := string(bodyBytes)
 	out, err := gophp.Unserialize([]byte(bodyString))
-	reportHolder := &SucuriReport{}
 
 	if err != nil {
-		fmt.Printf("%v\n", err)
+		fmt.Printf("Bad PHP unserialization %v\n", err)
 		return nil, err
 	}
 
 	b, _ := json.MarshalIndent(out, "", "  ")
+	reportHolder := &SucuriReport{}
 	json.Unmarshal(b, reportHolder)
 	//Testing Print Statements
 	//fmt.Printf("%v\n", string(b))
