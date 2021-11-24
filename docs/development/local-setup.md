@@ -105,7 +105,7 @@ If you've just checked out this repository, you'll need to invoke the following
 to install the pre-commit hook in your local git working tree:
 
 ```bash
-pre-commit install
+pre-commit install --hook-type pre-commit --hook-type pre-push
 ```
 
 A tartufo scan will be run whenever `git commit` is performed.  To manually run
