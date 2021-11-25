@@ -16,7 +16,7 @@ const (
 	Status        string      `json:"status"`
 	SubStatus     string      `json:"sub_status"`
 	FreeEmail     bool        `json:"free_email"`
-	DidYouMean    interface{} `json:"did_you_mean"`
+	DidYouMean    string `json:"did_you_mean"`
 	Account       string      `json:"account"`
 	Domain        string      `json:"domain"`
 	DomainAgeDays string      `json:"domain_age_days"`
