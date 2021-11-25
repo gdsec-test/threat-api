@@ -104,7 +104,7 @@ func zerobounceMetaDataExtract(zerobounceResults map[string]*zb.ZeroBounceReport
 	triageMetaData = append(triageMetaData, fmt.Sprintf("Valid account(s): %d, Invalid account(s): %d, Catch-all account(s): %d,"+
 		" Spamtrap account(s): %d, Abuse account(s): %d, Do_not_mail account(s): %d, Unkown account(s): %d",
 		validAccounts, invalidAccounts, catchAllAccounts, spamtrapAccounts, abuseAccounts, doNotMailAccounts, unknownAccounts))
-	triageMetaData = append(triageMetaData, "\nThe Zerobounce Batch API is rate-limited to allow 5 requests per minute with a maximum of 100 emails per request. In case no data is found, the rate limit has been exceeded. Try again in 10 minutes.")
+	triageMetaData = append(triageMetaData, "\nZerobounce API is rate-limited to allow 5 requests per minute with a maximum of 100 emails per request. In case no data is found, the rate limit has been exceeded. Try again in 10 minutes.")
 
 	return triageMetaData
 }
