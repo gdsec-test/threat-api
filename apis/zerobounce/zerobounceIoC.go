@@ -31,8 +31,6 @@ func (m *TriageModule) GetZeroBounceData(ctx context.Context, triageRequest *tri
 	}
 	ioc_list += "]"
 
-	//for _, ioc := range triageRequest.IOCs {
-	// Check context
 	select {
 	case <-ctx.Done():
 		break
@@ -64,7 +62,6 @@ func (m *TriageModule) GetZeroBounceData(ctx context.Context, triageRequest *tri
 		time.Sleep(2 * time.Second)
 	}(ioc_list)
 	span.End(spanCtx)
-	//}
 
 	wg.Wait()
 	return zerobounceResults, nil
