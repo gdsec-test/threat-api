@@ -24,10 +24,10 @@ func (m *TriageModule) GetZeroBounceData(ctx context.Context, triageRequest *tri
 	wg := sync.WaitGroup{}
 	zerobounceLock := sync.Mutex{}
 	threadLimit := make(chan int, maxThreadCount)
-	ioc_list := "\"email_batch\":["
+	ioc_list := `"email_batch":[`
 
 	for _, ioc := range triageRequest.IOCs {
-		ioc_list += "{\"email_address\": \"" + ioc + "\"},"
+		ioc_list += fmt.Sprintf(`{"email_address": "%s"},`, ioc)
 	}
 	ioc_list += "]"
 

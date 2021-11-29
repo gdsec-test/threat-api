@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 )
 
@@ -59,7 +60,7 @@ type ZeroBounceReport struct {
 
 func GetZeroBounce(ctx context.Context, iocList string, user string, key string, ZeroBounceClient *http.Client) (*ZeroBounceReport, error) {
 	// Build JSON request body
-	reqBody := "{\"api_key\":\"" + key + "\"," + iocList + "}"
+	reqBody := fmt.Sprintf(`{"api_key":"%s", "%s"}`, key, iocList)
 	var jsonBody = []byte(reqBody)
 
 	// Build request
