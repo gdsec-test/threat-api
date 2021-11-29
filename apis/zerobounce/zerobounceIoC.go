@@ -67,36 +67,10 @@ func (m *TriageModule) GetZeroBounceData(ctx context.Context, triageRequest *tri
 	return zerobounceResults, nil
 }
 
+var validAccounts, invalidAccounts, catchAllAccounts, spamtrapAccounts, abuseAccounts, doNotMailAccounts, unknownAccounts = 0, 0, 0, 0, 0, 0, 0
+
 func zerobounceMetaDataExtract(zerobounceResults map[string]*zb.ZeroBounceReport) []string {
 	var triageMetaData []string
-	var validAccounts, invalidAccounts, catchAllAccounts, spamtrapAccounts, abuseAccounts, doNotMailAccounts, unknownAccounts = 0, 0, 0, 0, 0, 0, 0
-
-	for _, response := range zerobounceResults {
-		if response == nil {
-			triageMetaData = append(triageMetaData, "Data not found")
-			continue
-		}
-
-		for _, data := range response.EmailBatch {
-			// Count the total number of email acocunt types found
-			switch {
-			case data.Status == "valid":
-				validAccounts++
-			case data.Status == "invalid":
-				invalidAccounts++
-			case data.Status == "catch-all":
-				catchAllAccounts++
-			case data.Status == "spamtrap":
-				spamtrapAccounts++
-			case data.Status == "abuse":
-				abuseAccounts++
-			case data.Status == "do_not_mail":
-				doNotMailAccounts++
-			case data.Status == "unknown":
-				unknownAccounts++
-			}
-		}
-	}
 
 	triageMetaData = append(triageMetaData, fmt.Sprintf("Valid account(s): %d, Invalid account(s): %d, Catch-all account(s): %d,"+
 		" Spamtrap account(s): %d, Abuse account(s): %d, Do_not_mail account(s): %d, Unkown account(s): %d",
@@ -151,8 +125,25 @@ func DumpCSV(zerobounceResults map[string]*zb.ZeroBounceReport) string {
 				email.ProcessedAt,
 			}
 			csv.Write(cols)
-		}
 
+			// Count the total number of email acocunt types found
+			switch {
+			case email.Status == "valid":
+				validAccounts++
+			case email.Status == "invalid":
+				invalidAccounts++
+			case email.Status == "catch-all":
+				catchAllAccounts++
+			case email.Status == "spamtrap":
+				spamtrapAccounts++
+			case email.Status == "abuse":
+				abuseAccounts++
+			case email.Status == "do_not_mail":
+				doNotMailAccounts++
+			case email.Status == "unknown":
+				unknownAccounts++
+			}
+		}
 	}
 	csv.Flush()
 	return resp.String()
