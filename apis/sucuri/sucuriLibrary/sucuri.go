@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"time"
 	"io"
 
 	"github.com/techoner/gophp"
@@ -14,47 +15,71 @@ import (
 var tb *toolbox.Toolbox
 
 const (
-	SucuriEndpoint = "https://monitor22.sucuri.net/scan-api.php?"
+	SucuriEndpoint = "https://sitecheck.sucuri.net/api/v3/?"
 )
 
 type SucuriReport struct {
-	BLACKLIST struct {
-		INFO [][]string `json:"INFO"`
-	} `json:"BLACKLIST"`
-	LINKS struct {
-		JSLOCAL []string `json:"JSLOCAL"`
-		URL     []string `json:"URL"`
-	} `json:"LINKS"`
-	RECOMMENDATIONS [][]string `json:"RECOMMENDATIONS"`
-	SCAN            struct {
-		DOMAIN []string `json:"DOMAIN"`
-		IP     []string `json:"IP"`
-		SITE   []string `json:"SITE"`
-	} `json:"SCAN"`
-	SYSTEM struct {
-		INFO   []string `json:"INFO"`
-		NOTICE []string `json:"NOTICE"`
-	} `json:"SYSTEM"`
-	VERSION struct {
-		BUILDDATE    []string `json:"BUILDDATE"`
-		COMPILEDDATE []string `json:"COMPILEDDATE"`
-		DBDATE       []string `json:"DBDATE"`
-		VERSION      []string `json:"VERSION"`
-	} `json:"VERSION"`
+	Scan struct {
+		DbDate   time.Time `json:"db_date,omitempty"`
+		Version  string    `json:"version,omitempty"`
+		Duration float64   `json:"duration,omitempty"`
+		LastScan time.Time `json:"last_scan,omitempty"`
+	} `json:"scan,omitempty"`
+	Site struct {
+		Input  string `json:"input,omitempty"`
+		Domain string `json:"domain,omitempty"`
+	} `json:"site,omitempty"`
+	Ratings struct {
+		Total struct {
+			Rating string `json:"rating,omitempty"`
+		} `json:"total,omitempty"`
+		Domain struct {
+			Passed string `json:"passed,omitempty"`
+			Rating string `json:"rating,omitempty"`
+		} `json:"domain,omitempty"`
+		Security struct {
+			Passed string `json:"passed,omitempty"`
+			Rating string `json:"rating,omitempty"`
+		} `json:"security,omitempty"`
+	} `json:"ratings,omitempty"`
+	Warnings struct {
+		Security struct {
+			Malware []struct {
+				Msg      string `json:"msg,omitempty"`
+				Type     string `json:"type,omitempty"`
+				Details  string `json:"details,omitempty"`
+				InfoURL  string `json:"info_url,omitempty"`
+				Location string `json:"location,omitempty"`
+			} `json:"malware,omitempty"`
+		} `json:"security,omitempty"`
+		ScanFailed []struct {
+			Msg      string `json:"msg,omitempty"`
+			Type     string `json:"type,omitempty"`
+			Details  string `json:"details,omitempty"`
+			InfoURL  string `json:"info_url,omitempty"`
+			Location string `json:"location,omitempty"`
+		} `json:"scan_failed,omitempty"`
+	} `json:"warnings,omitempty"`
+	Blacklists []struct {
+		Vendor   string `json:"vendor,omitempty"`
+		InfoURL  string `json:"info_url,omitempty"`
+		Location string `json:"location,omitempty"`
+	} `json:"blacklists,omitempty"`
+	Recommendations struct {
+		SecurityMinor struct {
+			NeedsWaf struct {
+			} `json:"needs_waf,omitempty"`
+		} `json:"security_minor,omitempty"`
+	} `json:"recommendations,omitempty"`
 }
+
 
 func GetSucuri(ctx context.Context, ioc string, SucuriClient *http.Client) (*SucuriReport, error) {
 	// Build URL
 	tb = toolbox.GetToolbox()
 	defer tb.Close(ctx)
 
-	SucuriKey, err := tb.GetFromCredentialsStore(ctx, "ThreatTools/Integrations/sucuri", nil)
-	if err != nil {
-		return nil, fmt.Errorf("error getting sucuri credentials: %w", err)
-	}
-
-	secret := *SucuriKey.SecretString
-	URL := SucuriEndpoint + "k=" + secret +  "&a=scan" + "&host=" + ioc + "&format=serialized"
+	URL := "scan=" +  ioc
 	URL = string(URL)
 
 
