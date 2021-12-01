@@ -100,6 +100,7 @@ func dumpCSV(nvdNVDResults map[string]*nvd.NVDReport) string {
 		"CVSS v3 String",
 		"Severity Score",
 		"CPEs",
+		"Badness",
 	})
 
 	for _, data := range nvdNVDResults {
@@ -115,13 +116,23 @@ func dumpCSV(nvdNVDResults map[string]*nvd.NVDReport) string {
 				}
 			}
 
+			problem_type_value := ""
+			problem_type_data := result.Cve.Problemtype.ProblemtypeData
+			if len(problem_type_data) > 0 {
+				problem_type := result.Cve.Problemtype.ProblemtypeData[0]
+				if len(problem_type.Description) > 0 {
+					problem_type_value = problem_type.Description[0].Value
+				}
+			}
+
 			cols := []string{
 				result.Cve.CVEDataMeta.ID,
 				result.PublishedDate,
-				result.Cve.Problemtype.ProblemtypeData[0].Description[0].Value,
+				problem_type_value,
 				result.Impact.BaseMetricV3.CvssV3.VectorString,
 				fmt.Sprintf("%f", result.Impact.BaseMetricV3.CvssV3.BaseScore),
 				cpes,
+				fmt.Sprintf("%f", result.Impact.BaseMetricV3.CvssV3.BaseScore/10.0),
 			}
 			csv.Write(cols)
 		}
