@@ -21,4 +21,4 @@ pushd swagger-ui-bucket
 popd
 rm -rf swagger-ui-bucket
 
-aws s3 cp resources/swagger.json s3://${BUCKET}/swagger.json
+aws s3 cp resources/swagger.json s3://${BUCKET}/swagger.json --quiet

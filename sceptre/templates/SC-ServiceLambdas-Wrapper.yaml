@@ -92,22 +92,22 @@ Resources:
     Properties:
       TemplateURL: https://s3.amazonaws.com/gd-threattools-dev-private-code-bucket/template/SC-ServiceLambdas.yaml
       Parameters:
-          DevelopmentTeam: ${DevelopmentTeam}
-          DevelopmentEnvironment: ${DevelopmentEnvironment}
-          SSOHost: ${SSOHost}
-          DXVpcSecurityGroups: ${DXVpcSecurityGroups}
-          DXVpcSubnetIds: ${DXVpcSubnetIds}
-          cmapSHA1: ${cmapSHA1}
-          geoipSHA1: ${geoipSHA1}
-          nvdSHA1: ${nvdSHA1}
-          passivetotalSHA1: ${passivetotalSHA1}
-          recordedfutureSHA1: ${recordedfutureSHA1}
-          servicenowSHA1: ${servicenowSHA1}
-          shodanSHA1: ${shodanSHA1}
-          splunkSHA1: ${splunkSHA1}
-          sucuriSHA1: ${sucuriSHA1}
-          trustarSHA1: ${trustarSHA1}
-          urlhausSHA1: ${urlhausSHA1}
-          virustotalSHA1: ${virustotalSHA1}
-          whoisSHA1: ${whoisSHA1}
-          zerobounceSHA1: ${zerobounceSHA1}
+          DevelopmentTeam: !Ref DevelopmentTeam
+          DevelopmentEnvironment: !Ref DevelopmentEnvironment
+          SSOHost: !Ref SSOHost
+          DXVpcSecurityGroups: !Ref DXVpcSecurityGroups
+          DXVpcSubnetIds: !Join [ ",", !Ref DXVpcSubnetIds ]
+          cmapSHA1: !Ref cmapSHA1
+          geoipSHA1: !Ref geoipSHA1
+          nvdSHA1: !Ref nvdSHA1
+          passivetotalSHA1: !Ref passivetotalSHA1
+          recordedfutureSHA1: !Ref recordedfutureSHA1
+          servicenowSHA1: !Ref servicenowSHA1
+          shodanSHA1: !Ref shodanSHA1
+          splunkSHA1: !Ref splunkSHA1
+          sucuriSHA1: !Ref sucuriSHA1
+          trustarSHA1: !Ref trustarSHA1
+          urlhausSHA1: !Ref urlhausSHA1
+          virustotalSHA1: !Ref virustotalSHA1
+          whoisSHA1: !Ref whoisSHA1
+          zerobounceSHA1: !Ref zerobounceSHA1

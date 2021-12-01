@@ -30,8 +30,8 @@ do
 
     # Create ZIP file and upload to S3
     rm -f function.zip
-    zip -9 function.zip ${LAMBDA}
-    aws s3 cp function.zip s3://${CODE_BUCKET}/${LAMBDA}/${SHA1HASH}
+    zip -9q function.zip ${LAMBDA}
+    aws s3 cp function.zip s3://${CODE_BUCKET}/${LAMBDA}/${SHA1HASH} --quiet
 
     # Cleanup
     rm -f ${LAMBDA} function.zip

@@ -6,7 +6,7 @@ rm -f function.zip
 
 pip install --target tempdeps -r requirements.txt
 cd tempdeps
-zip -r ../function.zip .
+zip -qr ../function.zip .
 
 cd ..
-zip -g function.zip trustar-isac.py enums.py event.py logger.py
+zip -qg function.zip trustar-isac.py enums.py event.py logger.py

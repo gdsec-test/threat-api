@@ -3,33 +3,21 @@ Description: ThreatTools API Service Lambdas
 
 Parameters:
   DevelopmentTeam:
-    Type: AWS::SSM::Parameter::Value<String>
+    Type: String
     Description: SSM Parameter for team owning the created resources.
-    Default: /AdminParams/Team/Name
-    AllowedValues:
-      - /AdminParams/Team/Name
   DevelopmentEnvironment:
-    Type: AWS::SSM::Parameter::Value<String>
+    Type: String
     Description: SSM Parameter for development environment this will live in.
-    Default: /AdminParams/Team/Environment
-    AllowedValues:
-      - /AdminParams/Team/Environment
   SSOHost:
     Type: String
     Description: SSO endpoint used by the Authorizer lambda
     Default: "sso.gdcorp.tools"
   DXVpcSecurityGroups:
-    Type: AWS::SSM::Parameter::Value<String>
+    Type: String
     Description: SSM Parameter for private dx app security group id
-    Default: /AdminParams/VPC/PrivateDXAPPSG
-    AllowedValues:
-      - /AdminParams/VPC/PrivateDXAPPSG
   DXVpcSubnetIds:
-    Type: AWS::SSM::Parameter::Value<List<String>>
+    Type: CommaDelimitedList
     Description: SSM Parameter for private dx app subnet ids
-    Default: /AdminParams/VPC/DXAPPSubnets
-    AllowedValues:
-      - /AdminParams/VPC/DXAPPSubnets
   cmapSHA1:
     Type: String
     Description: SHA1 hash of the cmap lambda source
