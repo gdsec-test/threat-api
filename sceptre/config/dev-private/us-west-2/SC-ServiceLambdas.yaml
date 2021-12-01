@@ -1,4 +1,4 @@
-template_path: SC-ServiceLambdas.yaml
+template_path: SC-ServiceLambdas-Wrapper.yaml
 dependencies:
   - {{environment}}/{{region}}/SC-CoreResources.yaml
 parameters:
