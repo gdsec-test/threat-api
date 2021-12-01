@@ -6,13 +6,8 @@ import (
 	"fmt"
 	"net/http"
 	"time"
-	"io"
-
-	"github.com/techoner/gophp"
-	"github.com/gdcorp-infosec/threat-api/lambdas/common/toolbox"
 )
 
-var tb *toolbox.Toolbox
 
 const (
 	SucuriEndpoint = "https://sitecheck.sucuri.net/api/v3/?"
@@ -26,8 +21,13 @@ type SucuriReport struct {
 		LastScan time.Time `json:"last_scan,omitempty"`
 	} `json:"scan,omitempty"`
 	Site struct {
-		Input  string `json:"input,omitempty"`
-		Domain string `json:"domain,omitempty"`
+		IP          []string `json:"ip,omitempty"`
+		Cdn         []string `json:"cdn,omitempty"`
+		Input       string   `json:"input,omitempty"`
+		Domain      string   `json:"domain,omitempty"`
+		FinalURL    string   `json:"final_url,omitempty"`
+		RunningOn   []string `json:"running_on,omitempty"`
+		RedirectsTo []string `json:"redirects_to,omitempty"`
 	} `json:"site,omitempty"`
 	Ratings struct {
 		Total struct {
@@ -76,10 +76,7 @@ type SucuriReport struct {
 
 func GetSucuri(ctx context.Context, ioc string, SucuriClient *http.Client) (*SucuriReport, error) {
 	// Build URL
-	tb = toolbox.GetToolbox()
-	defer tb.Close(ctx)
-
-	URL := "scan=" +  ioc
+	URL := SucuriEndpoint + "scan=" +  ioc
 	URL = string(URL)
 
 
@@ -98,21 +95,13 @@ func GetSucuri(ctx context.Context, ioc string, SucuriClient *http.Client) (*Suc
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("bad status code: %d", resp.StatusCode)
 	}
-	bodyBytes, _ := io.ReadAll(resp.Body)
-	bodyString := string(bodyBytes)
-	out, err := gophp.Unserialize([]byte(bodyString))
 
+	reportHolder := &SucuriReport{}
+	err = json.NewDecoder(resp.Body).Decode(reportHolder)
 	if err != nil {
-		fmt.Printf("Bad PHP unserialization %v\n", err)
 		return nil, err
 	}
 
-	b, _ := json.MarshalIndent(out, "", "  ")
-	reportHolder := &SucuriReport{}
-	json.Unmarshal(b, reportHolder)
-	//Testing Print Statements
-	//fmt.Printf("%v\n", string(b))
-	//fmt.Println(reportHolder.BLACKLIST.INFO[0])
 
 	return reportHolder, nil
 }

@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"encoding/csv"
-	"fmt"
 
 	"sync"
 
@@ -73,106 +72,44 @@ func dumpCSV(sucuriResults map[string]*sucuri.SucuriReport) string {
 	csv := csv.NewWriter(&resp)
 	// Write headers
 	csv.Write([]string{
-		"Risk Score",
-		"BlackList Info",
-		"Links: JSLOCAL",
+		"Domain",
+		"Total Rating",
+		"Security Rating",
+		"Domain Rating",
 		"Links: URL",
-		"Recommendations",
-		"Scan: Domain",
-		"Scan: IP",
-		"Scan: Site",
-		"System: Info",
-		"System: Notice",
-		"Version: Build Date",
-		"Version: Compiled Date",
-		"Version: DB Date",
-		"Version: Version",
-
-
+		"Suspicious Activity",
+		"Details",
+		"Redirects To:",
 	})
+
 	for ioc, data := range sucuriResults {
 		if data == nil {
 			continue
 		}
 
-		//Calculate Risk Score
-		fmt.Println("Len of Blacklist Info")
-		fmt.Println(len(data.BLACKLIST.WARN))
-		fmt.Println(len(data.MALWARE.WARN))
-		var blacklist_score float32
-		if len(data.BLACKLIST.WARN) >= 2 {
-			blacklist_score = 1.0
-		} else if len(data.BLACKLIST.WARN) == 1 {
-			blacklist_score = 0.5
-		} else {
-			blacklist_score = 0.0
+		//Get Strings from Selected Structs
+		var msgs string
+		var details string
+		for _, malouter := range data.Warnings.Security.Malware {
+			msgs = msgs + malouter.Msg + "\n"
+			details = details + malouter.Details + "\n"
 		}
-		var malware_score float32
-		if len(data.MALWARE.WARN) >= 1 {
-			malware_score = 1.0
-		} else {
-			malware_score = 0.0
+
+		var redirects string
+		for _, reds := range data.Site.RedirectsTo {
+			redirects = redirects + reds + "\n"
 		}
-		//var risk_score float32
-		risk_score := 0.33 * blacklist_score + 0.67 * malware_score
-		risksc := fmt.Sprintf("%f", risk_score)
-
-		fmt.Println("Risk Score")
-		fmt.Println(risk_score)
-		fmt.Println(blacklist_score)
-		fmt.Println(malware_score)
-
-		//Format Sucuri Output for Printing
-		var blacklisted string
-		for _, blacklistouter := range data.BLACKLIST.INFO {
-			for _, blacklistinner := range blacklistouter {
-				blacklisted = blacklisted + blacklistinner + "\n"
-			}
-		}
-		fmt.Println(blacklisted)
-
-		var recs string
-		for _, recsouter := range data.RECOMMENDATIONS {
-			for _, recsinner := range recsouter {
-				recs = recs + recsinner + "\n"
-			}
-		}
-		fmt.Println(recs)
-
-		var scans string
-		for _, scanouter := range data.SCAN.DOMAIN {
-			scans = "Domains:" + scans + scanouter + "\n"
-		}
-		fmt.Println(scans)
-
-		var mals string
-		for _, malouter := range data.MALWARE.WARN {
-			for _, malinner := range malouter {
-				mals = mals + malinner + "\n"
-			}
-		}
-		fmt.Println(mals)
-
 
 		cols := []string{
-			risksc,
 			ioc,
-			recs,
-			scans,
-			blacklisted,
-			//data.BLACKLIST.INFO[0][0],
-			//data.LINKS.JSLOCAL[0],
+			data.Ratings.Total.Rating,
+			data.Ratings.Security.Rating,
+			data.Ratings.Domain.Rating,
+			msgs,
+			details,
+			redirects,
 		}
 		csv.Write(cols)
-
-		//Test to Check if Data is passed
-		/* csv.Write(cols)
-		print("IOC", "/n")
-		print(cols[0], "/n")
-		print("Blacklist Info", "/n")
-		print(cols[1], "/n")
-		print("Links", "/n")
-		print(cols[2], "/n") */
 
 
 	}

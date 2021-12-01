@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	//"fmt"
 	"testing"
 
 	"github.com/gdcorp-infosec/threat-api/lambdas/common/toolbox"
@@ -34,10 +33,6 @@ func TestSucuri(t *testing.T) {
 		if triageResult[0].Data == "" {
 			t.Fatal("first data element empty ")
 		}
-		/*  To test if data is being passed
-			for _, data := range triageResult[0].Data {
-				fmt.Println(data)
-			} */
 
 	}
 }
