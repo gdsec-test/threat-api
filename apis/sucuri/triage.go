@@ -31,7 +31,7 @@ func (m *TriageModule) GetDocs() *triage.Doc {
 
 // Supports returns true of we support this ioc type
 func (m *TriageModule) Supports() []triage.IOCType {
-	return []triage.IOCType{} // TODO:Add the supported IoC modules
+	return []triage.IOCType{triage.DomainType} // TODO:Add the supported IoC modules
 }
 
 // Triage retrieves data from sucuri service TODO: Explain in detail
