@@ -4,4 +4,4 @@ set -eu
 
 env GOPRIVATE=github.secureserver.net,github.com/gdcorp-* GOOS=linux GOARCH=amd64 go build
 rm -f function.zip
-zip -9 function.zip responseprocessor
+zip -9q function.zip responseprocessor

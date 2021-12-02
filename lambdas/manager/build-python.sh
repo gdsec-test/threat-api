@@ -3,4 +3,4 @@
 set -eu
 
 rm -f function.zip
-zip -9 function.zip manager.py
+zip -9q function.zip manager.py

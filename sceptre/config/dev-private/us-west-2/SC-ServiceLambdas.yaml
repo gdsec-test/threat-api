@@ -1,4 +1,4 @@
-template_path: SC-ServiceLambdas.yaml
+template_path: SC-ServiceLambdas-Wrapper.yaml
 dependencies:
   - {{environment}}/{{region}}/SC-CoreResources.yaml
 parameters:
@@ -11,6 +11,7 @@ parameters:
   servicenowSHA1: !file_contents resources/servicenow.sha1
   shodanSHA1: !file_contents resources/shodan.sha1
   splunkSHA1: !file_contents resources/splunk.sha1
+  sucuriSHA1: !file_contents resources/sucuri.sha1
   trustarSHA1: !file_contents resources/trustar.sha1
   urlhausSHA1: !file_contents resources/urlhaus.sha1
   virustotalSHA1: !file_contents resources/virustotal.sha1

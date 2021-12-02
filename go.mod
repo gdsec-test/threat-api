@@ -65,6 +65,7 @@ require (
 	github.com/shurcooL/graphql v0.0.0-20181231061246-d48a9a75455f // indirect
 	github.com/smartystreets/assertions v1.2.0 // indirect
 	github.com/smartystreets/goconvey v1.7.2 // indirect
+	github.com/techoner/gophp v0.2.0 // indirect
 	github.com/thedevsaddam/gojsonq v2.3.0+incompatible // indirect
 	github.com/vertoforce/multiregex v0.0.0-20200305221808-10dce2b47221 // indirect
 	github.com/vertoforce/streamregex v0.0.0-20200126210557-5b6afd4f6723 // indirect
