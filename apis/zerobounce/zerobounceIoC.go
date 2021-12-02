@@ -67,21 +67,19 @@ func (m *TriageModule) GetZeroBounceData(ctx context.Context, triageRequest *tri
 	return zerobounceResults, nil
 }
 
-var validAccounts, invalidAccounts, catchAllAccounts, spamtrapAccounts, abuseAccounts, doNotMailAccounts, unknownAccounts = 0, 0, 0, 0, 0, 0, 0
+func zerobounceMetaDataExtract(zerobounceResults map[string]*zb.ZeroBounceReport, metaData *zb.MetaData) []string {
 
-func zerobounceMetaDataExtract(zerobounceResults map[string]*zb.ZeroBounceReport) []string {
 	var triageMetaData []string
 
 	triageMetaData = append(triageMetaData, fmt.Sprintf("Valid account(s): %d, Invalid account(s): %d, Catch-all account(s): %d,"+
-		" Spamtrap account(s): %d, Abuse account(s): %d, Do_not_mail account(s): %d, Unkown account(s): %d",
-		validAccounts, invalidAccounts, catchAllAccounts, spamtrapAccounts, abuseAccounts, doNotMailAccounts, unknownAccounts))
+		" Spamtrap account(s): %d, Abuse account(s): %d, Do_not_mail account(s): %d, Unkown account(s): %d", metaData.ValidAccounts, metaData.InvalidAccounts, metaData.CatchAllAccounts, metaData.SpamTrapAccounts, metaData.AbuseAccounts, metaData.DoNotMailAccounts, metaData.UnkownAccounts))
 	triageMetaData = append(triageMetaData, "\nZerobounce API is rate-limited to allow 5 requests per minute with a maximum of 100 emails per request. In case no data is found, the rate limit has been exceeded. Try again in 10 minutes.")
 
 	return triageMetaData
 }
 
 //dumpCSV dumps the triage data to CSV
-func DumpCSV(zerobounceResults map[string]*zb.ZeroBounceReport) string {
+func DumpCSV(zerobounceResults map[string]*zb.ZeroBounceReport, metaData *zb.MetaData) string {
 	//Dump data as csv
 	resp := bytes.Buffer{}
 	csv := csv.NewWriter(&resp)
@@ -129,19 +127,19 @@ func DumpCSV(zerobounceResults map[string]*zb.ZeroBounceReport) string {
 			// Count the total number of email acocunt types found
 			switch {
 			case email.Status == "valid":
-				validAccounts++
+				metaData.ValidAccounts++
 			case email.Status == "invalid":
-				invalidAccounts++
+				metaData.InvalidAccounts++
 			case email.Status == "catch-all":
-				catchAllAccounts++
+				metaData.CatchAllAccounts++
 			case email.Status == "spamtrap":
-				spamtrapAccounts++
+				metaData.SpamTrapAccounts++
 			case email.Status == "abuse":
-				abuseAccounts++
+				metaData.AbuseAccounts++
 			case email.Status == "do_not_mail":
-				doNotMailAccounts++
+				metaData.DoNotMailAccounts++
 			case email.Status == "unknown":
-				unknownAccounts++
+				metaData.UnkownAccounts++
 			}
 		}
 	}
