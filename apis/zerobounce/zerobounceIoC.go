@@ -126,7 +126,7 @@ func DumpCSV(zerobounceResults map[string]*zb.ZeroBounceReport, metaData *zb.Met
 
 			// Count the total number of email acocunt types found
 			switch {
-			case email.Status == "valid"
+			case email.Status == "valid":
 				metaData.ValidAccounts++
 			case email.Status == "invalid":
 				metaData.InvalidAccounts++
