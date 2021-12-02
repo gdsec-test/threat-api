@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/gdcorp-infosec/threat-api/apis/zerobounce/zerobounceLibrary"
 	"github.com/gdcorp-infosec/threat-api/lambdas/common/toolbox"
 	"github.com/gdcorp-infosec/threat-api/lambdas/common/toolbox/appsectracing"
 	"github.com/gdcorp-infosec/threat-api/lambdas/common/triagelegacyconnector/triage"
@@ -65,15 +66,16 @@ func (m *TriageModule) Triage(ctx context.Context, triageRequest *triage.Request
 	defer span.End(ctx)
 
 	// Retrieve zerobounce email validation API response
+	metaData := zerobounceLibrary.InitializeMetaData(ctx)
 	ZeroBounceResults, err := m.GetZeroBounceData(ctx, triageRequest)
 	if err != nil {
 		triageData.Data = fmt.Sprintf("error from zerobounce: %s", err)
 	} else {
 		//Dump data as csv
 		triageData.DataType = triage.CSVType
+		triageData.Data = DumpCSV(ZeroBounceResults, metaData)
 		//Calculate and add total number of valid or invalid emails
-		triageData.Metadata = zerobounceMetaDataExtract(ZeroBounceResults)
-		triageData.Data = DumpCSV(ZeroBounceResults)
+		triageData.Metadata = zerobounceMetaDataExtract(ZeroBounceResults, metaData)
 	}
 
 	return []*triage.Data{triageData}, nil

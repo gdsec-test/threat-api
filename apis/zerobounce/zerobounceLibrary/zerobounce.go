@@ -12,27 +12,6 @@ const (
 	zerobounceEndpoint = "https://bulkapi.zerobounce.net/v2/validatebatch"
 )
 
-/*type ZeroBounceReport struct {
-	Email         string      `json:"address"`
-	Status        string      `json:"status"`
-	SubStatus     string      `json:"sub_status"`
-	FreeEmail     bool        `json:"free_email"`
-	DidYouMean    string `json:"did_you_mean"`
-	Account       string      `json:"account"`
-	Domain        string      `json:"domain"`
-	DomainAgeDays string      `json:"domain_age_days"`
-	SmtpProvider  string      `json:"smtp_provider"`
-	MxFound       string      `json:"mx_found"`
-	MxRecord      string      `json:"mx_record"`
-	FirstName     interface{} `json:"firstname"`
-	LastName      interface{} `json:"lastname"`
-	Gender        interface{} `json:"gender"`
-	Country       interface{} `json:"country"`
-	Region        interface{} `json:"region"`
-	City          interface{} `json:"city"`
-	Zipcode       interface{} `json:"zipcode"`
-	ProcessedAt   string      `json:"processed_at"`
-}*/
 type ZeroBounceReport struct {
 	EmailBatch []struct {
 		Address       string      `json:"address"`
@@ -56,6 +35,21 @@ type ZeroBounceReport struct {
 		ProcessedAt   string      `json:"processed_at"`
 	} `json:"email_batch"`
 	Errors []interface{} `json:"errors"`
+}
+
+type MetaData struct {
+	ValidAccounts     int
+	InvalidAccounts   int
+	CatchAllAccounts  int
+	SpamTrapAccounts  int
+	AbuseAccounts     int
+	DoNotMailAccounts int
+	UnkownAccounts    int
+}
+
+func InitializeMetaData(ctx context.Context) *MetaData {
+	metaData := &MetaData{}
+	return metaData
 }
 
 func GetZeroBounce(ctx context.Context, iocList string, user string, key string, ZeroBounceClient *http.Client) (*ZeroBounceReport, error) {
