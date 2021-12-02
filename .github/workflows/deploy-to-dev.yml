@@ -88,6 +88,7 @@ jobs:
         run: |
           source venv/bin/activate
           cd sceptre
+          aws s3 cp templates/SC-ServiceLambdas.yaml s3://gd-threattools-dev-code-bucket/template/SC-ServiceLambdas.yaml --quiet
           sceptre launch -y dev/us-west-2
 
       - name: Update swagger
