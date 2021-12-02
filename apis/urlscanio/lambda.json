@@ -1,7 +1,7 @@
 {
   "handler": "urlscanio",
   "memory-size": "256",
-  "runtime": "go1.17.2",
+  "runtime": "go1.x",
   "timeout": "15",
   "metadata": {
     "supportedIOCTypes": [

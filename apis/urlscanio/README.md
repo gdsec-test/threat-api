@@ -16,7 +16,7 @@
 
 ## Built With
 
-- Golang v1.17.2
+- Golang
 
 ## General Developer CheatSheet
 
