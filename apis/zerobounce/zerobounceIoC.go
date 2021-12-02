@@ -68,11 +68,11 @@ func (m *TriageModule) GetZeroBounceData(ctx context.Context, triageRequest *tri
 }
 
 func zerobounceMetaDataExtract(zerobounceResults map[string]*zb.ZeroBounceReport, metaData *zb.MetaData) []string {
+
 	var triageMetaData []string
 
 	triageMetaData = append(triageMetaData, fmt.Sprintf("Valid account(s): %d, Invalid account(s): %d, Catch-all account(s): %d,"+
-		" Spamtrap account(s): %d, Abuse account(s): %d, Do_not_mail account(s): %d, Unkown account(s): %d",
-		metaData.ValidAccounts, metaData.InvalidAccounts, metaData.CatchAllAccounts, metaData.SpamTrapAccounts, metaData.AbuseAccounts, metaData.DoNotMailAccounts, metaData.UnkownAccounts))
+		" Spamtrap account(s): %d, Abuse account(s): %d, Do_not_mail account(s): %d, Unkown account(s): %d", metaData.ValidAccounts, metaData.InvalidAccounts, metaData.CatchAllAccounts, metaData.SpamTrapAccounts, metaData.AbuseAccounts, metaData.DoNotMailAccounts, metaData.UnkownAccounts))
 	triageMetaData = append(triageMetaData, "\nZerobounce API is rate-limited to allow 5 requests per minute with a maximum of 100 emails per request. In case no data is found, the rate limit has been exceeded. Try again in 10 minutes.")
 
 	return triageMetaData
@@ -126,7 +126,7 @@ func DumpCSV(zerobounceResults map[string]*zb.ZeroBounceReport, metaData *zb.Met
 
 			// Count the total number of email acocunt types found
 			switch {
-			case email.Status == "valid":
+			case email.Status == "valid"
 				metaData.ValidAccounts++
 			case email.Status == "invalid":
 				metaData.InvalidAccounts++
