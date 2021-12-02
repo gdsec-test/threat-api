@@ -1,0 +1,11 @@
+{
+  "handler": "urlscanio",
+  "memory-size": "256",
+  "runtime": "go1.17.2",
+  "timeout": "15",
+  "metadata": {
+    "supportedIOCTypes": [
+      "URL"
+    ]
+  }
+}
