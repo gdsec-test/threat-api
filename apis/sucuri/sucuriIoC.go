@@ -43,13 +43,12 @@ func (m *TriageModule) GetSucuriData(ctx context.Context, triageRequest *triage.
 				wg.Done()
 			}()
 
-			//Secret Handling:
-			//sucuriResult, err := sucuri.GetSucuri(ctx, ioc, m.Sucuri, m.SucuriKeyy, m.SucuriClient)
+
 			sucuriResult, err := sucuri.GetSucuri(ctx, ioc, m.SucuriClient)
 			if err != nil {
 				span.AddError(err)
 				sucuriLock.Lock()
-				sucuriResults[ioc] = nil // TODO:nil value according to your return data, "", 0 etc
+				sucuriResults[ioc] = nil
 				sucuriLock.Unlock()
 				return
 			}

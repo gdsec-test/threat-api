@@ -49,7 +49,7 @@ func (m *TriageModule) Triage(ctx context.Context, triageRequest *triage.Request
 	span, ctx = tb.TracerLogger.StartSpan(ctx, "Sucuri", "sucuri", "services", "get")
 	defer span.End(ctx)
 
-	//get the example data that service offers
+	//Get the example data that service offers
 	SucuriResults, err := m.GetSucuriData(ctx, triageRequest)
 	if err != nil {
 		triageSucuriData.Data = fmt.Sprintf("error from Sucuri: %s", err)
