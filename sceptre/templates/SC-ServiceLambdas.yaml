@@ -1288,7 +1288,7 @@ Resources:
         - Key: MemorySize
           Value: 256
         - Key: Runtime
-          Value: go1.17.2
+          Value: go1.x
         - Key: Timeout
           Value: 15
         - Key: CustomIAMRoleNameSuffix

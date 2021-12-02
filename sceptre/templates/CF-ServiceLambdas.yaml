@@ -625,7 +625,7 @@ Resources:
       Handler: urlscanio
       MemorySize: 256
       Role: !Sub arn:aws:iam::${AWS::AccountId}:role/threattools-custom-ThreatRole
-      Runtime: go1.17.2
+      Runtime: go1.x
       Timeout: 15
 
   urlscanioLambdaPermission:
