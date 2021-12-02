@@ -76,7 +76,6 @@ func dumpCSV(sucuriResults map[string]*sucuri.SucuriReport) string {
 		"Total Rating",
 		"Security Rating",
 		"Domain Rating",
-		"Links: URL",
 		"Suspicious Activity",
 		"Details",
 		"Redirects To:",
