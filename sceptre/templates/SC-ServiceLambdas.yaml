@@ -5,15 +5,9 @@ Parameters:
   DevelopmentTeam:
     Type: String
     Description: SSM Parameter for team owning the created resources.
-    Default: /AdminParams/Team/Name
-    AllowedValues:
-      - /AdminParams/Team/Name
   DevelopmentEnvironment:
     Type: String
     Description: SSM Parameter for development environment this will live in.
-    Default: /AdminParams/Team/Environment
-    AllowedValues:
-      - /AdminParams/Team/Environment
   SSOHost:
     Type: String
     Description: SSO endpoint used by the Authorizer lambda
@@ -21,15 +15,9 @@ Parameters:
   DXVpcSecurityGroups:
     Type: String
     Description: SSM Parameter for private dx app security group id
-    Default: /AdminParams/VPC/PrivateDXAPPSG
-    AllowedValues:
-      - /AdminParams/VPC/PrivateDXAPPSG
   DXVpcSubnetIds:
     Type: CommaDelimitedList
     Description: SSM Parameter for private dx app subnet ids
-    Default: /AdminParams/VPC/DXAPPSubnets
-    AllowedValues:
-      - /AdminParams/VPC/DXAPPSubnets
   cmapSHA1:
     Type: String
     Description: SHA1 hash of the cmap lambda source
