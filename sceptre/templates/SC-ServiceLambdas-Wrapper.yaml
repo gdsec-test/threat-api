@@ -95,7 +95,7 @@ Resources:
   serviceLambdasTemplate:
     Type: AWS::CloudFormation::Stack
     Properties:
-      TemplateURL: https://s3.amazonaws.com/gd-threattools-dev-private-code-bucket/template/SC-ServiceLambdas.yaml
+      TemplateURL: !Sub https://s3.amazonaws.com/gd-${DevelopmentTeam}-${DevelopmentEnvironment}-code-bucket/template/SC-ServiceLambdas.yaml
       Parameters:
           DevelopmentTeam: !Ref DevelopmentTeam
           DevelopmentEnvironment: !Ref DevelopmentEnvironment
