@@ -133,16 +133,6 @@ func GetURLScanResults(ctx context.Context, ioc string, key string, urlscanClien
 			} else if strings.Contains(bodyString, "DNS Error") {
 				return nil, fmt.Errorf("dns error")
 			}
-		} else if resp.StatusCode == 404 {
-			for {
-				time.Sleep(10 * time.Second)
-				resp, _ = urlscanClient.Do(req)
-				if resp.StatusCode == http.StatusOK {
-					break
-				} else if resp.StatusCode != 404 && resp.StatusCode != http.StatusOK {
-					return nil, fmt.Errorf("bad status code: %d", resp.StatusCode)
-				}
-			}
 		} else {
 			return nil, fmt.Errorf("bad status code: %d", resp.StatusCode)
 		}
@@ -170,8 +160,18 @@ func GetURLScanResults(ctx context.Context, ioc string, key string, urlscanClien
 		return nil, err
 	}
 
-	if scanResp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("bad status code: %d", scanResp.StatusCode)
+	for {
+		if scanResp.StatusCode == 404 { // status when result is not ready
+			time.Sleep(10 * time.Second) // sleep 10 seconds and try one more time later
+			scanResp, err = urlscanClient.Do(scanReq)
+			if err != nil {
+				return nil, err
+			}
+		} else if scanResp.StatusCode != http.StatusOK { // handle other bad statuses
+			return nil, fmt.Errorf("bad status code: %d", scanResp.StatusCode)
+		}  else {
+			break // get out of loop, cause result is ready
+		}
 	}
 
 	// Initialize empty scanResponseHolder
