@@ -132,10 +132,21 @@ func dumpCSV(urlscanioResults map[string]*us.ResultHolder, metaData *us.MetaData
 
 func urlscanMetaDataExtract(metaData *us.MetaData) []string {
 	var triageMetaData []string
+
 	triageMetaData = append(triageMetaData, fmt.Sprintf("Malicious URL(s) Found: %d", metaData.MaliciousURLsCount))
-	triageMetaData = append(triageMetaData, fmt.Sprintf("\nMalicious URL(s): %s", metaData.MaliciousURLs))
-	triageMetaData = append(triageMetaData, fmt.Sprintf("\nBlacklisted Domain(s) Found %d", metaData.BlacklistedDomainsCount))
-	triageMetaData = append(triageMetaData, fmt.Sprintf("\nBlacklisted Domain(s) Found %s", metaData.BlacklistedDomains))
+	triageMetaData = append(triageMetaData, fmt.Sprintf("\nBlacklisted Domain(s) Found: %d", metaData.BlacklistedDomainsCount))
+	triageMetaData = append(triageMetaData, fmt.Sprintf("\nURL(s) Not Found: %d", metaData.URLsNotFoundCount))
+
+	if metaData.MaliciousURLsCount > 0 {
+		triageMetaData = append(triageMetaData, fmt.Sprintf("\nMalicious URL(s): %s", metaData.MaliciousURLs))
+	}
+	if metaData.BlacklistedDomainsCount > 0 {
+		triageMetaData = append(triageMetaData, fmt.Sprintf("\nBlacklisted Domain(s): %s", metaData.BlacklistedDomains))
+	}
+	if metaData.URLsNotFoundCount > 0 {
+		triageMetaData = append(triageMetaData, fmt.Sprintf("\nURL(s) Not Found List: %s", metaData.URLsNotFound))
+	}
+
 	triageMetaData = append(triageMetaData, "\nurlscan.io Submission API used is rate-limited to 5000 public scans per day, 500 per hour and 60 per minute. Result API is rate-limited to 120 requests per minute, 5000 per hour and 10000 per day.")
 	return triageMetaData
 }
