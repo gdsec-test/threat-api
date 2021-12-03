@@ -67,6 +67,7 @@ func (m *TriageModule) GetZeroBounceData(ctx context.Context, triageRequest *tri
 	return zerobounceResults, nil
 }
 
+
 func zerobounceMetaDataExtract(zerobounceResults map[string]*zb.ZeroBounceReport, metaData *zb.MetaData) []string {
 
 	var triageMetaData []string

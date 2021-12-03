@@ -14,6 +14,7 @@ parameters:
   sucuriSHA1: !file_contents resources/sucuri.sha1
   trustarSHA1: !file_contents resources/trustar.sha1
   urlhausSHA1: !file_contents resources/urlhaus.sha1
+  urlscanioSHA1: !file_contents resources/urlscanio.sha1
   virustotalSHA1: !file_contents resources/virustotal.sha1
   whoisSHA1: !file_contents resources/whois.sha1
   zerobounceSHA1: !file_contents resources/zerobounce.sha1
