@@ -99,6 +99,8 @@ type MetaData struct {
 	BlacklistedDomains      string
 	URLsNotFoundCount       int
 	URLsNotFound            string
+	UnknownErrorCount       int
+	UnknownErrorURL         string
 }
 
 func InitializeMetaData(ctx context.Context) *MetaData {
@@ -123,9 +125,24 @@ func GetURLScanResults(ctx context.Context, ioc string, key string, urlscanClien
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		if resp.StatusCode == 400 || resp.StatusCode == 404 {
-			err := fmt.Errorf("%d", resp.StatusCode)
-			return nil, err
+		if resp.StatusCode == 400 {
+			bodyBytes, _ := io.ReadAll(resp.Body)
+			bodyString := string(bodyBytes)
+			if strings.Contains(bodyString, "Scan prevented") {
+				return nil, fmt.Errorf("scan prevented")
+			} else if strings.Contains(bodyString, "DNS Error") {
+				return nil, fmt.Errorf("dns error")
+			}
+		} else if resp.StatusCode == 404 {
+			for {
+				time.Sleep(10 * time.Second)
+				resp, _ = urlscanClient.Do(req)
+				if resp.StatusCode == http.StatusOK {
+					break
+				} else if resp.StatusCode != 404 && resp.StatusCode != http.StatusOK {
+					return nil, fmt.Errorf("bad status code: %d", resp.StatusCode)
+				}
+			}
 		} else {
 			return nil, fmt.Errorf("bad status code: %d", resp.StatusCode)
 		}

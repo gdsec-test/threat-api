@@ -44,15 +44,16 @@ func (m *TriageModule) GetURLScanData(ctx context.Context, triageRequest *triage
 				wg.Done()
 			}()
 			urlscanioResult, err := us.GetURLScanResults(ctx, ioc, m.urlscanKey, m.urlscanClient)
-			if err != nil && strings.Contains(err.Error(), "400") {
+			if err != nil && strings.Contains(err.Error(), "scan prevented") {
 				metaData.BlacklistedDomainsCount++
 				metaData.BlacklistedDomains += ioc + " "
 				err = nil
-			} else if err != nil && strings.Contains(err.Error(), "404") {
+			} else if err != nil && strings.Contains(err.Error(), "dns error") {
 				metaData.URLsNotFoundCount++
 				metaData.URLsNotFound += ioc + " "
 			} else if err != nil {
-				span.AddError(err)
+				metaData.UnknownErrorCount++
+				metaData.UnknownErrorURL += ioc + " "
 				urlscanioLock.Lock()
 				urlscanioResults[ioc] = nil
 				urlscanioLock.Unlock()
@@ -144,6 +145,9 @@ func urlscanMetaDataExtract(metaData *us.MetaData) []string {
 	if metaData.URLsNotFoundCount > 0 {
 		triageMetaData = append(triageMetaData, fmt.Sprintf("\nURL(s) Not Found: %d", metaData.URLsNotFoundCount))
 		triageMetaData = append(triageMetaData, fmt.Sprintf("\nURL(s) Not Found List: %s", metaData.URLsNotFound))
+	}
+	if metaData.UnknownErrorCount > 0 {
+		triageMetaData = append(triageMetaData, fmt.Sprintf("\nUnknown error occurred while scanning URL(s): %s", metaData.UnknownErrorURL))
 	}
 
 	triageMetaData = append(triageMetaData, "\nurlscan.io Submission API used is rate-limited to 5000 public scans per day, 500 per hour and 60 per minute. Result API is rate-limited to 120 requests per minute, 5000 per hour and 10000 per day.")
