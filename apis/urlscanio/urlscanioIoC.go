@@ -78,7 +78,7 @@ func dumpCSV(urlscanioResults map[string]*us.ResultHolder, metaData *us.MetaData
 	csv := csv.NewWriter(&resp)
 	// Write headers
 	csv.Write([]string{
-		"URL",
+		"Final Redirect URL",
 		"Screenshot URL",
 		"Overall Verdict Malicious",
 		"Overall Verdict Score",
