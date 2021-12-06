@@ -73,8 +73,11 @@ func dumpCSV(sucuriResults map[string]*sucuri.SucuriReport) string {
 	csv.Write([]string{
 		"Domain",
 		"Total Rating",
+		"Total Rating Label",
 		"Security Rating",
+		"Security Rating Label",
 		"Domain Rating",
+		"Domain Rating Label",
 		"Suspicious Activity",
 		"Details",
 		"Redirects To:",
@@ -84,6 +87,8 @@ func dumpCSV(sucuriResults map[string]*sucuri.SucuriReport) string {
 		if data == nil {
 			continue
 		}
+
+
 
 		//Get Strings from Selected Structs
 		var msgs string
@@ -98,10 +103,55 @@ func dumpCSV(sucuriResults map[string]*sucuri.SucuriReport) string {
 			redirects = redirects + reds + "\n"
 		}
 
+		var totalscore string
+		switch data.Ratings.Total.Rating {
+		case "A":
+			totalscore = "Minimal"
+		case "B":
+			totalscore = "Low"
+		case "C":
+			totalscore = "Medium"
+		case "D":
+			totalscore = "High"
+		case "E":
+			totalscore = "Critical"
+		}
+
+		var secrating string
+		switch data.Ratings.Security.Rating {
+		case "A":
+			secrating = "Minimal"
+		case "B":
+			secrating = "Low"
+		case "C":
+			secrating = "Medium"
+		case "D":
+			secrating = "High"
+		case "E":
+			secrating = "Critical"
+		}
+
+		var domrating string
+		switch data.Ratings.Domain.Rating {
+		case "A":
+			domrating = "Minimal"
+		case "B":
+			domrating = "Low"
+		case "C":
+			domrating = "Medium"
+		case "D":
+			domrating = "High"
+		case "E":
+			domrating = "Critical"
+		}
+
 		cols := []string{
 			ioc,
+			totalscore,
 			data.Ratings.Total.Rating,
+			secrating,
 			data.Ratings.Security.Rating,
+			domrating,
 			data.Ratings.Domain.Rating,
 			msgs,
 			details,
@@ -109,9 +159,9 @@ func dumpCSV(sucuriResults map[string]*sucuri.SucuriReport) string {
 		}
 		csv.Write(cols)
 
-
 	}
 	csv.Flush()
+
 
 
 	return resp.String()
