@@ -1,7 +1,7 @@
 {
   "swagger": "2.0",
   "info": {
-    "description": "Threat Tools Platform API. See [documentation](https://github.com/gdcorp-infosec/threat-api/blob/main/docs/USAGE.md) available in our [GitHub repository](https://github.com/gdcorp-infosec/threat-api) for more information.",
+    "description": "Threat Tools Platform API. See [documentation](https://github.com/gdcorp-infosec/threat-api/blob/main/docs/IOCTYPES.md) available in our [GitHub repository](https://github.com/gdcorp-infosec/threat-api) for more information.",
     "version": "2.0.0",
     "title": "ThreatAPI",
     "contact": {
@@ -28,6 +28,15 @@
             "in": "body",
             "description": "List of IOCs to evaluate. IOCs will only be processed by the modules specified in the request. All of the IOCs provided must be of the same type.",
             "required": true
+          },
+          {
+            "name": "Forwarded",
+            "in": "header",
+            "description": "Example: for=user name. Optional param to identify original user to request job if job created by proxy authenticated user (e.g. service account)",
+            "schema": {
+              "type": "string"
+            },
+            "required": false
           }
         ],
         "responses": {

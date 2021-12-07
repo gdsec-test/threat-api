@@ -3,33 +3,21 @@ Description: ThreatTools API Service Lambdas
 
 Parameters:
   DevelopmentTeam:
-    Type: AWS::SSM::Parameter::Value<String>
+    Type: String
     Description: SSM Parameter for team owning the created resources.
-    Default: /AdminParams/Team/Name
-    AllowedValues:
-      - /AdminParams/Team/Name
   DevelopmentEnvironment:
-    Type: AWS::SSM::Parameter::Value<String>
+    Type: String
     Description: SSM Parameter for development environment this will live in.
-    Default: /AdminParams/Team/Environment
-    AllowedValues:
-      - /AdminParams/Team/Environment
   SSOHost:
     Type: String
     Description: SSO endpoint used by the Authorizer lambda
     Default: "sso.gdcorp.tools"
   DXVpcSecurityGroups:
-    Type: AWS::SSM::Parameter::Value<String>
+    Type: String
     Description: SSM Parameter for private dx app security group id
-    Default: /AdminParams/VPC/PrivateDXAPPSG
-    AllowedValues:
-      - /AdminParams/VPC/PrivateDXAPPSG
   DXVpcSubnetIds:
-    Type: AWS::SSM::Parameter::Value<List<String>>
+    Type: CommaDelimitedList
     Description: SSM Parameter for private dx app subnet ids
-    Default: /AdminParams/VPC/DXAPPSubnets
-    AllowedValues:
-      - /AdminParams/VPC/DXAPPSubnets
   cmapSHA1:
     Type: String
     Description: SHA1 hash of the cmap lambda source
@@ -62,6 +50,10 @@ Parameters:
     Type: String
     Description: SHA1 hash of the splunk lambda source
     Default: ""
+  sucuriSHA1:
+    Type: String
+    Description: SHA1 hash of the sucuri lambda source
+    Default: ""
   trustarSHA1:
     Type: String
     Description: SHA1 hash of the trustar lambda source
@@ -69,6 +61,10 @@ Parameters:
   urlhausSHA1:
     Type: String
     Description: SHA1 hash of the urlhaus lambda source
+    Default: ""
+  urlscanioSHA1:
+    Type: String
+    Description: SHA1 hash of the urlscanio lambda source
     Default: ""
   virustotalSHA1:
     Type: String
@@ -948,6 +944,114 @@ Resources:
           - Key: doNotShutDown
             Value: "true"
 
+  sucuriLambdaFunction:
+    Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
+    Properties:
+      ProductName: Lambda
+      ProvisioningArtifactName: 2.3.0
+      ProvisionedProductName: sucuriLambdaFunction
+      ProvisioningParameters:
+        - Key: S3Bucket
+          Value: !Sub gd-${DevelopmentTeam}-${DevelopmentEnvironment}-code-bucket
+        - Key: S3Key
+          Value: !Sub sucuri/${sucuriSHA1}
+        - Key: Handler
+          Value: sucuri
+        - Key: LambdaName
+          Value: sucuri
+        - Key: LambdaDescription
+          Value: !Sub sucuri lambda (${sucuriSHA1})
+        - Key: MemorySize
+          Value: 256
+        - Key: Runtime
+          Value: go1.x
+        - Key: Timeout
+          Value: 15
+        - Key: CustomIAMRoleNameSuffix
+          Value: ThreatRole
+        - Key: EnvironmentVariablesJson
+          Value: !Sub '{"SSO_HOST": "${SSOHost}"}'
+        - Key: VpcSecurityGroups
+          Value: !Ref DXVpcSecurityGroups
+        - Key: VpcSubnetIds
+          Value: !Join [ ",", !Ref DXVpcSubnetIds ]
+      Tags:
+        - Key: doNotShutDown
+          Value: true
+
+  sucuriLambdaPermission:
+    DependsOn: sucuriLambdaFunction
+    Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
+    Properties:
+      ProductName: LambdaPermission
+      ProvisioningArtifactName: 1.0.1
+      ProvisionedProductName: sucuriLambdaPermission
+      ProvisioningParameters:
+        - Key: Action
+          Value: lambda:InvokeFunction
+        - Key: FunctionName
+          Value: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:sucuri
+        - Key: Principal
+          Value: sns.amazonaws.com
+        - Key: SourceArn
+          Value: !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:JobRequests
+      Tags:
+        - Key: doNotShutDown
+          Value: true
+
+  sucuriSNSSubscription:
+    DependsOn: sucuriLambdaFunction
+    Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
+    Properties:
+      ProductName: SNSSubscription
+      ProvisioningArtifactName: 1.0.1
+      ProvisionedProductName: sucuriSNSSubscription
+      ProvisioningParameters:
+        - Key: Protocol
+          Value: lambda
+        - Key: TopicArn
+          Value: !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:JobRequests
+        - Key: Endpoint
+          Value: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:sucuri
+        - Key: Region
+          Value: !Sub ${AWS::Region}
+      Tags:
+        - Key: doNotShutDown
+          Value: true
+
+  sucuriLambdaEventInvokeConfig:
+    DependsOn: sucuriLambdaFunction
+    Type: AWS::Lambda::EventInvokeConfig
+    Properties:
+      DestinationConfig:
+        OnSuccess:
+          Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobResponses
+        OnFailure:
+          Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobFailures
+      FunctionName: sucuri
+      Qualifier: $LATEST
+
+  sucuriLambdaMetadata:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: /ThreatTools/Modules/sucuri
+      Type: String
+      Value: '{"supportedIOCTypes": ["DOMAIN"]}'
+
+  sucuriAppSecSubscriptionFilter:
+    DependsOn: sucuriLambdaFunction
+    Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
+    Properties:
+      ProductName: SubscriptionFilterAppSecurity
+      ProvisionedProductName: sucuriAppSecSubscriptionFilter
+      ProvisioningArtifactName: 1.0.1
+      ProvisioningParameters:
+          - Key: CloudWatchLogGroup
+            Value: /aws/lambda/sucuri
+      Tags:
+          - Key: doNotShutDown
+            Value: "true"
+
   trustarLambdaFunction:
     Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
     Properties:
@@ -1160,6 +1264,114 @@ Resources:
       ProvisioningParameters:
           - Key: CloudWatchLogGroup
             Value: /aws/lambda/urlhaus
+      Tags:
+          - Key: doNotShutDown
+            Value: "true"
+
+  urlscanioLambdaFunction:
+    Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
+    Properties:
+      ProductName: Lambda
+      ProvisioningArtifactName: 2.3.0
+      ProvisionedProductName: urlscanioLambdaFunction
+      ProvisioningParameters:
+        - Key: S3Bucket
+          Value: !Sub gd-${DevelopmentTeam}-${DevelopmentEnvironment}-code-bucket
+        - Key: S3Key
+          Value: !Sub urlscanio/${urlscanioSHA1}
+        - Key: Handler
+          Value: urlscanio
+        - Key: LambdaName
+          Value: urlscanio
+        - Key: LambdaDescription
+          Value: !Sub urlscanio lambda (${urlscanioSHA1})
+        - Key: MemorySize
+          Value: 256
+        - Key: Runtime
+          Value: go1.x
+        - Key: Timeout
+          Value: 15
+        - Key: CustomIAMRoleNameSuffix
+          Value: ThreatRole
+        - Key: EnvironmentVariablesJson
+          Value: !Sub '{"SSO_HOST": "${SSOHost}"}'
+        - Key: VpcSecurityGroups
+          Value: !Ref DXVpcSecurityGroups
+        - Key: VpcSubnetIds
+          Value: !Join [ ",", !Ref DXVpcSubnetIds ]
+      Tags:
+        - Key: doNotShutDown
+          Value: true
+
+  urlscanioLambdaPermission:
+    DependsOn: urlscanioLambdaFunction
+    Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
+    Properties:
+      ProductName: LambdaPermission
+      ProvisioningArtifactName: 1.0.1
+      ProvisionedProductName: urlscanioLambdaPermission
+      ProvisioningParameters:
+        - Key: Action
+          Value: lambda:InvokeFunction
+        - Key: FunctionName
+          Value: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:urlscanio
+        - Key: Principal
+          Value: sns.amazonaws.com
+        - Key: SourceArn
+          Value: !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:JobRequests
+      Tags:
+        - Key: doNotShutDown
+          Value: true
+
+  urlscanioSNSSubscription:
+    DependsOn: urlscanioLambdaFunction
+    Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
+    Properties:
+      ProductName: SNSSubscription
+      ProvisioningArtifactName: 1.0.1
+      ProvisionedProductName: urlscanioSNSSubscription
+      ProvisioningParameters:
+        - Key: Protocol
+          Value: lambda
+        - Key: TopicArn
+          Value: !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:JobRequests
+        - Key: Endpoint
+          Value: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:urlscanio
+        - Key: Region
+          Value: !Sub ${AWS::Region}
+      Tags:
+        - Key: doNotShutDown
+          Value: true
+
+  urlscanioLambdaEventInvokeConfig:
+    DependsOn: urlscanioLambdaFunction
+    Type: AWS::Lambda::EventInvokeConfig
+    Properties:
+      DestinationConfig:
+        OnSuccess:
+          Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobResponses
+        OnFailure:
+          Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobFailures
+      FunctionName: urlscanio
+      Qualifier: $LATEST
+
+  urlscanioLambdaMetadata:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: /ThreatTools/Modules/urlscanio
+      Type: String
+      Value: '{"supportedIOCTypes": ["URL"]}'
+
+  urlscanioAppSecSubscriptionFilter:
+    DependsOn: urlscanioLambdaFunction
+    Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
+    Properties:
+      ProductName: SubscriptionFilterAppSecurity
+      ProvisionedProductName: urlscanioAppSecSubscriptionFilter
+      ProvisioningArtifactName: 1.0.1
+      ProvisioningParameters:
+          - Key: CloudWatchLogGroup
+            Value: /aws/lambda/urlscanio
       Tags:
           - Key: doNotShutDown
             Value: "true"

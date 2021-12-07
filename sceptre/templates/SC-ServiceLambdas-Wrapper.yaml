@@ -1,0 +1,117 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Wrapper around original Service Lambdas template for nesting stacks due to CloudFormation quota limits
+Parameters:
+  DevelopmentTeam:
+    Type: AWS::SSM::Parameter::Value<String>
+    Description: SSM Parameter for team owning the created resources.
+    Default: /AdminParams/Team/Name
+    AllowedValues:
+      - /AdminParams/Team/Name
+  DevelopmentEnvironment:
+    Type: AWS::SSM::Parameter::Value<String>
+    Description: SSM Parameter for development environment this will live in.
+    Default: /AdminParams/Team/Environment
+    AllowedValues:
+      - /AdminParams/Team/Environment
+  SSOHost:
+    Type: String
+    Description: SSO endpoint used by the Authorizer lambda
+    Default: "sso.gdcorp.tools"
+  DXVpcSecurityGroups:
+    Type: AWS::SSM::Parameter::Value<String>
+    Description: SSM Parameter for private dx app security group id
+    Default: /AdminParams/VPC/PrivateDXAPPSG
+    AllowedValues:
+      - /AdminParams/VPC/PrivateDXAPPSG
+  DXVpcSubnetIds:
+    Type: AWS::SSM::Parameter::Value<List<String>>
+    Description: SSM Parameter for private dx app subnet ids
+    Default: /AdminParams/VPC/DXAPPSubnets
+    AllowedValues:
+      - /AdminParams/VPC/DXAPPSubnets
+  cmapSHA1:
+    Type: String
+    Description: SHA1 hash of the cmap lambda source
+    Default: ""
+  geoipSHA1:
+    Type: String
+    Description: SHA1 hash of the geoip lambda source
+    Default: ""
+  nvdSHA1:
+    Type: String
+    Description: SHA1 hash of the nvd lambda source
+    Default: ""
+  passivetotalSHA1:
+    Type: String
+    Description: SHA1 hash of the passivetotal lambda source
+    Default: ""
+  recordedfutureSHA1:
+    Type: String
+    Description: SHA1 hash of the recordedfuture lambda source
+    Default: ""
+  servicenowSHA1:
+    Type: String
+    Description: SHA1 hash of the servicenow lambda source
+    Default: ""
+  shodanSHA1:
+    Type: String
+    Description: SHA1 hash of the shodan lambda source
+    Default: ""
+  splunkSHA1:
+    Type: String
+    Description: SHA1 hash of the splunk lambda source
+    Default: ""
+  sucuriSHA1:
+    Type: String
+    Description: SHA1 hash of the sucuri lambda source
+    Default: ""
+  trustarSHA1:
+    Type: String
+    Description: SHA1 hash of the trustar lambda source
+    Default: ""
+  urlhausSHA1:
+    Type: String
+    Description: SHA1 hash of the urlhaus lambda source
+    Default: ""
+  urlscanioSHA1:
+    Type: String
+    Description: SHA1 hash of the urlscanio lambda source
+    Default: ""
+  virustotalSHA1:
+    Type: String
+    Description: SHA1 hash of the virustotal lambda source
+    Default: ""
+  whoisSHA1:
+    Type: String
+    Description: SHA1 hash of the whois lambda source
+    Default: ""
+  zerobounceSHA1:
+    Type: String
+    Description: SHA1 hash of the zerobounce lambda source
+    Default: ""
+Resources:
+  serviceLambdasTemplate:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub https://s3.amazonaws.com/gd-${DevelopmentTeam}-${DevelopmentEnvironment}-code-bucket/template/SC-ServiceLambdas.yaml
+      Parameters:
+          DevelopmentTeam: !Ref DevelopmentTeam
+          DevelopmentEnvironment: !Ref DevelopmentEnvironment
+          SSOHost: !Ref SSOHost
+          DXVpcSecurityGroups: !Ref DXVpcSecurityGroups
+          DXVpcSubnetIds: !Join [ ",", !Ref DXVpcSubnetIds ]
+          cmapSHA1: !Ref cmapSHA1
+          geoipSHA1: !Ref geoipSHA1
+          nvdSHA1: !Ref nvdSHA1
+          passivetotalSHA1: !Ref passivetotalSHA1
+          recordedfutureSHA1: !Ref recordedfutureSHA1
+          servicenowSHA1: !Ref servicenowSHA1
+          shodanSHA1: !Ref shodanSHA1
+          splunkSHA1: !Ref splunkSHA1
+          sucuriSHA1: !Ref sucuriSHA1
+          trustarSHA1: !Ref trustarSHA1
+          urlhausSHA1: !Ref urlhausSHA1
+          urlscanioSHA1: !Ref urlscanioSHA1
+          virustotalSHA1: !Ref virustotalSHA1
+          whoisSHA1: !Ref whoisSHA1
+          zerobounceSHA1: !Ref zerobounceSHA1

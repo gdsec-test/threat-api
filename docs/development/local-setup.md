@@ -20,7 +20,7 @@ pip install -U -r requirements.txt -r requirements-test.txt
 For any package/ version specific errors, check the latest compatibility available online.
 Make sure it's replicated when pulling a virtual environment.
 
-### Go Env setup
+### Golang Environment Setup
 
 Because we rely on internal libraries, you need to configure go to be able to authenticate and download those libraries.
 
@@ -40,14 +40,46 @@ Then if you run `cat ~/.gitconfig` you should see this addition
 [url "git@github.com:gdcorp-"]
         insteadOf = https://github.com/gdcorp-
 ```
-
-Then set this env var whenever you run `go get`.  You may even need to run it multiple times if you haven't run it recently.  A good rule of thumb is whenever you are getting a `410 GONE` error, run this command again
+Set the GOPRIVATE environment variable:
 
 ```sh
 export GOPRIVATE=github.secureserver.net,github.com/gdcorp-*
 ```
 
+#### Install Go
 
+This involves 3 high-level steps:
+1. Install the latest supported version of Go: https://golang.org/dl/
+2. Add the path to your Golang binaries to your PATH environment variable.
+3. Create a GOPATH environment variable which contains the path to your Go workspace. On Mac, this path would be "$HOME/go" by default. On Windows, an example of this path would be "C:\Projects\Go".
+
+#### Upgrade Go Version
+
+This involves 3 high-level steps:
+
+1. Delete the directory where you installed Go. On Windows, this is usually "C:\Go". On Mac or Linux, it is usually "/usr/local/bin/go". You can also use the following commad to check which directory Go is installed in if it is not installed in the default location (on Mac/Linux):
+
+```sh
+which go
+```
+
+2. Remove the path to your Go binaries from the PATH environment variable and also remove the GOPATH environment variable if it exists.
+
+3. Install the latest supported version of Go (https://golang.org/dl/), include the new path to your Go binaries in the PATH environment variable and also set the GOPATH environment variable.
+
+#### Additional resources on Go un-installtion steps by OS type:
+
+**Linux**: Run the following command from root or using sudo:
+```sh
+rm -rf /usr/local/go && tar -C /usr/local -xzf go1.17.2.linux-amd64.tar.gz
+```
+
+**Mac**: Depending on whether you installed Go using brew or its package manager, follow these steps to uninstall Go:
+https://blog.dharnitski.com/2019/04/06/uninstall-go-on-mac/
+
+**Windows**: To remove an existing Go installation from your system delete the go directory. This is usually "C:\Go" under Windows. You should also remove the Go bin directory from your PATH environment variable.
+
+#### Troubleshooting
 For any package/ version specific errors, check the latest compatibility available online.
 `go.mod` and `go.sum` has to be [committed to the codebase with your PR when you add/ modify any packages used](https://github.com/golang/go/wiki/Modules#releasing-modules-all-versions)
 
@@ -73,7 +105,7 @@ If you've just checked out this repository, you'll need to invoke the following
 to install the pre-commit hook in your local git working tree:
 
 ```bash
-pre-commit install
+pre-commit install --hook-type pre-commit --hook-type pre-push
 ```
 
 A tartufo scan will be run whenever `git commit` is performed.  To manually run

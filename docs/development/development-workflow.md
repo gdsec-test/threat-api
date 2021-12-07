@@ -44,7 +44,7 @@ to make necessary changes to your sceptre files.
 - Once everything, check if your code is ready for AWS Dev (check in secrets in AWS Secrets Manager)
 - Squash and Merge the PR (This ensures that we just have one single commit for your entire code)
 - Check if everything works as intended in AWS Dev environment
-- Delete you branch if everything works good
+- Delete your branch if everything works good
 
 ## Prod Release
 

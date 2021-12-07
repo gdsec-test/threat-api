@@ -18,6 +18,7 @@ const (
 	// jobIDKey used in DB and API
 	jobIDKey    = "jobId"
 	usernameKey = "username"
+	originRequesterKey = "originrequester"
 	// API Version and API path prefix
 	version = "v1"
 )

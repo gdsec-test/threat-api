@@ -25,7 +25,7 @@ CF_CONFIG_START = dedent(
 
 SC_CONFIG_START = dedent(
     """\
-    template_path: SC-ServiceLambdas.yaml
+    template_path: SC-ServiceLambdas-Wrapper.yaml
     dependencies:
       - {{environment}}/{{region}}/SC-CoreResources.yaml
     parameters:
@@ -59,6 +59,13 @@ TEMPLATE_HEADER = dedent(
     """\
     AWSTemplateFormatVersion: 2010-09-09
     Description: ThreatTools API Service Lambdas
+    """
+)
+
+TEMPLATE_WRAPPER_HEADER = dedent(
+    """\
+    AWSTemplateFormatVersion: '2010-09-09'
+    Description: Wrapper around original Service Lambdas template for nesting stacks due to CloudFormation quota limits
     """
 )
 
@@ -129,6 +136,28 @@ SC_PARAMETERS_HEADER = dedent(
     """\
     Parameters:
       DevelopmentTeam:
+        Type: String
+        Description: SSM Parameter for team owning the created resources.
+      DevelopmentEnvironment:
+        Type: String
+        Description: SSM Parameter for development environment this will live in.
+      SSOHost:
+        Type: String
+        Description: SSO endpoint used by the Authorizer lambda
+        Default: "sso.gdcorp.tools"
+      DXVpcSecurityGroups:
+        Type: String
+        Description: SSM Parameter for private dx app security group id
+      DXVpcSubnetIds:
+        Type: CommaDelimitedList
+        Description: SSM Parameter for private dx app subnet ids
+    """
+)
+
+SC_WRAPPER_PARAMETERS_HEADER = dedent(
+    """\
+    Parameters:
+      DevelopmentTeam:
         Type: AWS::SSM::Parameter::Value<String>
         Description: SSM Parameter for team owning the created resources.
         Default: /AdminParams/Team/Name
@@ -160,6 +189,15 @@ SC_PARAMETERS_HEADER = dedent(
 )
 
 SC_PARAMETERS_BLOCK = dedent(
+    """\
+    __NAME__SHA1:
+      Type: String
+      Description: SHA1 hash of the __NAME__ lambda source
+      Default: ""
+    """
+)
+
+SC_WRAPPER_PARAMETERS_BLOCK = dedent(
     """\
     __NAME__SHA1:
       Type: String
@@ -280,6 +318,29 @@ SC_RESOURCES_BLOCK = dedent(
     """
 )
 
+SC_WRAPPER_NESTED_RESOURCE_BLOCK = dedent(
+    """\
+    Resources:
+      serviceLambdasTemplate:
+        Type: AWS::CloudFormation::Stack
+        Properties:
+          TemplateURL: !Sub https://s3.amazonaws.com/gd-${DevelopmentTeam}-${DevelopmentEnvironment}-code-bucket/template/SC-ServiceLambdas.yaml
+          Parameters:
+              DevelopmentTeam: !Ref DevelopmentTeam
+              DevelopmentEnvironment: !Ref DevelopmentEnvironment
+              SSOHost: !Ref SSOHost
+              DXVpcSecurityGroups: !Ref DXVpcSecurityGroups
+              DXVpcSubnetIds: !Join [ ",", !Ref DXVpcSubnetIds ]
+    """
+)
+
+
+SC_WRAPPER_RESOURCE_BLOCK = dedent(
+    """\
+            __NAME__SHA1: !Ref __NAME__SHA1
+    """
+)
+
 log = logging.getLogger()
 log.setLevel(logging.INFO)
 
@@ -385,4 +446,23 @@ if lambdas:
 
 open(join(SCEPTRE_PATH, "templates", "SC-ServiceLambdas.yaml"), "w").write(
     sc_template.strip() + "\n"
+)
+
+sc_wrapper_template = TEMPLATE_WRAPPER_HEADER
+
+if lambdas:
+    sc_wrapper_template += SC_WRAPPER_PARAMETERS_HEADER
+    for fn in sorted(lambdas.keys()):
+        sc_wrapper_template += expand_template(
+            SC_WRAPPER_PARAMETERS_BLOCK, lambdas[fn], 2
+        )
+
+    sc_wrapper_template += SC_WRAPPER_NESTED_RESOURCE_BLOCK
+    for fn in sorted(lambdas.keys()):
+        sc_wrapper_template += expand_template(
+            SC_WRAPPER_RESOURCE_BLOCK, lambdas[fn], 10
+        )
+
+open(join(SCEPTRE_PATH, "templates", "SC-ServiceLambdas-Wrapper.yaml"), "w").write(
+    sc_wrapper_template.strip() + "\n"
 )

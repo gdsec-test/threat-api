@@ -157,14 +157,20 @@ func (t *Toolbox) getJWTADGroups(ctx context.Context, jwt string) ([]string, err
 func GetJWTFromRequest(request events.APIGatewayProxyRequest) string {
 	// Try the auth header
 	authHeader, ok := request.Headers["Authorization"]
+	if !ok { // due to bug with APIGatewayProxyRequest being case-sensitive
+		authHeader, ok = request.Headers["authorization"]
+	}
 	if ok && strings.HasPrefix(strings.ToLower(authHeader), "sso-jwt ") {
 		return authHeader[8:]
 	}
 
 	// Try cookies
 	cookieHeader, ok := request.Headers["cookie"]
+	if !ok {
+		cookieHeader, ok = request.Headers["Cookie"]
+	}
 	if ok {
-		cookies := parseCookies(cookieHeader)
+		cookies := parseQueryParams(cookieHeader)
 		if jwt, ok := cookies["auth_jomax"]; ok {
 			return strings.Trim(jwt, " ")
 		}
@@ -172,7 +178,24 @@ func GetJWTFromRequest(request events.APIGatewayProxyRequest) string {
 	return ""
 }
 
-func parseCookies(cookies string) map[string]string {
+// GetOriginalRequester pulls out the forwarded requester name if it is present as `for` attribute
+// see https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Forwarded
+func GetOriginalRequester(request events.APIGatewayProxyRequest) string {
+	// Try cookies
+	forwardedHeader, ok := request.Headers["Forwarded"]
+	if !ok { // due to bug with APIGatewayProxyRequest being case-sensitive
+		forwardedHeader, ok = request.Headers["forwarded"]
+	}
+	if ok {
+		forwardedParams := parseQueryParams(forwardedHeader)
+		if originRequester, ok := forwardedParams["for"]; ok {
+			return strings.Trim(originRequester, " ")
+		}
+	}
+	return ""
+}
+
+func parseQueryParams(cookies string) map[string]string {
 	ret := map[string]string{}
 
 	cookiesList := strings.Split(cookies, ";")

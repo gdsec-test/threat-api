@@ -34,6 +34,10 @@ Parameters:
     Type: String
     Description: SHA1 hash of the splunk lambda source
     Default: ""
+  sucuriSHA1:
+    Type: String
+    Description: SHA1 hash of the sucuri lambda source
+    Default: ""
   trustarSHA1:
     Type: String
     Description: SHA1 hash of the trustar lambda source
@@ -41,6 +45,10 @@ Parameters:
   urlhausSHA1:
     Type: String
     Description: SHA1 hash of the urlhaus lambda source
+    Default: ""
+  urlscanioSHA1:
+    Type: String
+    Description: SHA1 hash of the urlscanio lambda source
     Default: ""
   virustotalSHA1:
     Type: String
@@ -456,6 +464,56 @@ Resources:
       Type: String
       Value: '{"supportedIOCTypes": ["GODADDY_USERNAME", "IP", "CVE", "AWSHOSTNAME"], "actions": {"ReadSplunk": {"requiredADGroups": ["ENG-Threat Research", "ENG-DCU", "infosec_response"]}}}'
 
+  sucuriLambdaFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      Code:
+        S3Bucket: !Sub gd-threattools-${AWS::AccountId}-code-bucket
+        S3Key: !Sub sucuri/${sucuriSHA1}
+      Description: !Sub sucuri lambda (${sucuriSHA1})
+      FunctionName: sucuri
+      Handler: sucuri
+      MemorySize: 256
+      Role: !Sub arn:aws:iam::${AWS::AccountId}:role/threattools-custom-ThreatRole
+      Runtime: go1.x
+      Timeout: 15
+
+  sucuriLambdaPermission:
+    DependsOn: sucuriLambdaFunction
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:sucuri
+      Principal: sns.amazonaws.com
+      SourceArn: !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:JobRequests
+
+  sucuriSNSSubscription:
+    DependsOn: sucuriLambdaFunction
+    Type: AWS::SNS::Subscription
+    Properties:
+      Endpoint: !GetAtt sucuriLambdaFunction.Arn
+      Protocol: lambda
+      TopicArn: !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:JobRequests
+
+  sucuriLambdaEventInvokeConfig:
+    DependsOn: sucuriLambdaFunction
+    Type: AWS::Lambda::EventInvokeConfig
+    Properties:
+      DestinationConfig:
+        OnSuccess:
+          Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobResponses
+        OnFailure:
+          Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobFailures
+      FunctionName: sucuri
+      Qualifier: $LATEST
+
+  sucuriLambdaMetadata:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: /ThreatTools/Modules/sucuri
+      Type: String
+      Value: '{"supportedIOCTypes": ["DOMAIN"]}'
+
   trustarLambdaFunction:
     Type: AWS::Lambda::Function
     Properties:
@@ -555,6 +613,56 @@ Resources:
       Name: /ThreatTools/Modules/urlhaus
       Type: String
       Value: '{"supportedIOCTypes": ["DOMAIN", "IP", "URL", "MD5", "SHA256"]}'
+
+  urlscanioLambdaFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      Code:
+        S3Bucket: !Sub gd-threattools-${AWS::AccountId}-code-bucket
+        S3Key: !Sub urlscanio/${urlscanioSHA1}
+      Description: !Sub urlscanio lambda (${urlscanioSHA1})
+      FunctionName: urlscanio
+      Handler: urlscanio
+      MemorySize: 256
+      Role: !Sub arn:aws:iam::${AWS::AccountId}:role/threattools-custom-ThreatRole
+      Runtime: go1.x
+      Timeout: 15
+
+  urlscanioLambdaPermission:
+    DependsOn: urlscanioLambdaFunction
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:urlscanio
+      Principal: sns.amazonaws.com
+      SourceArn: !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:JobRequests
+
+  urlscanioSNSSubscription:
+    DependsOn: urlscanioLambdaFunction
+    Type: AWS::SNS::Subscription
+    Properties:
+      Endpoint: !GetAtt urlscanioLambdaFunction.Arn
+      Protocol: lambda
+      TopicArn: !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:JobRequests
+
+  urlscanioLambdaEventInvokeConfig:
+    DependsOn: urlscanioLambdaFunction
+    Type: AWS::Lambda::EventInvokeConfig
+    Properties:
+      DestinationConfig:
+        OnSuccess:
+          Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobResponses
+        OnFailure:
+          Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobFailures
+      FunctionName: urlscanio
+      Qualifier: $LATEST
+
+  urlscanioLambdaMetadata:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: /ThreatTools/Modules/urlscanio
+      Type: String
+      Value: '{"supportedIOCTypes": ["URL"]}'
 
   virustotalLambdaFunction:
     Type: AWS::Lambda::Function

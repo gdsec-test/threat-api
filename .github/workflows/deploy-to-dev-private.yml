@@ -31,10 +31,10 @@ jobs:
           rm -f $HOME/.gitconfig
 
       - name: Checkout
-        uses: actions/checkout@1e204e9a9253d643386038d443f96446fa156a97
+        uses: actions/checkout@ec3a7ce113134d7a93b817d10a8272cb61118579
 
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@0d9a5be0dceea74e09396820e1e522ba4a110d2f
+        uses: aws-actions/configure-aws-credentials@ea7b857d8a33dc2fb4ef5a724500044281b49a5e
         with:
           aws-access-key-id: ${{ secrets.DEV_PRIVATE_AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.DEV_PRIVATE_AWS_SECRET_ACCESS_KEY }}
@@ -64,7 +64,7 @@ jobs:
       - name: Setup golang environment
         uses: actions/setup-go@331ce1d993939866bb63c32c6cbbfd48fa76fc57
         with:
-          go-version: '1.15.6'
+          go-version: '1.17.2'
 
       - name: Install golang dependencies
         env:
@@ -87,6 +87,7 @@ jobs:
         run: |
           source venv/bin/activate
           cd sceptre
+          aws s3 cp templates/SC-ServiceLambdas.yaml s3://gd-threattools-dev-private-code-bucket/template/SC-ServiceLambdas.yaml --quiet
           sceptre launch -y dev-private/us-west-2
 
       - name: Update swagger

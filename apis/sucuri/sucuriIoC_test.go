@@ -8,7 +8,7 @@ import (
 	"github.com/gdcorp-infosec/threat-api/lambdas/common/triagelegacyconnector/triage"
 )
 
-func TestEnrichCVE(t *testing.T) {
+func TestSucuri(t *testing.T) {
 
 	ctx := context.Background()
 	tb = toolbox.GetToolbox()
@@ -16,7 +16,7 @@ func TestEnrichCVE(t *testing.T) {
 
 	var triageRequests []*triage.Request
 	triageRequests = append(triageRequests, &triage.Request{
-		IOCs:     []string{"propelltherapy.com"},
+		IOCs:     []string{"google.com"},
 		IOCsType: triage.DomainType,
 	})
 
@@ -33,6 +33,6 @@ func TestEnrichCVE(t *testing.T) {
 		if triageResult[0].Data == "" {
 			t.Fatal("first data element empty ")
 		}
-	}
 
+	}
 }

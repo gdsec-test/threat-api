@@ -44,11 +44,11 @@
 ##### deploy-to-dev.yml
 - Triggered on every merge into `develop`
 - Can also be manually triggered via `workflow_dispatch`
-  - Make sure you choose `develop` to trigger the deployment from
-  - Refrain from pushing from other branches. If you do push, please run from `develop` again to remain consistent
+  - The workflow will only succeed if triggered from `develop` branch
+  - Although the other branches might be displayed, the jobs will be skipped thus terminating the workflow
 
 ##### deploy-to-prod.yml
 - PR from `develop` to `main` is merged
 - Can also be manually trigerred via `workflow_dispatch`
-  - Make sure you choose `main` to trigger the deployment from
-  - Refrain from pushing from other branches. If you do push, please run from `main` again to remain consistent
+  - The workflow will only succeed if triggered from `main` branch
+  - Although the other branches might be displayed, the jobs will be skipped thus terminating the workflow

@@ -36,7 +36,7 @@ do
         echo ${SHA1HASH} > ${RESOURCES_DIR}/${LAMBDA}.sha1
 
         # Upload the ZIP file to S3
-        aws s3 cp function.zip s3://${CODE_BUCKET}/${LAMBDA}/${SHA1HASH}
+        aws s3 cp function.zip s3://${CODE_BUCKET}/${LAMBDA}/${SHA1HASH} --quiet
 
         # Cleanup
         rm -f ${LAMBDA} function.zip
