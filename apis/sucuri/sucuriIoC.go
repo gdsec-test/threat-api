@@ -88,8 +88,6 @@ func dumpCSV(sucuriResults map[string]*sucuri.SucuriReport) string {
 			continue
 		}
 
-
-
 		//Get Strings from Selected Structs
 		var msgs string
 		var details string
