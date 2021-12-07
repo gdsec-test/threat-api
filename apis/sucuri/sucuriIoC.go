@@ -72,12 +72,12 @@ func dumpCSV(sucuriResults map[string]*sucuri.SucuriReport) string {
 	// Write headers
 	csv.Write([]string{
 		"Domain",
-		"Total Rating",
 		"Total Rating Label",
-		"Security Rating",
+		"Total Rating Score",
 		"Security Rating Label",
-		"Domain Rating",
+		"Security Rating Score",
 		"Domain Rating Label",
+		"Domain Rating Score",
 		"Suspicious Activity",
 		"Details",
 		"Redirects To:",
