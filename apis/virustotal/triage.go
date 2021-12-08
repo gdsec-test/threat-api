@@ -213,16 +213,12 @@ func HashesToCsv(payloads []*vt.Object, metaDataHolder *vtlib.MetaData) string {
 			continue
 		}
 		lastAnalysis, err := payload.Get("last_analysis_stats")
+		var harmless, malicious, suspicious, timeout, undetected int64
 		if err != nil {
-			fmt.Println(err)
-			continue
+			lastAnalysisMap := lastAnalysis.(map[string]interface{})
+			harmless, malicious, suspicious, timeout, undetected = getLastAnalysisStats(lastAnalysisMap)
+			updateMetaData(metaDataHolder, harmless, malicious, suspicious, timeout, undetected)
 		}
-		lastAnalysisMap := lastAnalysis.(map[string]interface{})
-		harmless := int64(lastAnalysisMap["harmless"].(float64))
-		malicious := int64(lastAnalysisMap["malicious"].(float64))
-		suspicious := int64(lastAnalysisMap["suspicious"].(float64))
-		timeout := int64(lastAnalysisMap["timeout"].(float64))
-		undetected := int64(lastAnalysisMap["undetected"].(float64))
 
 		updateMetaData(metaDataHolder, harmless, malicious, suspicious, timeout, undetected)
 
@@ -290,18 +286,12 @@ func DomainsToCsv(payloads []*vt.Object, metaDataHolder *vtlib.MetaData) string 
 			continue
 		}
 		lastAnalysis, err := payload.Get("last_analysis_stats")
-		if err != nil {
-			fmt.Println(err)
-			continue
+		var harmless, malicious, suspicious, timeout, undetected int64
+		if err == nil {
+			lastAnalysisMap := lastAnalysis.(map[string]interface{})
+			harmless, malicious, suspicious, timeout, undetected = getLastAnalysisStats(lastAnalysisMap)
+			updateMetaData(metaDataHolder, harmless, malicious, suspicious, timeout, undetected)
 		}
-		lastAnalysisMap := lastAnalysis.(map[string]interface{})
-		harmless := int64(lastAnalysisMap["harmless"].(float64))
-		malicious := int64(lastAnalysisMap["malicious"].(float64))
-		suspicious := int64(lastAnalysisMap["suspicious"].(float64))
-		timeout := int64(lastAnalysisMap["timeout"].(float64))
-		undetected := int64(lastAnalysisMap["undetected"].(float64))
-
-		updateMetaData(metaDataHolder, harmless, malicious, suspicious, timeout, undetected)
 
 		cols := []string{
 			creationDate,
@@ -358,16 +348,12 @@ func IpsToCsv(payloads []*vt.Object, metaDataHolder *vtlib.MetaData) string {
 			continue
 		}
 		lastAnalysis, err := payload.Get("last_analysis_stats")
+		var harmless, malicious, suspicious, timeout, undetected int64
 		if err != nil {
-			fmt.Println(err)
-			continue
+			lastAnalysisMap := lastAnalysis.(map[string]interface{})
+			harmless, malicious, suspicious, timeout, undetected = getLastAnalysisStats(lastAnalysisMap)
+			updateMetaData(metaDataHolder, harmless, malicious, suspicious, timeout, undetected)
 		}
-		lastAnalysisMap := lastAnalysis.(map[string]interface{})
-		harmless := int64(lastAnalysisMap["harmless"].(float64))
-		malicious := int64(lastAnalysisMap["malicious"].(float64))
-		suspicious := int64(lastAnalysisMap["suspicious"].(float64))
-		timeout := int64(lastAnalysisMap["timeout"].(float64))
-		undetected := int64(lastAnalysisMap["undetected"].(float64))
 
 		updateMetaData(metaDataHolder, harmless, malicious, suspicious, timeout, undetected)
 
@@ -437,16 +423,12 @@ func UrlsToCsv(payloads []*vt.Object, metaDataHolder *vtlib.MetaData) string {
 			continue
 		}
 		lastAnalysis, err := payload.Get("last_analysis_stats")
+		var harmless, malicious, suspicious, timeout, undetected int64
 		if err != nil {
-			fmt.Println(err)
-			continue
+			lastAnalysisMap := lastAnalysis.(map[string]interface{})
+			harmless, malicious, suspicious, timeout, undetected = getLastAnalysisStats(lastAnalysisMap)
+			updateMetaData(metaDataHolder, harmless, malicious, suspicious, timeout, undetected)
 		}
-		lastAnalysisMap := lastAnalysis.(map[string]interface{})
-		harmless := int64(lastAnalysisMap["harmless"].(float64))
-		malicious := int64(lastAnalysisMap["malicious"].(float64))
-		suspicious := int64(lastAnalysisMap["suspicious"].(float64))
-		timeout := int64(lastAnalysisMap["timeout"].(float64))
-		undetected := int64(lastAnalysisMap["undetected"].(float64))
 
 		updateMetaData(metaDataHolder, harmless, malicious, suspicious, timeout, undetected)
 
@@ -466,6 +448,30 @@ func UrlsToCsv(payloads []*vt.Object, metaDataHolder *vtlib.MetaData) string {
 	csv.Flush()
 
 	return resp.String()
+}
+
+func getLastAnalysisStats(lastAnalysisMap map[string]interface{}) (int64, int64, int64, int64, int64) {
+	var harmless int64
+	if fmt.Sprintf("%T", lastAnalysisMap["harmless"]) == "int" {
+		harmless = int64(lastAnalysisMap["harmless"].(int))
+	}
+	var malicious int64
+	if fmt.Sprintf("%T", lastAnalysisMap["malicious"]) == "int" {
+		malicious = int64(lastAnalysisMap["malicious"].(int))
+	}
+	var suspicious int64
+	if fmt.Sprintf("%T", lastAnalysisMap["suspicious"]) == "int" {
+		suspicious = int64(lastAnalysisMap["suspicious"].(int))
+	}
+	var timeout int64
+	if fmt.Sprintf("%T", lastAnalysisMap["timeout"]) == "int" {
+		timeout = int64(lastAnalysisMap["timeout"].(int))
+	}
+	var undetected int64
+	if fmt.Sprintf("%T", lastAnalysisMap["undetected"]) == "int" {
+		undetected = int64(lastAnalysisMap["undetected"].(int))
+	}
+	return harmless, malicious, suspicious, timeout, undetected
 }
 
 func updateMetaData(metaDataHolder *vtlib.MetaData, harmless int64, malicious int64, suspicious int64, timeout int64, undetected int64) {
