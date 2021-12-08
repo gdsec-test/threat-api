@@ -452,24 +452,24 @@ func UrlsToCsv(payloads []*vt.Object, metaDataHolder *vtlib.MetaData) string {
 
 func getLastAnalysisStats(lastAnalysisMap map[string]interface{}) (int64, int64, int64, int64, int64) {
 	var harmless int64
-	if fmt.Sprintf("%T", lastAnalysisMap["harmless"]) == "int" {
-		harmless = int64(lastAnalysisMap["harmless"].(int))
+	if fmt.Sprintf("%T", lastAnalysisMap["harmless"]) == "float64" {
+		harmless = int64(lastAnalysisMap["harmless"].(float64))
 	}
 	var malicious int64
-	if fmt.Sprintf("%T", lastAnalysisMap["malicious"]) == "int" {
-		malicious = int64(lastAnalysisMap["malicious"].(int))
+	if fmt.Sprintf("%T", lastAnalysisMap["malicious"]) == "float64" {
+		malicious = int64(lastAnalysisMap["malicious"].(float64))
 	}
 	var suspicious int64
-	if fmt.Sprintf("%T", lastAnalysisMap["suspicious"]) == "int" {
-		suspicious = int64(lastAnalysisMap["suspicious"].(int))
+	if fmt.Sprintf("%T", lastAnalysisMap["suspicious"]) == "float64" {
+		suspicious = int64(lastAnalysisMap["suspicious"].(float64))
 	}
 	var timeout int64
-	if fmt.Sprintf("%T", lastAnalysisMap["timeout"]) == "int" {
-		timeout = int64(lastAnalysisMap["timeout"].(int))
+	if fmt.Sprintf("%T", lastAnalysisMap["timeout"]) == "float64" {
+		timeout = int64(lastAnalysisMap["timeout"].(float64))
 	}
 	var undetected int64
-	if fmt.Sprintf("%T", lastAnalysisMap["undetected"]) == "int" {
-		undetected = int64(lastAnalysisMap["undetected"].(int))
+	if fmt.Sprintf("%T", lastAnalysisMap["undetected"]) == "float64" {
+		undetected = int64(lastAnalysisMap["undetected"].(float64))
 	}
 	return harmless, malicious, suspicious, timeout, undetected
 }
