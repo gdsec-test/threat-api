@@ -23,6 +23,19 @@ type VirusTotal struct {
 	client *vt.Client
 }
 
+type MetaData struct {
+	Harmless   int64
+	Malicious  int64
+	Suspicious int64
+	Timeout    int64
+	Undetected int64
+}
+
+func InitializeLastAnalysisMetaData() *MetaData {
+	metaDataHolder := &MetaData{}
+	return metaDataHolder
+}
+
 func NewVirusTotal(tb *toolbox.Toolbox, apiKey string) *VirusTotal {
 	virusTotal := new(VirusTotal)
 	virusTotal.tb = tb
