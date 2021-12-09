@@ -9,8 +9,7 @@ import (
 )
 
 const (
-	PassiveDNSPath       = "/v2/dns/passive"
-	UniquePassiveDNSPath = "/v2/dns/passive/unique"
+	PassiveDNSPath = "/v2/dns/passive"
 )
 
 type PDNSReportResult struct {
@@ -70,15 +69,6 @@ func (p *PDNSReportResult) MakeDomainResolution() *PassiveTotalResolution {
 	}
 }
 
-type PDNSUniqueReport struct {
-	Pager      interface{}     `json:"pager"`
-	Frequency  [][]interface{} `json:"frequency"`
-	Total      int             `json:"total"`
-	QueryValue string          `json:"queryValue"`
-	Results    []string        `json:"results"`
-	QueryType  string          `json:"queryType"`
-}
-
 func GetPassiveDNS(ctx context.Context, ptUrl string, ioc string, user string, key string, PTClient *http.Client) (*PDNSReport, error) {
 	// Build URL
 	values := url.Values{}
@@ -103,41 +93,6 @@ func GetPassiveDNS(ctx context.Context, ptUrl string, ioc string, user string, k
 	}
 
 	reportHolder := &PDNSReport{}
-	err = json.NewDecoder(resp.Body).Decode(reportHolder)
-	if err != nil {
-		return nil, err
-	}
-
-	return reportHolder, nil
-}
-
-//GetUniquePassiveDNS gets the unique passiveDNS results
-func GetUniquePassiveDNS(ctx context.Context, ptUrl string, ioc string, user string, key string, PTClient *http.Client) (*PDNSUniqueReport, error) {
-	// When the rate limits are high, this function can be calculated by ourself by processing the results from GetPassiveDNS
-	// Build URL
-	values := url.Values{}
-	values.Add("query", ioc)
-
-	URL := fmt.Sprintf("%s%s?%s", ptUrl, UniquePassiveDNSPath, values.Encode())
-
-	// Build request
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, URL, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	req.SetBasicAuth(user, key)
-
-	resp, err := PTClient.Do(req)
-	if err != nil {
-		return nil, err
-	}
-
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("bad status code: %d", resp.StatusCode)
-	}
-
-	reportHolder := &PDNSUniqueReport{}
 	err = json.NewDecoder(resp.Body).Decode(reportHolder)
 	if err != nil {
 		return nil, err
