@@ -73,6 +73,10 @@ Parameters:
     Type: String
     Description: SHA1 hash of the urlhaus lambda source
     Default: ""
+  urlscanioSHA1:
+    Type: String
+    Description: SHA1 hash of the urlscanio lambda source
+    Default: ""
   virustotalSHA1:
     Type: String
     Description: SHA1 hash of the virustotal lambda source
@@ -85,7 +89,6 @@ Parameters:
     Type: String
     Description: SHA1 hash of the zerobounce lambda source
     Default: ""
-
 Resources:
   serviceLambdasTemplate:
     Type: AWS::CloudFormation::Stack
@@ -108,6 +111,7 @@ Resources:
           sucuriSHA1: !Ref sucuriSHA1
           trustarSHA1: !Ref trustarSHA1
           urlhausSHA1: !Ref urlhausSHA1
+          urlscanioSHA1: !Ref urlscanioSHA1
           virustotalSHA1: !Ref virustotalSHA1
           whoisSHA1: !Ref whoisSHA1
           zerobounceSHA1: !Ref zerobounceSHA1

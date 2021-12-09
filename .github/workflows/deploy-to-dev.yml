@@ -65,7 +65,7 @@ jobs:
       - name: Setup golang environment
         uses: actions/setup-go@331ce1d993939866bb63c32c6cbbfd48fa76fc57
         with:
-          go-version: '1.15.6'
+          go-version: '1.17.2'
 
       - name: Install golang dependencies
         env:

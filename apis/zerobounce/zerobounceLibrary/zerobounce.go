@@ -52,6 +52,7 @@ func InitializeMetaData(ctx context.Context) *MetaData {
 	return metaData
 }
 
+
 func GetZeroBounce(ctx context.Context, iocList string, user string, key string, ZeroBounceClient *http.Client) (*ZeroBounceReport, error) {
 	// Build JSON request body
 	reqBody := fmt.Sprintf(`{"api_key":"%s", %s}`, key, iocList)
