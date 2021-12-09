@@ -72,16 +72,19 @@ func (m *TriageModule) Triage(ctx context.Context, triageRequest *triage.Request
 	//retrieve PDNS results
 	passiveDNSresults, err := m.GetPassiveDNS(ctx, triageRequest)
 	if err != nil {
-		triageDataPTData.Data = fmt.Sprintf("error from passivetotal: %s", err)
+		triageDataPTData.Data = fmt.Sprintf("Passive Total returned an error: %s", err)
 	} else {
 		triageDataPTData.DataType = triage.JSONType
-		var valArray []ptl.PassiveTotalResponse
+		var jsonResponse []ptl.PassiveTotalResponse
 		for _, val := range passiveDNSresults {
-			valArray = append(valArray, *val.MakeDomainResponse())
+			jsonResponse = append(jsonResponse, *val.MakeDomainResponse())
 		}
-		a, _ := json.Marshal(valArray)
-		b := string(a)
-		fmt.Println(b)
+		marshalledResponse, err := json.Marshal(jsonResponse)
+		if err == nil {
+			triageDataPTData.Data = string(marshalledResponse)
+		} else {
+			triageDataPTData.Data = fmt.Sprintf("Marshalling the JSON structure into a string failed: %s", err)
+		}
 	}
 
 	return []*triage.Data{triageDataPTData}, nil

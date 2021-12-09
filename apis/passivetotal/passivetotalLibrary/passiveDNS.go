@@ -48,6 +48,8 @@ type PassiveTotalResponse struct {
 	Resolutions []PassiveTotalResolution `json:"resolutions"`
 }
 
+// Convert the structure returned by Passive Total into the
+// structure that the API will return
 func (p *PDNSReport) MakeDomainResponse() *PassiveTotalResponse {
 	response := PassiveTotalResponse{
 		Value:     p.QueryValue,
@@ -60,9 +62,11 @@ func (p *PDNSReport) MakeDomainResponse() *PassiveTotalResponse {
 	return &response
 }
 
+// Convert the nested structure returned by Passive Total into the
+// structure that the API will return
 func (p *PDNSReportResult) MakeDomainResolution() *PassiveTotalResolution {
 	return &PassiveTotalResolution{
-		Value:     p.Value,
+		Value:     p.Resolve,
 		FirstSeen: p.FirstSeen,
 		LastSeen:  p.LastSeen,
 		Sources:   p.Source,
