@@ -2,35 +2,12 @@ package passivetotalLibrary
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
-
-func TestDomainResponseFormatting(t *testing.T) {
-	report := PDNSReport{
-		QueryValue: "localhost.lan",
-		FirstSeen:  "1776-04-01",
-		LastSeen:   "2021-12-08",
-	}
-	report.Results = append(report.Results, PDNSReportResult{
-		Value:     "127.0.0.1",
-		FirstSeen: "1776-04-01",
-		LastSeen:  "2021-01-06",
-		Source:    []string{"nonsense.com"},
-	})
-	report.Results = append(report.Results, PDNSReportResult{
-		Value:     "255.255.255.255",
-		FirstSeen: "1980-08-15",
-		LastSeen:  "2021-12-08",
-		Source:    []string{"nonsense.com"},
-	})
-	other := report.MakeDomainResponse()
-	fmt.Print(other)
-}
 
 func TestGetPassiveDNSSuccess(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(

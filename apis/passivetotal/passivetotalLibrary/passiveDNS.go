@@ -35,14 +35,14 @@ type PDNSReport struct {
 }
 
 type PassiveTotalResolution struct {
-	Value     string   `json:"ip"`
+	Value     string   `json:"resolution"`
 	FirstSeen string   `json:"firstSeen"`
 	LastSeen  string   `json:"lastSeen"`
 	Sources   []string `json:"sources"`
 }
 
 type PassiveTotalResponse struct {
-	Value       string                   `json:"domain"`
+	Value       string                   `json:"query"`
 	FirstSeen   string                   `json:"firstSeen"`
 	LastSeen    string                   `json:"lastSeen"`
 	Resolutions []PassiveTotalResolution `json:"resolutions"`
