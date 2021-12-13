@@ -4,10 +4,12 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net/http"
+
+	ptl "github.com/gdcorp-infosec/threat-api/apis/passivetotal/passivetotalLibrary"
 	"github.com/gdcorp-infosec/threat-api/lambdas/common/toolbox"
 	"github.com/gdcorp-infosec/threat-api/lambdas/common/toolbox/appsectracing"
 	"github.com/gdcorp-infosec/threat-api/lambdas/common/triagelegacyconnector/triage"
-	"net/http"
 )
 
 const (
@@ -40,10 +42,6 @@ func (m *TriageModule) Triage(ctx context.Context, triageRequest *triage.Request
 		Title:    "PassiveDNS from Passivetotal",
 		Metadata: []string{},
 	}
-	triageDataPTUniqueData := &triage.Data{
-		Title:    "Unique PassiveDNS from Passivetotal",
-		Metadata: []string{},
-	}
 
 	tb = toolbox.GetToolbox()
 	defer tb.Close(ctx)
@@ -51,15 +49,13 @@ func (m *TriageModule) Triage(ctx context.Context, triageRequest *triage.Request
 	secret, err := tb.GetFromCredentialsStore(ctx, secretID, nil)
 	if err != nil {
 		triageDataPTData.Data = fmt.Sprintf("error in retrieving secrets: %s", err)
-		triageDataPTUniqueData.Data = fmt.Sprintf("error in retrieving secrets: %s", err)
-		return []*triage.Data{triageDataPTData, triageDataPTUniqueData}, err
+		return []*triage.Data{triageDataPTData}, err
 	}
 
 	secretMap := map[string]string{}
 	if err := json.Unmarshal([]byte(*secret.SecretString), &secretMap); err != nil {
 		triageDataPTData.Data = fmt.Sprintf("error in unmarshaling secrets: %s", err)
-		triageDataPTUniqueData.Data = fmt.Sprintf("error in unmarshaling secrets: %s", err)
-		return []*triage.Data{triageDataPTData, triageDataPTUniqueData}, err
+		return []*triage.Data{triageDataPTData}, err
 	}
 
 	if m.PTClient == nil {
@@ -76,22 +72,20 @@ func (m *TriageModule) Triage(ctx context.Context, triageRequest *triage.Request
 	//retrieve PDNS results
 	passiveDNSresults, err := m.GetPassiveDNS(ctx, triageRequest)
 	if err != nil {
-		triageDataPTData.Data = fmt.Sprintf("error from passivetotal: %s", err)
+		triageDataPTData.Data = fmt.Sprintf("Passive Total returned an error: %s", err)
 	} else {
-		//Dump data as csv
-		triageDataPTData.DataType = triage.CSVType
-		triageDataPTData.Data = dumpPDNSCSV(passiveDNSresults)
+		triageDataPTData.DataType = triage.JSONType
+		var jsonResponse []ptl.PassiveTotalResponse
+		for _, val := range passiveDNSresults {
+			jsonResponse = append(jsonResponse, *val.MakeDomainResponse())
+		}
+		marshalledResponse, err := json.Marshal(jsonResponse)
+		if err == nil {
+			triageDataPTData.Data = string(marshalledResponse)
+		} else {
+			triageDataPTData.Data = fmt.Sprintf("Marshalling the JSON structure into a string failed: %s", err)
+		}
 	}
 
-	//retrieve Unique PDNS results
-	passiveDNSUniqueresults, err := m.GetUniquePassiveDNS(ctx, triageRequest)
-	if err != nil {
-		triageDataPTUniqueData.Data = fmt.Sprintf("error from passivetotal: %s", err)
-	} else {
-		//Dump data as csv
-		triageDataPTUniqueData.DataType = triage.CSVType
-		triageDataPTUniqueData.Data = dumpUniquePDNSCSV(passiveDNSUniqueresults)
-	}
-
-	return []*triage.Data{triageDataPTData, triageDataPTUniqueData}, nil
+	return []*triage.Data{triageDataPTData}, nil
 }
