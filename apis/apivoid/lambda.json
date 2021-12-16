@@ -1,0 +1,24 @@
+{
+  "handler": "apivoid",
+  "memory-size": "256",
+  "runtime": "go1.x",
+  "timeout": "60",
+  "metadata": {
+    "supportedIOCTypes": [
+      "DOMAIN",
+      "IP",
+      "URL"
+    ],
+    "actions": {
+      "Run": {
+        "requiredADGroups": ["ENG-Threat Research", "ENG-DCU", "infosec_response"]
+      },
+      "ViewPII": {
+        "requiredADGroups": ["ENG-Threat Research", "ENG-DCU", "infosec_response"]
+      },
+      "ReadSplunk": {
+        "requiredADGroups": ["ENG-Threat Research", "ENG-DCU", "infosec_response"]
+      }
+    }
+  }
+}
