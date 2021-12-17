@@ -1,6 +1,5 @@
 package main
 
-// TODO: Change the library as needed
 import (
 	"bytes"
 	"context"
@@ -25,7 +24,6 @@ const (
 )
 
 // GetAPIVoidData returns the needed data TODO: Provide the description in brief
-// TODO: Create the required return data structure from what the service API provides
 func (m *TriageModule) GetAPIVoidData(ctx context.Context, triageRequest *triage.Request) (map[string]*APIvoidReport, error) {
 
 	apivoidResults := make(map[string]*APIvoidReport) //TODO: Create the return structure accordingly
@@ -44,8 +42,7 @@ func (m *TriageModule) GetAPIVoidData(ctx context.Context, triageRequest *triage
 		default:
 		}
 
-		// TODO: Assign operationNAme, operationType, operationSubtype, operationAction properly by the naming standards of Elastic APM
-		span, spanCtx := tb.TracerLogger.StartSpan(ctx, "EgLookup", "apivoid", "", "apivoidIoCLookup")
+				span, spanCtx := tb.TracerLogger.StartSpan(ctx, "APIVoidLookup", "apivoid", "", "apivoidIoCLookup")
 
 		go func(ioc string) {
 			defer func() {
@@ -56,7 +53,7 @@ func (m *TriageModule) GetAPIVoidData(ctx context.Context, triageRequest *triage
 			if err != nil {
 				span.AddError(err)
 				apivoidLock.Lock()
-				apivoidResults[ioc] = nil // TODO:nil value according to your return data, "", 0 etc
+				apivoidResults[ioc] = nil
 				apivoidLock.Unlock()
 				return
 			}

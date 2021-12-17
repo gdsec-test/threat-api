@@ -24,7 +24,7 @@ type TriageModule struct {
 
 // GetDocs of this module TODO: Explain APIVoid service in detail
 func (m *TriageModule) GetDocs() *triage.Doc {
-	return &triage.Doc{Name: triageModuleName, Description: "APIVoid module reports many IOCs findings including IP, Domain and URL"} // TODO: Change description
+	return &triage.Doc{Name: triageModuleName, Description: "APIVoid module reports many IOCs findings including IP, Domain and URL"}
 }
 
 // Supports returns true of we support this ioc type
@@ -38,8 +38,6 @@ func (m *TriageModule) Triage(ctx context.Context, triageRequest *triage.Request
 		Title:    "APIvoid data",
 		Metadata: []string{},
 	}
-
-	// TODO : Extend the triageData to how many ever result type you need
 
 	tb = toolbox.GetToolbox()
 	defer tb.Close(ctx)
@@ -57,7 +55,6 @@ func (m *TriageModule) Triage(ctx context.Context, triageRequest *triage.Request
 	m.APIVoidKey = *secret.SecretString
 
 	var span *appsectracing.Span
-	// TODO: Assign operationNAme, operationType, operationSubtype, operationAction properly by the naming standards of Elastic APM
 	span, ctx = tb.TracerLogger.StartSpan(ctx, "APIVoid", "APIVoid", "services", "get")
 	defer span.End(ctx)
 
@@ -74,8 +71,6 @@ func (m *TriageModule) Triage(ctx context.Context, triageRequest *triage.Request
 
 
 	}
-
-	// TODO: Expand the above code block for different IoC's your module is supporting
 
 	return []*triage.Data{triageAPIVoidData}, nil
 }

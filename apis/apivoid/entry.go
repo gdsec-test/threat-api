@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"encoding/json"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
@@ -23,34 +22,4 @@ func handler(ctx context.Context, request events.SNSEvent) ([]*common.CompletedJ
 
 func main() {
 	lambda.Start(handler)
-}
-
-func convertJobToSNSEvent(job common.JobSubmission) events.SNSEvent {
-	tb = toolbox.GetToolbox()
-	defer tb.Close(context.Background())
-
-	jobBodyMarshalled, err := json.Marshal(job)
-	if err != nil {
-		panic(err)
-	}
-
-	jobSNS := common.JobSNSMessage{
-		JobID: "test",
-		Submission: events.APIGatewayProxyRequest{
-			Body: string(jobBodyMarshalled),
-		},
-	}
-
-	jobSNSMarshalled, err := json.Marshal(jobSNS)
-	if err != nil {
-		panic(err)
-	}
-
-	return events.SNSEvent{
-		Records: []events.SNSEventRecord{
-			{SNS: events.SNSEntity{
-				Message: string(jobSNSMarshalled),
-			}},
-		},
-	}
 }

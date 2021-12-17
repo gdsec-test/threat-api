@@ -8,17 +8,6 @@
       "DOMAIN",
       "IP",
       "URL"
-    ],
-    "actions": {
-      "Run": {
-        "requiredADGroups": ["ENG-Threat Research", "ENG-DCU", "infosec_response"]
-      },
-      "ViewPII": {
-        "requiredADGroups": ["ENG-Threat Research", "ENG-DCU", "infosec_response"]
-      },
-      "ReadSplunk": {
-        "requiredADGroups": ["ENG-Threat Research", "ENG-DCU", "infosec_response"]
-      }
-    }
+    ]
   }
 }
