@@ -23,6 +23,15 @@ to make necessary changes to your sceptre files.
 
 ## Test features
 
+- Test locally, open `entry.go` file (or any with `main` func) and use below code
+```go
+import ("github.com/gdcorp-infosec/threat-api/lambdas/common")
+
+func main() {
+	//lambda.Start(handler)
+	common.RunModules([]string{"modulename"}, []string{"IOC1", "IOC2"}, triage.DomainType, handler)
+}
+```
 - Once you are sure the code works in your local as expected, trigger a dev-private deployment to test
     - Since dev-private is not CICD controlled, you can expect a race condition with your teammates
       running/ testing code. Please make sure you are sure that no one is testing the code/ post in the
