@@ -18,6 +18,10 @@ Parameters:
   DXVpcSubnetIds:
     Type: CommaDelimitedList
     Description: SSM Parameter for private dx app subnet ids
+  apivoidSHA1:
+    Type: String
+    Description: SHA1 hash of the apivoid lambda source
+    Default: ""
   cmapSHA1:
     Type: String
     Description: SHA1 hash of the cmap lambda source
@@ -80,6 +84,114 @@ Parameters:
     Default: ""
 
 Resources:
+  apivoidLambdaFunction:
+    Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
+    Properties:
+      ProductName: Lambda
+      ProvisioningArtifactName: 2.3.0
+      ProvisionedProductName: apivoidLambdaFunction
+      ProvisioningParameters:
+        - Key: S3Bucket
+          Value: !Sub gd-${DevelopmentTeam}-${DevelopmentEnvironment}-code-bucket
+        - Key: S3Key
+          Value: !Sub apivoid/${apivoidSHA1}
+        - Key: Handler
+          Value: apivoid
+        - Key: LambdaName
+          Value: apivoid
+        - Key: LambdaDescription
+          Value: !Sub apivoid lambda (${apivoidSHA1})
+        - Key: MemorySize
+          Value: 256
+        - Key: Runtime
+          Value: go1.x
+        - Key: Timeout
+          Value: 60
+        - Key: CustomIAMRoleNameSuffix
+          Value: ThreatRole
+        - Key: EnvironmentVariablesJson
+          Value: !Sub '{"SSO_HOST": "${SSOHost}"}'
+        - Key: VpcSecurityGroups
+          Value: !Ref DXVpcSecurityGroups
+        - Key: VpcSubnetIds
+          Value: !Join [ ",", !Ref DXVpcSubnetIds ]
+      Tags:
+        - Key: doNotShutDown
+          Value: true
+
+  apivoidLambdaPermission:
+    DependsOn: apivoidLambdaFunction
+    Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
+    Properties:
+      ProductName: LambdaPermission
+      ProvisioningArtifactName: 1.0.1
+      ProvisionedProductName: apivoidLambdaPermission
+      ProvisioningParameters:
+        - Key: Action
+          Value: lambda:InvokeFunction
+        - Key: FunctionName
+          Value: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:apivoid
+        - Key: Principal
+          Value: sns.amazonaws.com
+        - Key: SourceArn
+          Value: !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:JobRequests
+      Tags:
+        - Key: doNotShutDown
+          Value: true
+
+  apivoidSNSSubscription:
+    DependsOn: apivoidLambdaFunction
+    Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
+    Properties:
+      ProductName: SNSSubscription
+      ProvisioningArtifactName: 1.0.1
+      ProvisionedProductName: apivoidSNSSubscription
+      ProvisioningParameters:
+        - Key: Protocol
+          Value: lambda
+        - Key: TopicArn
+          Value: !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:JobRequests
+        - Key: Endpoint
+          Value: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:apivoid
+        - Key: Region
+          Value: !Sub ${AWS::Region}
+      Tags:
+        - Key: doNotShutDown
+          Value: true
+
+  apivoidLambdaEventInvokeConfig:
+    DependsOn: apivoidLambdaFunction
+    Type: AWS::Lambda::EventInvokeConfig
+    Properties:
+      DestinationConfig:
+        OnSuccess:
+          Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobResponses
+        OnFailure:
+          Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobFailures
+      FunctionName: apivoid
+      Qualifier: $LATEST
+
+  apivoidLambdaMetadata:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: /ThreatTools/Modules/apivoid
+      Type: String
+      Value: '{"supportedIOCTypes": ["DOMAIN", "IP", "URL"]}'
+
+  apivoidAppSecSubscriptionFilter:
+    DependsOn: apivoidLambdaFunction
+    Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
+    Properties:
+      ProductName: SubscriptionFilterAppSecurity
+      ProvisionedProductName: apivoidAppSecSubscriptionFilter
+      ProvisioningArtifactName: 1.0.1
+      ProvisioningParameters:
+          - Key: CloudWatchLogGroup
+            Value: /aws/lambda/apivoid
+      Tags:
+          - Key: doNotShutDown
+            Value: "true"
+
   cmapLambdaFunction:
     Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
     Properties:

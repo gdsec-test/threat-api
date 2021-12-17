@@ -29,6 +29,10 @@ Parameters:
     Default: /AdminParams/VPC/DXAPPSubnets
     AllowedValues:
       - /AdminParams/VPC/DXAPPSubnets
+  apivoidSHA1:
+    Type: String
+    Description: SHA1 hash of the apivoid lambda source
+    Default: ""
   cmapSHA1:
     Type: String
     Description: SHA1 hash of the cmap lambda source
@@ -100,6 +104,7 @@ Resources:
           SSOHost: !Ref SSOHost
           DXVpcSecurityGroups: !Ref DXVpcSecurityGroups
           DXVpcSubnetIds: !Join [ ",", !Ref DXVpcSubnetIds ]
+          apivoidSHA1: !Ref apivoidSHA1
           cmapSHA1: !Ref cmapSHA1
           geoipSHA1: !Ref geoipSHA1
           nvdSHA1: !Ref nvdSHA1

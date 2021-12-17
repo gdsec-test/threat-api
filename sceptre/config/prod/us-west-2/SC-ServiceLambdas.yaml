@@ -3,6 +3,7 @@ dependencies:
   - {{environment}}/{{region}}/SC-CoreResources.yaml
 parameters:
   SSOHost: {{sso_host}}
+  apivoidSHA1: !file_contents resources/apivoid.sha1
   cmapSHA1: !file_contents resources/cmap.sha1
   geoipSHA1: !file_contents resources/geoip.sha1
   nvdSHA1: !file_contents resources/nvd.sha1

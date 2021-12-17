@@ -2,6 +2,10 @@ AWSTemplateFormatVersion: 2010-09-09
 Description: ThreatTools API Service Lambdas
 
 Parameters:
+  apivoidSHA1:
+    Type: String
+    Description: SHA1 hash of the apivoid lambda source
+    Default: ""
   cmapSHA1:
     Type: String
     Description: SHA1 hash of the cmap lambda source
@@ -64,6 +68,56 @@ Parameters:
     Default: ""
 
 Resources:
+  apivoidLambdaFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      Code:
+        S3Bucket: !Sub gd-threattools-${AWS::AccountId}-code-bucket
+        S3Key: !Sub apivoid/${apivoidSHA1}
+      Description: !Sub apivoid lambda (${apivoidSHA1})
+      FunctionName: apivoid
+      Handler: apivoid
+      MemorySize: 256
+      Role: !Sub arn:aws:iam::${AWS::AccountId}:role/threattools-custom-ThreatRole
+      Runtime: go1.x
+      Timeout: 60
+
+  apivoidLambdaPermission:
+    DependsOn: apivoidLambdaFunction
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:apivoid
+      Principal: sns.amazonaws.com
+      SourceArn: !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:JobRequests
+
+  apivoidSNSSubscription:
+    DependsOn: apivoidLambdaFunction
+    Type: AWS::SNS::Subscription
+    Properties:
+      Endpoint: !GetAtt apivoidLambdaFunction.Arn
+      Protocol: lambda
+      TopicArn: !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:JobRequests
+
+  apivoidLambdaEventInvokeConfig:
+    DependsOn: apivoidLambdaFunction
+    Type: AWS::Lambda::EventInvokeConfig
+    Properties:
+      DestinationConfig:
+        OnSuccess:
+          Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobResponses
+        OnFailure:
+          Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobFailures
+      FunctionName: apivoid
+      Qualifier: $LATEST
+
+  apivoidLambdaMetadata:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: /ThreatTools/Modules/apivoid
+      Type: String
+      Value: '{"supportedIOCTypes": ["DOMAIN", "IP", "URL"]}'
+
   cmapLambdaFunction:
     Type: AWS::Lambda::Function
     Properties:
