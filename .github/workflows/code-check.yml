@@ -37,7 +37,7 @@ jobs:
           repository: gdcorp-actions/tartufo
           token: ${{ secrets.REPO_CLONE_TOKEN_SA_PAT }} # PAT with read access to gdcorp-actions/tartufo
           path: tartufo
-          ref: v2.6.0
+          ref: main
           persist-credentials: false # Do not persist auth token in local git config.
 
       - name: Tartufo secret scanning using the Tartufo GitHub Action
