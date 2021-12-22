@@ -7,7 +7,7 @@ require (
 	github.com/aws/aws-lambda-go v1.19.1
 	github.com/aws/aws-sdk-go v1.35.27
 	github.com/gdcorp-infosec/cmap-go v0.0.0-20210910182244-ffed93b0c375
-	github.com/gdcorp-infosec/go-ioc v0.0.0-20211217003331-fecca7403010
+	github.com/gdcorp-infosec/go-ioc v0.0.0-20211221221900-675db6b52f14
 	github.com/godaddy/asherah/go/appencryption v0.1.5
 	github.com/likexian/whois v1.12.1
 	github.com/likexian/whois-parser v1.20.3
