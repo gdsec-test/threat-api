@@ -4,22 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"regexp"
 	"strings"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/gdcorp-infosec/go-ioc/ioc"
 	"github.com/gdcorp-infosec/threat-api/lambdas/common/triagelegacyconnector/triage"
-)
-
-// Regexes
-var (
-	// Regexes
-	awsHostnameRegex     = regexp.MustCompile(`ip-(\d+-)+\d+.*internal`)
-	godaddyHostnameRegex = regexp.MustCompile(`((\w|-)+\.?)+\.gdg`)
-
-	mitreRegex = regexp.MustCompile("^(?P<concept>M(A)?|T(A)?|G|S)\\d{4}(\\.\\d{3})?$")
-	//mitreRegex = regexp.MustCompile(`(?P<matrix>^MA\d+)|(?P<tactic>^TA\d+)|(?P<subtechnique>^T\d+[.]\d+)|(?P<technique>^T\d+)|(?P<mitigation>^M\d+)|(?P<group>^G\d+)|(?P<software>^S\d+)`)
 )
 
 // ClassifyRequest is the body of a request to classify IOCs
@@ -85,43 +74,26 @@ func getIOCsTypes(iocs []string) map[triage.IOCType][]string {
 			triageType = triage.CAPECType
 		case ioc.CPE:
 			triageType = triage.CPEType
-		}
-		// Try to parse it ourself if the triagetype is still unknown. If it's already assigned go with that as it's prior to this classification
-		if triageType == triage.UnknownType {
-			switch {
-			case awsHostnameRegex.MatchString(iocInput):
-				triageType = triage.AWSHostnameType
-				// Use the raw input as the recognized input from the ioc library
-				// will not be accurate
-				triageContent = iocInput
-			case mitreRegex.MatchString(iocInput) && len(iocInput) >= 5:
-				regResult := mitreRegex.FindStringSubmatch(iocInput)
-				if len(regResult) >= 2 {
-					switch regResult[1] {
-					case "MA":
-						triageType = triage.MitreMatrixType
-					case "TA":
-						triageType = triage.MitreTacticType
-					case "T":
-						if regResult[4] != "" {
-							triageType = triage.MitreSubTechniqueType
-						} else {
-							triageType = triage.MitreTechniqueType
-						}
-					case "M":
-						triageType = triage.MitreMitigationType
-					case "G":
-						triageType = triage.MitreGroupType
-					case "S":
-						triageType = triage.MitreSoftwareType
-					}
-					triageContent = regResult[0]
-				}
-			case godaddyHostnameRegex.MatchString(iocInput):
-				// TODO: Instead just look up using GoDaddy DNS server
-				triageType = triage.HostnameType
-				triageContent = iocInput
-			}
+		case ioc.AWSHostName:
+			triageType = triage.AWSHostnameType
+		case ioc.GoDaddyHostName:
+			triageType = triage.GoDaddyHostnameType
+		case ioc.MitreMatrix:
+			triageType = triage.MitreMatrixType
+		case ioc.MitreTactic:
+			triageType = triage.MitreTacticType
+		case ioc.MitreTechnique:
+			triageType = triage.MitreTechniqueType
+		case ioc.MitreSubtechnique:
+			triageType = triage.MitreSubTechniqueType
+		case ioc.MitreMitigation:
+			triageType = triage.MitreMitigationType
+		case ioc.MitreGroup:
+			triageType = triage.MitreGroupType
+		case ioc.MitreSoftware:
+			triageType = triage.MitreSoftwareType
+		case ioc.MitreDetection:
+			triageType = triage.MitreDetectionType
 		}
 
 		if triageType == triage.UnknownType {
