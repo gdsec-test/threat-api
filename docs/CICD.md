@@ -20,7 +20,15 @@
     - Secrets for DC1 can be accessed via OpenStack
     - `GITHUB_ACTIONS_GHC_SA` SSH key pair is linked with this account to handle repo clones from `github.secureserver.net`. The email address used for this key pair generation points to `SVCOJtJzC2BlV1MvD@godaddy.com`. Secret value pair is available through AWS Secrets Manager with the same name for the team's access
 
+- AWS ephemeral self hosted runners are now available in our AWS CICD account.
+  - The sceptre configs for the infrastructure is available at `sceptre/aws-runners`
+  - It just requires a one time sceptre launch unless any changes are made to the sceptre script
+  - Follow the instructions in [GHEC cicd guide here](https://github.com/gdcorp-engineering/cicd-docs/blob/main/ghec-cicd-guide.md#2---bootstrap-the-runners) to run them after changes
+  - Use the below code snippet to choose the runner in your workflow
 
+```yaml
+    runs-on: [self-hosted,threat-runners]
+```
 ### Github Actions code
 - All workflows `.yml` must be placed under `.github/workflows` directory
 - `dependabot.yml` lives in `.github/` and creates a PR if any new SHA is found on dependencies

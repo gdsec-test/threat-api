@@ -1,0 +1,20 @@
+name: Create Runner
+project_code: threatapi-cicd
+region: us-west-2
+template_path: sc-gha-repo-runner.yaml
+stack_name: cicd-runners
+parameters:
+  ProductVersion: 1.2.0
+  RunnerName: github-actions-runner
+  RunnerLabels: self-hosted, threat-runners
+  RunnerAutoScalingGroupDesiredSize: "1"
+  RunnerAutoScalingGroupMinSize: "1"
+  RunnerVolumeSize: "40"
+  RunnerInstanceType: m5.xlarge
+  GitHubOrganization: gdcorp-infosec
+  GitHubRepository: threat-api
+  GitHubSecretName: /GitHub/Runner-Secrets
+  RunnerAutoScalingGroupWarmPoolSize: "2"
+  RunnerAutoScalingGroupSubnets: /AdminParams/VPC/DXAPPSubnets
+  RunnerAMIId: /GoldenAMI/gd-ubuntu18.04/latest
+  UseCICDRole: "true"

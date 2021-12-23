@@ -6,7 +6,7 @@ on:
 
 jobs:
   tartufo:
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted,threat-runners]
     steps:
       - name: Configure AWS credentials for ECR access
         uses: aws-actions/configure-aws-credentials@ea7b857d8a33dc2fb4ef5a724500044281b49a5e
@@ -47,7 +47,7 @@ jobs:
 
   python-code-check:
     needs: tartufo
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted,threat-runners]
     steps:
       - name: Checkout Repository
         uses: actions/checkout@ec3a7ce113134d7a93b817d10a8272cb61118579
