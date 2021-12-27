@@ -56,6 +56,9 @@ Parameters:
     Type: String
     Description: SHA1 hash of the responseprocessor lambda source
     Default: ""
+  ThreatApiJobBucket:
+    Type: String
+    Description: Name of S3 Bucket to work with Jobs\Modules big objects
 
 Resources:
   SSOHostParameter:
@@ -313,6 +316,37 @@ Resources:
         - Key: doNotShutDown
           Value: true
 
+  ThreatRoleCustomPolicy:
+    Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
+    Properties:
+      ProductName: IAMPolicy
+      ProvisioningArtifactName: 1.0.0
+      ProvisionedProductName: ThreatRoleCustomPolicy
+      ProvisioningParameters:
+        - Key: PolicyNameSuffix
+          Value: ThreatPolicyLambdaModules
+        - Key: PolicyJSON
+          Value: !Sub |
+            {
+              "Version": "2012-10-17",
+              "Statement": [
+                  {
+                      "Action": [
+                        "s3:List*",
+                        "s3:GetObject*",
+                        "s3:PutObject*",
+                        "s3:DeleteObject*",
+                        "s3:ReplicateObject*"
+                      ],
+                      "Resource": "arn:aws:s3:::gd-${DevelopmentTeam}-${DevelopmentEnvironment}-${ThreatApiJobBucket}/*",
+                      "Effect": "Allow"
+                  }
+              ]
+            }
+      Tags:
+        - Key: doNotShutDown
+          Value: true
+
   ThreatRole:
     DependsOn:
       - ThreatPolicySecretsManager
@@ -335,6 +369,7 @@ Resources:
               - arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole
               - !Sub arn:aws:iam::${AWS::AccountId}:policy/${DevelopmentTeam}-custom-ThreatPolicySecretsManager
               - !Sub arn:aws:iam::${AWS::AccountId}:policy/${DevelopmentTeam}-custom-ThreatPolicySQS
+              - !Sub arn:aws:iam::${AWS::AccountId}:policy/${DevelopmentTeam}-custom-ThreatPolicyLambdaModules
         - Key: AssumingServices
           Value: lambda.amazonaws.com
       Tags:

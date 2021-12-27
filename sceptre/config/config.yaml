@@ -3,3 +3,4 @@ threatapi_domain_name: ""
 threatapi_certificate_arn: ""
 sso_host: sso.gdcorp.tools
 development_team: threattools
+threat_api_job_bucket: threat-api-job-bucket
