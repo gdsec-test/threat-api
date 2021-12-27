@@ -21,56 +21,51 @@ Parameters:
     Type: String
     Description: Name of S3 Bucket to work with Jobs\Modules big objects
 Resources:
-  CodeBucket:
+  ThreatApiJobStorageBucket:
     Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
     Properties:
       ProductName: S3
-      ProvisioningArtifactName: 1.6.0
-      ProvisionedProductName: CodeBucket
+      ProvisioningArtifactName: 1.16.0
+      ProvisionedProductName: ThreatApiJobStorageBucket
       ProvisioningParameters:
         - Key: BucketNameSuffix
           Value: !Sub ${ThreatApiJobBucket}
         - Key: BucketPolicy
           Value: Private
         - Key: MoveToStandardIAStorageDays
-          Value: 3
+          Value: 30
         - Key: MoveToGlacierStorageDays
-          Value: 9
-        - Key: ExpirationDays
           Value: 90
-        # - Key: CustomBucketPolicyJSON
-        #   Value: !Sub |
-        #             {
-        #             "Version": "2012-10-17",
-        #             "Statement": [
-        #               {
-        #                     "Effect": "Allow",
-        #                     "Principal": {
-        #                       "AWS": [
-        #                         "*"
-        #                       ]
-        #                     },
-        #                     "Action": [
-        #                       "s3:GetObject"
-        #                     ],
-        #                     "Resource": "arn:aws:s3:::gd-${DevelopmentTeam}-${DevelopmentEnvironment}-${ThreatApiJobBucket}/*",
-        #                     "Condition": {
-        #                       "ForAnyValue:StringEquals": {
-        #                         "aws:PrincipalOrgID": [ "o-nkgi7akmvi", "o-1xnd0t0rwa", "o-5tjjsp4k13", "o-by05f6zmn4", "o-pn5n9kd1l3"]
-        #                       }
-        #                     }
-        #               }]
-        #             }
-        - Key: NotificationConfigurationJson
+        - Key: ExpirationDays
+          Value: 180
+        - Key: CustomBucketPolicyJSON
           Value: !Sub |
                     {
-                      "TopicConfigurations": [
-                          {
-                            "Topic": "${SlackSnsTopicName}",
-                            "Event": "s3:ObjectCreated:*"
-                          }
-                      ]
+                    "Version": "2012-10-17",
+                    "Statement": [
+                      {
+                            "Effect": "Allow",
+                            "Principal": "*",
+                            "Action": [
+                              "s3:GetObject",
+                              "s3:ListBucket"
+                            ],
+                            "Resource": [
+                              "arn:aws:s3:::gd-${DevelopmentTeam}-${DevelopmentEnvironment}-${ThreatApiJobBucket}",
+                              "arn:aws:s3:::gd-${DevelopmentTeam}-${DevelopmentEnvironment}-${ThreatApiJobBucket}/*"
+                            ]
+                      }]
                     }
+        # - Key: NotificationConfigurationJson
+        #   Value: !Sub |
+        #             {
+        #               "TopicConfigurations": [
+        #                   {
+        #                     "Topic": "${SlackSnsTopicName}",
+        #                     "Event": "s3:ObjectCreated:*"
+        #                   }
+        #               ]
+        #             }
       Tags:
         - Key: doNotShutDown
           Value: true

@@ -237,4 +237,5 @@ type APIvoidReport struct {
 	EstimatedQueries string  `json:"estimated_queries,omitempty"`
 	ElapsedTime      string  `json:"elapsed_time,omitempty"`
 	Success          bool    `json:"success,omitempty"`
+	FullReportS3URL  string  `json:"fullReportS3URL,omitempty"`
 }
