@@ -11,7 +11,10 @@
   whenever a message containing a request is published
 * Each service lambda decides if it should contribute to the results of a
   requested job by examining a `modules` attribute in the original submission
-* Each service lambda sends its output to the `JobResponses` SQS queue
+* Each service lambda sends its output to the `JobResponses` SQS queue.
+  For big outputs over 256Kb, they should be stored in special S3 bucket
+  `gd-$AWS_DEV_TEAM-$AWS_DEV_ENV-threat-api-job-bucket`,
+  so SQS contains only presigned URL to get full output
 * The `ResponseProcessor` lambda is triggered by SQS queue submissions, and
   stores the provided output in DynamoDB
 * Jobs may be queried by calling the API Gateway and specifying the `jobId`;

@@ -72,6 +72,10 @@ A few notes about the original request (`submission`):
 The output you must return after completing your lambda will be the following.
 This is denoted as a `CompletedJob`.  Note that you pass an array of completed jobs because
 each lambda can technically accept and array of jobs to handle.
+For big output response there is helper method `common.PutObjectInS3`,
+which takes big object and saves it in S3 bucket
+ `gd-$AWS_DEV_TEAM-$AWS_DEV_ENV-threat-api-job-bucket/responses/$Year/$Month/$Day/$Time_$filename`
+ and returns back pre-signed URL valid for 7 days to retrieve file by clients. This URL can be added to response as prop
 
 ```json
 [

@@ -3,6 +3,7 @@ package common
 import (
 	"context"
 	"encoding/json"
+	"os"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/gdcorp-infosec/threat-api/lambdas/common/triagelegacyconnector/triage"
@@ -15,6 +16,8 @@ import (
 }*/
 func RunModules(modulesList []string, IOCs []string, iocType triage.IOCType,
 	handler func(ctx context.Context, request events.SNSEvent) ([]*CompletedJobData, error)) ([]*CompletedJobData, error) {
+	os.Setenv("AWS_DEV_TEAM", "threattools")
+	os.Setenv("AWS_DEV_ENV", "dev-private")
 	job := JobSubmission{
 		Modules: modulesList,
 		IOCs:    IOCs,

@@ -12,6 +12,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/gdcorp-infosec/threat-api/lambdas/common"
 	"github.com/gdcorp-infosec/threat-api/lambdas/common/triagelegacyconnector/triage"
 )
 
@@ -42,7 +43,7 @@ func (m *TriageModule) GetAPIVoidData(ctx context.Context, triageRequest *triage
 		default:
 		}
 
-				span, spanCtx := tb.TracerLogger.StartSpan(ctx, "APIVoidLookup", "apivoid", "", "apivoidIoCLookup")
+		span, spanCtx := tb.TracerLogger.StartSpan(ctx, "APIVoidLookup", "apivoid", "", "apivoidIoCLookup")
 
 		go func(ioc string) {
 			defer func() {
@@ -174,7 +175,9 @@ func GetAPIVoidReport(ctx context.Context, ioc string, APIvoidClient *http.Clien
 	}
 
 	reportHolder, err := ReformatResponse(resp.Body)
-
+	reportJSON, _ := json.Marshal(reportHolder)
+	reportURL, err := common.PutObjectInS3("apivoid.json", bytes.NewReader(reportJSON))
+	reportHolder.FullReportS3URL = reportURL
 	return reportHolder, err
 }
 
@@ -211,6 +214,8 @@ func apiVoidMetaDataExtract(apivoidResults map[string]*APIvoidReport, iocType tr
 	for ioc, data := range apivoidResults {
 		triageMetaData = append(triageMetaData, fmt.Sprintf("IOC: %s, RiskScore:%v\n",
 			ioc, data.Data.Report.RiskScore))
+		triageMetaData = append(triageMetaData, fmt.Sprintf("IOC: %s, FullReportS3URL:%v\n",
+			ioc, data.FullReportS3URL))
 		if iocType == triage.IPType || iocType == triage.DomainType {
 			engines := data.Data.Report.Blacklist
 			triageMetaData = append(triageMetaData,
