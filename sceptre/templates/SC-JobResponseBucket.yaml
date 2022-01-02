@@ -53,7 +53,12 @@ Resources:
                             "Resource": [
                               "arn:aws:s3:::gd-${DevelopmentTeam}-${DevelopmentEnvironment}-${ThreatApiJobBucket}",
                               "arn:aws:s3:::gd-${DevelopmentTeam}-${DevelopmentEnvironment}-${ThreatApiJobBucket}/*"
-                            ]
+                            ],
+                            "Condition": {
+                              "ForAnyValue:StringEquals": {
+                                "aws:PrincipalOrgID": [ "o-nkgi7akmvi", "o-1xnd0t0rwa", "o-5tjjsp4k13", "o-by05f6zmn4", "o-pn5n9kd1l3"]
+                              }
+                            }
                       }]
                     }
         # - Key: NotificationConfigurationJson
