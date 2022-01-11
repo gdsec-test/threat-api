@@ -1,0 +1,4 @@
+[tool.tartufo]
+exclude-paths = ".tartufo-excludes"
+regex = true
+entropy = true

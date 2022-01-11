@@ -10,6 +10,7 @@ parameters:
   APIHash: !file_contents resources/api.sha1
   ManagerHash: !file_contents resources/manager.sha1
   ResponseProcessorHash: !file_contents resources/responseprocessor.sha1
+  VulnerabilityWatchHash: !file_contents resources/vulnerabilitywatch.sha1
   ThreatApiJobBucket: {{threat_api_job_bucket}}
 hooks:
   before_create:
