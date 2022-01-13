@@ -12,7 +12,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/gdcorp-infosec/threat-api/lambdas/common"
+	// "github.com/gdcorp-infosec/threat-api/lambdas/common"
 	"github.com/gdcorp-infosec/threat-api/lambdas/common/triagelegacyconnector/triage"
 )
 
@@ -175,9 +175,9 @@ func GetAPIVoidReport(ctx context.Context, ioc string, APIvoidClient *http.Clien
 	}
 
 	reportHolder, err := ReformatResponse(resp.Body)
-	reportJSON, _ := json.Marshal(reportHolder)
-	reportURL, err := common.PutObjectInS3("apivoid.json", bytes.NewReader(reportJSON))
-	reportHolder.FullReportS3URL = reportURL
+	// reportJSON, _ := json.Marshal(reportHolder)
+	// reportURL, err := common.PutObjectInS3("apivoid.json", bytes.NewReader(reportJSON))
+	// reportHolder.FullReportS3URL = reportURL
 	return reportHolder, err
 }
 
