@@ -135,7 +135,6 @@ jobs:
           ssh-add - <<< "${GITHUBCLOUD_SSH_PRIVATE_KEY}"
           git config --global url.git@github.secureserver.net:.insteadOf https://github.secureserver.net/
           git config --global url.https://$GH_ACCESS_TOKEN@github.com/.insteadOf https://github.com/
-#          git config --global url.git@github.com:gdcorp-.insteadOf https://github.com/gdcorp-
           go mod tidy
           ssh-agent -k
       - name: Go code checks and build
@@ -189,3 +188,4 @@ jobs:
 
 
 # TODO: Remove Test line here
+#          git config --global url.git@github.com:gdcorp-.insteadOf https://github.com/gdcorp-
