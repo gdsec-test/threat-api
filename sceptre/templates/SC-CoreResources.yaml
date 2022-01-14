@@ -747,6 +747,43 @@ Resources:
         - Key: doNotShutDown
           Value: true
 
+  VulnerabilityWatchCloudWatchEventRule:
+    Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
+    Properties:
+      ProductName: EventsRule
+      ProvisioningArtifactName: 1.0.2
+      ProvisionedProductName: VulnerabilityWatchCloudWatchEventRule
+      ProvisioningParameters:
+        - Key: Name
+          Value: VulnerabilityWatchEventsRule
+        - Key: Description
+          Value: VulnerabilityWatch Event to run Lambda over schedule
+        - Key: EventsRuleScheduleExpression
+          Value: cron(0 */12 * * *)
+        - Key: TargetArnRef
+          # Value: !Sub "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${FunctionName}:$LATEST"
+          Value: !GetAtt VulnerabilityWatchLambda.Arn
+      Tags:
+        - Key: doNotShutDown
+          Value: "true"
+
+  VulnerabilityWatchEventsLambdaPermission:
+    Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
+    Properties:
+      ProductName: LambdaPermission
+      ProvisioningArtifactName: 1.0.1
+      ProvisionedProductName: VulnerabilityWatchEventsLambdaPermission
+      ProvisioningParameters:
+        - Key: Action
+          Value: lambda:InvokeFunction
+        - Key: FunctionName
+          Value: !GetAtt VulnerabilityWatchLambda.Arn
+        - Key: Principal
+          Value: events.amazonaws.com
+      Tags:
+        - Key: doNotShutDown
+          Value: true
+
 Outputs:
   StackArn:
     Value: !GetAtt ThreatAPI.CloudformationStackArn
