@@ -24,7 +24,7 @@ on:
 
 jobs:
   deploy_to_dev:
-    runs-on: self-hosted
+    runs-on: [self-hosted,threat-runners]
     if: github.ref == 'refs/heads/develop'
     steps:
       - name: Reset gitconfig
@@ -72,6 +72,7 @@ jobs:
           GIT_SSH_COMMAND: "ssh -o StrictHostKeyChecking=no"
           SECURESERVER_ACCESS_KEY_GHC_SA: ${{ secrets.SECURESERVER_ACCESS_KEY_GHC_SA }}
           GITHUBCLOUD_SSH_PRIVATE_KEY: ${{ secrets.GITHUBCLOUD_SSH_PRIVATE_KEY }}
+          GH_ACCESS_TOKEN: ${{ secrets.REPO_CLONE_TOKEN_SA_PAT }}
           GOPRIVATE: "github.secureserver.net,github.com/gdcorp-*"
         run: |
           eval "$(ssh-agent -s)"
@@ -79,7 +80,7 @@ jobs:
           ssh-add - <<< "${GITHUBCLOUD_SSH_PRIVATE_KEY}"
 
           git config --global url.git@github.secureserver.net:.insteadOf https://github.secureserver.net/
-          git config --global url.git@github.com:gdcorp-.insteadOf https://github.com/gdcorp-
+          git config --global url.https://$GH_ACCESS_TOKEN@github.com/.insteadOf https://github.com/
           go mod tidy
 
           ssh-agent -k
