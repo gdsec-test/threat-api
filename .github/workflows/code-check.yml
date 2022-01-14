@@ -96,7 +96,7 @@ jobs:
 
   go-code-check:
     needs: tartufo
-    runs-on: self-hosted
+    runs-on: [self-hosted,threat-runners]
 
     steps:
       - name: Reset gitconfig
