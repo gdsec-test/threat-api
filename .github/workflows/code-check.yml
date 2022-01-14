@@ -1,8 +1,6 @@
 name: Code quality check
 
 on:
-  push:
-    branches: [bug/go-check-failure]
   pull_request:
     branches: [ develop ]
 
