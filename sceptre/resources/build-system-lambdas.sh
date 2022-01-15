@@ -22,17 +22,17 @@ do
 
     pushd ${THREAT_API_SOURCE}/lambdas/${LAMBDA}
 
-    # build Golang Lambdas
-    env GOPRIVATE=github.secureserver.net,github.com/gdcorp-* GOOS=linux GOARCH=amd64 go build
-
-    # build NodeJS Lambdas
     if test -f "./package.json"; then
+        # build NodeJS Lambdas
         curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.1/install.sh | bash
         source ~/.bashrc
         source ~/.nvm/nvm.sh
         nvm install
         nvm use
         npm i
+    else
+        # build Golang Lambdas
+        env GOPRIVATE=github.secureserver.net,github.com/gdcorp-* GOOS=linux GOARCH=amd64 go build
     fi;
 
     # Store the SHA1 hash of the resulting binary

@@ -18,4 +18,4 @@ parameters:
   RunnerAutoScalingGroupSubnets: /AdminParams/VPC/DXAPPSubnets
   RunnerAMIId: /GoldenAMI/gd-ubuntu18.04/latest
   UseCICDRole: "true"
-  CustomUserData: yum install zip -y
+  CustomUserData: sudo apt-get install zip
