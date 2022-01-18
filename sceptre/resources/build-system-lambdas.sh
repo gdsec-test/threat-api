@@ -9,7 +9,7 @@
 #   can reference them
 
 set -eu
-apt-get install zip unzip libdigest-sha-perl -qy
+sudo apt-get install zip unzip libdigest-sha-perl -qy
 
 THREAT_API_SOURCE=$(cd `dirname $0`/../.. && pwd)
 
