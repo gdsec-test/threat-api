@@ -28,8 +28,8 @@ do
 
     if test -f "./package.json"; then
         # build NodeJS Lambdas
-        nvm install
-        nvm use
+        #nvm install
+        #//nvm use
         npm i
         zip -9rq function.zip .
     else
