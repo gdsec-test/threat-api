@@ -28,8 +28,6 @@ do
 
     if test -f "./package.json"; then
         # build NodeJS Lambdas
-        curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.1/install.sh | bash
-        source ~/.nvm/nvm.sh
         nvm install
         nvm use
         npm i

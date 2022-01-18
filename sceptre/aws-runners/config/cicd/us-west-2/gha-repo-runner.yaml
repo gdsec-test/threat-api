@@ -18,4 +18,7 @@ parameters:
   RunnerAutoScalingGroupSubnets: /AdminParams/VPC/DXAPPSubnets
   RunnerAMIId: /GoldenAMI/gd-ubuntu18.04/latest
   UseCICDRole: "true"
-  CustomUserData: sudo apt-get install zip unzip libdigest-sha-perl -qy
+  CustomUserData: |
+    sudo apt-get install zip unzip libdigest-sha-perl -qy
+    curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.1/install.sh | bash
+    source ~/.nvm/nvm.sh
