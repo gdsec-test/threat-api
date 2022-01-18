@@ -688,10 +688,37 @@ Resources:
         - Key: doNotShutDown
           Value: true
 
+  VulnerabilityWatchPolicyDynamoDB:
+    Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
+    Properties:
+      ProductName: IAMPolicy
+      ProvisioningArtifactName: 1.0.0
+      ProvisionedProductName: VulnerabilityWatchPolicyDynamoDB
+      ProvisioningParameters:
+        - Key: PolicyNameSuffix
+          Value: VulnerabilityWatchPolicyDynamoDB
+        - Key: PolicyJSON
+          Value: !Sub '{
+            "Version": "2012-10-17",
+            "Statement": [
+                {
+                    "Action": [
+                        "dynamodb:*"
+                    ],
+                    "Resource": "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/cve",
+                    "Effect": "Allow"
+                }
+            ]
+          }'
+      Tags:
+        - Key: doNotShutDown
+          Value: true
+
   VulnerabilityWatchRole:
     DependsOn:
       - ThreatPolicyDynamoDB
       - ThreatPolicySecretsManager
+      - VulnerabilityWatchPolicyDynamoDB
     Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
     Properties:
       ProductName: IAMRole
@@ -711,6 +738,7 @@ Resources:
               - !Sub arn:aws:iam::${AWS::AccountId}:policy/GD-AWS-KMS-USER
               - !Sub arn:aws:iam::${AWS::AccountId}:policy/${DevelopmentTeam}-custom-ThreatPolicyDynamoDB
               - !Sub arn:aws:iam::${AWS::AccountId}:policy/${DevelopmentTeam}-custom-ThreatPolicySecretsManager
+              - !Sub arn:aws:iam::${AWS::AccountId}:policy/${DevelopmentTeam}-custom-VulnerabilityWatchPolicyDynamoDB
         - Key: AssumingServices
           Value: lambda.amazonaws.com
       Tags:
@@ -748,26 +776,31 @@ Resources:
           Value: true
 
   VulnerabilityWatchCloudWatchEventRule:
+    DependsOn: VulnerabilityWatchLambda
     Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
     Properties:
       ProductName: EventsRule
-      ProvisioningArtifactName: 1.0.2
+      ProvisioningArtifactName: 1.2.0
       ProvisionedProductName: VulnerabilityWatchCloudWatchEventRule
       ProvisioningParameters:
         - Key: Name
           Value: VulnerabilityWatchEventsRule
         - Key: Description
           Value: VulnerabilityWatch Event to run Lambda over schedule
-        - Key: EventsRuleScheduleExpression
-          Value: cron(0 */12 * * *)
+        - Key: ScheduleExpression
+          #Value: cron(0 */12 * * *)
+          Value: cron(0/5 * * * ? *)
+        - Key: TargetId
+          Value: VulnerabilityWatchTarget
         - Key: TargetArnRef
-          # Value: !Sub "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${FunctionName}:$LATEST"
-          Value: !GetAtt VulnerabilityWatchLambda.Arn
+          Value: !Sub "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:vulnerabilitywatch:$LATEST"
+          # Value: !GetAtt VulnerabilityWatchLambda.Outputs.LambdaFunctionArn
       Tags:
         - Key: doNotShutDown
           Value: "true"
 
   VulnerabilityWatchEventsLambdaPermission:
+    DependsOn: VulnerabilityWatchLambda
     Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
     Properties:
       ProductName: LambdaPermission
@@ -777,7 +810,7 @@ Resources:
         - Key: Action
           Value: lambda:InvokeFunction
         - Key: FunctionName
-          Value: !GetAtt VulnerabilityWatchLambda.Arn
+          Value: !GetAtt VulnerabilityWatchLambda.Outputs.LambdaFunctionArn
         - Key: Principal
           Value: events.amazonaws.com
       Tags:
