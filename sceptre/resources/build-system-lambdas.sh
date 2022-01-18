@@ -24,9 +24,6 @@ do
 
     # Create ZIP file and upload to S3
     rm -f function.zip
-    # Store the SHA1 hash of the resulting binary
-    SHA1HASH=$(shasum "${LAMBDA}" | cut -d' ' -f1)
-    echo ${SHA1HASH} > ${RESOURCES_DIR}/${LAMBDA}.sha1
 
     if test -f "./package.json"; then
         # build NodeJS Lambdas
@@ -35,12 +32,16 @@ do
         nvm install
         nvm use
         npm i
-        zip -9q function.zip .
+        zip -0rq function.zip .
     else
         # build Golang Lambdas
         env GOPRIVATE=github.secureserver.net,github.com/gdcorp-* GOOS=linux GOARCH=amd64 go build
         zip -9q function.zip ${LAMBDA}
     fi;
+
+    # Store the SHA1 hash of the resulting binary
+    SHA1HASH=$(shasum function.zip | cut -d' ' -f1)
+    echo ${SHA1HASH} > ${RESOURCES_DIR}/${LAMBDA}.sha1
 
     aws s3 cp function.zip s3://${CODE_BUCKET}/${LAMBDA}/${SHA1HASH} --quiet
 
