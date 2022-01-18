@@ -18,3 +18,4 @@ parameters:
   RunnerAutoScalingGroupSubnets: /AdminParams/VPC/DXAPPSubnets
   RunnerAMIId: /GoldenAMI/gd-ubuntu18.04/latest
   UseCICDRole: "true"
+  CustomUserData: sudo apt-get install zip unzip libdigest-sha-perl -qy

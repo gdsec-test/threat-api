@@ -9,6 +9,7 @@
 #   can reference them
 
 set -eu
+apt-get install zip unzip libdigest-sha-perl -qy
 
 THREAT_API_SOURCE=$(cd `dirname $0`/../.. && pwd)
 
@@ -32,7 +33,7 @@ do
         nvm install
         nvm use
         npm i
-        zip -0rq function.zip .
+        zip -9rq function.zip .
     else
         # build Golang Lambdas
         env GOPRIVATE=github.secureserver.net,github.com/gdcorp-* GOOS=linux GOARCH=amd64 go build
