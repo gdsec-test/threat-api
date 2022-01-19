@@ -707,6 +707,15 @@ Resources:
                     ],
                     "Resource": "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/cve",
                     "Effect": "Allow"
+                },
+                {
+                    "Action": [
+                        "logs:CreateLogGroup",
+                        "logs:CreateLogStream",
+                        "logs:PutLogEvents"
+                    ],
+                    "Resource": "*",
+                    "Effect": "Allow"
                 }
             ]
           }'
@@ -736,6 +745,7 @@ Resources:
               - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
               - arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole
               - !Sub arn:aws:iam::${AWS::AccountId}:policy/GD-AWS-KMS-USER
+              - !Sub arn:aws:iam::${AWS::AccountId}:policy/AllowResourcesAccessToCloudWatchPolicy
               - !Sub arn:aws:iam::${AWS::AccountId}:policy/${DevelopmentTeam}-custom-ThreatPolicyDynamoDB
               - !Sub arn:aws:iam::${AWS::AccountId}:policy/${DevelopmentTeam}-custom-ThreatPolicySecretsManager
               - !Sub arn:aws:iam::${AWS::AccountId}:policy/${DevelopmentTeam}-custom-VulnerabilityWatchPolicyDynamoDB
@@ -764,11 +774,11 @@ Resources:
         - Key: LambdaDescription
           Value: !Sub vulnerabilitywatch lambda (${VulnerabilityWatchHash})
         - Key: MemorySize
-          Value: 256
+          Value: 512
         - Key: Runtime
           Value: nodejs12.x
         - Key: Timeout
-          Value: 30
+          Value: 900
         - Key: CustomIAMRoleNameSuffix
           Value: VulnerabilityWatchRole
       Tags:
@@ -788,13 +798,13 @@ Resources:
         - Key: Description
           Value: VulnerabilityWatch Event to run Lambda over schedule
         - Key: ScheduleExpression
-          #Value: cron(0 */12 * * *)
-          Value: cron(0/5 * * * ? *)
+          # Value: cron(0 */12 * * *)
+          Value: rate(12 hours)
         - Key: TargetId
           Value: VulnerabilityWatchTarget
         - Key: TargetArnRef
-          Value: !Sub "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:vulnerabilitywatch:$LATEST"
-          # Value: !GetAtt VulnerabilityWatchLambda.Outputs.LambdaFunctionArn
+          # Value: !Sub "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:vulnerabilitywatch"
+          Value: !GetAtt VulnerabilityWatchLambda.Outputs.LambdaFunctionArn
       Tags:
         - Key: doNotShutDown
           Value: "true"
