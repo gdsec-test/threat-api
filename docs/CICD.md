@@ -60,3 +60,8 @@
 - Can also be manually trigerred via `workflow_dispatch`
   - The workflow will only succeed if triggered from `main` branch
   - Although the other branches might be displayed, the jobs will be skipped thus terminating the workflow
+- Workflow contains automation to create a change order ticket `InProgress` and `Complete` the ticket after a successful Prod deployment
+  - Secrets used by change order automation are (All the secrets are stored in GitHub Secrets) :
+    - SNOW_USER (Service account username for ServiceNow)
+    - SNOW_PASS (Service account password for ServiceNow)
+    - REPO_CLONE_TOKEN_SA_PAT (PAT to clone the `change-order-action` repository from `gdcorp-actions` )

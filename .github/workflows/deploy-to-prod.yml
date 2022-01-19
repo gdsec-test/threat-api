@@ -27,6 +27,37 @@ jobs:
     runs-on: [self-hosted,threat-runners]
     if: github.ref == 'refs/heads/main'
     steps:
+      # Get version to reference in CO
+      - name: Get version
+        id: get-version
+        run: echo ::set-output name=VERSION::${GITHUB_REF#refs/tags/}
+
+      # Checkout the change-order-action
+      - uses: actions/checkout@5a4ac9002d0be2fb38bd78e4b4dbde5606d7042f
+        with:
+          repository: gdcorp-actions/change-order-action
+          ref: main
+          token: ${{ secrets.REPO_CLONE_TOKEN_SA_PAT }}
+          path: change-order-action
+
+      # Create Change Order
+      - name: Create Change Order
+        uses: ./change-order-action
+        id: create-co
+        with:
+          snowUser: ${{ secrets.SNOW_USER }}
+          snowPass: ${{ secrets.SNOW_PASS }}
+          snowUrl: https://godaddy.service-now.com
+          action: create
+          owningGroup: ENG-Threat Research
+          tag: ${{ steps.get-version.outputs.VERSION }}
+          environment: production
+          region: us-west-2 # optional, will be appended to description
+          owner: ${{ github.repository_owner }}
+          repo: ${{ github.event.repository.name }}
+          state: InProgress
+
+      # Deploy to prod
       - name: Reset gitconfig
         run: |
           rm -f $HOME/.gitconfig
@@ -97,3 +128,20 @@ jobs:
           source venv/bin/activate
           cd sceptre
           ./resources/swagger-ui-bucket-create.sh
+
+      # Close Change Order
+      - name: Close Change Order
+        uses: ./change-order-action
+        with:
+          snowUser: ${{ secrets.SNOW_USER }}
+          snowPass: ${{ secrets.SNOW_PASS }}
+          snowUrl: https://godaddy.service-now.com
+          action: update
+          owningGroup: ENG-Threat Research
+          tag: ${{ steps.get-version.outputs.VERSION }}
+          environment: production
+          region: ${{ github.event.inputs.region }}
+          owner: ${{ github.repository_owner }}
+          repo: ${{ github.event.repository.name }}
+          state: Complete
+          id: ${{ steps.create-co.outputs.id }}
