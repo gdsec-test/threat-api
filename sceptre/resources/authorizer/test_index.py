@@ -175,7 +175,7 @@ class authorizer_tests(unittest.TestCase):
         }
 
         mock_base_auth_token.side_effect = HTTPError(
-            url="url", code="code", msg="msg", hdrs="hdrs", fp="fp"
+            url="url", code="code", msg="msg", hdrs="hdrs", fp=None
         )
 
         result = index.validate_token(b"fake.header.jwt")
