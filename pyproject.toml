@@ -10,6 +10,8 @@ exclude-path-patterns = [
     "docs/diagrams/threat_api_aws.svg",
     "apis/splunk/splunkcert.go",
     "apis/(.*)/(.*)_test.go",
+    "package-lock.json",
+    "node_modules",
     "(.*)package-lock.json",
     "(.*)node_modules"
 ]
