@@ -17,96 +17,71 @@ import (
 	"github.com/aws/aws-sdk-go/service/sns"
 	"github.com/gdcorp-infosec/threat-api/lambdas/common"
 	"github.com/gdcorp-infosec/threat-api/lambdas/common/toolbox"
+	"github.secureserver.net/auth-contrib/go-auth/gdtoken"
 )
 
-// createJob creates a new job ID in dynamo DB and sends it to the appropriate SNS topics
-func createJob(ctx context.Context, request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
-	span, ctx := to.TracerLogger.StartSpan(ctx, "CreateJob", "job", "manager", "create")
+func logNewJob(box *toolbox.Toolbox, ctx context.Context, jobID string, body string) (*dynamodb.AttributeValue, error) {
+	span, ctx := box.TracerLogger.StartSpan(ctx, "EncryptSubmission", "job", "manager", "encrypt")
 	defer span.End(ctx)
-
-	// Generate jobId
-	jobID := to.GenerateJobID(ctx)
-
-	//log the joID to ESSP for tracing
 	span.LogKV("jobID", jobID)
 
-	// Get username
-	jwt, err := to.ValidateJWT(ctx, toolbox.GetJWTFromRequest(request))
-	if err != nil {
-		return events.APIGatewayProxyResponse{StatusCode: 401}, err
-	}
-	originRequester := toolbox.GetOriginalRequester(request)
-	if originRequester != "" {
-		span.LogKV("username", originRequester + "-proxy")
-	} else {
-		span.LogKV("username", jwt.BaseToken.AccountName)
-	}
-
-
-	// TODO: If we want the default behavior on blank `modules` list to be launching all modules, we need to
-	// check the job request and add the list of all modules if it is blank.
-	// For now we require a user to submit what modules they want to run.
-
-	// Encrypt submission
-	span, ctx = to.TracerLogger.StartSpan(ctx, "EncryptSubmission", "job", "manager", "encrypt")
-	//log jobID
-	span.LogKV("jobID", jobID)
-
-	encryptedData, err := to.Encrypt(ctx, jobID, []byte(request.Body))
+	encryptedData, err := box.Encrypt(ctx, jobID, []byte(body))
 	if err != nil {
 		span.LogKV("error", err)
-		span.End(ctx)
-		return events.APIGatewayProxyResponse{StatusCode: 500}, fmt.Errorf("error encrypting submission: %w", err)
+		return nil, fmt.Errorf("error encrypting submission: %w", err)
 	}
 	encryptedDataMarshalled, err := dynamodbattribute.Marshal(encryptedData)
 	if err != nil {
 		span.LogKV("error", err)
-		span.End(ctx)
-		return events.APIGatewayProxyResponse{StatusCode: 500}, fmt.Errorf("error marshalling encrypted data: %w", err)
+		return nil, fmt.Errorf("error marshalling encrypted data: %w", err)
 	}
-	span.End(ctx)
 
-	// Get the SNS topic ARN
-	span, ctx = to.TracerLogger.StartSpan(ctx, "GetSNSTopicInfo", "job", "sns", "getinfo")
-	topicARN, err := to.GetFromParameterStore(ctx, snsTopicARNParameterName, false)
+	return encryptedDataMarshalled, nil
+}
+
+func countTopicSubscriptions(box *toolbox.Toolbox, ctx context.Context, snsClient *sns.SNS) (int, string, error) {
+	span, ctx := box.TracerLogger.StartSpan(ctx, "GetSNSTopicInfo", "job", "sns", "getinfo")
+	defer span.End(ctx)
+
+	topicARN, err := box.GetFromParameterStore(ctx, snsTopicARNParameterName, false)
 	if err != nil || topicARN.Value == nil {
 		span.LogKV("error", fmt.Errorf("error getting SNS topic ARN: %w", err))
-		span.End(ctx)
-		return events.APIGatewayProxyResponse{StatusCode: 500}, nil
+		return 0, "", err
 	}
 
 	// Count total subscriptions to the SNS topic
 	// Note this may only work up to 100 subscriptions
-	snsClient := sns.New(to.AWSSession)
 	subscriptionsOutput, err := snsClient.ListSubscriptionsByTopic(&sns.ListSubscriptionsByTopicInput{
 		TopicArn: topicARN.Value,
 	})
 	if err != nil {
 		span.LogKV("error", fmt.Errorf("error getting SNS topic subscriptions: %w", err))
-		span.End(ctx)
-		return events.APIGatewayProxyResponse{StatusCode: 500}, nil
+		return 0, "", err
 	}
 	totalModuleCount := len(subscriptionsOutput.Subscriptions)
 	span.LogKV("SNSSubscriptionSize", totalModuleCount)
-	span.End(ctx)
 
-	// Store in database
-	span, ctx = to.TracerLogger.StartSpan(ctx, "StoreJob", "job", "manager", "store")
-	span.LogKV("jobId", jobID)
+	return totalModuleCount, *topicARN.Value, nil
+}
 
-	jobSubmission, err := common.GetJobSubmission(request)
+func storeRequestedModulesList(box *toolbox.Toolbox, ctx context.Context, jwt *gdtoken.Token, request *events.APIGatewayProxyRequest, originRequester string, jobID string, encryptedDataMarshalled *dynamodb.AttributeValue) error {
+	span, ctx := to.TracerLogger.StartSpan(ctx, "StoreJob", "job", "manager", "store")
+	defer span.End(ctx)
+	span.LogKV("jobID", jobID)
+
+	jobSubmission, err := common.GetJobSubmission(*request)
 	if err != nil {
-		span.LogKV("error", fmt.Errorf("error getting the jobSubmission: %w", err))
-		span.End(ctx)
-		return events.APIGatewayProxyResponse{StatusCode: 500}, nil
+		e := fmt.Errorf("error getting the jobSubmission: %w", err)
+		span.LogKV("error", e)
+		return e
 	}
 
 	// Marshaling requestedModules slice into dynamodbattribute for storage
 	requestedModules, err := dynamodbattribute.Marshal(jobSubmission.Modules)
 	if err != nil {
-		span.LogKV("error", err)
-		span.End(ctx)
-		return events.APIGatewayProxyResponse{StatusCode: 500}, fmt.Errorf("error marshalling requestedModules: %w", err)
+		e := fmt.Errorf("error marshalling requestedModules: %w", err)
+		span.LogKV("error", e)
+		return e
 	}
 	Item := map[string]*dynamodb.AttributeValue{
 		jobIDKey:           {S: &jobID},
@@ -118,46 +93,90 @@ func createJob(ctx context.Context, request events.APIGatewayProxyRequest) (even
 		"requestedModules": requestedModules,
 	}
 	if originRequester != "" {
-		Item[originRequesterKey] =  &dynamodb.AttributeValue{S: &originRequester}
+		Item[originRequesterKey] = &dynamodb.AttributeValue{S: &originRequester}
 	}
 	_, err = dynamoDBClient.PutItem(&dynamodb.PutItemInput{
-		Item: Item,
+		Item:      Item,
 		TableName: &to.JobDBTableName,
 	})
 	if err != nil {
 		span.LogKV("error", err)
-		span.End(ctx)
-		return events.APIGatewayProxyResponse{StatusCode: 500}, err
+		return err
 	}
-	span.End(ctx)
 
-	// Send to SNS
-	span, ctx = to.TracerLogger.StartSpan(ctx, "SendSNS", "job", "manager", "sendsns")
+	return nil
+}
+
+func publishToSns(box *toolbox.Toolbox, ctx context.Context, request events.APIGatewayProxyRequest, jobID string, snsClient *sns.SNS, topicARN string) error {
+	span, ctx := to.TracerLogger.StartSpan(ctx, "SendSNS", "job", "manager", "sendsns")
+	defer span.End(ctx)
 	span.LogKV("jobID", jobID)
 
 	// Marshal body
 	submissionMarshalled, err := json.Marshal(common.JobSNSMessage{Submission: request, JobID: jobID})
 	if err != nil {
 		span.LogKV("error", err)
-		span.End(ctx)
-		return events.APIGatewayProxyResponse{StatusCode: 500}, err
+		return err
 	}
 	submissionMarshalledString := string(submissionMarshalled)
 
 	// Send the entire request marshalled along with the jobID
 	_, err = snsClient.Publish(&sns.PublishInput{
 		Message:  &submissionMarshalledString,
-		TopicArn: topicARN.Value,
+		TopicArn: &topicARN,
 	})
 	if err != nil {
 		span.LogKV("error", err)
-		span.End(ctx)
+		return err
+	}
+
+	return nil
+}
+
+// createJob creates a new job ID in dynamo DB and sends it to the appropriate SNS topics
+func createJob(ctx context.Context, request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
+	span, ctx := to.TracerLogger.StartSpan(ctx, "CreateJob", "job", "manager", "create")
+	defer span.End(ctx)
+
+	// Generate jobID
+	jobID := to.GenerateJobID(ctx)
+	span.LogKV("jobID", jobID)
+
+	// Retrieve the requester username from the JWT
+	jwt, err := to.ValidateJWT(ctx, toolbox.GetJWTFromRequest(request))
+	if err != nil {
+		return events.APIGatewayProxyResponse{StatusCode: 401}, err
+	}
+	originRequester := toolbox.GetOriginalRequester(request)
+	if originRequester != "" {
+		span.LogKV("username", originRequester+"-proxy")
+	} else {
+		span.LogKV("username", jwt.BaseToken.AccountName)
+	}
+
+	encryptedDataMarshalled, err := logNewJob(to, ctx, jobID, request.Body)
+	if err != nil {
 		return events.APIGatewayProxyResponse{StatusCode: 500}, err
 	}
-	span.End(ctx)
+
+	snsClient := sns.New(to.AWSSession)
+	_, topicARN, err := countTopicSubscriptions(to, ctx, snsClient)
+	if err != nil {
+		return events.APIGatewayProxyResponse{StatusCode: 500}, err
+	}
+
+	err = storeRequestedModulesList(to, ctx, jwt, &request, originRequester, jobID, encryptedDataMarshalled)
+	if err != nil {
+		return events.APIGatewayProxyResponse{StatusCode: 500}, err
+	}
+
+	err = publishToSns(to, ctx, request, jobID, snsClient, topicARN)
+	if err != nil {
+		return events.APIGatewayProxyResponse{StatusCode: 500}, err
+	}
 
 	response := struct {
-		JobID string `json:"jobId"`
+		JobID string `json:"jobID"`
 	}{JobID: jobID}
 	responseBytes, _ := json.Marshal(response)
 	return events.APIGatewayProxyResponse{
@@ -226,7 +245,7 @@ func deleteJob(ctx context.Context, request events.APIGatewayProxyRequest, jobID
 // getJob gets the job status from dynamoDB and send it as a response
 func getJob(ctx context.Context, jobID string) (events.APIGatewayProxyResponse, error) {
 	span, ctx := to.TracerLogger.StartSpan(ctx, "GetJobStatus", "job", "manager", "getstatus")
-	span.LogKV("jobId", jobID)
+	span.LogKV("jobID", jobID)
 	defer span.End(ctx)
 
 	if jobID == "" {
