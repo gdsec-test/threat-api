@@ -37,6 +37,9 @@
 
 `Lambda-run` is interactive CLI tool to call and debug AWS Lambdas in their native environment on local machine
 It is configured to work with our Lambdas and should be run from root folder of project
+See demo video for quick start
+- [Test utility Lambdas](https://secureservernet.sharepoint.com/:v:/s/InfoSecTeam/Eechgbaa2SxGtvRKn4Gc97EBN4TmYK7DsMVh_rcdsEE1gw?e=Y8O1Yt)
+- [Test API module](https://secureservernet.sharepoint.com/:v:/s/InfoSecTeam/EZijifNjLotBsMbqUa_OPE8BrRumzNn4tBpHvDQ5SamSOA?e=wenOMC)
 
 #### Install:
 `npm install -g ./tools/lambda-run/` - in root folder
