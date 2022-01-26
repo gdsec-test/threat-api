@@ -8,8 +8,8 @@ parameters:
   RunnerName: github-actions-runner
   RunnerLabels: self-hosted, threat-runners
   RunnerAutoScalingGroupDesiredSize: "1"
-  RunnerVolumeSize: "40"
-  RunnerInstanceType: m5.xlarge
+  RunnerVolumeSize: "30"
+  RunnerInstanceType: t3.small
   GitHubOrganization: gdcorp-infosec
   GitHubRepository: threat-api
   GitHubSecretName: /GitHub/Runner-Secrets
