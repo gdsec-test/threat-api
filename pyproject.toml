@@ -10,6 +10,8 @@ exclude-path-patterns = [
     "docs/diagrams/threat_api_aws.svg",
     "apis/splunk/splunkcert.go",
     "apis/(.*)/(.*)_test.go",
+    "package-lock.json",
+    "node_modules",
     "(.*)package-lock.json",
     "(.*)node_modules"
 ]
@@ -25,6 +27,7 @@ exclude-signatures = [
 "0e0320c9793521f51ce637a6ab73b98988d5b01020b01b34e60776857ef7a65b", # Hash in RF test cases
 "796e17d1f95c95aa7bda5703b4315e29fbe7f0504ed42e1fe0a86dcbe1bd95c6", # Hash in RF test cases
 "690a025f5b6a0c25440f108e5a89077e13a911c7b9681adac96a73f8a642ec8f", # Hash in RF test cases
+"d16411815091bfdfeab9c60faf620b5892f8fb411c659b69b15105408b9b6d9c", # URL for sharepoint video
 ]
 json = false
 regex = true

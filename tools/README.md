@@ -32,3 +32,27 @@
   Script to generate Sceptre config and template files for the service lambdas.
   This script updates sceptre files for discovered lambdas in the `apis/`
   directory.
+
+### Lambda-run
+
+`Lambda-run` is interactive CLI tool to call and debug AWS Lambdas in their native environment on local machine
+It is configured to work with our Lambdas and should be run from root folder of project
+See demo video for quick start
+- [Test utility Lambdas](https://secureservernet.sharepoint.com/:v:/s/InfoSecTeam/Eechgbaa2SxGtvRKn4Gc97EBN4TmYK7DsMVh_rcdsEE1gw?e=Y8O1Yt)
+- [Test API module](https://secureservernet.sharepoint.com/:v:/s/InfoSecTeam/EZijifNjLotBsMbqUa_OPE8BrRumzNn4tBpHvDQ5SamSOA?e=wenOMC)
+
+#### Install:
+`npm install -g ./tools/lambda-run/` - in root folder
+
+#### Launch:
+1. `lambda-run` - in root folder(some paths set to be relative to root folder)
+2. Follow instruction and answer all questions and wait for `Lambda API listening on port 9001...` message in shell
+
+#### Develop and debug:
+1. Copy, change as needed and run suggested command (see `info: Use below command to call\debug Lambda:
+`) in separate terminal, for instance:
+```
+aws lambda invoke --endpoint http://localhost:9001 --no-sign-request --function-name apivoid --payload '{"Records":[{"Sns":{"Message":"{\"JobID\":\"test\",\"Submission\":{\"Body\":\"{\\\"Modules\\\":[\\\"apivoid\\\"],\\\"IOCs\\\":[\\\"google.com\\\"],\\\"IOCType\\\":\\\"DOMAIN\\\"}\"}}"}}]}' /dev/stdout 2>/dev/null
+```
+2. See debug info and output for results
+3. Lambda supports watch-mode for Python and NodeJS(Go requires rebuild\re-run), so when you change target code, it will pick latest changes, for the next invoke call fresh code will be used

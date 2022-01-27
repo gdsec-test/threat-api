@@ -180,6 +180,10 @@ If your codebase is talking to AWS, you'll need an identity to log into AWS. Fol
   ```
 
 ### Testing modules in local
+
+#### Develop and debug:
+See [Lambda-run](../../tools/README.md) in `tools/README.md`
+
 #### Go:
 All your codes are written to run on lambdas.Different ways to test the Lambda code in local:
 - Through Unit Tests. As long as your unit tests run, you are good to go
