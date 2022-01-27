@@ -185,7 +185,8 @@ func GetAPIVoidReport(ctx context.Context, ioc string, APIvoidClient *http.Clien
 func ReformatResponse(responseBody io.ReadCloser) (*APIvoidReport, error) {
 	reportHolder := &APIvoidReport{}
 	reportBody := ""
-	if b, err := io.ReadAll(responseBody); err == nil {
+	b, err := io.ReadAll(responseBody)
+	if err == nil {
 		reportBody = string(b)
 	} else {
 		return nil, err
@@ -200,7 +201,7 @@ func ReformatResponse(responseBody io.ReadCloser) (*APIvoidReport, error) {
 	}
 	reportBody = strings.ReplaceAll(reportBody, `"engines":{}`, `"engines":[`+strings.Join(allEnginesString, ",")+`]`)
 
-	err := json.Unmarshal([]byte(reportBody), reportHolder)
+	err = json.Unmarshal([]byte(reportBody), reportHolder)
 	if err != nil {
 		return nil, err
 	}

@@ -183,6 +183,8 @@ If your codebase is talking to AWS, you'll need an identity to log into AWS. Fol
 
 #### Develop and debug:
 See [Lambda-run](../../tools/README.md) in `tools/README.md`
+Run `./go-test.sh` script in root folder to go through all unit-tests
+If script runs with directory path as extra parameter, (`./go-test.sh <dir>`) it will switch to this directory and runs only inside it, so no other Go code runs and can be used for faster unit-testing only your code
 
 #### Go:
 All your codes are written to run on lambdas.Different ways to test the Lambda code in local:
