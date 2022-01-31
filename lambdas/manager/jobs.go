@@ -20,7 +20,7 @@ import (
 	"github.secureserver.net/auth-contrib/go-auth/gdtoken"
 )
 
-func logNewJob(box *toolbox.Toolbox, ctx context.Context, jobID string, body string) (*dynamodb.AttributeValue, error) {
+func encryptSubmission(box *toolbox.Toolbox, ctx context.Context, jobID string, body string) (*dynamodb.AttributeValue, error) {
 	span, ctx := box.TracerLogger.StartSpan(ctx, "EncryptSubmission", "job", "manager", "encrypt")
 	defer span.End(ctx)
 	span.LogKV("jobID", jobID)
@@ -154,16 +154,17 @@ func createJob(ctx context.Context, request events.APIGatewayProxyRequest) (even
 		span.LogKV("username", jwt.BaseToken.AccountName)
 	}
 
-	encryptedDataMarshalled, err := logNewJob(to, ctx, jobID, request.Body)
+	encryptedDataMarshalled, err := encryptSubmission(to, ctx, jobID, request.Body)
 	if err != nil {
 		return events.APIGatewayProxyResponse{StatusCode: 500}, err
 	}
 
 	snsClient := sns.New(to.AWSSession)
-	_, topicARN, err := countTopicSubscriptions(to, ctx, snsClient)
+	subscriptionsCount, topicARN, err := countTopicSubscriptions(to, ctx, snsClient)
 	if err != nil {
 		return events.APIGatewayProxyResponse{StatusCode: 500}, err
 	}
+	span.LogKV("subscriptionsCount", subscriptionsCount)
 
 	err = storeRequestedModulesList(to, ctx, jwt, &request, originRequester, jobID, encryptedDataMarshalled)
 	if err != nil {
@@ -176,7 +177,7 @@ func createJob(ctx context.Context, request events.APIGatewayProxyRequest) (even
 	}
 
 	response := struct {
-		JobID string `json:"jobID"`
+		JobID string `json:"jobId"`
 	}{JobID: jobID}
 	responseBytes, _ := json.Marshal(response)
 	return events.APIGatewayProxyResponse{
