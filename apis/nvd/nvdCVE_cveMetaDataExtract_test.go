@@ -24,7 +24,7 @@ func TestCveMetaDataExtract(t *testing.T) {
 			}
 		})
 
-		Convey("should dump proper CSV output for DOMAIN", func() {
+		Convey("should extract proper metadata for CVE", func() {
 			NVDReportData := &nvd.NVDReport{}
 
 			responseReportString := `{
