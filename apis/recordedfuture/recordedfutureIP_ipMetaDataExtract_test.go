@@ -25,20 +25,19 @@ func TestIpMetaDataExtract(t *testing.T) {
 		})
 
 		Convey("should extract IP metadata", func() {
-			RecorderFutureIPReportData := &rf.IPReport{}
+			RecordedFutureIPReportData := &rf.IPReport{}
 
-			responseReportString := TestRecorderFutureIPReportData
-			json.Unmarshal([]byte(responseReportString), &RecorderFutureIPReportData)
+			responseReportString := TestRecordedFutureIPReportData
+			json.Unmarshal([]byte(responseReportString), &RecordedFutureIPReportData)
 
 			expectedMetadata := []string{"2 Risky IP's in same CIDR as 123.45.67.89"}
 
 			reports := map[string]*rf.IPReport{
-				"123.45.67.89": RecorderFutureIPReportData,
+				"123.45.67.89": RecordedFutureIPReportData,
 			}
 			actualMetadata := ipMetaDataExtract(reports)
 			So(actualMetadata, ShouldResemble, expectedMetadata)
 		})
-
 
 	})
 }

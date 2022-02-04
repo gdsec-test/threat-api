@@ -39,11 +39,11 @@ func TestEnrichCVEGo(t *testing.T) {
 			requestMethod = method
 			return &request, nil
 		}))
-		RecordedFutureCVEResponseBody := ioutil.NopCloser(bytes.NewBufferString(TestRecorderFutureCVEReportData))
+		RecordedFutureCVEResponseBody := ioutil.NopCloser(bytes.NewBufferString(TestRecordedFutureCVEReportData))
 		RecordedFutureCVEClient := http.DefaultClient
 		RecordedFutureCVEResp := &Response{
 			StatusCode: http.StatusOK,
-			Body: RecordedFutureCVEResponseBody,
+			Body:       RecordedFutureCVEResponseBody,
 		}
 		patches = append(patches, ApplyMethod(reflect.TypeOf(RecordedFutureCVEClient), "Do", func(client *http.Client, req *Request) (*Response, error) {
 			return RecordedFutureCVEResp, nil
@@ -60,7 +60,7 @@ func TestEnrichCVEGo(t *testing.T) {
 
 		Convey("should return proper output result report", func() {
 			RecordedFutureCVEReportData := &rt.CVEReport{}
-			json.Unmarshal([]byte(TestRecorderFutureCVEReportData), &RecordedFutureCVEReportData)
+			json.Unmarshal([]byte(TestRecordedFutureCVEReportData), &RecordedFutureCVEReportData)
 
 			actualReport, _ := rt.EnrichCVE(ctx1, RecordedFutureCVEKey, RecordedFutureCVEClient, "CVE-2022", rt.CVEReportFields, false)
 			So(RecordedFutureCVEReportData, ShouldResemble, actualReport)

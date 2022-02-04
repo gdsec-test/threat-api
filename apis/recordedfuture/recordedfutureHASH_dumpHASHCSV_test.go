@@ -25,15 +25,15 @@ func TestDumpHASHCSV(t *testing.T) {
 		})
 
 		Convey("should dump proper HASH CSV output ", func() {
-			RecorderFutureHASHReportData := &rf.HashReport{}
+			RecordedFutureHASHReportData := &rf.HashReport{}
 
-			responseReportString := TestRecorderFutureHASHReportData
-			json.Unmarshal([]byte(responseReportString), &RecorderFutureHASHReportData)
+			responseReportString := TestRecordedFutureHASHReportData
+			json.Unmarshal([]byte(responseReportString), &RecordedFutureHASHReportData)
 
 			expectedCSV := "IntelCardLink,Risk Score,Criticality,CriticalityLabel,First Seen,Last Seen,HashAlgorithm,ThreatLists,FileHashes\nhttps://app.recordedfuture.com/live/sc/entity/hash%12345,70,3,Malicious,2019-04-28 06:42:19.004 +0000 UTC,2022-01-25 07:00:04.129 +0000 UTC,MD5,,12345/123456789\n"
 
 			reports := map[string]*rf.HashReport{
-				"123456": RecorderFutureHASHReportData,
+				"123456": RecordedFutureHASHReportData,
 			}
 			actualCSV := dumpHASHCSV(reports)
 			So(actualCSV, ShouldResemble, expectedCSV)

@@ -39,11 +39,11 @@ func TestEnrichIPGo(t *testing.T) {
 			requestMethod = method
 			return &request, nil
 		}))
-		RecordedFutureIPResponseBody := ioutil.NopCloser(bytes.NewBufferString(TestRecorderFutureIPReportData))
+		RecordedFutureIPResponseBody := ioutil.NopCloser(bytes.NewBufferString(TestRecordedFutureIPReportData))
 		RecordedFutureIPClient := http.DefaultClient
 		RecordedFutureIPResp := &Response{
 			StatusCode: http.StatusOK,
-			Body: RecordedFutureIPResponseBody,
+			Body:       RecordedFutureIPResponseBody,
 		}
 		patches = append(patches, ApplyMethod(reflect.TypeOf(RecordedFutureIPClient), "Do", func(client *http.Client, req *Request) (*Response, error) {
 			return RecordedFutureIPResp, nil
@@ -60,7 +60,7 @@ func TestEnrichIPGo(t *testing.T) {
 
 		Convey("should return proper output result report", func() {
 			RecordedFutureIPReportData := &rt.IPReport{}
-			json.Unmarshal([]byte(TestRecorderFutureIPReportData), &RecordedFutureIPReportData)
+			json.Unmarshal([]byte(TestRecordedFutureIPReportData), &RecordedFutureIPReportData)
 
 			actualReport, _ := rt.EnrichIP(ctx1, RecordedFutureIPKey, RecordedFutureIPClient, "23.52.152.75", rt.IPReportFields, false)
 			So(RecordedFutureIPReportData, ShouldResemble, actualReport)

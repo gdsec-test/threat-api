@@ -39,11 +39,11 @@ func TestEnrichHASHGo(t *testing.T) {
 			requestMethod = method
 			return &request, nil
 		}))
-		RecordedFutureHashResponseBody := ioutil.NopCloser(bytes.NewBufferString(TestRecorderFutureHASHReportData))
+		RecordedFutureHashResponseBody := ioutil.NopCloser(bytes.NewBufferString(TestRecordedFutureHASHReportData))
 		RecordedFutureHashClient := http.DefaultClient
 		RecordedFutureHashResp := &Response{
 			StatusCode: http.StatusOK,
-			Body: RecordedFutureHashResponseBody,
+			Body:       RecordedFutureHashResponseBody,
 		}
 		patches = append(patches, ApplyMethod(reflect.TypeOf(RecordedFutureHashClient), "Do", func(client *http.Client, req *Request) (*Response, error) {
 			return RecordedFutureHashResp, nil
@@ -60,7 +60,7 @@ func TestEnrichHASHGo(t *testing.T) {
 
 		Convey("should return proper output result report", func() {
 			RecordedFutureHashReportData := &rt.HashReport{}
-			json.Unmarshal([]byte(TestRecorderFutureHASHReportData), &RecordedFutureHashReportData)
+			json.Unmarshal([]byte(TestRecordedFutureHASHReportData), &RecordedFutureHashReportData)
 
 			actualReport, _ := rt.EnrichHASH(ctx1, RecordedFutureHashKey, RecordedFutureHashClient, "010000000000000000000000111", rt.HASHReportFields, false)
 			So(RecordedFutureHashReportData, ShouldResemble, actualReport)

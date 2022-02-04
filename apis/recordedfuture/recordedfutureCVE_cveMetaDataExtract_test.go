@@ -25,15 +25,15 @@ func TestCveMetaDataExtract(t *testing.T) {
 		})
 
 		Convey("should extrac proper CVE metadata output ", func() {
-			RecorderFutureCVEReportData := &rf.CVEReport{}
-			responseReportString := TestRecorderFutureCVEReportData
+			RecordedFutureCVEReportData := &rf.CVEReport{}
+			responseReportString := TestRecordedFutureCVEReportData
 
-			json.Unmarshal([]byte(responseReportString), &RecorderFutureCVEReportData)
+			json.Unmarshal([]byte(responseReportString), &RecordedFutureCVEReportData)
 
 			expectedMetadata := []string{"1 CVE's have a risk score > 60", "CPE's associated with list of CVE's : 2", "Access Vectors for CVE's : NETWORK"}
 
 			reports := map[string]*rf.CVEReport{
-				"CVE-2014-0160": RecorderFutureCVEReportData,
+				"CVE-2014-0160": RecordedFutureCVEReportData,
 			}
 			actualMetadata := cveMetaDataExtract(reports)
 			So(actualMetadata, ShouldResemble, expectedMetadata)

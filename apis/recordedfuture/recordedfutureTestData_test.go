@@ -1,6 +1,6 @@
 package main
 
-var TestRecorderFutureIPReportData = `{
+var TestRecordedFutureIPReportData = `{
 				"data": {
 						"riskyCIDRIPs": [
 								{
@@ -201,7 +201,7 @@ var TestRecorderFutureIPReportData = `{
 				}
 			}`
 
-var TestRecorderFutureHASHReportData = `{
+var TestRecordedFutureHASHReportData = `{
 				"data": {
 						"enterpriseLists": [],
 						"sightings": [
@@ -382,7 +382,7 @@ var TestRecorderFutureHASHReportData = `{
 				}
 			}`
 
-var TestRecorderFutureCVEReportData = `{
+var TestRecordedFutureCVEReportData = `{
 				"data": {
 						"relatedLinks": [
 								"http://www.ubuntu.com/usn/USN-5346-1",

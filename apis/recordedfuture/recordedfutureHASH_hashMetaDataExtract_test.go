@@ -25,15 +25,15 @@ func TestHashMetaDataExtract(t *testing.T) {
 		})
 
 		Convey("should extrac proper HASH metadata ", func() {
-			RecorderFutureHASHReportData := &rf.HashReport{}
+			RecordedFutureHASHReportData := &rf.HashReport{}
 
-			responseReportString := TestRecorderFutureHASHReportData
-			json.Unmarshal([]byte(responseReportString), &RecorderFutureHASHReportData)
+			responseReportString := TestRecordedFutureHASHReportData
+			json.Unmarshal([]byte(responseReportString), &RecordedFutureHASHReportData)
 
 			expectedMetadata := []string{"1 HASH's have a risk score > 60"}
 
 			reports := map[string]*rf.HashReport{
-				"123456": RecorderFutureHASHReportData,
+				"123456": RecordedFutureHASHReportData,
 			}
 			actualMetadata := hashMetaDataExtract(reports)
 			So(actualMetadata, ShouldResemble, expectedMetadata)
