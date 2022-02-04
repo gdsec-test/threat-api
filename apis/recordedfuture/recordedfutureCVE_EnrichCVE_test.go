@@ -17,7 +17,6 @@ import (
 	. "github.com/agiledragon/gomonkey/v2"
 	"github.com/gdcorp-infosec/threat-api/lambdas/common/toolbox"
 
-	// "github.com/gdcorp-infosec/threat-api/lambdas/common/triagelegacyconnector/triage"
 	rt "github.com/gdcorp-infosec/threat-api/apis/recordedfuture/recordedfutureLibrary"
 	. "github.com/smartystreets/goconvey/convey"
 )
@@ -78,13 +77,14 @@ func TestEnrichCVEGo(t *testing.T) {
 			rt.EnrichCVE(ctx1, RecordedFutureCVEKey, RecordedFutureCVEClient, cve, rt.CVEReportFields, false)
 			So(actualURL, ShouldResemble, expectedURL)
 			So(requestMethod, ShouldResemble, http.MethodGet)
+			So(request.Header.Get("X-RFToken"), ShouldResemble, RecordedFutureCVEKey)
 		})
 
-		// Convey("should return error as output result if something goes wrong", func() {
-		// 	RecordedFutureCVEResp.StatusCode = http.StatusBadRequest
-		// 	_, err := GetRecordedFutureCVEReport(ctx1, "I am IOC", RecordedFutureCVEClient, triage.DomainType, RecordedFutureCVEKey)
-		// 	So(err, ShouldResemble, fmt.Errorf("bad response status code: %d", RecordedFutureCVEResp.StatusCode))
-		// })
+		Convey("should return error as output result if something goes wrong", func() {
+			RecordedFutureCVEResp.StatusCode = http.StatusBadRequest
+			_, err := rt.EnrichCVE(ctx1, RecordedFutureCVEKey, RecordedFutureCVEClient, "CVE-2022", rt.CVEReportFields, false)
+			So(err, ShouldResemble, fmt.Errorf("bad status code: %d", RecordedFutureCVEResp.StatusCode))
+		})
 
 	})
 }
