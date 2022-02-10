@@ -65,7 +65,7 @@ func countTopicSubscriptions(box *toolbox.Toolbox, ctx context.Context, snsClien
 }
 
 func storeRequestedModulesList(box *toolbox.Toolbox, ctx context.Context, jwt *gdtoken.Token, request *events.APIGatewayProxyRequest, originRequester string, jobID string, encryptedDataMarshalled *dynamodb.AttributeValue) error {
-	span, ctx := to.TracerLogger.StartSpan(ctx, "StoreJob", "job", "manager", "store")
+	span, ctx := box.TracerLogger.StartSpan(ctx, "StoreJob", "job", "manager", "store")
 	defer span.End(ctx)
 	span.LogKV("jobID", jobID)
 
@@ -97,7 +97,7 @@ func storeRequestedModulesList(box *toolbox.Toolbox, ctx context.Context, jwt *g
 	}
 	_, err = dynamoDBClient.PutItem(&dynamodb.PutItemInput{
 		Item:      Item,
-		TableName: &to.JobDBTableName,
+		TableName: &box.JobDBTableName,
 	})
 	if err != nil {
 		span.LogKV("error", err)
