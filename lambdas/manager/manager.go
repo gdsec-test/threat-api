@@ -55,7 +55,7 @@ func handler(ctx context.Context, request events.APIGatewayProxyRequest) (events
 		switch request.HTTPMethod {
 		case http.MethodPost:
 			// They want to create a new job
-			return createJob(ctx, request)
+			return createJob(to, ctx, request)
 		case http.MethodGet:
 			if jobID, ok := request.PathParameters[jobIDKey]; ok {
 				// They are checking the status of a job
