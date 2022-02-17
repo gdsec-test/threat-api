@@ -16,8 +16,8 @@ const (
 	resourceName             = "geoip"
 	snsTopicARNParameterName = "/ThreatTools/JobRequests"
 	// jobIDKey used in DB and API
-	jobIDKey    = "jobId"
-	usernameKey = "username"
+	jobIDKey           = "jobId"
+	usernameKey        = "username"
 	originRequesterKey = "originrequester"
 	// API Version and API path prefix
 	version = "v1"
@@ -59,7 +59,7 @@ func handler(ctx context.Context, request events.APIGatewayProxyRequest) (events
 		case http.MethodGet:
 			if jobID, ok := request.PathParameters[jobIDKey]; ok {
 				// They are checking the status of a job
-				return getJob(ctx, jobID)
+				return getJob(ctx, request, jobID)
 			}
 			// They are getting all their jobs
 			return getJobs(ctx, request)

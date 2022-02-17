@@ -20,6 +20,13 @@ import (
 	"github.secureserver.net/auth-contrib/go-auth/gdtoken"
 )
 
+// Build modified / simplified JobDBEntry for each job
+// Adding jobpercentage to the returned data for UI calculations
+type ResponseData struct {
+	JobDB         common.JobDBEntry
+	JobPercentage float64 `json:"jobPercentage"`
+}
+
 func encryptSubmission(box *toolbox.Toolbox, ctx context.Context, jobID string, body string) (*dynamodb.AttributeValue, error) {
 	span, ctx := box.TracerLogger.StartSpan(ctx, "EncryptSubmission", "job", "manager", "encrypt")
 	defer span.End(ctx)
@@ -244,7 +251,7 @@ func deleteJob(ctx context.Context, request events.APIGatewayProxyRequest, jobID
 }
 
 // getJob gets the job status from dynamoDB and send it as a response
-func getJob(ctx context.Context, jobID string) (events.APIGatewayProxyResponse, error) {
+func getJob(ctx context.Context, request events.APIGatewayProxyRequest, jobID string) (events.APIGatewayProxyResponse, error) {
 	span, ctx := to.TracerLogger.StartSpan(ctx, "GetJobStatus", "job", "manager", "getstatus")
 	span.LogKV("jobID", jobID)
 	defer span.End(ctx)
@@ -319,13 +326,6 @@ func getJobs(ctx context.Context, request events.APIGatewayProxyRequest) (events
 	if err != nil {
 		span.LogKV("error", err)
 		return events.APIGatewayProxyResponse{StatusCode: 500}, err
-	}
-
-	// Build modified / simplified JobDBEntry for each job
-	// Adding jobpercentage to the returned data for UI calculations
-	type ResponseData struct {
-		JobDB         common.JobDBEntry
-		JobPercentage float64 `json:"jobPercentage"`
 	}
 
 	response := []ResponseData{}
