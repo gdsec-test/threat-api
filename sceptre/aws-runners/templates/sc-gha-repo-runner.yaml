@@ -23,6 +23,13 @@ Parameters:
       2. WEBHOOK_SECRET - webhook secret for webhook to receive 'Workflow jobs' events."
     Default: /GitHub/GitHub-Actions-Runner-Secret
     AllowedPattern: "/GitHub.*"
+  DeviceName:
+    Type: String
+    Description: (optional) Root volume mount device name. See https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/device_naming.html
+    Default: /dev/xvda
+    AllowedValues:
+      - /dev/xvda
+      - /dev/sda1
   RunnerAutoScalingGroupDesiredSize:
     Default: 1
     Description: The desired capacity for the instances in the runner autoscaling group
@@ -83,7 +90,6 @@ Parameters:
     Type: Number
     Description: Number of seconds to keep instance before attempting to terminating it. It will terminate stopped and running instance (non busy runners) and basically accomplish instance rotation.
     Default: 43200
-
 Resources:
   Instance:
     Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
@@ -96,6 +102,10 @@ Resources:
           Value: !Ref RunnerName
         - Key: RunnerLabels
           Value: !Ref RunnerLabels
+        - Key: RunnerVolumeSize
+          Value: !Ref RunnerVolumeSize
+        - Key: DeviceName
+          Value: !Ref DeviceName
         - Key: GitHubOrganization
           Value: !Ref GitHubOrganization
         - Key: GitHubRepository
