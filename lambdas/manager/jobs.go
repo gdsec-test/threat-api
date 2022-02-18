@@ -20,6 +20,13 @@ import (
 	"github.secureserver.net/auth-contrib/go-auth/gdtoken"
 )
 
+// Build modified / simplified JobDBEntry for each job
+// Adding jobpercentage to the returned data for UI calculations
+type ResponseData struct {
+	JobDB         common.JobDBEntry
+	JobPercentage float64 `json:"jobPercentage"`
+}
+
 func encryptSubmission(box *toolbox.Toolbox, ctx context.Context, jobID string, body string) (*dynamodb.AttributeValue, error) {
 	span, ctx := box.TracerLogger.StartSpan(ctx, "EncryptSubmission", "job", "manager", "encrypt")
 	defer span.End(ctx)
@@ -108,7 +115,7 @@ func storeRequestedModulesList(box *toolbox.Toolbox, ctx context.Context, jwt *g
 }
 
 func publishToSns(box *toolbox.Toolbox, ctx context.Context, request events.APIGatewayProxyRequest, jobID string, snsClient *sns.SNS, topicARN string) error {
-	span, ctx := to.TracerLogger.StartSpan(ctx, "SendSNS", "job", "manager", "sendsns")
+	span, ctx := box.TracerLogger.StartSpan(ctx, "SendSNS", "job", "manager", "sendsns")
 	defer span.End(ctx)
 	span.LogKV("jobID", jobID)
 
@@ -134,16 +141,16 @@ func publishToSns(box *toolbox.Toolbox, ctx context.Context, request events.APIG
 }
 
 // createJob creates a new job ID in dynamo DB and sends it to the appropriate SNS topics
-func createJob(ctx context.Context, request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
-	span, ctx := to.TracerLogger.StartSpan(ctx, "CreateJob", "job", "manager", "create")
+func createJob(box *toolbox.Toolbox, ctx context.Context, request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
+	span, ctx := box.TracerLogger.StartSpan(ctx, "CreateJob", "job", "manager", "create")
 	defer span.End(ctx)
 
 	// Generate jobID
-	jobID := to.GenerateJobID(ctx)
+	jobID := box.GenerateJobID(ctx)
 	span.LogKV("jobID", jobID)
 
 	// Retrieve the requester username from the JWT
-	jwt, err := to.ValidateJWT(ctx, toolbox.GetJWTFromRequest(request))
+	jwt, err := box.ValidateJWT(ctx, toolbox.GetJWTFromRequest(request))
 	if err != nil {
 		return events.APIGatewayProxyResponse{StatusCode: 401}, err
 	}
@@ -154,24 +161,24 @@ func createJob(ctx context.Context, request events.APIGatewayProxyRequest) (even
 		span.LogKV("username", jwt.BaseToken.AccountName)
 	}
 
-	encryptedDataMarshalled, err := encryptSubmission(to, ctx, jobID, request.Body)
+	encryptedDataMarshalled, err := encryptSubmission(box, ctx, jobID, request.Body)
 	if err != nil {
 		return events.APIGatewayProxyResponse{StatusCode: 500}, err
 	}
 
-	snsClient := sns.New(to.AWSSession)
-	subscriptionsCount, topicARN, err := countTopicSubscriptions(to, ctx, snsClient)
+	snsClient := sns.New(box.AWSSession)
+	subscriptionsCount, topicARN, err := countTopicSubscriptions(box, ctx, snsClient)
 	if err != nil {
 		return events.APIGatewayProxyResponse{StatusCode: 500}, err
 	}
 	span.LogKV("subscriptionsCount", subscriptionsCount)
 
-	err = storeRequestedModulesList(to, ctx, jwt, &request, originRequester, jobID, encryptedDataMarshalled)
+	err = storeRequestedModulesList(box, ctx, jwt, &request, originRequester, jobID, encryptedDataMarshalled)
 	if err != nil {
 		return events.APIGatewayProxyResponse{StatusCode: 500}, err
 	}
 
-	err = publishToSns(to, ctx, request, jobID, snsClient, topicARN)
+	err = publishToSns(box, ctx, request, jobID, snsClient, topicARN)
 	if err != nil {
 		return events.APIGatewayProxyResponse{StatusCode: 500}, err
 	}
@@ -244,7 +251,7 @@ func deleteJob(ctx context.Context, request events.APIGatewayProxyRequest, jobID
 }
 
 // getJob gets the job status from dynamoDB and send it as a response
-func getJob(ctx context.Context, jobID string) (events.APIGatewayProxyResponse, error) {
+func getJob(ctx context.Context, request events.APIGatewayProxyRequest, jobID string) (events.APIGatewayProxyResponse, error) {
 	span, ctx := to.TracerLogger.StartSpan(ctx, "GetJobStatus", "job", "manager", "getstatus")
 	span.LogKV("jobID", jobID)
 	defer span.End(ctx)
@@ -319,13 +326,6 @@ func getJobs(ctx context.Context, request events.APIGatewayProxyRequest) (events
 	if err != nil {
 		span.LogKV("error", err)
 		return events.APIGatewayProxyResponse{StatusCode: 500}, err
-	}
-
-	// Build modified / simplified JobDBEntry for each job
-	// Adding jobpercentage to the returned data for UI calculations
-	type ResponseData struct {
-		JobDB         common.JobDBEntry
-		JobPercentage float64 `json:"jobPercentage"`
 	}
 
 	response := []ResponseData{}
