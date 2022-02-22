@@ -166,7 +166,7 @@ function logError(message) {
 function suggestion({ LAMBDA, PORT }) {
   const lambdaPath = LAMBDA.split('/');
   const functionName = lambdaPath[lambdaPath.length - 1];
-  let suggestedPayload = '{}';
+  let suggestedPayload = '{"prop": "value"}';
   if (lambdaPath[0] === MODULES_DIR) {
     const job = {
       JobID: 'test',
@@ -190,7 +190,7 @@ function suggestion({ LAMBDA, PORT }) {
   }
   const suggestedInvoke =
     `aws lambda invoke --endpoint http://localhost:${PORT} --no-sign-request ` +
-    `--function-name ${functionName} --payload '${JSON.stringify(
+    `--function-name ${functionName} --cli-binary-format raw-in-base64-out --payload '${JSON.stringify(
       suggestedPayload
     )}' /dev/stdout 2>/dev/null`;
   logInfo(`Use below command to call\\debug Lambda:\n${suggestedInvoke}`);
