@@ -163,7 +163,7 @@ jobs:
         uses: actions/checkout@ec3a7ce113134d7a93b817d10a8272cb61118579
 
       - name: Set up Javascript 3.9.0
-        uses: actions/setup-node@f099707f6e7a91b89cdebdeca599fc76cc8bf088
+        uses: actions/setup-node@9ced9a43a244f3ac94f13bfd896db8c8f30da67a
         with:
           node-version: 12.20.0
 
