@@ -7,8 +7,8 @@ import io
 import json
 import logging
 import sys
-from typing import Any, Dict, Generator, List, Set
 from urllib.error import HTTPError
+from typing import Any, Dict, Generator, List, Set, Tuple
 
 import boto3
 import trustar
@@ -109,19 +109,20 @@ def lookupEmailAddress(ts: trustar.TruStar, address: str) -> Dict[str, Any]:
     return ts.search_indicators(search_term=address, indicator_types=["EMAIL_ADDRESS"])
 
 
-def retrieveCorrelatedIndicators(ts: trustar.TruStar, ioc: str) -> Dict[str, Set[str]]:
+def retrieveCorrelatedIndicators(ts: trustar.TruStar, ioc: str) -> Tuple[Dict[str, Set[str]], str]:
     """Retrieve a Report object associated with the IoC provided
     
     :param ts: TruSTAR object for issuing API queries
     :param ioc: one IoC to find correlated IoCs
-    :returns: dictionary of correlated IoCs where the keys are the IoC types
+    :returns: dictionary of correlated IoCs where the keys are the IoC types, and an error message
     """
 
     # get all the reports correlated to the provided IoC
     reports = ts.get_correlated_reports([ioc])
     if reports is None:
-        log.error(f"Null returned when retrieving reports correlated with {ioc}")
-        return dict()
+        err_msg = f"Null returned when retrieving reports correlated with {ioc}"
+        log.error(err_msg)
+        return dict(), err_msg
 
     # pivot: retrieve all IoCs correlated with those reports
     unique_iocs = defaultdict(set)
@@ -129,7 +130,7 @@ def retrieveCorrelatedIndicators(ts: trustar.TruStar, ioc: str) -> Dict[str, Set
         for corr_ioc in ts.get_indicators_for_report(report.id):
             unique_iocs[corr_ioc.type].add(corr_ioc.value)
 
-    return unique_iocs
+    return unique_iocs, None
 
 
 def convertIndicator(
@@ -158,12 +159,18 @@ def convertTimestamp(epoch: int) -> str:
     )
 
 
-def dumpSet(obj):
+def dumpSet(obj:Set[Any]) -> List[Any]:
+    """Method for casting a set into a list for JSON serialzation"""
     return list(obj)
 
 
 def convertToCsv(ioc_dict: Dict[str, List[Dict[str, Any]]], ioc_correlations: Dict[str, str]) -> str:
-    """Convert the IoC dictionary to a CSV representation"""
+    """Convert the IoC dictionary to a CSV representation
+    
+    :params ioc_dict: 
+    :params ioc_correlations: 
+    :returns: CSV string
+    """
     output = io.StringIO()
     writer = csv.writer(output, lineterminator="\n")
     writer.writerow(["ioc", "firstSeen", "lastSeen", "sightings", "correlations"])
@@ -183,12 +190,14 @@ def convertToCsv(ioc_dict: Dict[str, List[Dict[str, Any]]], ioc_correlations: Di
 
 def process(job_request: Dict[str, str]) -> Dict[str, str]:
     """Process an individual record"""
+    err_msg = None
+
     try:
         job_id = job_request["jobId"]
         job_request_body = json.loads(job_request["submission"]["body"])
     except Exception as e:
-        log.error("Exception while loading the request body")
-        log.error(e)
+        err_msg = "Exception while loading the request body: " + str(e)
+        log.error(err_msg)
         job_id = "UNKNOWN"
         job_request_body = {}
 
@@ -198,7 +207,8 @@ def process(job_request: Dict[str, str]) -> Dict[str, str]:
 
     ts = configureTrustar()
     if ts is None:
-        log.error("Failed to instantiate the TruSTAR object")
+        err_msg = "Failed to instantiate the TruSTAR object"
+        log.error(err_msg)
         job_id = "UNKNOWN"
         job_request_body = {}
 
@@ -243,14 +253,16 @@ def process(job_request: Dict[str, str]) -> Dict[str, str]:
         log.warn("{} is an unsupported artifact type".format(ioc_type))
 
     # search for correlated IoCs
-    ioc_correlations = {ioc:retrieveCorrelatedIndicators(ts, ioc) for ioc in ioc_dict}
+    ioc_correlations = dict()
+    for ioc in ioc_dict:
+        ioc_corr, err_msg = retrieveCorrelatedIndicators(ts, ioc)
+        if err_msg is not None: break
+        ioc_correlations[ioc] = ioc_corr
 
     response_count = sum(map(len, ioc_dict.values()))
-    metadata = (
-        "1 response found"
-        if response_count == 1
-        else "{} responses found".format(response_count),
-    )
+    metadata = [ f"{response_count} response(s) found" ]
+    if err_msg is not None:
+        metadata.append(err_msg)
     response_message = {
         "module_name": MODULE_NAME,
         "jobId": job_id,
