@@ -18,8 +18,3 @@ parameters:
   RunnerAMIId: /GoldenAMI/gd-ubuntu20.04/latest
   DeviceName: /dev/sda1
   UseCICDRole: "true"
-  CustomUserData: |
-    sudo snap install amazon-ssm-agent --classic
-    sudo systemctl start snap.amazon-ssm-agent.amazon-ssm-agent.service
-    sudo snap start amazon-ssm-agent
-    sudo apt-get install zip unzip libdigest-sha-perl -qy
