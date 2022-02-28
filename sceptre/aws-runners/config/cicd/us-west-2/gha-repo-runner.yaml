@@ -4,7 +4,7 @@ region: us-west-2
 template_path: sc-gha-repo-runner.yaml
 stack_name: cicd-runners
 parameters:
-  ProductVersion: 1.3.2
+  ProductVersion: 1.3.4
   RunnerName: github-actions-runner
   RunnerLabels: self-hosted, threat-runners
   RunnerAutoScalingGroupDesiredSize: "1"
