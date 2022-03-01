@@ -2,7 +2,7 @@
   "handler": "zerobounce",
   "memory-size": "256",
   "runtime": "go1.x",
-  "timeout": "15",
+  "timeout": "900",
   "metadata": {
     "supportedIOCTypes": [
       "EMAIL"

@@ -2,7 +2,7 @@
   "handler": "trustar-isac.handler",
   "memory-size": "128",
   "runtime": "python3.8",
-  "timeout": "15",
+  "timeout": "900",
   "metadata": {
     "supportedIOCTypes": [
       "DOMAIN",
