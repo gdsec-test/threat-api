@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"testing"
 
 	. "github.com/agiledragon/gomonkey/v2"
@@ -138,16 +139,23 @@ func TestGetMd5(t *testing.T) {
 				So(URLHausKey, ShouldResemble, expectedResult.Prop)
 				So(URLHausValue, ShouldResemble, expectedResult.Value)
 			})
-		}
 
-		// Convey("should return error if something goes wrong", func() {
-		// 	expectedError := errors.New("query api error g256")
-		// 	patches = append(patches, ApplyFunc(ctxhttp.PostForm, func(ctx context.Context, client *http.Client, url string, data url.Values) (*http.Response, error) {
-		// 		return nil, expectedError
-		// 	}))
-		// 	_, actualErr := GetMd5(ctx1, "bw345gbgw45h", "dfg", "bw45g5")
-		// 	So(actualErr, ShouldResemble, expectedError)
-		// })
+			Convey("should return error for "+expectedResult.Name+"if something goes wrong", func() {
+				expectedError := errors.New("query api error for " + expectedResult.Name)
+				patches = append(patches, ApplyFunc(QueryApi, func(ctx context.Context, apiUrl string, key string, value string) ([]byte, error) {
+					return nil, expectedError
+				}))
+				var actualErr error
+				if expectedResult.Url == apiHashUrl {
+					_, actualErr = expectedResult.Method(ctx1, expectedResult.Value)
+				} else if expectedResult.Url == apiHostUrl {
+					_, actualErr = expectedResult.MethodHost(ctx1, expectedResult.Value)
+				} else if expectedResult.Url == apiUrlUrl {
+					_, actualErr = expectedResult.MethodUrl(ctx1, expectedResult.Value)
+				}
+				So(actualErr, ShouldResemble, expectedError)
+			})
+		}
 
 	})
 }
