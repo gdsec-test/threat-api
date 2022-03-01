@@ -8,6 +8,7 @@ import json
 import logging
 import sys
 from typing import Any, Dict, Generator, List, Set
+from urllib.error import HTTPError
 
 import boto3
 import trustar
@@ -135,7 +136,12 @@ def convertIndicator(
 ) -> List[Dict[str, Any]]:
     """Convert a generator of Indicator objects into a list of dictionaries"""
     if indicators is not None:
-        return [indicator.to_dict() for indicator in indicators]
+        try:
+            return [indicator.to_dict() for indicator in indicators]
+        except HTTPError as e:
+            # HTTP 429 - rate limiting - may apply here
+            log.error(e)
+            return list()
     log.warn("Failed to look up the artifact: " + ioc)
     return list()
 
