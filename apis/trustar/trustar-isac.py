@@ -15,6 +15,7 @@ import trustar
 from enums import EventKind, EventCategory, EventType, EventOutcome
 from event import Event
 from logger import AppSecFormatter, AppSecLogger
+from requests.exceptions import HTTPError
 
 AWS_REGION = "us-west-2"
 MODULE_NAME = "trustar"
