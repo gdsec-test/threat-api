@@ -256,6 +256,14 @@ func getJob(ctx context.Context, request events.APIGatewayProxyRequest, jobID st
 	span.LogKV("jobID", jobID)
 	defer span.End(ctx)
 
+	jwt, err := to.ValidateJWT(ctx, toolbox.GetJWTFromRequest(request))
+	if err != nil {
+		err = fmt.Errorf("error validating jwt: %w", err)
+		span.LogKV("error", err)
+		return events.APIGatewayProxyResponse{StatusCode: http.StatusUnauthorized}, err
+	}
+	span.LogKV("username", jwt.BaseToken.AccountName)
+
 	if jobID == "" {
 		return events.APIGatewayProxyResponse{StatusCode: 400}, nil
 	}
