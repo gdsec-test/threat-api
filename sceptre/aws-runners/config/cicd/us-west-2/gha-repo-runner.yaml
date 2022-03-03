@@ -13,6 +13,7 @@ parameters:
   GitHubOrganization: gdcorp-infosec
   GitHubRepository: threat-api
   GitHubSecretName: /GitHub/Runner-Secrets
+  RunnerVersion: "2.288.1"
   RunnerAutoScalingGroupWarmPoolSize: "2"
   RunnerAutoScalingGroupSubnets: /AdminParams/VPC/DXAPPSubnets
   RunnerAMIId: /GoldenAMI/gd-ubuntu20.04/latest
