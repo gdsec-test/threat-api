@@ -6,14 +6,13 @@ import (
 
 	. "github.com/agiledragon/gomonkey/v2"
 	zb "github.com/gdcorp-infosec/threat-api/apis/zerobounce/zerobounceLibrary"
-	"github.com/gdcorp-infosec/threat-api/lambdas/common/toolbox"
+
 	. "github.com/smartystreets/goconvey/convey"
 )
 
 func TestCveMetaDataExtract(t *testing.T) {
 
 	Convey("zerobounceMetaDataExtract", t, func() {
-		tb = toolbox.GetToolbox()
 		// setup stubs\mocks
 		patches := []*Patches{}
 

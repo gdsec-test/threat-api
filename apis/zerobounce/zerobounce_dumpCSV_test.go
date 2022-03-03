@@ -6,14 +6,13 @@ import (
 
 	. "github.com/agiledragon/gomonkey/v2"
 	zb "github.com/gdcorp-infosec/threat-api/apis/zerobounce/zerobounceLibrary"
-	"github.com/gdcorp-infosec/threat-api/lambdas/common/toolbox"
+
 	. "github.com/smartystreets/goconvey/convey"
 )
 
 func TestDumpCSV(t *testing.T) {
 
 	Convey("dumpCSV", t, func() {
-		tb = toolbox.GetToolbox()
 		// setup stubs\mocks
 		patches := []*Patches{}
 
