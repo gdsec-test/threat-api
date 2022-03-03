@@ -2,7 +2,7 @@
   "handler": "apivoid",
   "memory-size": "256",
   "runtime": "go1.x",
-  "timeout": "60",
+  "timeout": "900",
   "metadata": {
     "supportedIOCTypes": [
       "DOMAIN",

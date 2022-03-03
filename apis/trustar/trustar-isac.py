@@ -8,12 +8,14 @@ import json
 import logging
 import sys
 from typing import Any, Dict, Generator, List, Set
+from urllib.error import HTTPError
 
 import boto3
 import trustar
 from enums import EventKind, EventCategory, EventType, EventOutcome
 from event import Event
 from logger import AppSecFormatter, AppSecLogger
+from requests.exceptions import HTTPError
 
 AWS_REGION = "us-west-2"
 MODULE_NAME = "trustar"
@@ -135,7 +137,12 @@ def convertIndicator(
 ) -> List[Dict[str, Any]]:
     """Convert a generator of Indicator objects into a list of dictionaries"""
     if indicators is not None:
-        return [indicator.to_dict() for indicator in indicators]
+        try:
+            return [indicator.to_dict() for indicator in indicators]
+        except HTTPError as e:
+            # HTTP 429 - rate limiting - may apply here
+            log.error(e)
+            return list()
     log.warn("Failed to look up the artifact: " + ioc)
     return list()
 
