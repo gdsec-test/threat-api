@@ -39,6 +39,25 @@ func TestGetJob(t *testing.T) {
 			Path: "Super cool path3ye435t",
 		}
 
+		jwtTokenString := "I am cool JWK secret token345 gw4vw45"
+		patches = append(patches, ApplyFunc(toolbox.GetJWTFromRequest,
+			func(request events.APIGatewayProxyRequest) string {
+				return jwtTokenString
+			}))
+
+		jwtToken := &gdtoken.Token{
+			BaseToken: gdtoken.BaseToken{
+				AccountName: "Account Name vaw45",
+			},
+		}
+
+		actualJWTToken := ""
+		patches = append(patches, ApplyMethod(reflect.TypeOf(to), "ValidateJWT",
+			func(t *toolbox.Toolbox, ctx context.Context, token string) (*gdtoken.Token, error) {
+				actualJWTToken = token
+				return jwtToken, nil
+			}))
+
 		jobID := "job twer32t23s"
 		jobStatus := JobInProgress
 		jobPercentage := 47.45
@@ -94,6 +113,11 @@ func TestGetJob(t *testing.T) {
 			expectedResponse := events.APIGatewayProxyResponse{StatusCode: 400}
 			actualResponse, _ := getJob(ctx1, *APIGatewayRequest, "")
 			So(actualResponse, ShouldResemble, expectedResponse)
+		})
+
+		Convey("should get JWT from actual response", func() {
+			getJob(ctx1, *APIGatewayRequest, "")
+			So(actualJWTToken, ShouldResemble, jwtTokenString)
 		})
 
 		Convey("should return error if getting job from DB failed", func() {
