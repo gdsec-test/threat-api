@@ -56,20 +56,6 @@ func TestGetZeroBounce(t *testing.T) {
 		 "errors":[]
 		 }`
 
-		// errResponseReportString := `{"EmailBatch”:[
-		// 		]"struct"{
-		// 		   "Address string""json:\"address\"""; Status string""json:\"status\"""; SubStatus string""json:\"sub_status\"""; FreeEmail bool""json:\"free_email\"""; DidYouMean interface"{
-		// 		   }"json:\"did_you_mean\"""; Account string""json:\"account\"""; Domain string""json:\"domain\"""; DomainAgeDays string""json:\"domain_age_days\"""; SMTPProvider string""json:\"smtp_provider\"""; MxFound string""json:\"mx_found\"""; MxRecord string""json:\"mx_record\"""; Firstname string""json:\"firstname\"""; Lastname string""json:\"lastname\"""; Gender string""json:\"gender\"""; Country interface"{
-		// 		   }"json:\"country\"""; Region interface"{
-		// 		   }"json:\"region\"""; City interface"{
-		// 		   }"json:\"city\"""; Zipcode interface"{
-		// 		   }"json:\"zipcode\"""; ProcessedAt string""json:\"processed_at\""
-		// 		}"(nil)",
-		// 		"Errors":[
-		// 		]"interface"{
-		// 		}"(nil)"
-		// 	 }`
-
 		zeroBounceResponseBody := ioutil.NopCloser(bytes.NewBufferString(responseReportString))
 		zeroBounceClient := http.DefaultClient
 		zeroBounceResp := &Response{
@@ -86,13 +72,6 @@ func TestGetZeroBounce(t *testing.T) {
 				patch.Reset()
 			}
 		})
-
-		// Convey("should successfully make requests to the zerobounce batch email verification API", func() {
-		// 	ExpectedZeroBounceReportData := &zb.ZeroBounceReport{}
-		// 	json.Unmarshal([]byte(responseReportString), &ExpectedZeroBounceReportData)
-		// 	actualReport, _ := zb.GetZeroBounce(ctx1, "", "", "", zeroBounceClient)
-		// 	So(actualReport, ShouldResemble, ExpectedZeroBounceReportData)
-		// })
 
 		Convey("should set proper URL and request params", func() {
 			u, _ := url.Parse(zb.ZerobounceEndpoint)
