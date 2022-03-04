@@ -17,7 +17,7 @@ func TestGetExampleData(t *testing.T) {
 	var triageRequests []*triage.Request
 
 	triageRequests = append(triageRequests, &triage.Request{
-		IOCs:     []string{"seguro.emporiobrazil24h.com/cart", "https://pi-mars.com/", "https://discord-fonts.com/", "outlook.live.com/owa/"},
+		IOCs:     []string{"https://pi-mars.com/", "https://discord-fonts.com/", "outlook.live.com/owa/"},
 		IOCsType: triage.URLType,
 	})
 

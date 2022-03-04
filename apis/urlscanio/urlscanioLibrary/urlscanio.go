@@ -13,6 +13,8 @@ import (
 
 const (
 	urlSubmissionEndpoint = "https://urlscan.io/api/v1/scan/"
+	RETRY_ATTEMPT         = 5
+	TIMEOUT               = 10
 )
 
 type SubmissionResultHolder struct {
@@ -147,7 +149,7 @@ func GetURLScanResults(ctx context.Context, ioc string, key string, urlscanClien
 	api := submissionResultHolder.API
 
 	// Urlscan.io Submission API takes up to 10 seconds to scan the URL and prepare its response
-	time.Sleep(10 * time.Second)
+	time.Sleep(TIMEOUT * time.Second)
 
 	// Result API request to fetch url scan results
 	scanReq, err := http.NewRequestWithContext(ctx, http.MethodGet, api, nil)
@@ -159,10 +161,13 @@ func GetURLScanResults(ctx context.Context, ioc string, key string, urlscanClien
 	if err != nil {
 		return nil, err
 	}
-
+	retryCount := 0
 	for {
-		if scanResp.StatusCode == 404 { // status when result is not ready
-			time.Sleep(10 * time.Second) // sleep 10 seconds and try one more time later
+		if retryCount >= RETRY_ATTEMPT { // handle when result didnt appear after long time
+			return nil, fmt.Errorf("Unable to receive results after %d seconds", TIMEOUT*RETRY_ATTEMPT)
+		} else if scanResp.StatusCode == 404 { // status when result is not ready
+			time.Sleep(TIMEOUT * time.Second) // sleep 10 seconds and try one more time later
+			retryCount++
 			scanResp, err = urlscanClient.Do(scanReq)
 			if err != nil {
 				return nil, err
