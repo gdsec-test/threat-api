@@ -142,9 +142,9 @@ func TestGetMd5(t *testing.T) {
 
 			Convey("should return error for "+expectedResult.Name+"if something goes wrong", func() {
 				expectedError := errors.New("query api error for " + expectedResult.Name)
-				patches = append(patches, ApplyFunc(QueryApi, func(ctx context.Context, apiUrl string, key string, value string) ([]byte, error) {
+				QueryApiStub := ApplyFunc(QueryApi, func(ctx context.Context, apiUrl string, key string, value string) ([]byte, error) {
 					return nil, expectedError
-				}))
+				})
 				var actualErr error
 				if expectedResult.Url == apiHashUrl {
 					_, actualErr = expectedResult.Method(ctx1, expectedResult.Value)
@@ -154,6 +154,7 @@ func TestGetMd5(t *testing.T) {
 					_, actualErr = expectedResult.MethodUrl(ctx1, expectedResult.Value)
 				}
 				So(actualErr, ShouldResemble, expectedError)
+				QueryApiStub.Reset()
 			})
 		}
 
