@@ -10,6 +10,10 @@ Parameters:
   RunnerLabels:
     Type: String
     Description: Comma separated list of labels to attach to the Runner in addition to the default ones.
+  RunnerVersion:
+    Type: String
+    Description: Action Runner version
+    Default: "2.288.1"
   GitHubOrganization:
     Type: String
     Description: The organization containing the repository, ex gdcorp-cp
@@ -104,6 +108,8 @@ Resources:
           Value: !Ref RunnerLabels
         - Key: RunnerVolumeSize
           Value: !Ref RunnerVolumeSize
+        - Key: RunnerVersion
+          Value: !Ref RunnerVersion
         - Key: DeviceName
           Value: !Ref DeviceName
         - Key: GitHubOrganization
