@@ -67,8 +67,8 @@ func (a *APMTracer) StartSpan(ctx context.Context, operationName, opType, operat
 	startTime := time.Now()
 	transaction := a.APMTracer.StartTransactionOptions(operationName, operationType, apm.TransactionOptions{Start: startTime})
 	ctx = apm.ContextWithTransaction(ctx, transaction)
-
-	return &APMSpan{startTime: startTime, transaction: transaction}, ctx
+	span, _ := apm.StartSpanOptions(ctx, operationName, operationType, apm.SpanOptions{Start: startTime})
+	return &APMSpan{startTime: startTime, transaction: transaction, span: span}, ctx
 }
 
 func (a *APMTracer) Close(ctx context.Context) error {
