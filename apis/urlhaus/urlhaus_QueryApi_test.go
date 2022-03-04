@@ -58,11 +58,12 @@ func TestQueryApi(t *testing.T) {
 
 		Convey("should return error if something goes wrong", func() {
 			expectedError := errors.New("query api error g256")
-			patches = append(patches, ApplyFunc(ctxhttp.PostForm, func(ctx context.Context, client *http.Client, url string, data url.Values) (*http.Response, error) {
+			PostFormStub := ApplyFunc(ctxhttp.PostForm, func(ctx context.Context, client *http.Client, url string, data url.Values) (*http.Response, error) {
 				return nil, expectedError
-			}))
+			})
 			_, actualErr := QueryApi(ctx1, "bw345gbgw45h", "dfg", "bw45g5")
 			So(actualErr, ShouldResemble, expectedError)
+			PostFormStub.Reset()
 		})
 
 	})
