@@ -38,6 +38,7 @@ func (m *TriageModule) Supports() []triage.IOCType {
 		triage.IPType,
 		triage.URLType,
 		triage.MD5Type,
+		triage.SHA1Type,
 		triage.SHA256Type,
 	}
 }
@@ -215,12 +216,12 @@ func HashesToCsv(payloads []*vt.Object, metaDataHolder *vtlib.MetaData) string {
 			fmt.Println(err)
 			continue
 		}
+		badness := math.Tanh(math.Min(-float64(reputation), 0.0) * badnessScalingFactor)
 		lastAnalysis, err := payload.Get("last_analysis_stats")
 		var harmless, malicious, suspicious, timeout, undetected int64
-		var badness float64
 		if err != nil {
 			lastAnalysisMap := lastAnalysis.(map[string]interface{})
-			harmless, malicious, suspicious, timeout, undetected, badness = getLastAnalysisStats(lastAnalysisMap)
+			harmless, malicious, suspicious, timeout, undetected = getLastAnalysisStats(lastAnalysisMap)
 		}
 		updateMetaData(metaDataHolder, harmless, malicious, suspicious, timeout, undetected)
 
@@ -289,12 +290,12 @@ func DomainsToCsv(payloads []*vt.Object, metaDataHolder *vtlib.MetaData) string 
 			fmt.Println(err)
 			continue
 		}
+		badness := math.Tanh(math.Min(-float64(reputation), 0.0) * badnessScalingFactor)
 		lastAnalysis, err := payload.Get("last_analysis_stats")
 		var harmless, malicious, suspicious, timeout, undetected int64
-		var badness float64
 		if err == nil {
 			lastAnalysisMap := lastAnalysis.(map[string]interface{})
-			harmless, malicious, suspicious, timeout, undetected, badness = getLastAnalysisStats(lastAnalysisMap)
+			harmless, malicious, suspicious, timeout, undetected = getLastAnalysisStats(lastAnalysisMap)
 		}
 		updateMetaData(metaDataHolder, harmless, malicious, suspicious, timeout, undetected)
 
@@ -331,6 +332,7 @@ func IpsToCsv(payloads []*vt.Object, metaDataHolder *vtlib.MetaData) string {
 		"Suspicious",
 		"Timeout",
 		"Undetected",
+		"Badness",
 	})
 
 	for _, payload := range payloads {
@@ -353,12 +355,17 @@ func IpsToCsv(payloads []*vt.Object, metaDataHolder *vtlib.MetaData) string {
 			fmt.Println(err)
 			continue
 		}
+		reputation, err := payload.GetInt64("reputation")
+		if err != nil {
+			fmt.Println(err)
+			continue
+		}
+		badness := math.Tanh(math.Min(-float64(reputation), 0.0) * badnessScalingFactor)
 		lastAnalysis, err := payload.Get("last_analysis_stats")
 		var harmless, malicious, suspicious, timeout, undetected int64
-		var badness float64
 		if err != nil {
 			lastAnalysisMap := lastAnalysis.(map[string]interface{})
-			harmless, malicious, suspicious, timeout, undetected, badness = getLastAnalysisStats(lastAnalysisMap)
+			harmless, malicious, suspicious, timeout, undetected = getLastAnalysisStats(lastAnalysisMap)
 		}
 		updateMetaData(metaDataHolder, harmless, malicious, suspicious, timeout, undetected)
 
@@ -429,12 +436,12 @@ func UrlsToCsv(payloads []*vt.Object, metaDataHolder *vtlib.MetaData) string {
 			fmt.Println(err)
 			continue
 		}
+		badness := math.Tanh(math.Min(-float64(reputation), 0.0) * badnessScalingFactor)
 		lastAnalysis, err := payload.Get("last_analysis_stats")
 		var harmless, malicious, suspicious, timeout, undetected int64
-		var badness float64
 		if err != nil {
 			lastAnalysisMap := lastAnalysis.(map[string]interface{})
-			harmless, malicious, suspicious, timeout, undetected, badness = getLastAnalysisStats(lastAnalysisMap)
+			harmless, malicious, suspicious, timeout, undetected = getLastAnalysisStats(lastAnalysisMap)
 		}
 		updateMetaData(metaDataHolder, harmless, malicious, suspicious, timeout, undetected)
 
@@ -457,7 +464,7 @@ func UrlsToCsv(payloads []*vt.Object, metaDataHolder *vtlib.MetaData) string {
 	return resp.String()
 }
 
-func getLastAnalysisStats(lastAnalysisMap map[string]interface{}) (int64, int64, int64, int64, int64, float64) {
+func getLastAnalysisStats(lastAnalysisMap map[string]interface{}) (int64, int64, int64, int64, int64) {
 	var harmless int64
 	if fmt.Sprintf("%T", lastAnalysisMap["harmless"]) == "float64" {
 		harmless = int64(lastAnalysisMap["harmless"].(float64))
@@ -478,9 +485,7 @@ func getLastAnalysisStats(lastAnalysisMap map[string]interface{}) (int64, int64,
 	if fmt.Sprintf("%T", lastAnalysisMap["undetected"]) == "float64" {
 		undetected = int64(lastAnalysisMap["undetected"].(float64))
 	}
-	var badness float64
-	badness = math.Tanh(float64(malicious-harmless) * badnessScalingFactor)
-	return harmless, malicious, suspicious, timeout, undetected, badness
+	return harmless, malicious, suspicious, timeout, undetected
 }
 
 func updateMetaData(metaDataHolder *vtlib.MetaData, harmless int64, malicious int64, suspicious int64, timeout int64, undetected int64) {
