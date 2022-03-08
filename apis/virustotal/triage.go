@@ -216,7 +216,7 @@ func HashesToCsv(payloads []*vt.Object, metaDataHolder *vtlib.MetaData) string {
 			fmt.Println(err)
 			continue
 		}
-		badness := math.Tanh(math.Min(-float64(reputation), 0.0) * badnessScalingFactor)
+		badness := math.Tanh(math.Max(-float64(reputation), 0.0) * badnessScalingFactor)
 		lastAnalysis, err := payload.Get("last_analysis_stats")
 		var harmless, malicious, suspicious, timeout, undetected int64
 		if err != nil {
@@ -290,7 +290,7 @@ func DomainsToCsv(payloads []*vt.Object, metaDataHolder *vtlib.MetaData) string 
 			fmt.Println(err)
 			continue
 		}
-		badness := math.Tanh(math.Min(-float64(reputation), 0.0) * badnessScalingFactor)
+		badness := math.Tanh(math.Max(-float64(reputation), 0.0) * badnessScalingFactor)
 		lastAnalysis, err := payload.Get("last_analysis_stats")
 		var harmless, malicious, suspicious, timeout, undetected int64
 		if err == nil {
@@ -360,7 +360,7 @@ func IpsToCsv(payloads []*vt.Object, metaDataHolder *vtlib.MetaData) string {
 			fmt.Println(err)
 			continue
 		}
-		badness := math.Tanh(math.Min(-float64(reputation), 0.0) * badnessScalingFactor)
+		badness := math.Tanh(math.Max(-float64(reputation), 0.0) * badnessScalingFactor)
 		lastAnalysis, err := payload.Get("last_analysis_stats")
 		var harmless, malicious, suspicious, timeout, undetected int64
 		if err != nil {
@@ -436,7 +436,7 @@ func UrlsToCsv(payloads []*vt.Object, metaDataHolder *vtlib.MetaData) string {
 			fmt.Println(err)
 			continue
 		}
-		badness := math.Tanh(math.Min(-float64(reputation), 0.0) * badnessScalingFactor)
+		badness := math.Tanh(math.Max(-float64(reputation), 0.0) * badnessScalingFactor)
 		lastAnalysis, err := payload.Get("last_analysis_stats")
 		var harmless, malicious, suspicious, timeout, undetected int64
 		if err != nil {
