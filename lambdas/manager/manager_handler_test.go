@@ -80,6 +80,14 @@ func TestManagerHandler(t *testing.T) {
 				return GetModulesResponse, nil
 			}))
 
+			LaunchVulnerabilityResponse := events.APIGatewayProxyResponse{}
+		var isLaunchVulnerabilityCalled events.APIGatewayProxyRequest
+		patches = append(patches, ApplyFunc(InvokeVulnerabilityService,
+			func(ctx context.Context, request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
+				isLaunchVulnerabilityCalled = request
+				return LaunchVulnerabilityResponse, nil
+			}))
+
 		Reset(func() {
 			// deferred reset all stubs\mocks after every test suite running
 			for _, patch := range patches {
@@ -94,11 +102,11 @@ func TestManagerHandler(t *testing.T) {
 		})
 
 		type TestAPICall struct {
-			Name string
-			Path   string
+			Name           string
+			Path           string
 			PathParameters map[string]string
-			Method string
-			Result *events.APIGatewayProxyRequest
+			Method         string
+			Result         *events.APIGatewayProxyRequest
 		}
 
 		APICalls := []*TestAPICall{}
@@ -154,8 +162,16 @@ func TestManagerHandler(t *testing.T) {
 			&isGetModulesCalled,
 		})
 
+		APICalls = append(APICalls, &TestAPICall{
+			"LaunchVulnerability",
+			"/vulnerability",
+			map[string]string{},
+			http.MethodPost,
+			&isLaunchVulnerabilityCalled,
+		})
+
 		for _, APICall := range APICalls {
-			Convey("should call " + APICall.Name + " API properly by it's URL", func() {
+			Convey("should call "+APICall.Name+" API properly by it's URL", func() {
 				APIGatewayRequest.Resource = fmt.Sprintf("%d", rand.Intn(1000))
 				APIGatewayRequest.Path = version + APICall.Path
 				APIGatewayRequest.HTTPMethod = APICall.Method
