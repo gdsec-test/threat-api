@@ -1,0 +1,76 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: ThreatTools API Job Resposne Bucket for large response objects
+Parameters:
+  DevelopmentTeam:
+    Type: AWS::SSM::Parameter::Value<String>
+    Description: SSM Parameter for team owning the created resources.
+    Default: /AdminParams/Team/Name
+    AllowedValues:
+      - /AdminParams/Team/Name
+  DevelopmentEnvironment:
+    Type: AWS::SSM::Parameter::Value<String>
+    Description: SSM Parameter for development environment this will live in.
+    Default: /AdminParams/Team/Environment
+    AllowedValues:
+      - /AdminParams/Team/Environment
+  SlackSnsTopicName:
+    Type: AWS::SSM::Parameter::Value<String>
+    Description: SNS Topic Name, which has Slack webhook to send messages
+    Default: /AdminParams/SNS/AlarmNotificationTopic
+  ThreatApiJobBucket:
+    Type: String
+    Description: Name of S3 Bucket to work with Jobs\Modules big objects
+Resources:
+  ThreatApiJobStorageBucket:
+    Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
+    Properties:
+      ProductName: S3
+      ProvisioningArtifactName: 1.16.0
+      ProvisionedProductName: ThreatApiJobStorageBucket
+      ProvisioningParameters:
+        - Key: BucketNameSuffix
+          Value: !Sub ${ThreatApiJobBucket}
+        - Key: BucketPolicy
+          Value: Private
+        - Key: MoveToStandardIAStorageDays
+          Value: 30
+        - Key: MoveToGlacierStorageDays
+          Value: 90
+        - Key: ExpirationDays
+          Value: 180
+        - Key: CustomBucketPolicyJSON
+          Value: !Sub |
+                    {
+                    "Version": "2012-10-17",
+                    "Statement": [
+                      {
+                            "Effect": "Allow",
+                            "Principal": "*",
+                            "Action": [
+                              "s3:GetObject",
+                              "s3:ListBucket"
+                            ],
+                            "Resource": [
+                              "arn:aws:s3:::gd-${DevelopmentTeam}-${DevelopmentEnvironment}-${ThreatApiJobBucket}",
+                              "arn:aws:s3:::gd-${DevelopmentTeam}-${DevelopmentEnvironment}-${ThreatApiJobBucket}/*"
+                            ],
+                            "Condition": {
+                              "ForAnyValue:StringEquals": {
+                                "aws:PrincipalOrgID": [ "o-nkgi7akmvi", "o-1xnd0t0rwa", "o-5tjjsp4k13", "o-by05f6zmn4", "o-pn5n9kd1l3"]
+                              }
+                            }
+                      }]
+                    }
+        # - Key: NotificationConfigurationJson
+        #   Value: !Sub |
+        #             {
+        #               "TopicConfigurations": [
+        #                   {
+        #                     "Topic": "${SlackSnsTopicName}",
+        #                     "Event": "s3:ObjectCreated:*"
+        #                   }
+        #               ]
+        #             }
+      Tags:
+        - Key: doNotShutDown
+          Value: true

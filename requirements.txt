@@ -1,3 +1,4 @@
+markupsafe == 2.0.1
 awscli
 aws-okta-processor
 boto3

@@ -2,6 +2,7 @@ template_path: SC-CoreResources.yaml
 dependencies:
   - {{environment}}/{{region}}/SC-CodeBucket.yaml
   - {{environment}}/{{region}}/SC-WAFv2Regional.yaml
+  - {{environment}}/{{region}}/SC-JobResponseBucket.yaml
 parameters:
   CustomDomainName: {{threatapi_domain_name}}
   CustomDomainAcmCertificateId: {{threatapi_certificate_arn}}
@@ -9,6 +10,8 @@ parameters:
   APIHash: !file_contents resources/api.sha1
   ManagerHash: !file_contents resources/manager.sha1
   ResponseProcessorHash: !file_contents resources/responseprocessor.sha1
+  VulnerabilityWatchHash: !file_contents resources/vulnerabilitywatch.sha1
+  ThreatApiJobBucket: {{threat_api_job_bucket}}
 hooks:
   before_create:
     - !cmd resources/upload-api-spec.sh

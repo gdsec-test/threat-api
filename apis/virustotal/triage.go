@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/csv"
 	"fmt"
+	"math"
 	"strconv"
 	"time"
 
@@ -16,8 +17,9 @@ import (
 )
 
 const (
-	triageModuleName = "virustotal"
-	secretID         = "/ThreatTools/Integrations/virustotal"
+	triageModuleName     = "virustotal"
+	secretID             = "/ThreatTools/Integrations/virustotal"
+	badnessScalingFactor = 1.0 / 7.0
 )
 
 // Triage module
@@ -36,6 +38,7 @@ func (m *TriageModule) Supports() []triage.IOCType {
 		triage.IPType,
 		triage.URLType,
 		triage.MD5Type,
+		triage.SHA1Type,
 		triage.SHA256Type,
 	}
 }
@@ -165,6 +168,7 @@ func HashesToCsv(payloads []*vt.Object, metaDataHolder *vtlib.MetaData) string {
 		"Suspicious",
 		"Timeout",
 		"Undetected",
+		"Badness",
 	})
 
 	for _, payload := range payloads {
@@ -212,14 +216,13 @@ func HashesToCsv(payloads []*vt.Object, metaDataHolder *vtlib.MetaData) string {
 			fmt.Println(err)
 			continue
 		}
+		badness := math.Tanh(math.Max(-float64(reputation), 0.0) * badnessScalingFactor)
 		lastAnalysis, err := payload.Get("last_analysis_stats")
 		var harmless, malicious, suspicious, timeout, undetected int64
 		if err != nil {
 			lastAnalysisMap := lastAnalysis.(map[string]interface{})
 			harmless, malicious, suspicious, timeout, undetected = getLastAnalysisStats(lastAnalysisMap)
-			updateMetaData(metaDataHolder, harmless, malicious, suspicious, timeout, undetected)
 		}
-
 		updateMetaData(metaDataHolder, harmless, malicious, suspicious, timeout, undetected)
 
 		cols := []string{
@@ -235,6 +238,7 @@ func HashesToCsv(payloads []*vt.Object, metaDataHolder *vtlib.MetaData) string {
 			strconv.FormatInt(suspicious, 10),
 			strconv.FormatInt(timeout, 10),
 			strconv.FormatInt(undetected, 10),
+			strconv.FormatFloat(badness, 'f', 2, 64),
 		}
 		csv.Write(cols)
 	}
@@ -258,6 +262,7 @@ func DomainsToCsv(payloads []*vt.Object, metaDataHolder *vtlib.MetaData) string 
 		"Suspicious",
 		"Timeout",
 		"Undetected",
+		"Badness",
 	})
 
 	for _, payload := range payloads {
@@ -285,13 +290,14 @@ func DomainsToCsv(payloads []*vt.Object, metaDataHolder *vtlib.MetaData) string 
 			fmt.Println(err)
 			continue
 		}
+		badness := math.Tanh(math.Max(-float64(reputation), 0.0) * badnessScalingFactor)
 		lastAnalysis, err := payload.Get("last_analysis_stats")
 		var harmless, malicious, suspicious, timeout, undetected int64
 		if err == nil {
 			lastAnalysisMap := lastAnalysis.(map[string]interface{})
 			harmless, malicious, suspicious, timeout, undetected = getLastAnalysisStats(lastAnalysisMap)
-			updateMetaData(metaDataHolder, harmless, malicious, suspicious, timeout, undetected)
 		}
+		updateMetaData(metaDataHolder, harmless, malicious, suspicious, timeout, undetected)
 
 		cols := []string{
 			creationDate,
@@ -302,6 +308,7 @@ func DomainsToCsv(payloads []*vt.Object, metaDataHolder *vtlib.MetaData) string 
 			strconv.FormatInt(suspicious, 10),
 			strconv.FormatInt(timeout, 10),
 			strconv.FormatInt(undetected, 10),
+			strconv.FormatFloat(badness, 'f', 2, 64),
 		}
 		csv.Write(cols)
 	}
@@ -325,6 +332,7 @@ func IpsToCsv(payloads []*vt.Object, metaDataHolder *vtlib.MetaData) string {
 		"Suspicious",
 		"Timeout",
 		"Undetected",
+		"Badness",
 	})
 
 	for _, payload := range payloads {
@@ -347,14 +355,18 @@ func IpsToCsv(payloads []*vt.Object, metaDataHolder *vtlib.MetaData) string {
 			fmt.Println(err)
 			continue
 		}
+		reputation, err := payload.GetInt64("reputation")
+		if err != nil {
+			fmt.Println(err)
+			continue
+		}
+		badness := math.Tanh(math.Max(-float64(reputation), 0.0) * badnessScalingFactor)
 		lastAnalysis, err := payload.Get("last_analysis_stats")
 		var harmless, malicious, suspicious, timeout, undetected int64
 		if err != nil {
 			lastAnalysisMap := lastAnalysis.(map[string]interface{})
 			harmless, malicious, suspicious, timeout, undetected = getLastAnalysisStats(lastAnalysisMap)
-			updateMetaData(metaDataHolder, harmless, malicious, suspicious, timeout, undetected)
 		}
-
 		updateMetaData(metaDataHolder, harmless, malicious, suspicious, timeout, undetected)
 
 		cols := []string{
@@ -366,6 +378,7 @@ func IpsToCsv(payloads []*vt.Object, metaDataHolder *vtlib.MetaData) string {
 			strconv.FormatInt(suspicious, 10),
 			strconv.FormatInt(timeout, 10),
 			strconv.FormatInt(undetected, 10),
+			strconv.FormatFloat(badness, 'f', 2, 64),
 		}
 		csv.Write(cols)
 	}
@@ -390,6 +403,7 @@ func UrlsToCsv(payloads []*vt.Object, metaDataHolder *vtlib.MetaData) string {
 		"Suspicious",
 		"Timeout",
 		"Undetected",
+		"Badness",
 	})
 
 	for _, payload := range payloads {
@@ -422,14 +436,13 @@ func UrlsToCsv(payloads []*vt.Object, metaDataHolder *vtlib.MetaData) string {
 			fmt.Println(err)
 			continue
 		}
+		badness := math.Tanh(math.Max(-float64(reputation), 0.0) * badnessScalingFactor)
 		lastAnalysis, err := payload.Get("last_analysis_stats")
 		var harmless, malicious, suspicious, timeout, undetected int64
 		if err != nil {
 			lastAnalysisMap := lastAnalysis.(map[string]interface{})
 			harmless, malicious, suspicious, timeout, undetected = getLastAnalysisStats(lastAnalysisMap)
-			updateMetaData(metaDataHolder, harmless, malicious, suspicious, timeout, undetected)
 		}
-
 		updateMetaData(metaDataHolder, harmless, malicious, suspicious, timeout, undetected)
 
 		cols := []string{
@@ -442,6 +455,7 @@ func UrlsToCsv(payloads []*vt.Object, metaDataHolder *vtlib.MetaData) string {
 			strconv.FormatInt(suspicious, 10),
 			strconv.FormatInt(timeout, 10),
 			strconv.FormatInt(undetected, 10),
+			strconv.FormatFloat(badness, 'f', 2, 64),
 		}
 		csv.Write(cols)
 	}

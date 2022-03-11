@@ -9,7 +9,7 @@ import (
 )
 
 const (
-	zerobounceEndpoint = "https://bulkapi.zerobounce.net/v2/validatebatch"
+	ZerobounceEndpoint = "https://bulkapi.zerobounce.net/v2/validatebatch"
 )
 
 type ZeroBounceReport struct {
@@ -52,14 +52,13 @@ func InitializeMetaData(ctx context.Context) *MetaData {
 	return metaData
 }
 
-
 func GetZeroBounce(ctx context.Context, iocList string, user string, key string, ZeroBounceClient *http.Client) (*ZeroBounceReport, error) {
 	// Build JSON request body
 	reqBody := fmt.Sprintf(`{"api_key":"%s", %s}`, key, iocList)
 	var jsonBody = []byte(reqBody)
 
 	// Build request
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, zerobounceEndpoint, bytes.NewBuffer(jsonBody))
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, ZerobounceEndpoint, bytes.NewBuffer(jsonBody))
 	if err != nil {
 		return nil, err
 	}

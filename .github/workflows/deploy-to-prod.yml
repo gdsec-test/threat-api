@@ -24,18 +24,49 @@ on:
 
 jobs:
   deploy_to_prod:
-    runs-on: self-hosted
+    runs-on: [self-hosted,threat-runners]
     if: github.ref == 'refs/heads/main'
     steps:
+      # Get version to reference in CO
+      - name: Get version
+        id: get-version
+        run: echo ::set-output name=VERSION::${GITHUB_REF#refs/tags/}
+
+      # Checkout the change-order-action
+      - uses: actions/checkout@a12a3943b4bdde767164f792f33f40b04645d846
+        with:
+          repository: gdcorp-actions/change-order-action
+          ref: main
+          token: ${{ secrets.REPO_CLONE_TOKEN_SA_PAT }}
+          path: change-order-action
+
+      # Create Change Order
+      - name: Create Change Order
+        uses: ./change-order-action
+        id: create-co
+        with:
+          snowUser: ${{ secrets.SNOW_USER }}
+          snowPass: ${{ secrets.SNOW_PASS }}
+          snowUrl: https://godaddy.service-now.com
+          action: create
+          owningGroup: ENG-Threat Research
+          tag: ${{ steps.get-version.outputs.VERSION }}
+          environment: production
+          region: us-west-2 # optional, will be appended to description
+          owner: ${{ github.repository_owner }}
+          repo: ${{ github.event.repository.name }}
+          state: InProgress
+
+      # Deploy to prod
       - name: Reset gitconfig
         run: |
           rm -f $HOME/.gitconfig
 
       - name: Checkout
-        uses: actions/checkout@ec3a7ce113134d7a93b817d10a8272cb61118579
+        uses: actions/checkout@a12a3943b4bdde767164f792f33f40b04645d846
 
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@ea7b857d8a33dc2fb4ef5a724500044281b49a5e
+        uses: aws-actions/configure-aws-credentials@05b148adc31e091bafbaf404f745055d4d3bc9d2
         with:
           aws-access-key-id: ${{ secrets.PROD_AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.PROD_AWS_SECRET_ACCESS_KEY }}
@@ -63,7 +94,7 @@ jobs:
           ssh-agent -k
 
       - name: Setup golang environment
-        uses: actions/setup-go@331ce1d993939866bb63c32c6cbbfd48fa76fc57
+        uses: actions/setup-go@f6164bd8c8acb4a71fb2791a8b6c4024ff038dab
         with:
           go-version: '1.17.2'
 
@@ -72,6 +103,7 @@ jobs:
           GIT_SSH_COMMAND: "ssh -o StrictHostKeyChecking=no"
           SECURESERVER_ACCESS_KEY_GHC_SA: ${{ secrets.SECURESERVER_ACCESS_KEY_GHC_SA }}
           GITHUBCLOUD_SSH_PRIVATE_KEY: ${{ secrets.GITHUBCLOUD_SSH_PRIVATE_KEY }}
+          GH_ACCESS_TOKEN: ${{ secrets.REPO_CLONE_TOKEN_SA_PAT }}
           GOPRIVATE: "github.secureserver.net,github.com/gdcorp-*"
         run: |
           eval "$(ssh-agent -s)"
@@ -79,7 +111,7 @@ jobs:
           ssh-add - <<< "${GITHUBCLOUD_SSH_PRIVATE_KEY}"
 
           git config --global url.git@github.secureserver.net:.insteadOf https://github.secureserver.net/
-          git config --global url.git@github.com:gdcorp-.insteadOf https://github.com/gdcorp-
+          git config --global url.https://$GH_ACCESS_TOKEN@github.com/.insteadOf https://github.com/
           go mod tidy
 
           ssh-agent -k
@@ -96,3 +128,20 @@ jobs:
           source venv/bin/activate
           cd sceptre
           ./resources/swagger-ui-bucket-create.sh
+
+      # Close Change Order
+      - name: Close Change Order
+        uses: ./change-order-action
+        with:
+          snowUser: ${{ secrets.SNOW_USER }}
+          snowPass: ${{ secrets.SNOW_PASS }}
+          snowUrl: https://godaddy.service-now.com
+          action: update
+          owningGroup: ENG-Threat Research
+          tag: ${{ steps.get-version.outputs.VERSION }}
+          environment: production
+          region: ${{ github.event.inputs.region }}
+          owner: ${{ github.repository_owner }}
+          repo: ${{ github.event.repository.name }}
+          state: Complete
+          id: ${{ steps.create-co.outputs.id }}

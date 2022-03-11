@@ -32,7 +32,7 @@ const (
 	JSONType DataType = "json"
 )
 
-// IOCType is the
+// IOCType
 type IOCType string
 
 // IOCTypes
@@ -50,12 +50,11 @@ const (
 	SHA256Type  IOCType = "SHA256"
 	SHA512Type  IOCType = "SHA512"
 	IPType      IOCType = "IP"
-	// This is for godaddy machine hostnames
-	HostnameType IOCType = "HOSTNAME"
 	// AWS hostname
 	AWSHostnameType IOCType = "AWSHOSTNAME"
 	// GoDaddy username
 	GoDaddyUsernameType IOCType = "GODADDY_USERNAME"
+	GoDaddyHostnameType IOCType = "GODADDY_HOSTNAME"
 	// Mitre IOCs
 	MitreMatrixType       IOCType = "MITRE_MATRIX"
 	MitreTacticType       IOCType = "MITRE_TACTIC"
@@ -64,6 +63,7 @@ const (
 	MitreMitigationType   IOCType = "MITRE_MITIGATION"
 	MitreGroupType        IOCType = "MITRE_GROUP"
 	MitreSoftwareType     IOCType = "MITRE_SOFTWARE"
+	MitreDetectionType    IOCType = "MITRE_DETECTION"
 )
 
 type IOCTypes []IOCType
@@ -81,9 +81,9 @@ var AllIOCTypes = IOCTypes{
 	SHA256Type,
 	SHA512Type,
 	IPType,
-	HostnameType,
 	AWSHostnameType,
 	GoDaddyUsernameType,
+	GoDaddyHostnameType,
 	MitreTacticType,
 	MitreTechniqueType,
 	MitreSubTechniqueType,
@@ -91,6 +91,7 @@ var AllIOCTypes = IOCTypes{
 	MitreMatrixType,
 	MitreGroupType,
 	MitreSoftwareType,
+	MitreDetectionType,
 }
 
 // IOCTypes.ToString() returns the human-readable strings for all supported IOCs.
@@ -135,7 +136,7 @@ type Doc struct {
 	Description string
 }
 
-// Supports returns true of the module supports the provided iocType
+// Supports returns true if the module supports the provided iocType
 func Supports(m Module, iocType IOCType) bool {
 	for _, t := range m.Supports() {
 		if t == iocType {

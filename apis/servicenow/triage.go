@@ -28,7 +28,7 @@ func (m *TriageModule) GetDocs() *triage.Doc {
 
 // Supports returns true of we support this ioc type
 func (m *TriageModule) Supports() []triage.IOCType {
-	return []triage.IOCType{triage.HostnameType}
+	return []triage.IOCType{triage.GoDaddyHostnameType}
 }
 
 // Triage retrieves data from servicenow - CMDB
@@ -66,7 +66,7 @@ func (m *TriageModule) Triage(ctx context.Context, triageRequest *triage.Request
 	span, ctx = tb.TracerLogger.StartSpan(ctx, "ServiceNow", "servicenow", "cmdb", "get")
 	defer span.End(ctx)
 
-	if triageRequest.IOCsType == triage.HostnameType {
+	if triageRequest.IOCsType == triage.GoDaddyHostnameType {
 		//get the example data that service offers
 		cmdbDataResults, err := m.GetCMDBData(ctx, triageRequest.IOCs)
 		if err != nil {

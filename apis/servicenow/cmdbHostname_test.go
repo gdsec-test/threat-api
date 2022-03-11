@@ -17,7 +17,7 @@ func TestGetCMDBData(t *testing.T) {
 	var triageRequests []*triage.Request
 	triageRequests = append(triageRequests, &triage.Request{
 		IOCs:     []string{"github-actions.cloud.phx3.gdg"},
-		IOCsType: triage.HostnameType,
+		IOCsType: triage.GoDaddyHostnameType,
 	})
 
 	for _, triageRequest := range triageRequests {

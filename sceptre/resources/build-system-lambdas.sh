@@ -9,12 +9,15 @@
 #   can reference them
 
 set -eu
+sudo apt-get install zip unzip libdigest-sha-perl -qy
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.1/install.sh | bash
+source ~/.nvm/nvm.sh
 
 THREAT_API_SOURCE=$(cd `dirname $0`/../.. && pwd)
 
 CODE_BUCKET=$(aws s3api list-buckets --output text --query 'Buckets[?ends_with(Name, `code-bucket`)].Name')
 RESOURCES_DIR=${THREAT_API_SOURCE}/sceptre/resources
-SYSTEM_LAMBDAS="manager responseprocessor"
+SYSTEM_LAMBDAS="manager responseprocessor vulnerabilitywatch"
 
 for LAMBDA in ${SYSTEM_LAMBDAS}
 do
@@ -22,15 +25,25 @@ do
 
     pushd ${THREAT_API_SOURCE}/lambdas/${LAMBDA}
 
-    env GOPRIVATE=github.secureserver.net,github.com/gdcorp-* GOOS=linux GOARCH=amd64 go build
-
-    # Store the SHA1 hash of the resulting binary
-    SHA1HASH=$(shasum "${LAMBDA}" | cut -d' ' -f1)
-    echo ${SHA1HASH} > ${RESOURCES_DIR}/${LAMBDA}.sha1
-
     # Create ZIP file and upload to S3
     rm -f function.zip
-    zip -9q function.zip ${LAMBDA}
+
+    if test -f "./package.json"; then
+        # build NodeJS Lambdas
+        nvm install
+        nvm use
+        npm i
+        zip -9rq function.zip .
+    else
+        # build Golang Lambdas
+        env GOPRIVATE=github.secureserver.net,github.com/gdcorp-* GOOS=linux GOARCH=amd64 go build
+        zip -9q function.zip ${LAMBDA}
+    fi;
+
+    # Store the SHA1 hash of the resulting binary
+    SHA1HASH=$(shasum function.zip | cut -d' ' -f1)
+    echo ${SHA1HASH} > ${RESOURCES_DIR}/${LAMBDA}.sha1
+
     aws s3 cp function.zip s3://${CODE_BUCKET}/${LAMBDA}/${SHA1HASH} --quiet
 
     # Cleanup

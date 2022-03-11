@@ -1,18 +1,21 @@
 #!/usr/bin/env python3
 
+from collections import defaultdict
 import csv
 import datetime
 import io
 import json
 import logging
 import sys
-from typing import Any, Dict, Generator, List
+from urllib.error import HTTPError
+from typing import Any, Dict, Generator, List, Set, Tuple
 
 import boto3
 import trustar
 from enums import EventKind, EventCategory, EventType, EventOutcome
 from event import Event
 from logger import AppSecFormatter, AppSecLogger
+from requests.exceptions import HTTPError
 
 AWS_REGION = "us-west-2"
 MODULE_NAME = "trustar"
@@ -106,28 +109,71 @@ def lookupEmailAddress(ts: trustar.TruStar, address: str) -> Dict[str, Any]:
     return ts.search_indicators(search_term=address, indicator_types=["EMAIL_ADDRESS"])
 
 
+def retrieveCorrelatedIndicators(ts: trustar.TruStar, ioc: str) -> Tuple[Dict[str, Set[str]], str]:
+    """Retrieve a Report object associated with the IoC provided
+    
+    :param ts: TruSTAR object for issuing API queries
+    :param ioc: one IoC to find correlated IoCs
+    :returns: dictionary of correlated IoCs where the keys are the IoC types, and an error message
+    """
+
+    # get all the reports correlated to the provided IoC
+    reports = ts.get_correlated_reports([ioc])
+    if reports is None:
+        err_msg = f"Null returned when retrieving reports correlated with {ioc}"
+        log.error(err_msg)
+        return dict(), err_msg
+
+    # pivot: retrieve all IoCs correlated with those reports
+    unique_iocs = defaultdict(set)
+    for report in reports:
+        for corr_ioc in ts.get_indicators_for_report(report.id):
+            unique_iocs[corr_ioc.type].add(corr_ioc.value)
+
+    return unique_iocs, None
+
+
 def convertIndicator(
     ioc: str, indicators: Generator[trustar.Indicator, None, None]
 ) -> List[Dict[str, Any]]:
     """Convert a generator of Indicator objects into a list of dictionaries"""
     if indicators is not None:
-        return [indicator.to_dict() for indicator in indicators]
+        try:
+            return [indicator.to_dict() for indicator in indicators]
+        except HTTPError as e:
+            # HTTP 429 - rate limiting - may apply here
+            log.error(e)
+            return list()
     log.warn("Failed to look up the artifact: " + ioc)
     return list()
 
 
 def convertTimestamp(epoch: int) -> str:
-    """Convert a timestamp given in epoch milliseconds into a UTC string representation"""
+    """Convert a timestamp given in epoch milliseconds into a UTC string representation
+    
+    :param epoch: Linux epoch time in integer format
+    :returns: time in string form ISO formatted
+    """
     return datetime.datetime.utcfromtimestamp(epoch / 1000).strftime(
         "%Y-%m-%dT%H:%M:%SZ"
     )
 
 
-def convertToCsv(ioc_dict: Dict[str, List[Dict[str, Any]]]) -> str:
-    """Convert the IoC dictionary to a CSV representation"""
+def dumpSet(obj:Set[Any]) -> List[Any]:
+    """Method for casting a set into a list for JSON serialzation"""
+    return list(obj)
+
+
+def convertToCsv(ioc_dict: Dict[str, List[Dict[str, Any]]], ioc_correlations: Dict[str, str]) -> str:
+    """Convert the IoC dictionary to a CSV representation
+    
+    :params ioc_dict: 
+    :params ioc_correlations: 
+    :returns: CSV string
+    """
     output = io.StringIO()
     writer = csv.writer(output, lineterminator="\n")
-    writer.writerow(["ioc", "firstSeen", "lastSeen"])
+    writer.writerow(["ioc", "firstSeen", "lastSeen", "sightings", "correlations"])
     for ioc, indicators in ioc_dict.items():
         for indicator in indicators:
             writer.writerow(
@@ -135,6 +181,8 @@ def convertToCsv(ioc_dict: Dict[str, List[Dict[str, Any]]]) -> str:
                     ioc,
                     convertTimestamp(indicator["firstSeen"]),
                     convertTimestamp(indicator["lastSeen"]),
+                    "0" if indicator["sightings"] is None else str(indicator["sightings"]),
+                    json.dumps(ioc_correlations.get(ioc, dict()), default=dumpSet)
                 ]
             )
     return output.getvalue()
@@ -142,13 +190,14 @@ def convertToCsv(ioc_dict: Dict[str, List[Dict[str, Any]]]) -> str:
 
 def process(job_request: Dict[str, str]) -> Dict[str, str]:
     """Process an individual record"""
+    err_msg = None
+
     try:
         job_id = job_request["jobId"]
         job_request_body = json.loads(job_request["submission"]["body"])
-        print(job_request_body)
     except Exception as e:
-        log.error("Exception while loading the request body")
-        log.error(e)
+        err_msg = "Exception while loading the request body: " + str(e)
+        log.error(err_msg)
         job_id = "UNKNOWN"
         job_request_body = {}
 
@@ -158,13 +207,15 @@ def process(job_request: Dict[str, str]) -> Dict[str, str]:
 
     ts = configureTrustar()
     if ts is None:
-        log.error("Failed to instantiate the TruSTAR object")
+        err_msg = "Failed to instantiate the TruSTAR object"
+        log.error(err_msg)
         job_id = "UNKNOWN"
         job_request_body = {}
 
     ioc_type = job_request_body.get("iocType", "")
     ioc_list = job_request_body.get("iocs", list())
 
+    # get data for the IoCs themselves
     ioc_dict = dict()
     if ioc_type == "DOMAIN":
         log.info("Processing {} domain artifact(s)".format(len(ioc_list)))
@@ -201,12 +252,17 @@ def process(job_request: Dict[str, str]) -> Dict[str, str]:
     else:
         log.warn("{} is an unsupported artifact type".format(ioc_type))
 
+    # search for correlated IoCs
+    ioc_correlations = dict()
+    for ioc in ioc_dict:
+        ioc_corr, err_msg = retrieveCorrelatedIndicators(ts, ioc)
+        if err_msg is not None: break
+        ioc_correlations[ioc] = ioc_corr
+
     response_count = sum(map(len, ioc_dict.values()))
-    metadata = (
-        "1 response found"
-        if response_count == 1
-        else "{} responses found".format(response_count),
-    )
+    metadata = [ f"{response_count} response(s) found" ]
+    if err_msg is not None:
+        metadata.append(err_msg)
     response_message = {
         "module_name": MODULE_NAME,
         "jobId": job_id,
@@ -216,7 +272,7 @@ def process(job_request: Dict[str, str]) -> Dict[str, str]:
                     "Title": "TruSTAR/ISAC Query",
                     "Metadata": metadata,
                     "DataType": "csv",
-                    "Data": convertToCsv(ioc_dict),
+                    "Data": convertToCsv(ioc_dict, ioc_correlations),
                 }
             ]
         ),

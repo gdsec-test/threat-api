@@ -234,7 +234,7 @@ SC_RESOURCES_BLOCK = dedent(
           - Key: CustomIAMRoleNameSuffix
             Value: ThreatRole
           - Key: EnvironmentVariablesJson
-            Value: !Sub '{"SSO_HOST": "${SSOHost}"}'
+            Value: !Sub '{"SSO_HOST": "${SSOHost}", "AWS_DEV_TEAM": "${DevelopmentTeam}", "AWS_DEV_ENV": "${DevelopmentEnvironment}"}'
           - Key: VpcSecurityGroups
             Value: !Ref DXVpcSecurityGroups
           - Key: VpcSubnetIds

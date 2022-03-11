@@ -23,7 +23,7 @@ on:
 
 jobs:
   deploy_to_dev_private:
-    runs-on: self-hosted
+    runs-on: [self-hosted,threat-runners]
 
     steps:
       - name: Reset gitconfig
@@ -31,10 +31,10 @@ jobs:
           rm -f $HOME/.gitconfig
 
       - name: Checkout
-        uses: actions/checkout@ec3a7ce113134d7a93b817d10a8272cb61118579
+        uses: actions/checkout@a12a3943b4bdde767164f792f33f40b04645d846
 
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@ea7b857d8a33dc2fb4ef5a724500044281b49a5e
+        uses: aws-actions/configure-aws-credentials@05b148adc31e091bafbaf404f745055d4d3bc9d2
         with:
           aws-access-key-id: ${{ secrets.DEV_PRIVATE_AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.DEV_PRIVATE_AWS_SECRET_ACCESS_KEY }}
@@ -62,7 +62,7 @@ jobs:
           ssh-agent -k
 
       - name: Setup golang environment
-        uses: actions/setup-go@331ce1d993939866bb63c32c6cbbfd48fa76fc57
+        uses: actions/setup-go@f6164bd8c8acb4a71fb2791a8b6c4024ff038dab
         with:
           go-version: '1.17.2'
 
@@ -71,6 +71,7 @@ jobs:
           GIT_SSH_COMMAND: "ssh -o StrictHostKeyChecking=no"
           SECURESERVER_ACCESS_KEY_GHC_SA: ${{ secrets.SECURESERVER_ACCESS_KEY_GHC_SA }}
           GITHUBCLOUD_SSH_PRIVATE_KEY: ${{ secrets.GITHUBCLOUD_SSH_PRIVATE_KEY }}
+          GH_ACCESS_TOKEN: ${{ secrets.REPO_CLONE_TOKEN_SA_PAT }}
           GOPRIVATE: "github.secureserver.net,github.com/gdcorp-*"
         run: |
           eval "$(ssh-agent -s)"
@@ -78,7 +79,7 @@ jobs:
           ssh-add - <<< "${GITHUBCLOUD_SSH_PRIVATE_KEY}"
 
           git config --global url.git@github.secureserver.net:.insteadOf https://github.secureserver.net/
-          git config --global url.git@github.com:gdcorp-.insteadOf https://github.com/gdcorp-
+          git config --global url.https://$GH_ACCESS_TOKEN@github.com/.insteadOf https://github.com/
           go mod tidy
 
           ssh-agent -k
@@ -88,6 +89,7 @@ jobs:
           source venv/bin/activate
           cd sceptre
           aws s3 cp templates/SC-ServiceLambdas.yaml s3://gd-threattools-dev-private-code-bucket/template/SC-ServiceLambdas.yaml --quiet
+          export NODE_ENV=sdfgdfsg
           sceptre launch -y dev-private/us-west-2
 
       - name: Update swagger

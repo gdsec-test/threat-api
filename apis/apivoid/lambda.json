@@ -1,0 +1,13 @@
+{
+  "handler": "apivoid",
+  "memory-size": "256",
+  "runtime": "go1.x",
+  "timeout": "900",
+  "metadata": {
+    "supportedIOCTypes": [
+      "DOMAIN",
+      "IP",
+      "URL"
+    ]
+  }
+}
