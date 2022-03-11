@@ -266,27 +266,3 @@ func TestGetModulesRequest(t *testing.T) {
 		t.Fatalf("no results returned")
 	}
 }
-
-func TestVulnerabilityRequest(t *testing.T) {
-	resp, err := handler(context.Background(), events.APIGatewayProxyRequest{
-		Path:       version + "/vulnerability",
-		HTTPMethod: "POST",
-	})
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	if resp.StatusCode != 200 {
-		t.Fatalf("bad error code: %d body: %s", resp.StatusCode, resp.Body)
-	}
-
-	ret := map[string]toolbox.LambdaMetadata{}
-	err = json.Unmarshal([]byte(resp.Body), &ret)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	if len(ret) == 0 {
-		t.Fatalf("no results returned")
-	}
-}
