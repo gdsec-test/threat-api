@@ -12,6 +12,7 @@ require (
 	github.com/likexian/whois v1.12.1
 	github.com/likexian/whois-parser v1.20.3
 	github.com/ns3777k/go-shodan/v4 v4.2.0
+	github.com/opencontainers/runc v1.0.2 // indirect
 	github.com/oschwald/geoip2-golang v1.4.0
 	github.com/sirupsen/logrus v1.8.1
 	github.com/stretchr/testify v1.6.1
