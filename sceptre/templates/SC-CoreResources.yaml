@@ -399,6 +399,7 @@ Resources:
             -
               - arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess
               - arn:aws:iam::aws:policy/AmazonSSMReadOnlyAccess
+              - arn:aws:iam::aws:policy/AWSLambdaInvocation-DynamoDB
               - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
               - arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole
               - !Sub arn:aws:iam::${AWS::AccountId}:policy/GD-AWS-KMS-USER
