@@ -216,7 +216,7 @@ Resources:
           - Effect: Allow
             Action:
               - secretsmanager:GetSecretValue
-            Resource: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:/ThreatTools/Integrations/*"
+            Resource: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:*"
 
   ThreatPolicySNS:
     Type: AWS::IAM::ManagedPolicy
