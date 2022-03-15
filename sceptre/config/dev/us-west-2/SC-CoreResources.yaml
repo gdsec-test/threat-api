@@ -16,14 +16,14 @@ hooks:
   before_create:
     - !cmd resources/upload-api-spec.sh
     - !cmd resources/build-system-lambdas.sh
-    - !cmd resources/create-CVE-table.sh
+    - !cmd chmod u+x resources/create-CVE-table.sh && resources/create-CVE-table.sh
   after_create:
     - !cmd rm -f resources/*.sha1
     - !cmd resources/swagger-ui-bucket-create.sh
   before_update:
     - !cmd resources/upload-api-spec.sh
     - !cmd resources/build-system-lambdas.sh
-    - !cmd resources/create-CVE-table.sh
+    - !cmd chmod u+x resources/create-CVE-table.sh && resources/create-CVE-table.sh
   after_update:
     - !cmd rm -f resources/*.sha1
   before_delete:
