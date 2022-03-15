@@ -169,7 +169,7 @@ jobs:
 
       - name: Install NVM to support NodeJS Version, all dependencies, test and Build each code for only Javascript functions
         run: |
-          curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.1/install.sh | bash
+          curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/master/install.sh | bash
           source ~/.bashrc
           source ~/.nvm/nvm.sh
           for d in lambdas/* ; do
