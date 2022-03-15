@@ -10,7 +10,7 @@
 
 set -eu
 sudo apt-get install zip unzip libdigest-sha-perl -qy
-curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.1/install.sh | bash
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/master/install.sh | bash
 source ~/.nvm/nvm.sh
 
 THREAT_API_SOURCE=$(cd `dirname $0`/../.. && pwd)
