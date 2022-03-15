@@ -1,4 +1,4 @@
-#!/usr/bin/node
+#!/usr/bin/env node
 
 const createCVETableIfNotExist = require('../../lambdas/vulnerabilitywatch/src/createCVETableIfNotExist');
 const Logger = require('../../lambdas/vulnerabilitywatch/src/logger');
