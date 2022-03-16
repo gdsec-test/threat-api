@@ -29,6 +29,8 @@ exclude-signatures = [
 "690a025f5b6a0c25440f108e5a89077e13a911c7b9681adac96a73f8a642ec8f", # Hash in RF test cases
 "d16411815091bfdfeab9c60faf620b5892f8fb411c659b69b15105408b9b6d9c", # URL for sharepoint video
 "9c01d35a3f2136cb2550b4ff0528f2db8c2c88b0b98f741a16c9d328f5db0140", # github actions hash
+"29a2ee9bb589ab8c59ed532375c840889ce19e6e9593b664b0eab48de52dfcbf", # github actions hash
+"1a7f12fa476c9e6e8891e680c20cc5c0167450fec61b765011f3d4e3f2bf646c", # github actions hash
 ]
 json = false
 regex = true
