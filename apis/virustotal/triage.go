@@ -26,12 +26,19 @@ const (
 type TriageModule struct {
 }
 
-// GetDocs of this module
-func (m *TriageModule) GetDocs() *triage.Doc {
-	return &triage.Doc{Name: triageModuleName, Description: "Return information about scanned filed and URLs from VirusTotal."}
+// Mock interface for external VirusTotal library Object (vt.Object)
+type VirusTotalObject interface {
+	GetInt64(attr string) (int64, error)
+	GetString(attr string) (s string, err error)
+	Get(attr string) (interface{}, error)
 }
 
-// Supports returns true of we support this IoC type
+// GetDocs of this module
+func (m *TriageModule) GetDocs() *triage.Doc {
+	return &triage.Doc{Name: triageModuleName, Description: "Return information about scanned files and URLs from VirusTotal."}
+}
+
+// Supports returns true if we support this IoC type
 func (m *TriageModule) Supports() []triage.IOCType {
 	return []triage.IOCType{
 		triage.DomainType,
@@ -51,12 +58,10 @@ func (m *TriageModule) ProcessRequest(ctx context.Context, triageRequest *triage
 	tb := toolbox.GetToolbox()
 	virusTotal := vtlib.NewVirusTotal(tb, apiKey)
 
-	// Initialize empty metadata holder
-	metaDataHolder := vtlib.InitializeLastAnalysisMetaData()
-
+	metaDataHolder := vtlib.InitializeLastAnalysisMetaData() // Initialize empty metadata holder
+	var entries []*vt.Object                                 // Initialize slice of entries
 	switch triageRequest.IOCsType {
 	case triage.MD5Type, triage.SHA256Type:
-		var entries []*vt.Object
 		for _, ioc := range triageRequest.IOCs {
 			entry, err := virusTotal.GetHash(ctx, ioc)
 			if err != nil {
@@ -65,10 +70,10 @@ func (m *TriageModule) ProcessRequest(ctx context.Context, triageRequest *triage
 			}
 			entries = append(entries, entry)
 		}
-		triageData.Data = HashesToCsv(entries, metaDataHolder)
+		entriesVTObject := covertToVTObject(entries)
+		triageData.Data = HashesToCsv(entriesVTObject, metaDataHolder)
 		triageData.Metadata = []string{fmt.Sprintf("Found %d matching %s hashes", len(entries), triageRequest.IOCsType)}
 	case triage.DomainType:
-		var entries []*vt.Object
 		for _, ioc := range triageRequest.IOCs {
 			entry, err := virusTotal.GetDomain(ctx, ioc)
 			if err != nil {
@@ -77,10 +82,10 @@ func (m *TriageModule) ProcessRequest(ctx context.Context, triageRequest *triage
 			}
 			entries = append(entries, entry)
 		}
-		triageData.Data = DomainsToCsv(entries, metaDataHolder)
+		entriesVTObject := covertToVTObject(entries)
+		triageData.Data = DomainsToCsv(entriesVTObject, metaDataHolder)
 		triageData.Metadata = []string{fmt.Sprintf("Found %d matching domains", len(entries))}
 	case triage.IPType:
-		var entries []*vt.Object
 		for _, ioc := range triageRequest.IOCs {
 			entry, err := virusTotal.GetAddress(ctx, ioc)
 			if err != nil {
@@ -89,10 +94,10 @@ func (m *TriageModule) ProcessRequest(ctx context.Context, triageRequest *triage
 			}
 			entries = append(entries, entry)
 		}
-		triageData.Data = IpsToCsv(entries, metaDataHolder)
+		entriesVTObject := covertToVTObject(entries)
+		triageData.Data = IpsToCsv(entriesVTObject, metaDataHolder)
 		triageData.Metadata = []string{fmt.Sprintf("Found %d matching IP address", len(entries))}
 	case triage.URLType:
-		var entries []*vt.Object
 		for _, ioc := range triageRequest.IOCs {
 			entry, err := virusTotal.GetURL(ctx, ioc)
 			if err != nil {
@@ -101,7 +106,8 @@ func (m *TriageModule) ProcessRequest(ctx context.Context, triageRequest *triage
 			}
 			entries = append(entries, entry)
 		}
-		triageData.Data = UrlsToCsv(entries, metaDataHolder)
+		entriesVTObject := covertToVTObject(entries)
+		triageData.Data = UrlsToCsv(entriesVTObject, metaDataHolder)
 		triageData.Metadata = []string{fmt.Sprintf("Found %d matching URLs", len(entries))}
 	}
 	currentTime := time.Now()
@@ -151,7 +157,7 @@ func (m *TriageModule) Triage(ctx context.Context, triageRequest *triage.Request
 
 // Dump the relevant fields from the VirusTotal Object returned by
 // the files interface into CSV format.
-func HashesToCsv(payloads []*vt.Object, metaDataHolder *vtlib.MetaData) string {
+func HashesToCsv(payloads []VirusTotalObject, metaDataHolder *vtlib.MetaData) string {
 	resp := bytes.Buffer{}
 	csv := csv.NewWriter(&resp)
 
@@ -249,7 +255,7 @@ func HashesToCsv(payloads []*vt.Object, metaDataHolder *vtlib.MetaData) string {
 
 // Dump the relevant fields from the VirusTotal Object returned by
 // the domains interface into CSV format.
-func DomainsToCsv(payloads []*vt.Object, metaDataHolder *vtlib.MetaData) string {
+func DomainsToCsv(payloads []VirusTotalObject, metaDataHolder *vtlib.MetaData) string {
 	resp := bytes.Buffer{}
 	csv := csv.NewWriter(&resp)
 
@@ -293,7 +299,7 @@ func DomainsToCsv(payloads []*vt.Object, metaDataHolder *vtlib.MetaData) string 
 		badness := math.Tanh(math.Max(-float64(reputation), 0.0) * badnessScalingFactor)
 		lastAnalysis, err := payload.Get("last_analysis_stats")
 		var harmless, malicious, suspicious, timeout, undetected int64
-		if err == nil {
+		if err == nil && lastAnalysis != nil {
 			lastAnalysisMap := lastAnalysis.(map[string]interface{})
 			harmless, malicious, suspicious, timeout, undetected = getLastAnalysisStats(lastAnalysisMap)
 		}
@@ -319,7 +325,7 @@ func DomainsToCsv(payloads []*vt.Object, metaDataHolder *vtlib.MetaData) string 
 
 // Dump the relevant fields from the VirusTotal Object returned by
 // the ip_addresses interface into CSV format.
-func IpsToCsv(payloads []*vt.Object, metaDataHolder *vtlib.MetaData) string {
+func IpsToCsv(payloads []VirusTotalObject, metaDataHolder *vtlib.MetaData) string {
 	resp := bytes.Buffer{}
 	csv := csv.NewWriter(&resp)
 
@@ -389,7 +395,7 @@ func IpsToCsv(payloads []*vt.Object, metaDataHolder *vtlib.MetaData) string {
 
 // Dump the relevant fields from the VirusTotal Object returned by
 // the urls interface into CSV format.
-func UrlsToCsv(payloads []*vt.Object, metaDataHolder *vtlib.MetaData) string {
+func UrlsToCsv(payloads []VirusTotalObject, metaDataHolder *vtlib.MetaData) string {
 	resp := bytes.Buffer{}
 	csv := csv.NewWriter(&resp)
 
@@ -494,4 +500,13 @@ func updateMetaData(metaDataHolder *vtlib.MetaData, harmless int64, malicious in
 	metaDataHolder.Suspicious += suspicious
 	metaDataHolder.Timeout += timeout
 	metaDataHolder.Undetected += undetected
+}
+
+// Helper method to convert a slice of entries (vt.Object type) to a slice of VirusTotalObject entries
+func covertToVTObject(entries []*vt.Object) []VirusTotalObject {
+	entriesVTObject := make([]VirusTotalObject, len(entries))
+	for i, entry := range entries {
+		entriesVTObject[i] = entry
+	}
+	return entriesVTObject
 }
