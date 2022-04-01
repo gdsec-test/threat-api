@@ -117,6 +117,7 @@ func HostsToCsv(hosts []*UrlhausHostEntry) string {
 		"URL Summary",
 		"Spamhaus",
 		"SURBL",
+		"Badness",
 	})
 	// Rows
 	for _, host := range hosts {
@@ -128,6 +129,7 @@ func HostsToCsv(hosts []*UrlhausHostEntry) string {
 			fmt.Sprintf("Seen at %d different URLs", host.Count),
 			host.Blacklists.SpamhausStatus,
 			host.Blacklists.SurblStatus,
+			fmt.Sprintf("%0.2f", host.GetBadnessScore()),
 		}
 		csv.Write(cols)
 	}
@@ -146,6 +148,7 @@ func UrlsToCsv(urls []*UrlhausUrlEntry) string {
 		"Status",
 		"Added",
 		"Taken Down",
+		"Badness",
 	})
 	// Rows
 	for _, url := range urls {
@@ -157,6 +160,7 @@ func UrlsToCsv(urls []*UrlhausUrlEntry) string {
 			url.Status,
 			url.Added,
 			fmt.Sprint(url.Takedown),
+			fmt.Sprintf("%0.2f", url.GetBadnessScore()),
 		}
 		csv.Write(cols)
 	}
@@ -177,6 +181,7 @@ func HashesToCsv(payloads []*UrlhausPayloadEntry) string {
 		"File Size",
 		"First Seen",
 		"URL Summary",
+		"Badness",
 	})
 	// Rows
 	for _, payload := range payloads {
@@ -190,6 +195,7 @@ func HashesToCsv(payloads []*UrlhausPayloadEntry) string {
 			fmt.Sprint(payload.Size),
 			payload.First,
 			fmt.Sprintf("Seen at %d different URLs", payload.UrlCount),
+			fmt.Sprintf("%0.2f", payload.GetBadnessScore()),
 		}
 		csv.Write(cols)
 	}

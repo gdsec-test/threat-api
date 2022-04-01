@@ -101,3 +101,31 @@ type UrlhausUrlEntry struct {
 	Tags       []string                     `json:"tags"`
 	Payloads   []UrlhausUrlPayloadSubentry  `json:"payloads"`
 }
+
+func (m *UrlhausPayloadEntry) GetBadnessScore() float64 {
+	score_sum := 0.0
+	for _, v := range m.VirusTotalResults {
+		score_sum += float64(v.Percent) / 100.0
+	}
+	return score_sum / float64(len(m.VirusTotalResults))
+}
+
+func (m *UrlhausHostEntry) GetBadnessScore() float64 {
+	return m.Blacklists.GetBadnessScore()
+}
+
+func (m *UrlhausHostBlacklistSubentry) GetBadnessScore() float64 {
+	blacklist_hits := 0.0
+	blacklist_count := 2.0
+	if len(m.SpamhausStatus) > 0 {
+		blacklist_hits++
+	}
+	if len(m.SurblStatus) > 0 {
+		blacklist_hits++
+	}
+	return blacklist_hits / blacklist_count
+}
+
+func (m *UrlhausUrlEntry) GetBadnessScore() float64 {
+	return m.Blacklists.GetBadnessScore()
+}
