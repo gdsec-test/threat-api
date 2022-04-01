@@ -1,5 +1,12 @@
 package main
 
+const (
+	notBlacklisted = "not listed"
+	spammerDomain  = "spammer_domain"
+	phishingDomain = "phishing_domain"
+	botnetC2Domain = "botnet_cc_domain"
+)
+
 type urlHausEntry struct {
 	Date      string
 	URL       string
@@ -45,6 +52,7 @@ type UrlhausPayloadEntry struct {
 	Urls              []UrlSubentry        `json:"urls"`
 }
 
+// See https://urlhaus-api.abuse.ch/ for allowed filler values
 type UrlhausHostBlacklistSubentry struct {
 	SurblStatus    string `json:"surbl"`
 	SpamhausStatus string `json:"spamhaus_dbl"`
@@ -100,4 +108,37 @@ type UrlhausUrlEntry struct {
 	Takedown   int                          `json:"takedown_time_seconds,string"`
 	Tags       []string                     `json:"tags"`
 	Payloads   []UrlhausUrlPayloadSubentry  `json:"payloads"`
+}
+
+func (m *UrlhausPayloadEntry) GetBadnessScore() float64 {
+	score_sum := 0.0
+	for _, v := range m.VirusTotalResults {
+		score_sum += float64(v.Percent) / 100.0
+	}
+	return score_sum / float64(len(m.VirusTotalResults))
+}
+
+func (m *UrlhausHostEntry) GetBadnessScore() float64 {
+	return m.Blacklists.GetBadnessScore()
+}
+
+func (m *UrlhausHostBlacklistSubentry) GetBadnessScore() float64 {
+	blacklist_hits := 0.0
+	blacklist_count := 2.0
+	if len(m.SpamhausStatus) > 0 && m.SpamhausStatus != notBlacklisted {
+		if m.SpamhausStatus == spammerDomain || m.SpamhausStatus == phishingDomain || m.SpamhausStatus == botnetC2Domain {
+			blacklist_hits++
+		} else {
+			// Treat "abused_legit_spam", "abused_legit_malware", "abused_legit_phishing", "abused_legit_botnetcc", and "abused_redirector" as less bad by half
+			blacklist_hits += 0.5
+		}
+	}
+	if m.SurblStatus != notBlacklisted {
+		blacklist_hits++
+	}
+	return blacklist_hits / blacklist_count
+}
+
+func (m *UrlhausUrlEntry) GetBadnessScore() float64 {
+	return m.Blacklists.GetBadnessScore()
 }
