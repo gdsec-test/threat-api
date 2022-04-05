@@ -1,0 +1,11 @@
+{
+  "handler": "tanium",
+  "memory-size": "256",
+  "runtime": "go1.x",
+  "timeout": "900",
+  "metadata": {
+    "supportedIOCTypes": [
+
+    ]
+  }
+}
