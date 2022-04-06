@@ -18,9 +18,6 @@ const (
 )
 
 func (m *TriageModule) returnTaniumClient() tn.TaniumClient {
-	// TODO: Set Auth data from triagemodule to TaniumClient
-	// TODO: Add in extra data required for Tanium Authentication
-	// Returning an empty client for now
 	return tn.TaniumClient{}
 }
 

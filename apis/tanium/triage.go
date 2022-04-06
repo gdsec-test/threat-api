@@ -16,7 +16,7 @@ const (
 	triageModuleName = "tanium"
 )
 
-// TriageModule triage module TODO: Change struct after auth
+// TriageModule triage module
 type TriageModule struct {
 	ExampleKey    string
 	ExampleUser   string
@@ -30,8 +30,6 @@ func (m *TriageModule) GetDocs() *triage.Doc {
 
 // Supports returns true of we support this ioc type
 func (m *TriageModule) Supports() []triage.IOCType {
-	//TODO: uncomment to get actual results after Auth
-	//return []triage.IOCType{triage.*********}
 	return nil
 }
 
@@ -40,26 +38,6 @@ func (m *TriageModule) Triage(ctx context.Context, triageRequest *triage.Request
 
 	tb = toolbox.GetToolbox()
 	defer tb.Close(ctx)
-
-	// TODO: Handle secrets after Auth, and have a Tanium initClient here
-	//secret, err := tb.GetFromCredentialsStore(ctx, secretID, nil)
-	//if err != nil {
-	//	triageExampleData.Data = fmt.Sprintf("error in retrieving secrets: %s", err)
-	//	return []*triage.Data{triageExampleData}, err
-	//}
-	//
-	//secretMap := map[string]string{}
-	//if err := json.Unmarshal([]byte(*secret.SecretString), &secretMap); err != nil {
-	//	triageExampleData.Data = fmt.Sprintf("error in unmarshaling secrets: %s", err)
-	//	return []*triage.Data{triageExampleData}, err
-	//}
-	//
-	//if m.ExampleClient == nil {
-	//	m.ExampleClient = http.DefaultClient
-	//}
-	//
-	//m.ExampleKey = secretMap["key"]
-	//m.ExampleUser = secretMap["user"]
 
 	var span *appsectracing.Span
 
@@ -73,15 +51,7 @@ func (m *TriageModule) Triage(ctx context.Context, triageRequest *triage.Request
 		Metadata: []string{},
 	}
 
-	switch triageRequest.IOCsType {
-	case triage.CPEType:
-		//triageDatas = m.triageCPEs(ctx, triageRequest)
-	case triage.CVEType:
-		//triageDatas = m.triageCVEs(ctx, triageRequest)
-	case triage.GoDaddyHostnameType:
-		triageProgramsData, err = m.GetProgramsFromGodaddyMachines(ctx, triageRequest)
-	}
-
+	triageProgramsData, err = m.GetProgramsFromGodaddyMachines(ctx, triageRequest)
 	if err != nil {
 		triageTaniumMachineData.Data = fmt.Sprintf("error from tanium: %s", err)
 	} else {
