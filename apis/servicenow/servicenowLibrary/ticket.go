@@ -42,7 +42,7 @@ func (c *Client) CreateTicket(ctx context.Context, body *Body, fileMap map[strin
 		return nil, err
 	}
 
-	data, err := c.httpRequestAndRead(ctx, http.MethodPost, c.tableURL, bytes.NewBuffer(jsonBytes), "application/json")
+	data, err := c.HttpRequestAndRead(ctx, http.MethodPost, c.tableURL, bytes.NewBuffer(jsonBytes), "application/json")
 	if err != nil {
 		return nil, err
 	}
@@ -60,7 +60,7 @@ func (c *Client) CreateTicket(ctx context.Context, body *Body, fileMap map[strin
 
 	var ticket = new(Ticket)
 	for fileName, byteFileData := range fileMap {
-		err = c.uploadFile(ctx, fileName, byteFileData, result.Response.SysID)
+		err = c.UploadFile(ctx, fileName, byteFileData, result.Response.SysID)
 		if err != nil {
 			if failOnWarning {
 				return nil, err
@@ -83,7 +83,7 @@ func (c *Client) getSysIdFromTicketNumber(ctx context.Context, ticketNumber stri
 
 	getTicketURL := fmt.Sprintf("%s?%s", c.tableURL, paramValues.Encode())
 
-	data, err := c.httpRequestAndRead(ctx, http.MethodGet, getTicketURL, nil, "")
+	data, err := c.HttpRequestAndRead(ctx, http.MethodGet, getTicketURL, nil, "")
 	if err != nil {
 		return "", err
 	}
@@ -143,7 +143,7 @@ func (c *Client) AppendToSnowTicketWorklogWithSysId(ctx context.Context, sysid s
 
 	editTicketURL := fmt.Sprintf("%s?%s", editTicketURLString.String(), paramValues.Encode())
 
-	_, err = c.httpRequest(ctx, http.MethodPut, editTicketURL, bytes.NewReader(jsonBytes), "application/json")
+	_, err = c.HttpRequest(ctx, http.MethodPut, editTicketURL, bytes.NewReader(jsonBytes), "application/json")
 	if err != nil {
 		return err
 	}
@@ -180,7 +180,7 @@ func (c *Client) CloseSnowTicketWithSysId(ctx context.Context, sysid string) err
 
 	editTicketURL := fmt.Sprintf("%s?%s", editTicketURLString.String(), paramValues.Encode())
 
-	_, err = c.httpRequest(ctx, http.MethodPut, editTicketURL, bytes.NewReader(jsonBytes), "application/json")
+	_, err = c.HttpRequest(ctx, http.MethodPut, editTicketURL, bytes.NewReader(jsonBytes), "application/json")
 	if err != nil {
 		return err
 	}
