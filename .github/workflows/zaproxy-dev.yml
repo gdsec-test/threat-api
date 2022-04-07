@@ -36,6 +36,7 @@ jobs:
           aws-region: ${{ env.AWS_REGION }}
           role-to-assume: arn:aws:iam::786677461057:role/GD-AWS-USA-GD-ThreatTools-Dev-Deploy
           role-duration-seconds: 7200 # 2 hours
+          role-skip-session-tagging: true
 
       - name: Login to Amazon ECR
         uses: aws-actions/amazon-ecr-login@b9c809dc38d74cd0fde3c13cc4fe4ac72ebecdae # 2.2.2

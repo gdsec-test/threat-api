@@ -42,6 +42,7 @@ jobs:
           aws-region: us-west-2
           role-to-assume: arn:aws:iam::786677461057:role/GD-AWS-USA-GD-ThreatTools-Dev-Deploy
           role-duration-seconds: 3600
+          role-skip-session-tagging: true
 
       - name: Setup python environment
         run: |
