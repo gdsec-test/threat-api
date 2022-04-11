@@ -149,7 +149,6 @@ jobs:
 #
 #  1. /apis/servicenow/servicenowLibrary/servicenow_test.go
 #  2. /apis/servicenow/servicenowLibrary/table_test.go
-#  3. /apis/splunk/splunk_test.go
 #  4. /apis/shodan/shodan_test.go
 #  5. /apis/virustotal/virustotal_test.go
 

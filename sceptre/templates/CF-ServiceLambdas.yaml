@@ -34,10 +34,6 @@ Parameters:
     Type: String
     Description: SHA1 hash of the shodan lambda source
     Default: ""
-  splunkSHA1:
-    Type: String
-    Description: SHA1 hash of the splunk lambda source
-    Default: ""
   sucuriSHA1:
     Type: String
     Description: SHA1 hash of the sucuri lambda source
@@ -80,7 +76,7 @@ Resources:
       MemorySize: 256
       Role: !Sub arn:aws:iam::${AWS::AccountId}:role/threattools-custom-ThreatRole
       Runtime: go1.x
-      Timeout: 60
+      Timeout: 900
 
   apivoidLambdaPermission:
     DependsOn: apivoidLambdaFunction
@@ -130,7 +126,7 @@ Resources:
       MemorySize: 256
       Role: !Sub arn:aws:iam::${AWS::AccountId}:role/threattools-custom-ThreatRole
       Runtime: go1.x
-      Timeout: 15
+      Timeout: 900
 
   cmapLambdaPermission:
     DependsOn: cmapLambdaFunction
@@ -180,7 +176,7 @@ Resources:
       MemorySize: 256
       Role: !Sub arn:aws:iam::${AWS::AccountId}:role/threattools-custom-ThreatRole
       Runtime: go1.x
-      Timeout: 15
+      Timeout: 900
 
   geoipLambdaPermission:
     DependsOn: geoipLambdaFunction
@@ -230,7 +226,7 @@ Resources:
       MemorySize: 256
       Role: !Sub arn:aws:iam::${AWS::AccountId}:role/threattools-custom-ThreatRole
       Runtime: go1.x
-      Timeout: 15
+      Timeout: 900
 
   nvdLambdaPermission:
     DependsOn: nvdLambdaFunction
@@ -280,7 +276,7 @@ Resources:
       MemorySize: 256
       Role: !Sub arn:aws:iam::${AWS::AccountId}:role/threattools-custom-ThreatRole
       Runtime: go1.x
-      Timeout: 15
+      Timeout: 900
 
   passivetotalLambdaPermission:
     DependsOn: passivetotalLambdaFunction
@@ -330,7 +326,7 @@ Resources:
       MemorySize: 256
       Role: !Sub arn:aws:iam::${AWS::AccountId}:role/threattools-custom-ThreatRole
       Runtime: go1.x
-      Timeout: 15
+      Timeout: 900
 
   recordedfutureLambdaPermission:
     DependsOn: recordedfutureLambdaFunction
@@ -380,7 +376,7 @@ Resources:
       MemorySize: 256
       Role: !Sub arn:aws:iam::${AWS::AccountId}:role/threattools-custom-ThreatRole
       Runtime: go1.x
-      Timeout: 15
+      Timeout: 900
 
   servicenowLambdaPermission:
     DependsOn: servicenowLambdaFunction
@@ -430,7 +426,7 @@ Resources:
       MemorySize: 256
       Role: !Sub arn:aws:iam::${AWS::AccountId}:role/threattools-custom-ThreatRole
       Runtime: go1.x
-      Timeout: 15
+      Timeout: 900
 
   shodanLambdaPermission:
     DependsOn: shodanLambdaFunction
@@ -468,56 +464,6 @@ Resources:
       Type: String
       Value: '{"supportedIOCTypes": ["DOMAIN", "IP"]}'
 
-  splunkLambdaFunction:
-    Type: AWS::Lambda::Function
-    Properties:
-      Code:
-        S3Bucket: !Sub gd-threattools-${AWS::AccountId}-code-bucket
-        S3Key: !Sub splunk/${splunkSHA1}
-      Description: !Sub splunk lambda (${splunkSHA1})
-      FunctionName: splunk
-      Handler: splunk
-      MemorySize: 256
-      Role: !Sub arn:aws:iam::${AWS::AccountId}:role/threattools-custom-ThreatRole
-      Runtime: go1.x
-      Timeout: 300
-
-  splunkLambdaPermission:
-    DependsOn: splunkLambdaFunction
-    Type: AWS::Lambda::Permission
-    Properties:
-      Action: lambda:InvokeFunction
-      FunctionName: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:splunk
-      Principal: sns.amazonaws.com
-      SourceArn: !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:JobRequests
-
-  splunkSNSSubscription:
-    DependsOn: splunkLambdaFunction
-    Type: AWS::SNS::Subscription
-    Properties:
-      Endpoint: !GetAtt splunkLambdaFunction.Arn
-      Protocol: lambda
-      TopicArn: !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:JobRequests
-
-  splunkLambdaEventInvokeConfig:
-    DependsOn: splunkLambdaFunction
-    Type: AWS::Lambda::EventInvokeConfig
-    Properties:
-      DestinationConfig:
-        OnSuccess:
-          Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobResponses
-        OnFailure:
-          Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobFailures
-      FunctionName: splunk
-      Qualifier: $LATEST
-
-  splunkLambdaMetadata:
-    Type: AWS::SSM::Parameter
-    Properties:
-      Name: /ThreatTools/Modules/splunk
-      Type: String
-      Value: '{"supportedIOCTypes": ["GODADDY_USERNAME", "IP", "CVE", "AWSHOSTNAME"], "actions": {"ReadSplunk": {"requiredADGroups": ["ENG-Threat Research", "ENG-DCU", "infosec_response"]}}}'
-
   sucuriLambdaFunction:
     Type: AWS::Lambda::Function
     Properties:
@@ -530,7 +476,7 @@ Resources:
       MemorySize: 256
       Role: !Sub arn:aws:iam::${AWS::AccountId}:role/threattools-custom-ThreatRole
       Runtime: go1.x
-      Timeout: 15
+      Timeout: 900
 
   sucuriLambdaPermission:
     DependsOn: sucuriLambdaFunction
@@ -580,7 +526,7 @@ Resources:
       MemorySize: 128
       Role: !Sub arn:aws:iam::${AWS::AccountId}:role/threattools-custom-ThreatRole
       Runtime: python3.8
-      Timeout: 15
+      Timeout: 900
 
   trustarLambdaPermission:
     DependsOn: trustarLambdaFunction
@@ -630,7 +576,7 @@ Resources:
       MemorySize: 256
       Role: !Sub arn:aws:iam::${AWS::AccountId}:role/threattools-custom-ThreatRole
       Runtime: go1.x
-      Timeout: 15
+      Timeout: 900
 
   urlhausLambdaPermission:
     DependsOn: urlhausLambdaFunction
@@ -680,7 +626,7 @@ Resources:
       MemorySize: 256
       Role: !Sub arn:aws:iam::${AWS::AccountId}:role/threattools-custom-ThreatRole
       Runtime: go1.x
-      Timeout: 15
+      Timeout: 900
 
   urlscanioLambdaPermission:
     DependsOn: urlscanioLambdaFunction
@@ -730,7 +676,7 @@ Resources:
       MemorySize: 256
       Role: !Sub arn:aws:iam::${AWS::AccountId}:role/threattools-custom-ThreatRole
       Runtime: go1.x
-      Timeout: 15
+      Timeout: 900
 
   virustotalLambdaPermission:
     DependsOn: virustotalLambdaFunction
@@ -780,7 +726,7 @@ Resources:
       MemorySize: 256
       Role: !Sub arn:aws:iam::${AWS::AccountId}:role/threattools-custom-ThreatRole
       Runtime: go1.x
-      Timeout: 300
+      Timeout: 900
 
   whoisLambdaPermission:
     DependsOn: whoisLambdaFunction
@@ -830,7 +776,7 @@ Resources:
       MemorySize: 256
       Role: !Sub arn:aws:iam::${AWS::AccountId}:role/threattools-custom-ThreatRole
       Runtime: go1.x
-      Timeout: 15
+      Timeout: 900
 
   zerobounceLambdaPermission:
     DependsOn: zerobounceLambdaFunction

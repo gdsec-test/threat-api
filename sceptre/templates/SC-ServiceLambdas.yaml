@@ -50,10 +50,6 @@ Parameters:
     Type: String
     Description: SHA1 hash of the shodan lambda source
     Default: ""
-  splunkSHA1:
-    Type: String
-    Description: SHA1 hash of the splunk lambda source
-    Default: ""
   sucuriSHA1:
     Type: String
     Description: SHA1 hash of the sucuri lambda source
@@ -106,7 +102,7 @@ Resources:
         - Key: Runtime
           Value: go1.x
         - Key: Timeout
-          Value: 60
+          Value: 900
         - Key: CustomIAMRoleNameSuffix
           Value: ThreatRole
         - Key: EnvironmentVariablesJson
@@ -214,7 +210,7 @@ Resources:
         - Key: Runtime
           Value: go1.x
         - Key: Timeout
-          Value: 15
+          Value: 900
         - Key: CustomIAMRoleNameSuffix
           Value: ThreatRole
         - Key: EnvironmentVariablesJson
@@ -322,7 +318,7 @@ Resources:
         - Key: Runtime
           Value: go1.x
         - Key: Timeout
-          Value: 15
+          Value: 900
         - Key: CustomIAMRoleNameSuffix
           Value: ThreatRole
         - Key: EnvironmentVariablesJson
@@ -430,7 +426,7 @@ Resources:
         - Key: Runtime
           Value: go1.x
         - Key: Timeout
-          Value: 15
+          Value: 900
         - Key: CustomIAMRoleNameSuffix
           Value: ThreatRole
         - Key: EnvironmentVariablesJson
@@ -538,7 +534,7 @@ Resources:
         - Key: Runtime
           Value: go1.x
         - Key: Timeout
-          Value: 15
+          Value: 900
         - Key: CustomIAMRoleNameSuffix
           Value: ThreatRole
         - Key: EnvironmentVariablesJson
@@ -646,7 +642,7 @@ Resources:
         - Key: Runtime
           Value: go1.x
         - Key: Timeout
-          Value: 15
+          Value: 900
         - Key: CustomIAMRoleNameSuffix
           Value: ThreatRole
         - Key: EnvironmentVariablesJson
@@ -754,7 +750,7 @@ Resources:
         - Key: Runtime
           Value: go1.x
         - Key: Timeout
-          Value: 15
+          Value: 900
         - Key: CustomIAMRoleNameSuffix
           Value: ThreatRole
         - Key: EnvironmentVariablesJson
@@ -862,7 +858,7 @@ Resources:
         - Key: Runtime
           Value: go1.x
         - Key: Timeout
-          Value: 15
+          Value: 900
         - Key: CustomIAMRoleNameSuffix
           Value: ThreatRole
         - Key: EnvironmentVariablesJson
@@ -948,114 +944,6 @@ Resources:
           - Key: doNotShutDown
             Value: "true"
 
-  splunkLambdaFunction:
-    Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
-    Properties:
-      ProductName: Lambda
-      ProvisioningArtifactName: 2.3.0
-      ProvisionedProductName: splunkLambdaFunction
-      ProvisioningParameters:
-        - Key: S3Bucket
-          Value: !Sub gd-${DevelopmentTeam}-${DevelopmentEnvironment}-code-bucket
-        - Key: S3Key
-          Value: !Sub splunk/${splunkSHA1}
-        - Key: Handler
-          Value: splunk
-        - Key: LambdaName
-          Value: splunk
-        - Key: LambdaDescription
-          Value: !Sub splunk lambda (${splunkSHA1})
-        - Key: MemorySize
-          Value: 256
-        - Key: Runtime
-          Value: go1.x
-        - Key: Timeout
-          Value: 300
-        - Key: CustomIAMRoleNameSuffix
-          Value: ThreatRole
-        - Key: EnvironmentVariablesJson
-          Value: !Sub '{"SSO_HOST": "${SSOHost}", "AWS_DEV_TEAM": "${DevelopmentTeam}", "AWS_DEV_ENV": "${DevelopmentEnvironment}"}'
-        - Key: VpcSecurityGroups
-          Value: !Ref DXVpcSecurityGroups
-        - Key: VpcSubnetIds
-          Value: !Join [ ",", !Ref DXVpcSubnetIds ]
-      Tags:
-        - Key: doNotShutDown
-          Value: true
-
-  splunkLambdaPermission:
-    DependsOn: splunkLambdaFunction
-    Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
-    Properties:
-      ProductName: LambdaPermission
-      ProvisioningArtifactName: 1.0.1
-      ProvisionedProductName: splunkLambdaPermission
-      ProvisioningParameters:
-        - Key: Action
-          Value: lambda:InvokeFunction
-        - Key: FunctionName
-          Value: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:splunk
-        - Key: Principal
-          Value: sns.amazonaws.com
-        - Key: SourceArn
-          Value: !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:JobRequests
-      Tags:
-        - Key: doNotShutDown
-          Value: true
-
-  splunkSNSSubscription:
-    DependsOn: splunkLambdaFunction
-    Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
-    Properties:
-      ProductName: SNSSubscription
-      ProvisioningArtifactName: 1.0.1
-      ProvisionedProductName: splunkSNSSubscription
-      ProvisioningParameters:
-        - Key: Protocol
-          Value: lambda
-        - Key: TopicArn
-          Value: !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:JobRequests
-        - Key: Endpoint
-          Value: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:splunk
-        - Key: Region
-          Value: !Sub ${AWS::Region}
-      Tags:
-        - Key: doNotShutDown
-          Value: true
-
-  splunkLambdaEventInvokeConfig:
-    DependsOn: splunkLambdaFunction
-    Type: AWS::Lambda::EventInvokeConfig
-    Properties:
-      DestinationConfig:
-        OnSuccess:
-          Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobResponses
-        OnFailure:
-          Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobFailures
-      FunctionName: splunk
-      Qualifier: $LATEST
-
-  splunkLambdaMetadata:
-    Type: AWS::SSM::Parameter
-    Properties:
-      Name: /ThreatTools/Modules/splunk
-      Type: String
-      Value: '{"supportedIOCTypes": ["GODADDY_USERNAME", "IP", "CVE", "AWSHOSTNAME"], "actions": {"ReadSplunk": {"requiredADGroups": ["ENG-Threat Research", "ENG-DCU", "infosec_response"]}}}'
-
-  splunkAppSecSubscriptionFilter:
-    DependsOn: splunkLambdaFunction
-    Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
-    Properties:
-      ProductName: SubscriptionFilterAppSecurity
-      ProvisionedProductName: splunkAppSecSubscriptionFilter
-      ProvisioningArtifactName: 1.0.1
-      ProvisioningParameters:
-          - Key: CloudWatchLogGroup
-            Value: /aws/lambda/splunk
-      Tags:
-          - Key: doNotShutDown
-            Value: "true"
-
   sucuriLambdaFunction:
     Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
     Properties:
@@ -1078,7 +966,7 @@ Resources:
         - Key: Runtime
           Value: go1.x
         - Key: Timeout
-          Value: 15
+          Value: 900
         - Key: CustomIAMRoleNameSuffix
           Value: ThreatRole
         - Key: EnvironmentVariablesJson
@@ -1186,7 +1074,7 @@ Resources:
         - Key: Runtime
           Value: python3.8
         - Key: Timeout
-          Value: 15
+          Value: 900
         - Key: CustomIAMRoleNameSuffix
           Value: ThreatRole
         - Key: EnvironmentVariablesJson
@@ -1294,7 +1182,7 @@ Resources:
         - Key: Runtime
           Value: go1.x
         - Key: Timeout
-          Value: 15
+          Value: 900
         - Key: CustomIAMRoleNameSuffix
           Value: ThreatRole
         - Key: EnvironmentVariablesJson
@@ -1402,7 +1290,7 @@ Resources:
         - Key: Runtime
           Value: go1.x
         - Key: Timeout
-          Value: 15
+          Value: 900
         - Key: CustomIAMRoleNameSuffix
           Value: ThreatRole
         - Key: EnvironmentVariablesJson
@@ -1510,7 +1398,7 @@ Resources:
         - Key: Runtime
           Value: go1.x
         - Key: Timeout
-          Value: 15
+          Value: 900
         - Key: CustomIAMRoleNameSuffix
           Value: ThreatRole
         - Key: EnvironmentVariablesJson
@@ -1618,7 +1506,7 @@ Resources:
         - Key: Runtime
           Value: go1.x
         - Key: Timeout
-          Value: 300
+          Value: 900
         - Key: CustomIAMRoleNameSuffix
           Value: ThreatRole
         - Key: EnvironmentVariablesJson
@@ -1726,7 +1614,7 @@ Resources:
         - Key: Runtime
           Value: go1.x
         - Key: Timeout
-          Value: 15
+          Value: 900
         - Key: CustomIAMRoleNameSuffix
           Value: ThreatRole
         - Key: EnvironmentVariablesJson

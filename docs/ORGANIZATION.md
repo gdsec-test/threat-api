@@ -35,7 +35,7 @@ This git repository contains resources grouped by the following functions:
 
   ```json
   {
-  "handler": "splunk",
+  "handler": "recordedfuture",
   "memory-size": "256",
   "runtime": "go1.x",
   "timeout": "300",
@@ -47,7 +47,7 @@ This git repository contains resources grouped by the following functions:
       "AWSHOSTNAME"
     ],
     "actions": {
-      "ReadSplunk": {
+      "ReadRf": {
         "requiredADGroups": ["ENG-Threat Research", "ENG-DCU", "infosec_response"]
       }
     }
