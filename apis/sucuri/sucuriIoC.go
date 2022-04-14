@@ -93,9 +93,9 @@ func dumpCSV(sucuriResults map[string]*sucuri.SucuriReport) string {
 	}
 	ratingToBadness := map[string]float64{
 		"A": 0.00,
-		"B": 0.17,
+		"B": 0.11,
 		"C": 0.50,
-		"D": 0.83,
+		"D": 0.89,
 		"E": 1.00,
 	}
 
@@ -121,7 +121,7 @@ func dumpCSV(sucuriResults map[string]*sucuri.SucuriReport) string {
 		totalscore := ratingToLongForm[data.Ratings.Total.Rating]
 		secrating := ratingToLongForm[data.Ratings.Security.Rating]
 		domrating := ratingToLongForm[data.Ratings.Domain.Rating]
-		badness := ratingToBadness[data.Ratings.Total.Rating]
+		badness := (ratingToBadness[data.Ratings.Security.Rating] + ratingToBadness[data.Ratings.Domain.Rating]) / 2.0
 
 		cols := []string{
 			ioc,
