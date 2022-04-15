@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/csv"
+	"strconv"
 
 	"sync"
 
@@ -34,7 +35,7 @@ func (m *TriageModule) GetSucuriData(ctx context.Context, triageRequest *triage.
 		default:
 		}
 
-		//Assign operationNAme, operationType, operationSubtype, operationAction properly by the naming standards of Elastic APM
+		// Assign operationNAme, operationType, operationSubtype, operationAction properly by the naming standards of Elastic APM
 		span, spanCtx := tb.TracerLogger.StartSpan(ctx, "SucuriLookup", "sucuri", "", "sucuriIoCLookup")
 
 		go func(ioc string) {
@@ -42,7 +43,6 @@ func (m *TriageModule) GetSucuriData(ctx context.Context, triageRequest *triage.
 				<-threadLimit
 				wg.Done()
 			}()
-
 
 			sucuriResult, err := sucuri.GetSucuri(ctx, ioc, m.SucuriClient)
 			if err != nil {
@@ -64,9 +64,9 @@ func (m *TriageModule) GetSucuriData(ctx context.Context, triageRequest *triage.
 	return sucuriResults, nil
 }
 
-//dumpCSV dumps the triage data to CSV
+// dumpCSV dumps the triage data to CSV
 func dumpCSV(sucuriResults map[string]*sucuri.SucuriReport) string {
-	//Dump data as csv
+	// Dump data as csv
 	resp := bytes.Buffer{}
 	csv := csv.NewWriter(&resp)
 	// Write headers
@@ -80,15 +80,31 @@ func dumpCSV(sucuriResults map[string]*sucuri.SucuriReport) string {
 		"Domain Rating Score",
 		"Suspicious Activity",
 		"Details",
-		"Redirects To:",
+		"Redirects To",
+		"Badness",
 	})
+
+	ratingToLongForm := map[string]string{
+		"A": "Minimal",
+		"B": "Low",
+		"C": "Medium",
+		"D": "High",
+		"E": "Critical",
+	}
+	ratingToBadness := map[string]float64{
+		"A": 0.00,
+		"B": 0.11,
+		"C": 0.50,
+		"D": 0.89,
+		"E": 1.00,
+	}
 
 	for ioc, data := range sucuriResults {
 		if data == nil {
 			continue
 		}
 
-		//Get Strings from Selected Structs
+		// Get Strings from Selected Structs
 		var msgs string
 		var details string
 		for _, malouter := range data.Warnings.Security.Malware {
@@ -101,47 +117,11 @@ func dumpCSV(sucuriResults map[string]*sucuri.SucuriReport) string {
 			redirects = redirects + reds + "\n"
 		}
 
-		var totalscore string
-		switch data.Ratings.Total.Rating {
-		case "A":
-			totalscore = "Minimal"
-		case "B":
-			totalscore = "Low"
-		case "C":
-			totalscore = "Medium"
-		case "D":
-			totalscore = "High"
-		case "E":
-			totalscore = "Critical"
-		}
-
-		var secrating string
-		switch data.Ratings.Security.Rating {
-		case "A":
-			secrating = "Minimal"
-		case "B":
-			secrating = "Low"
-		case "C":
-			secrating = "Medium"
-		case "D":
-			secrating = "High"
-		case "E":
-			secrating = "Critical"
-		}
-
-		var domrating string
-		switch data.Ratings.Domain.Rating {
-		case "A":
-			domrating = "Minimal"
-		case "B":
-			domrating = "Low"
-		case "C":
-			domrating = "Medium"
-		case "D":
-			domrating = "High"
-		case "E":
-			domrating = "Critical"
-		}
+		// Convert the single-letter ratings into more verbose words and a float score value
+		totalscore := ratingToLongForm[data.Ratings.Total.Rating]
+		secrating := ratingToLongForm[data.Ratings.Security.Rating]
+		domrating := ratingToLongForm[data.Ratings.Domain.Rating]
+		badness := (ratingToBadness[data.Ratings.Security.Rating] + ratingToBadness[data.Ratings.Domain.Rating]) / 2.0
 
 		cols := []string{
 			ioc,
@@ -154,13 +134,12 @@ func dumpCSV(sucuriResults map[string]*sucuri.SucuriReport) string {
 			msgs,
 			details,
 			redirects,
+			strconv.FormatFloat(badness, 'f', 2, 64),
 		}
 		csv.Write(cols)
 
 	}
 	csv.Flush()
-
-
 
 	return resp.String()
 }
