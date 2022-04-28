@@ -180,6 +180,7 @@ jobs:
             nvm install
             nvm use
             npm i
+            npm run test
             popd
           fi;
           done
