@@ -44,7 +44,7 @@ repos:
           if test -f "$d/package.json"; then
             pushd .
             cd "$d"
-            npm run test
+            npm run test-ci
             popd
           fi;
           done

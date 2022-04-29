@@ -168,7 +168,7 @@ jobs:
         with:
           node-version: 12.20.0
 
-      - name: Install NVM to support NodeJS Version, all dependencies, test and Build each code for only Javascript functions
+      - name: Install NVM to support NodeJS Version, all dependencies, Test and Build each code for only Javascript functions
         run: |
           curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/master/install.sh | bash
           source ~/.bashrc
@@ -180,11 +180,10 @@ jobs:
             nvm install
             nvm use
             npm i
-            npm run test
+            npm run test-ci
             popd
           fi;
           done
-
 
 # TODO: Remove Test line here
 #          git config --global url.git@github.com:gdcorp-.insteadOf https://github.com/gdcorp-
