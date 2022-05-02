@@ -39,7 +39,6 @@ def initAppSecHandler() -> logging.StreamHandler:
 logging.setLoggerClass(AppSecLogger)
 log = logging.getLogger("app")
 log.setLevel(logging.INFO)
-log.addHandler(initAppSecHandler())
 
 
 def retrieveSecrets() -> Dict[str, str]:
@@ -291,6 +290,8 @@ def handler(event: Dict[str, Any], context) -> List[Dict[str, str]]:
 
     # The input event from SNS contains a list of records, so call process()
     # for each one and return a list of the results.
+    
+    log.addHandler(initAppSecHandler())
 
     try:
         return [
