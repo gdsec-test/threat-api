@@ -171,7 +171,10 @@ func (m *TriageModule) Triage(ctx context.Context, triageRequest *triage.Request
 
 func BadnessScore(reputation int64, analysis *VirusTotalAnalysis) float64 {
 	reputation_normalized := math.Tanh(math.Max(-float64(reputation), 0.0) * badnessScalingFactor)
-	analysis_normalized := float64(analysis.malicious) / float64(analysis.GetAnalysesCount())
+	analysis_normalized := 0.0
+	if analysis.GetAnalysesCount() > 0 {
+		analysis_normalized = float64(analysis.malicious) / float64(analysis.GetAnalysesCount())
+	}
 	return reputation_normalized*reputationComponent + analysis_normalized*analysisComponent
 }
 
@@ -243,7 +246,7 @@ func HashesToCsv(payloads []VirusTotalObject, metaDataHolder *vtlib.MetaData) st
 			continue
 		}
 		badness := 0.0
-		var analysis *VirusTotalAnalysis
+		analysis := new(VirusTotalAnalysis)
 		lastAnalysis, err := payload.Get("last_analysis_stats")
 		if err != nil {
 			lastAnalysisMap := lastAnalysis.(map[string]interface{})
@@ -317,7 +320,7 @@ func DomainsToCsv(payloads []VirusTotalObject, metaDataHolder *vtlib.MetaData) s
 			continue
 		}
 		badness := 0.0
-		var analysis *VirusTotalAnalysis
+		analysis := new(VirusTotalAnalysis)
 		lastAnalysis, err := payload.Get("last_analysis_stats")
 		if err == nil && lastAnalysis != nil {
 			lastAnalysisMap := lastAnalysis.(map[string]interface{})
@@ -387,7 +390,7 @@ func IpsToCsv(payloads []VirusTotalObject, metaDataHolder *vtlib.MetaData) strin
 			continue
 		}
 		badness := 0.0
-		var analysis *VirusTotalAnalysis
+		analysis := new(VirusTotalAnalysis)
 		lastAnalysis, err := payload.Get("last_analysis_stats")
 		if err != nil {
 			lastAnalysisMap := lastAnalysis.(map[string]interface{})
@@ -463,7 +466,7 @@ func UrlsToCsv(payloads []VirusTotalObject, metaDataHolder *vtlib.MetaData) stri
 			continue
 		}
 		badness := 0.0
-		var analysis *VirusTotalAnalysis
+		analysis := new(VirusTotalAnalysis)
 		lastAnalysis, err := payload.Get("last_analysis_stats")
 		if err != nil {
 			lastAnalysisMap := lastAnalysis.(map[string]interface{})
