@@ -126,6 +126,7 @@ func (m *TriageModule) ProcessRequest(ctx context.Context, triageRequest *triage
 	}
 	currentTime := time.Now()
 	triageData.Metadata = append(triageData.Metadata, fmt.Sprintf("The last analysis run on %s returned scan result counts of (harmless/malicious/suspicious/timeout/undetected): %d / %d / %d / %d / %d", currentTime.Format("2006-January-02"), metaDataHolder.Harmless, metaDataHolder.Malicious, metaDataHolder.Suspicious, metaDataHolder.Timeout, metaDataHolder.Undetected))
+	triageData.Metadata = append(triageData.Metadata, fmt.Sprintf("Badness scores are weighted %0.f%% for the reputation and %0.f%% for the anti-virus engine detections", reputationComponent*100.0, analysisComponent*100.0))
 
 	return triageData, nil
 }
