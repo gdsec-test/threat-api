@@ -45,8 +45,12 @@ func TestProcessRequest(t *testing.T) {
 
 			date := time.Now()
 			expectedTriageData := &triage.Data{
-				Title:    "VirusTotal",
-				Metadata: []string{"Found 0 matching MD5 hashes", fmt.Sprintf("The last analysis run on %v returned scan result counts of (harmless/malicious/suspicious/timeout/undetected): 0 / 0 / 0 / 0 / 0", date.Format("2006-January-02"))},
+				Title: "VirusTotal",
+				Metadata: []string{
+					"Found 0 matching MD5 hashes",
+					fmt.Sprintf("The last analysis run on %v returned scan result counts of (harmless/malicious/suspicious/timeout/undetected): 0 / 0 / 0 / 0 / 0", date.Format("2006-January-02")),
+					"Badness scores are weighted 20% for the reputation and 80% for the anti-virus engine detections",
+				},
 				DataType: "",
 				Data:     "MD5,SHA1,SHA256,Magic,File Size,First Seen,Reputation,Harmless,Malicious,Suspicious,Timeout,Undetected,Badness\n",
 			}
