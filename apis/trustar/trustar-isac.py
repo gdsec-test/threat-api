@@ -143,7 +143,7 @@ def convertIndicator(
             # HTTP 429 - rate limiting - may apply here
             log.error(e)
             return list()
-    log.warn("Failed to look up the artifact: " + ioc)
+    log.warning("Failed to look up the artifact: " + ioc)
     return list()
 
 
@@ -166,8 +166,8 @@ def dumpSet(obj:Set[Any]) -> List[Any]:
 def convertToCsv(ioc_dict: Dict[str, List[Dict[str, Any]]], ioc_correlations: Dict[str, str]) -> str:
     """Convert the IoC dictionary to a CSV representation
     
-    :params ioc_dict: 
-    :params ioc_correlations: 
+    :params ioc_dict: dictionary of indicators returned by TruSTAR
+    :params ioc_correlations: correlations to other indicators
     :returns: CSV string
     """
     output = io.StringIO()
@@ -249,7 +249,7 @@ def process(job_request: Dict[str, str]) -> Dict[str, str]:
         log.info("Processing {} CVE artifact(s)".format(len(ioc_list)))
         ioc_dict = {ioc: convertIndicator(ioc, lookupCve(ts, ioc)) for ioc in ioc_list}
     else:
-        log.warn("{} is an unsupported artifact type".format(ioc_type))
+        log.warning("{} is an unsupported artifact type".format(ioc_type))
 
     # search for correlated IoCs
     ioc_correlations = dict()
