@@ -199,7 +199,7 @@ Resources:
         - Key: MemorySize
           Value: 128
         - Key: Runtime
-          Value: python3.6
+          Value: python3.7
         - Key: Timeout
           Value: 5
         - Key: CustomIAMRoleNameSuffix

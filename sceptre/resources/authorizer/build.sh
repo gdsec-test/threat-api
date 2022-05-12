@@ -26,7 +26,7 @@ if [ "${RC}" != "0" ]; then
 
     aws lambda create-function \
         --function-name authorizer \
-        --runtime python3.6 \
+        --runtime python3.7 \
         --role ${ROLE_ARN} \
         --region us-west-2 \
         --timeout 3 \
