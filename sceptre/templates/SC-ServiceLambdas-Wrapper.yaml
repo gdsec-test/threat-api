@@ -37,10 +37,6 @@ Parameters:
     Type: String
     Description: SHA1 hash of the cmap lambda source
     Default: ""
-  geoipSHA1:
-    Type: String
-    Description: SHA1 hash of the geoip lambda source
-    Default: ""
   nvdSHA1:
     Type: String
     Description: SHA1 hash of the nvd lambda source
@@ -102,7 +98,6 @@ Resources:
           DXVpcSubnetIds: !Join [ ",", !Ref DXVpcSubnetIds ]
           apivoidSHA1: !Ref apivoidSHA1
           cmapSHA1: !Ref cmapSHA1
-          geoipSHA1: !Ref geoipSHA1
           nvdSHA1: !Ref nvdSHA1
           passivetotalSHA1: !Ref passivetotalSHA1
           recordedfutureSHA1: !Ref recordedfutureSHA1

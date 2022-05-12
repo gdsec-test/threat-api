@@ -10,10 +10,6 @@ Parameters:
     Type: String
     Description: SHA1 hash of the cmap lambda source
     Default: ""
-  geoipSHA1:
-    Type: String
-    Description: SHA1 hash of the geoip lambda source
-    Default: ""
   nvdSHA1:
     Type: String
     Description: SHA1 hash of the nvd lambda source
@@ -163,56 +159,6 @@ Resources:
       Name: /ThreatTools/Modules/cmap
       Type: String
       Value: '{"supportedIOCTypes": ["DOMAIN"], "actions": {"Run": {"requiredADGroups": ["ENG-Threat Research", "ENG-DCU"]}, "ViewPII": {"requiredADGroups": ["ENG-Threat Research", "ENG-DCU"]}}}'
-
-  geoipLambdaFunction:
-    Type: AWS::Lambda::Function
-    Properties:
-      Code:
-        S3Bucket: !Sub gd-threattools-${AWS::AccountId}-code-bucket
-        S3Key: !Sub geoip/${geoipSHA1}
-      Description: !Sub geoip lambda (${geoipSHA1})
-      FunctionName: geoip
-      Handler: geoip
-      MemorySize: 256
-      Role: !Sub arn:aws:iam::${AWS::AccountId}:role/threattools-custom-ThreatRole
-      Runtime: go1.x
-      Timeout: 900
-
-  geoipLambdaPermission:
-    DependsOn: geoipLambdaFunction
-    Type: AWS::Lambda::Permission
-    Properties:
-      Action: lambda:InvokeFunction
-      FunctionName: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:geoip
-      Principal: sns.amazonaws.com
-      SourceArn: !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:JobRequests
-
-  geoipSNSSubscription:
-    DependsOn: geoipLambdaFunction
-    Type: AWS::SNS::Subscription
-    Properties:
-      Endpoint: !GetAtt geoipLambdaFunction.Arn
-      Protocol: lambda
-      TopicArn: !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:JobRequests
-
-  geoipLambdaEventInvokeConfig:
-    DependsOn: geoipLambdaFunction
-    Type: AWS::Lambda::EventInvokeConfig
-    Properties:
-      DestinationConfig:
-        OnSuccess:
-          Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobResponses
-        OnFailure:
-          Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobFailures
-      FunctionName: geoip
-      Qualifier: $LATEST
-
-  geoipLambdaMetadata:
-    Type: AWS::SSM::Parameter
-    Properties:
-      Name: /ThreatTools/Modules/geoip
-      Type: String
-      Value: '{"supportedIOCTypes": ["IP"]}'
 
   nvdLambdaFunction:
     Type: AWS::Lambda::Function

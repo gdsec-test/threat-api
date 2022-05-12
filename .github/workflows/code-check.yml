@@ -30,10 +30,10 @@ jobs:
           aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $ECR_REGISTRY
 
       - name: Checkout Current Repo to be Scanned
-        uses: actions/checkout@a12a3943b4bdde767164f792f33f40b04645d846
+        uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b
 
       - name: Checkout Tartufo Repo
-        uses: actions/checkout@a12a3943b4bdde767164f792f33f40b04645d846
+        uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b
         with:
           repository: gdcorp-actions/tartufo
           token: ${{ secrets.REPO_CLONE_TOKEN_SA_PAT }} # PAT with read access to gdcorp-actions/tartufo
@@ -51,7 +51,7 @@ jobs:
     runs-on: [self-hosted,threat-runners]
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@a12a3943b4bdde767164f792f33f40b04645d846
+        uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b
 
       - name: Set up Python 3.9.0
         uses: actions/setup-python@98f2ad02fd48d057ee3b4d4f66525b231c3e52b6
@@ -104,7 +104,7 @@ jobs:
         run: |
           rm -f $HOME/.gitconfig
       - name: Checkout this repository
-        uses: actions/checkout@a12a3943b4bdde767164f792f33f40b04645d846
+        uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b
 
 #      TODO: Remove this actual AWS access once we have dependency injection
       - name: Configure AWS credentials
@@ -161,14 +161,14 @@ jobs:
     runs-on: [self-hosted,threat-runners]
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@a12a3943b4bdde767164f792f33f40b04645d846
+        uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b
 
       - name: Set up Javascript 3.9.0
         uses: actions/setup-node@56337c425554a6be30cdef71bf441f15be286854
         with:
           node-version: 12.20.0
 
-      - name: Install NVM to support NodeJS Version, all dependencies, test and Build each code for only Javascript functions
+      - name: Install NVM to support NodeJS Version, all dependencies, Test and Build each code for only Javascript functions
         run: |
           curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/master/install.sh | bash
           source ~/.bashrc
@@ -180,11 +180,10 @@ jobs:
             nvm install
             nvm use
             npm i
-            npm run test
+            npm run test-ci
             popd
           fi;
           done
-
 
 # TODO: Remove Test line here
 #          git config --global url.git@github.com:gdcorp-.insteadOf https://github.com/gdcorp-
