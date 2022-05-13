@@ -2,5 +2,5 @@ awscli
 aws-okta-processor
 boto3
 sceptre
-cffi
+cffi == 1.15.0
 -e git+ssh://git@github.secureserver.net/cloud/sceptre-hooks-resolvers.git#egg=gd-sceptre-hooks-resolvers
