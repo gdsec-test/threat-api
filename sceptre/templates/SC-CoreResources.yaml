@@ -183,7 +183,7 @@ Resources:
     Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
     Properties:
       ProductName: Lambda
-      ProvisioningArtifactName: 2.3.0
+      ProvisioningArtifactName: 2.4.0
       ProvisionedProductName: AuthorizerLambda
       ProvisioningParameters:
         - Key: InlineCode
