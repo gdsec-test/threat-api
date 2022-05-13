@@ -10,7 +10,6 @@ rm -rf package
 mkdir package
 pushd package
 pip install git+ssh://git@github.secureserver.net/auth-contrib/PyAuth.git@7.2.2#egg=PyAuth --target .
-pip install cffi==1.15.0 --target .
 zip -9qrg ../function.zip .
 popd
 rm -rf package
