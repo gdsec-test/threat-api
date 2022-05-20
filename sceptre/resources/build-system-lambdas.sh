@@ -19,11 +19,6 @@ CODE_BUCKET=$(aws s3api list-buckets --output text --query 'Buckets[?ends_with(N
 RESOURCES_DIR=${THREAT_API_SOURCE}/sceptre/resources
 SYSTEM_LAMBDAS="manager responseprocessor vulnerabilitywatch"
 
-pushd .
-cd ${RESOURCES_DIR}/authorizer
-./build.sh
-popd
-
 for LAMBDA in ${SYSTEM_LAMBDAS}
 do
     echo Building ${LAMBDA} lambda
