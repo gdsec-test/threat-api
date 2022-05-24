@@ -29,9 +29,10 @@ func (m *TriageModule) hashReportCreate(ctx context.Context, triageRequest *tria
 		default:
 		}
 
-		span, spanCtx := tb.TracerLogger.StartSpan(ctx, "RecordedFutureHASHLookup", "recordedfuture", "", "hashEnrich")
-
 		go func(hash string) {
+			span, spanCtx := tb.TracerLogger.StartSpan(ctx, "RecordedFutureHASHLookup", "recordedfuture", "", "hashEnrich")
+			defer span.End(spanCtx)
+
 			defer func() {
 				<-threadLimit
 				wg.Done()
@@ -50,7 +51,6 @@ func (m *TriageModule) hashReportCreate(ctx context.Context, triageRequest *tria
 			rfHASHResults[hash] = rfHASHResult
 			rfHASHResultsLock.Unlock()
 		}(hash)
-		span.End(spanCtx)
 	}
 
 	wg.Wait()

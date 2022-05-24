@@ -33,9 +33,10 @@ func (m *TriageModule) cveReportCreate(ctx context.Context, triageRequest *triag
 		default:
 		}
 
-		span, spanCtx := tb.TracerLogger.StartSpan(ctx, "RecordedFutureCVELookup", "recordedfuture", "", "cveEnrich")
-
 		go func(cve string) {
+			span, spanCtx := tb.TracerLogger.StartSpan(ctx, "RecordedFutureCVELookup", "recordedfuture", "", "cveEnrich")
+			span.End(spanCtx)
+
 			defer func() {
 				<-threadLimit
 				wg.Done()
@@ -54,7 +55,6 @@ func (m *TriageModule) cveReportCreate(ctx context.Context, triageRequest *triag
 			rfCVEResults[cve] = rfCVEResult
 			rfCVEResultsLock.Unlock()
 		}(cve)
-		span.End(spanCtx)
 	}
 
 	wg.Wait()
