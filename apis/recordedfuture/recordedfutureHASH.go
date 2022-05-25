@@ -98,6 +98,7 @@ func dumpHASHCSV(rfHASHResults map[string]*rf.HashReport) string {
 		"HashAlgorithm",
 		"ThreatLists",
 		"FileHashes",
+		"Badness",
 	})
 	for _, data := range rfHASHResults {
 		if data == nil {
@@ -122,6 +123,7 @@ func dumpHASHCSV(rfHASHResults map[string]*rf.HashReport) string {
 			data.Data.HashAlgorithm,
 			strings.Join(threatLists, " "),
 			strings.Join(fileHashes, "/"),
+			fmt.Sprintf("%.02f", float64(data.Data.Risk.Score)/100.0),
 		}
 		csv.Write(cols)
 	}

@@ -120,6 +120,7 @@ func dumpCVECSV(rfCVEResults map[string]*rf.CVEReport) string {
 		"Confidentiality",
 		"Integrity",
 		"NVD Description",
+		"Badness",
 	})
 	for _, data := range rfCVEResults {
 		if data == nil {
@@ -154,6 +155,7 @@ func dumpCVECSV(rfCVEResults map[string]*rf.CVEReport) string {
 			data.Data.Cvss.Confidentiality,
 			data.Data.Cvss.Integrity,
 			data.Data.NvdDescription,
+			fmt.Sprintf("%.02f", float64(data.Data.Risk.Score)/100.0),
 		}
 		csv.Write(cols)
 	}
