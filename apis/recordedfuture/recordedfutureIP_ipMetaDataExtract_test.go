@@ -30,7 +30,7 @@ func TestIpMetaDataExtract(t *testing.T) {
 			responseReportString := TestRecordedFutureIPReportData
 			json.Unmarshal([]byte(responseReportString), &RecordedFutureIPReportData)
 
-			expectedMetadata := []string{"2 Risky IP's in same CIDR as 123.45.67.89"}
+			expectedMetadata := []string{"2 risky IP addresses in same CIDR block as 123.45.67.89"}
 
 			reports := map[string]*rf.IPReport{
 				"123.45.67.89": RecordedFutureIPReportData,

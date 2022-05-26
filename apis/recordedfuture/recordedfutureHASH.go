@@ -29,9 +29,10 @@ func (m *TriageModule) hashReportCreate(ctx context.Context, triageRequest *tria
 		default:
 		}
 
-		span, spanCtx := tb.TracerLogger.StartSpan(ctx, "RecordedFutureHASHLookup", "recordedfuture", "", "hashEnrich")
-
 		go func(hash string) {
+			span, spanCtx := tb.TracerLogger.StartSpan(ctx, "RecordedFutureHASHLookup", "recordedfuture", "", "hashEnrich")
+			defer span.End(spanCtx)
+
 			defer func() {
 				<-threadLimit
 				wg.Done()
@@ -50,7 +51,6 @@ func (m *TriageModule) hashReportCreate(ctx context.Context, triageRequest *tria
 			rfHASHResults[hash] = rfHASHResult
 			rfHASHResultsLock.Unlock()
 		}(hash)
-		span.End(spanCtx)
 	}
 
 	wg.Wait()
@@ -98,6 +98,7 @@ func dumpHASHCSV(rfHASHResults map[string]*rf.HashReport) string {
 		"HashAlgorithm",
 		"ThreatLists",
 		"FileHashes",
+		"Badness",
 	})
 	for _, data := range rfHASHResults {
 		if data == nil {
@@ -122,6 +123,7 @@ func dumpHASHCSV(rfHASHResults map[string]*rf.HashReport) string {
 			data.Data.HashAlgorithm,
 			strings.Join(threatLists, " "),
 			strings.Join(fileHashes, "/"),
+			fmt.Sprintf("%.02f", float64(data.Data.Risk.Score)/100.0),
 		}
 		csv.Write(cols)
 	}

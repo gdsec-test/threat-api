@@ -83,12 +83,12 @@ func ipMetaDataExtract(rfIPResults map[string]*rf.IPReport) []string {
 	// Add the final results to Metadata
 	if len(riskyCIDRIPs) > 0 {
 		for ip, count := range riskyCIDRIPs {
-			triageMetaData = append(triageMetaData, fmt.Sprintf("%d Risky IP's in same CIDR as %s", count, ip))
+			triageMetaData = append(triageMetaData, fmt.Sprintf("%d risky IP addresses in same CIDR block as %s", count, ip))
 		}
 	}
 
 	if riskIP > 0 {
-		triageMetaData = append(triageMetaData, fmt.Sprintf("%d IP's have a risk score > 60", riskIP))
+		triageMetaData = append(triageMetaData, fmt.Sprintf("%d IP addresses have a risk score greater than 60", riskIP))
 	}
 	return triageMetaData
 }
@@ -107,6 +107,7 @@ func dumpIPCSV(rfIPResults map[string]*rf.IPReport) string {
 		"First Seen",
 		"Last Seen",
 		"ThreatLists",
+		"Badness",
 	})
 	for _, data := range rfIPResults {
 		if data == nil {
@@ -128,6 +129,7 @@ func dumpIPCSV(rfIPResults map[string]*rf.IPReport) string {
 			data.Data.Timestamps.FirstSeen.String(),
 			data.Data.Timestamps.LastSeen.String(),
 			strings.Join(threatLists, " "),
+			fmt.Sprintf("%.02f", float64(data.Data.Risk.Score)/100.0),
 		}
 		csv.Write(cols)
 	}
