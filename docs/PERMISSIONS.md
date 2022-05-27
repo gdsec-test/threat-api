@@ -7,11 +7,6 @@ We currently will check JOMAX AD groups.  In the future GoDaddy will use a new R
 
 This list is a plan on what permissions to give to what module.  In the future, this will likely be dynamically generated from the code / parameters.
 
-* splunk
-  * CVE - All infosec
-  * Failed ssh logins (IPs) - All infosec
-  * Failed okta logins (IPs) - All infosec
-  * General logs (any mention of any IOC) - All infosec
 * geoip
   * All infosec
   * Any GoDaddy employee TBD

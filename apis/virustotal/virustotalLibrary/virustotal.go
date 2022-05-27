@@ -54,6 +54,7 @@ func (m *VirusTotal) GetHash(ctx context.Context, hash string) (*vt.Object, erro
 		span.AddError(err)
 		return nil, err
 	}
+
 	return obj, nil
 }
 
@@ -69,6 +70,7 @@ func (m *VirusTotal) GetURL(ctx context.Context, _url string) (*vt.Object, error
 		span.AddError(err)
 		return nil, err
 	}
+
 	return obj, nil
 }
 
@@ -82,6 +84,7 @@ func (m *VirusTotal) GetDomain(ctx context.Context, domain string) (*vt.Object, 
 		span.AddError(err)
 		return nil, err
 	}
+
 	return obj, nil
 }
 
@@ -94,5 +97,6 @@ func (m *VirusTotal) GetAddress(ctx context.Context, ip string) (*vt.Object, err
 	if err != nil {
 		return nil, err
 	}
+
 	return obj, nil
 }

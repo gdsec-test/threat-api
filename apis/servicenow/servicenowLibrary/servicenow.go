@@ -81,7 +81,7 @@ func New(snowURL string, username string, password string, tableName string) (*C
 }
 
 // Utility function to upload files
-func (c *Client) uploadFile(ctx context.Context, fileName string, byteFileData []byte, sysID string) error {
+func (c *Client) UploadFile(ctx context.Context, fileName string, byteFileData []byte, sysID string) error {
 	paramValues := url.Values{
 		"file_name":    []string{fileName},
 		"table_name":   []string{c.tableName},
@@ -90,7 +90,7 @@ func (c *Client) uploadFile(ctx context.Context, fileName string, byteFileData [
 
 	uploadURL := fmt.Sprintf("%s?%s", c.fileUploadURL, paramValues.Encode())
 
-	_, err := c.httpRequest(ctx, http.MethodPost, uploadURL, bytes.NewReader(byteFileData), "application/octet-stream")
+	_, err := c.HttpRequest(ctx, http.MethodPost, uploadURL, bytes.NewReader(byteFileData), "application/octet-stream")
 	if err != nil {
 		return err
 	}
@@ -98,8 +98,8 @@ func (c *Client) uploadFile(ctx context.Context, fileName string, byteFileData [
 	return err
 }
 
-func (c *Client) httpRequestAndRead(ctx context.Context, method, url string, body io.Reader, contentType string) ([]byte, error) {
-	resp, err := c.httpRequest(ctx, method, url, body, contentType)
+func (c *Client) HttpRequestAndRead(ctx context.Context, method, url string, body io.Reader, contentType string) ([]byte, error) {
+	resp, err := c.HttpRequest(ctx, method, url, body, contentType)
 	if err != nil {
 		return nil, err
 	}
@@ -112,7 +112,7 @@ func (c *Client) httpRequestAndRead(ctx context.Context, method, url string, bod
 	return data, nil
 }
 
-func (c *Client) httpRequest(ctx context.Context, method, url string, body io.Reader, contentType string) (*http.Response, error) {
+func (c *Client) HttpRequest(ctx context.Context, method, url string, body io.Reader, contentType string) (*http.Response, error) {
 	req, err := http.NewRequestWithContext(ctx, method, url, body)
 	if err != nil {
 		return nil, err

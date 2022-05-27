@@ -16,7 +16,7 @@ const (
 	maxThreads = 10
 )
 
-type rowsResponse struct {
+type RowsResponse struct {
 	Result []map[string]interface{} `json:"result"`
 }
 
@@ -99,9 +99,8 @@ func (c *Client) GetRows(ctx context.Context, query string, additionalURLValues 
 			url := fmt.Sprintf("%s?%s", c.tableURL, params.Encode())
 
 			// Make request
-			resp, err := c.httpRequest(ctx, http.MethodGet, url, nil, "")
+			resp, err := c.HttpRequest(ctx, http.MethodGet, url, nil, "")
 			if err != nil {
-				// TODO: Maybe retry a few times
 				markDone(err)
 				return
 			}
@@ -120,7 +119,7 @@ func (c *Client) GetRows(ctx context.Context, query string, additionalURLValues 
 			}
 
 			// Parse
-			results := rowsResponse{}
+			results := RowsResponse{}
 			decoder := json.NewDecoder(resp.Body)
 			err = decoder.Decode(&results)
 			resp.Body.Close()
@@ -162,7 +161,7 @@ func (c *Client) GetUniqueRow(ctx context.Context, sysID string, query string, a
 	url := fmt.Sprintf("%s/%s?%s", c.tableURL, sysID, params.Encode())
 
 	//Make request
-	resp, err := c.httpRequest(ctx, http.MethodGet, url, nil, "")
+	resp, err := c.HttpRequest(ctx, http.MethodGet, url, nil, "")
 	if err != nil {
 		return nil, err
 	}

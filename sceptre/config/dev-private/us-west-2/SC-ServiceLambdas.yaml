@@ -5,13 +5,11 @@ parameters:
   SSOHost: {{sso_host}}
   apivoidSHA1: !file_contents resources/apivoid.sha1
   cmapSHA1: !file_contents resources/cmap.sha1
-  geoipSHA1: !file_contents resources/geoip.sha1
   nvdSHA1: !file_contents resources/nvd.sha1
   passivetotalSHA1: !file_contents resources/passivetotal.sha1
   recordedfutureSHA1: !file_contents resources/recordedfuture.sha1
   servicenowSHA1: !file_contents resources/servicenow.sha1
   shodanSHA1: !file_contents resources/shodan.sha1
-  splunkSHA1: !file_contents resources/splunk.sha1
   sucuriSHA1: !file_contents resources/sucuri.sha1
   trustarSHA1: !file_contents resources/trustar.sha1
   urlhausSHA1: !file_contents resources/urlhaus.sha1

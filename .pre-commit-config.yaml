@@ -37,8 +37,17 @@ repos:
   - repo: local
     hooks:
       - id: unit-tests
-        name: unit-tests
-        entry: go test ./... -tags runTests -gcflags=all=-l -cover
+        name: unit tests running
+        entry: |
+          go test ./... -tags runTests -gcflags=all=-l -cover
+          for d in lambdas/* ; do
+          if test -f "$d/package.json"; then
+            pushd .
+            cd "$d"
+            npm run test-ci
+            popd
+          fi;
+          done
         language: system
         stages: [push]
 default_stages: [commit, push]
