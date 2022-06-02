@@ -84,8 +84,6 @@ jobs:
           extra-index-url= https://$PYTHON_ARTIFACTORY_USER:$PYTHON_ARTIFACTORY_PASS@artifactory.secureserver.net/artifactory/api/pypi/python-virt/simple
           EOF
           export PIP_CONFIG_FILE=$(pwd)/pip.conf
-          echo AAAAAAAAA
-          echo $PIP_CONFIG_FILE
           echo "PIP_CONFIG_FILE=$PIP_CONFIG_FILE" >> $GITHUB_ENV
           pip install -U pip
 
