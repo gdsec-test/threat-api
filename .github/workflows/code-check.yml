@@ -75,16 +75,20 @@ jobs:
           source venv/bin/activate
           export PYTHON_ARTIFACTORY_USER=$(aws secretsmanager get-secret-value --secret-id python_creds --query SecretString --output text | jq -r .user)
           export PYTHON_ARTIFACTORY_PASS=$(aws secretsmanager get-secret-value --secret-id python_creds --query SecretString --output text | jq -r .pass)
-          touch $HOME/.config/pip/pip.conf
-          cat > $HOME/.config/pip/pip.conf <<EOF
+          touch ./pip.conf
+          cat > ./pip.conf <<EOF
           [global]
           index-url = https://pypi.python.org/simple
           trusted-host = pypi.python.org
                         artifactory.secureserver.net
           extra-index-url= https://$PYTHON_ARTIFACTORY_USER:$PYTHON_ARTIFACTORY_PASS@artifactory.secureserver.net/artifactory/api/pypi/python-virt/simple
           EOF
-
+          export PIP_CONFIG_FILE=$(pwd)/pip.conf
+          echo AAAAAAAAA
+          echo $PIP_CONFIG_FILE
+          echo "PIP_CONFIG_FILE=$PIP_CONFIG_FILE" >> $GITHUB_ENV
           pip install -U pip
+
       - name: Install Python dependencies
         env:
           SECURESERVER_ACCESS_KEY_GHC_SA: ${{ secrets.SECURESERVER_ACCESS_KEY_GHC_SA }}
