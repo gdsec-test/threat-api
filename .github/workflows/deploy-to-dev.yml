@@ -48,6 +48,8 @@ jobs:
         run: |
           python3 -m venv venv
           source venv/bin/activate
+          ./getpipconf.sh
+          echo "PIP_CONFIG_FILE=$PIP_CONFIG_FILE" >> $GITHUB_ENV
           pip install -U pip
 
       - name: Install python dependencies
