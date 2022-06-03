@@ -53,6 +53,16 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b
 
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@05b148adc31e091bafbaf404f745055d4d3bc9d2
+        with:
+          aws-access-key-id: ${{ secrets.DEV_PRIVATE_AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.DEV_PRIVATE_AWS_SECRET_ACCESS_KEY }}
+          role-to-assume: arn:aws:iam::345790377847:role/GD-AWS-USA-GD-ThreatTools-Dev-Private-Deploy
+          role-duration-seconds: 1200                                 # default max is 7200
+          aws-region: us-west-2                                       # set region you want to target
+          role-skip-session-tagging: true
+
       - name: Set up Python 3.9.0
         uses: actions/setup-python@98f2ad02fd48d057ee3b4d4f66525b231c3e52b6
         with:
@@ -63,7 +73,20 @@ jobs:
         run: |
           python3 -m venv venv
           source venv/bin/activate
+          export PYTHON_ARTIFACTORY_USER=$(aws secretsmanager get-secret-value --secret-id python_creds --query SecretString --output text | jq -r .user)
+          export PYTHON_ARTIFACTORY_PASS=$(aws secretsmanager get-secret-value --secret-id python_creds --query SecretString --output text | jq -r .pass)
+          touch ./pip.conf
+          cat > ./pip.conf <<EOF
+          [global]
+          index-url = https://pypi.python.org/simple
+          trusted-host = pypi.python.org
+                        artifactory.secureserver.net
+          extra-index-url= https://$PYTHON_ARTIFACTORY_USER:$PYTHON_ARTIFACTORY_PASS@artifactory.secureserver.net/artifactory/api/pypi/python-virt/simple
+          EOF
+          export PIP_CONFIG_FILE=$(pwd)/pip.conf
+          echo "PIP_CONFIG_FILE=$PIP_CONFIG_FILE" >> $GITHUB_ENV
           pip install -U pip
+
       - name: Install Python dependencies
         env:
           SECURESERVER_ACCESS_KEY_GHC_SA: ${{ secrets.SECURESERVER_ACCESS_KEY_GHC_SA }}

@@ -166,7 +166,7 @@ Resources:
       Handler: index.handler
       MemorySize: 128
       Role: !GetAtt AuthorizerRole.Arn
-      Runtime: python3.6
+      Runtime: python3.7
       Timeout: 5
 
   ThreatPolicyDynamoDB:
