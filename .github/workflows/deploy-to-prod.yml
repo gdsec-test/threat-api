@@ -79,8 +79,6 @@ jobs:
         run: |
           python3 -m venv venv
           source venv/bin/activate
-          ./getpipconf.sh
-          echo "PIP_CONFIG_FILE=$PIP_CONFIG_FILE" >> $GITHUB_ENV
           pip install -U pip
 
       - name: Install python dependencies
@@ -92,6 +90,8 @@ jobs:
           ssh-add - <<< "${SECURESERVER_ACCESS_KEY_GHC_SA}"
 
           source venv/bin/activate
+          chmod u+x ./getpipconf.sh
+          ./getpipconf.sh
           pip install -U -r requirements.txt -r requirements-test.txt
 
           ssh-agent -k
