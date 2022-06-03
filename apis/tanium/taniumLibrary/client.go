@@ -3,73 +3,74 @@ package taniumLibrary
 import (
 	"context"
 	"crypto/tls"
+	"encoding/json"
 	"fmt"
-	"github.secureserver.net/go/sso-client/sso"
 	"net/http"
 	"strings"
+
+	"github.com/gdcorp-infosec/threat-api/lambdas/common/toolbox"
 )
 
 // APIVersion is the currently-supported version of go-tanium for the Tanium API
-const APIVersion = 2
+const (
+	APIVersion = 2
+	secretID   = "/ThreatTools/Integrations/tanium"
+)
 
 // Config contains optional fields that can be set by the caller prior to initializing a new TaniumClient
 type Config struct {
-	HTTPClient  *http.Client // Used for customizing HTTP requests
-	baseURL     string
-	username    string
-	password    string
-	domain      string
-	Token       string
-	Session     string
-	Certificate *tls.Certificate
-	SSOEnv      sso.Environment
+	HTTPClient *http.Client // Used for customizing HTTP requests
+	baseURL    string
+	APIKey     string
 }
 
 // TaniumClient represents an authenticated session to a configured Tanium host, and is used for communication to the Tanium API.
-//
-// A *TaniumClient should only be used after calling NewTaniumClient(), otherwise the client will need to be manually authenticated with a call to (*TaniumClient).Login()
 type TaniumClient struct {
 	config *Config
-
-	session string
-	jwt     string
 }
 
 // NewTaniumClient creates a new *TaniumClient that is authenticated to the provided Tanium host using the provided credentials.
 //
 // The returned *TaniumClient should be used for interactions with the Tanium API, unless any errors have been returned
-func NewTaniumClient(ctx context.Context, username, password, domain, host string, config *Config) (*TaniumClient, error) {
-	configCopy := *config
+func NewTaniumClient(ctx context.Context, host string) (*TaniumClient, error) {
+	var configCopy Config
 	c := &TaniumClient{
 		config: &configCopy,
 	}
+
+	tr := &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+	}
+
 	if c.config.HTTPClient == nil {
-		c.config.HTTPClient = http.DefaultClient
+		client := &http.Client{Transport: tr}
+		c.config.HTTPClient = client
 	}
 
 	c.config.baseURL = strings.Trim(host, "/") + fmt.Sprintf("/api/v%d", APIVersion)
-	c.config.username = username
-	c.config.password = password
-	c.config.domain = domain
 
-	if c.config.Token != "" {
-		c.session = c.config.Token
-	} else if c.config.Session != "" {
-		c.session = c.config.Session
-		return c, nil
+	tb := toolbox.GetToolbox()
+	defer tb.Close(ctx)
+
+	secret, err := tb.GetFromCredentialsStore(ctx, secretID, nil)
+	if err != nil {
+		return nil, err
 	}
 
-	err := c.Login(ctx) // TODO-Tanium: Modify this later with API access
+	secretMap := map[string]string{}
+	if err := json.Unmarshal([]byte(*secret.SecretString), &secretMap); err != nil {
+		return nil, err
+	}
+	c.config.APIKey = secretMap["APIKey"]
 
 	return c, err
 }
 
-// GET performs a HTTP GET request to the specified endpoint path using the authenticated TaniumClient's session.
+// GET performs HTTP GET request to the specified endpoint path using the authenticated TaniumClient's session.
 //
 // The JSON contents of the data field for the HTTP response are returned as a []byte, allowing the caller to unmarsal the results at a later time.
 // The HTTP response's status code and any encountered errors are returned as well.
 func (c *TaniumClient) GET(ctx context.Context, path string) ([]byte, int, error) {
-	c.ValidateSession(ctx) //TODO-Tanium: might not be needed with API access, else add it
 
 	headers := c.getHeaders()
 	return MakeRequest(ctx, "GET", c.config.baseURL+path, c.config.HTTPClient, &headers, nil)
@@ -80,7 +81,6 @@ func (c *TaniumClient) GET(ctx context.Context, path string) ([]byte, int, error
 // The JSON contents of the data field for the HTTP response are returned as a []byte, allowing the caller to unmarsal the results at a later time.
 // The HTTP response's status code and any encountered errors are returned as well.
 func (c *TaniumClient) POST(ctx context.Context, path string, data interface{}) ([]byte, int, error) {
-	c.ValidateSession(ctx) //TODO-Tanium: might not be needed with API access, else add it
 
 	headers := c.getHeaders()
 	return MakeRequest(ctx, "POST", c.config.baseURL+path, c.config.HTTPClient, &headers, data)

@@ -61,6 +61,10 @@ Parameters:
     Type: String
     Description: SHA1 hash of the sucuri lambda source
     Default: ""
+  taniumSHA1:
+    Type: String
+    Description: SHA1 hash of the tanium lambda source
+    Default: ""
   trustarSHA1:
     Type: String
     Description: SHA1 hash of the trustar lambda source
@@ -104,6 +108,7 @@ Resources:
           servicenowSHA1: !Ref servicenowSHA1
           shodanSHA1: !Ref shodanSHA1
           sucuriSHA1: !Ref sucuriSHA1
+          taniumSHA1: !Ref taniumSHA1
           trustarSHA1: !Ref trustarSHA1
           urlhausSHA1: !Ref urlhausSHA1
           urlscanioSHA1: !Ref urlscanioSHA1

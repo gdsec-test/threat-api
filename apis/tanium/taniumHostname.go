@@ -5,21 +5,18 @@ import (
 	"context"
 	"encoding/csv"
 	"fmt"
+	"sync"
+
 	tn "github.com/gdcorp-infosec/threat-api/apis/tanium/taniumLibrary"
 	"github.com/gdcorp-infosec/threat-api/lambdas/common/triagelegacyconnector/triage"
-	"sync"
 )
 
 const (
-	maxThreadCount = 5
-	rowLimit       = 100
-
+	maxThreadCount            = 5
+	rowLimit                  = 100
+	host                      = "https://tanium-dev.int.gdcorp.tools" // will be added to parameter store while cleaning up in next phase
 	installedSoftwareQuestion = "Get Installed Applications from all machines with Computer Name matches %s"
 )
-
-func (m *TriageModule) returnTaniumClient() tn.TaniumClient {
-	return tn.TaniumClient{}
-}
 
 // GetProgramsFromGodaddyMachines returns the Tanium results for the questions that are queried
 func (m *TriageModule) GetProgramsFromGodaddyMachines(ctx context.Context, triageRequest *triage.Request) (map[string]chan tn.Row, error) {
@@ -72,7 +69,7 @@ func (m *TriageModule) GetProgramsFromGodaddyMachines(ctx context.Context, triag
 // performTaniumSearch given a Tanium question, create the question, wait for rowLimit results (or some maximum) to be available in Tanium, and return the column names, a channel of results, and an error if present
 
 func (m *TriageModule) performTaniumSearch(ctx context.Context, questionString string) ([]string, chan tn.Row, error) {
-	c := m.returnTaniumClient()
+	c, err := tn.NewTaniumClient(ctx, host)
 
 	parsable, err := c.CanParse(ctx, questionString)
 	if err != nil {

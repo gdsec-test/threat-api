@@ -14,10 +14,6 @@ const (
 
 // CanParse returns whether or not the input Tanium question can be created as an ask-able question with the Tanium server's sensors and packages.
 func (c *TaniumClient) CanParse(ctx context.Context, question string) (bool, error) {
-	valid, err := c.ValidateSession(ctx)
-	if err != nil || !valid {
-		return false, err
-	}
 
 	payload := struct {
 		Text string `json:"text"`
@@ -29,6 +25,8 @@ func (c *TaniumClient) CanParse(ctx context.Context, question string) (bool, err
 	if err != nil {
 		return false, err
 	}
+
+	// one or many results, first is closest - same as you submitted best practice. When it differs - check on logs and questions
 
 	if status != 200 {
 		return false, fmt.Errorf("received non-200 status code: %d", status)
@@ -75,6 +73,7 @@ func (c *TaniumClient) CreateQuestion(ctx context.Context, question string) (*Qu
 
 // GetDefinition populates the provided Question with detailed information about its creation/supported sensors/etc. from Tanium based on the question's Id, returning any errors received.
 func (q *Question) GetDefinition(ctx context.Context) error {
+
 	recvdata, status, err := q.client.GET(ctx, fmt.Sprintf("/questions/%d", q.Id))
 	if err != nil {
 		return err
@@ -95,6 +94,7 @@ func (q *Question) GetDefinition(ctx context.Context) error {
 // This information *does not* contain any rows of data, but is useful for determining when the asked question has received all available responses.
 // To retrieve responses to the Question, call GetResults.
 func (q *Question) GetResultInfo(ctx context.Context) ([]ResultSet, error) {
+
 	recvdata, status, err := q.client.GET(ctx, fmt.Sprintf("/result_info/question/%d", q.Id))
 	if err != nil {
 		return nil, err

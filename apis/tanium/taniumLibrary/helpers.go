@@ -79,3 +79,9 @@ func MakeRequest(ctx context.Context, method string, url string, client *http.Cl
 
 	return rawdata, resp.StatusCode, nil
 }
+
+func (c *TaniumClient) getHeaders() map[string]string {
+	headers := make(map[string]string, 0)
+	headers["session"] = c.config.APIKey
+	return headers
+}

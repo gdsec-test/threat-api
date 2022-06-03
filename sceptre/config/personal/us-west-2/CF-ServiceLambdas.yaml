@@ -10,6 +10,7 @@ parameters:
   servicenowSHA1: !file_contents resources/servicenow.sha1
   shodanSHA1: !file_contents resources/shodan.sha1
   sucuriSHA1: !file_contents resources/sucuri.sha1
+  taniumSHA1: !file_contents resources/tanium.sha1
   trustarSHA1: !file_contents resources/trustar.sha1
   urlhausSHA1: !file_contents resources/urlhaus.sha1
   urlscanioSHA1: !file_contents resources/urlscanio.sha1

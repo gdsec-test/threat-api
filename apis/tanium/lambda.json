@@ -5,7 +5,7 @@
   "timeout": "900",
   "metadata": {
     "supportedIOCTypes": [
-
+      "GODADDY_HOSTNAME"
     ]
   }
 }

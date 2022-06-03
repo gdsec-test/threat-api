@@ -18,9 +18,7 @@ const (
 
 // TriageModule triage module
 type TriageModule struct {
-	ExampleKey    string
-	ExampleUser   string
-	ExampleClient *http.Client
+	TaniumClient *http.Client
 }
 
 // GetDocs of Tanium triage module
@@ -30,7 +28,7 @@ func (m *TriageModule) GetDocs() *triage.Doc {
 
 // Supports returns true of we support this ioc type
 func (m *TriageModule) Supports() []triage.IOCType {
-	return nil
+	return []triage.IOCType{triage.GoDaddyHostnameType}
 }
 
 // Triage retrieves data by talking to the Tanium library
@@ -43,6 +41,10 @@ func (m *TriageModule) Triage(ctx context.Context, triageRequest *triage.Request
 
 	span, ctx = tb.TracerLogger.StartSpan(ctx, "Tanium", "triage", "questionquery", "get")
 	defer span.End(ctx)
+
+	if m.TaniumClient == nil {
+		m.TaniumClient = http.DefaultClient
+	}
 
 	var err error
 	var triageProgramsData map[string]chan tn.Row
