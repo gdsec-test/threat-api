@@ -3,8 +3,9 @@ package main
 import (
 	"context"
 	"fmt"
-	tn "github.com/gdcorp-infosec/threat-api/apis/tanium/taniumLibrary"
 	"net/http"
+
+	tn "github.com/gdcorp-infosec/threat-api/apis/tanium/taniumLibrary"
 
 	"github.com/gdcorp-infosec/threat-api/lambdas/common/toolbox"
 	"github.com/gdcorp-infosec/threat-api/lambdas/common/toolbox/appsectracing"
@@ -58,7 +59,7 @@ func (m *TriageModule) Triage(ctx context.Context, triageRequest *triage.Request
 		triageTaniumMachineData.Data = fmt.Sprintf("error from tanium: %s", err)
 	} else {
 		triageTaniumMachineData.DataType = triage.CSVType
-		triageTaniumMachineData.Data = dumpCSV(triageProgramsData)
+		triageTaniumMachineData.Data, triageTaniumMachineData.Metadata = postProcessing(triageProgramsData)
 	}
 
 	return []*triage.Data{triageTaniumMachineData}, nil

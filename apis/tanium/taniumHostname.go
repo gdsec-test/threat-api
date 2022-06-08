@@ -109,17 +109,25 @@ func (m *TriageModule) performTaniumSearch(ctx context.Context, questionString s
 
 }
 
-//dumpCSV dumps the triage data to CSV
-func dumpCSV(taniumResults map[string]chan tn.Row) string {
-	//Dump data as csv
+//postProcessing calculates the CSV and metadata for Godaddy hostnames
+func postProcessing(taniumResults map[string]chan tn.Row) (string, []string) {
+	//For dumping data as csv
 	resp := bytes.Buffer{}
 	csv := csv.NewWriter(&resp)
+
+	//MetaData is being calculated here as the results are in a channel, so they can be read out once.
+	//Instead of creating a duplicate channel and calculating the metadata it's more optimal doing both while reading the original returned channel
+
+	//MetaData gathering
+	var machinesMetadata []string
+
 	// Write headers
 	csv.Write([]string{
 		"Machine Name",
 		"Data",
 	})
 	for ioc, row := range taniumResults {
+		count := 0 // Count for keeping track of the metadata
 
 		if row == nil {
 			continue
@@ -128,10 +136,13 @@ func dumpCSV(taniumResults map[string]chan tn.Row) string {
 		var rowOutputData string
 
 		for data := range row {
+			count++
 			for _, r := range data.Data {
 				rowOutputData = rowOutputData + " " + r.String()
 			}
 		}
+
+		machinesMetadata = append(machinesMetadata, fmt.Sprintf("*%s* has *%d* programs installed", ioc, count))
 
 		cols := []string{
 			ioc,
@@ -142,5 +153,5 @@ func dumpCSV(taniumResults map[string]chan tn.Row) string {
 	}
 	csv.Flush()
 
-	return resp.String()
+	return resp.String(), machinesMetadata
 }

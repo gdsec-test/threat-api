@@ -194,8 +194,6 @@ type Row struct {
 
 // ResultSet is the Tanium ResultSet object
 type ResultSet struct {
-	MaxAvailableAge          string   `json:"max_available_age"`
-	Now                      string   `json:"now"`
 	Age                      int      `json:"age"`
 	CacheId                  string   `json:"cache_id"`
 	Columns                  []Column `json:"columns"`

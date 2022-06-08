@@ -173,7 +173,9 @@ func (q *Question) GetColumns(ctx context.Context) ([]Column, error) {
 	}
 
 	data := struct {
-		ResultSets []ResultSet `json:"result_sets"`
+		MaxAvailableAge string      `json:"max_available_age"`
+		Now             string      `json:"now"`
+		ResultSets      []ResultSet `json:"result_sets"`
 	}{}
 
 	err = json.Unmarshal(recvdata, &data)
@@ -208,7 +210,9 @@ func (q *Question) GetResults(ctx context.Context) (chan Row, error) {
 		}
 
 		data := struct {
-			ResultSets []ResultSet `json:"result_sets"`
+			MaxAvailableAge string      `json:"max_available_age"`
+			Now             string      `json:"now"`
+			ResultSets      []ResultSet `json:"result_sets"`
 		}{}
 
 		err = json.Unmarshal(recvdata, &data)
