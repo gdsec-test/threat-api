@@ -31,6 +31,7 @@ require (
 require (
 	github.com/BurntSushi/toml v0.3.1 // indirect
 	github.com/PuerkitoBio/goquery v1.5.1 // indirect
+	github.com/agiledragon/gomonkey/v2 v2.7.0 // indirect
 	github.com/andybalholm/cascadia v1.1.0 // indirect
 	github.com/armon/go-radix v1.0.0 // indirect
 	github.com/awnumar/memcall v0.0.0-20190930130926-11bbaffc6c8f // indirect
@@ -82,7 +83,6 @@ require (
 )
 
 require (
-	github.com/agiledragon/gomonkey/v2 v2.2.0
 	github.com/google/go-cmp v0.5.6 // indirect
 	github.com/smartystreets/goconvey v1.7.2
 	github.com/thedevsaddam/gojsonq v2.3.0+incompatible // indirect
