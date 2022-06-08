@@ -39,7 +39,7 @@ jobs:
           role-skip-session-tagging: true
 
       - name: Login to Amazon ECR
-        uses: aws-actions/amazon-ecr-login@b9c809dc38d74cd0fde3c13cc4fe4ac72ebecdae # 2.2.2
+        uses: aws-actions/amazon-ecr-login@3d4e073ce6a6845ed27b30a0fe05b6e22c80ac6b # 2.2.2
         with:
           registries: 672751022979
 
