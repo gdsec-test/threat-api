@@ -2,10 +2,7 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"net/http"
-
-	tn "github.com/gdcorp-infosec/threat-api/apis/tanium/taniumLibrary"
 
 	"github.com/gdcorp-infosec/threat-api/lambdas/common/toolbox"
 	"github.com/gdcorp-infosec/threat-api/lambdas/common/toolbox/appsectracing"
@@ -48,19 +45,8 @@ func (m *TriageModule) Triage(ctx context.Context, triageRequest *triage.Request
 	}
 
 	var err error
-	var triageProgramsData map[string]chan tn.Row
-	triageTaniumMachineData := &triage.Data{
-		Title:    "Programs and versions installed in the queried machine",
-		Metadata: []string{},
-	}
 
-	triageProgramsData, err = m.GetProgramsFromGodaddyMachines(ctx, triageRequest)
-	if err != nil {
-		triageTaniumMachineData.Data = fmt.Sprintf("error from tanium: %s", err)
-	} else {
-		triageTaniumMachineData.DataType = triage.CSVType
-		triageTaniumMachineData.Data, triageTaniumMachineData.Metadata = postProcessing(triageProgramsData)
-	}
+	result, err := m.SubmitTaniumQuestion(ctx, triageRequest)
 
-	return []*triage.Data{triageTaniumMachineData}, nil
+	return result, err
 }
