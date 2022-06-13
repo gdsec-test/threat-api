@@ -50,7 +50,7 @@ func (m *TriageModule) SubmitTaniumQuestion(ctx context.Context, triageRequest *
 			_, taniumResult, err := m.performTaniumSearch(ctx, ioc, triageRequest.IOCsType)
 			if err != nil {
 				taniumErr = err
-				span.AddError(err)
+				// span.AddError(err)
 				taniumLock.Lock()
 				taniumResults[ioc] = nil
 				taniumLock.Unlock()
