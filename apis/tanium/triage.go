@@ -26,7 +26,7 @@ func (m *TriageModule) GetDocs() *triage.Doc {
 
 // Supports returns true of we support this ioc type
 func (m *TriageModule) Supports() []triage.IOCType {
-	return []triage.IOCType{triage.GoDaddyHostnameType}
+	return []triage.IOCType{triage.GoDaddyHostnameType, triage.CPEType}
 }
 
 // Triage retrieves data by talking to the Tanium library
