@@ -14,12 +14,55 @@ import (
 )
 
 const (
-	maxThreadCount                             = 5
-	rowLimit                                   = 100
-	host                                       = "https://tanium-dev.int.gdcorp.tools" // will be added to parameter store while cleaning up in next phase
+	maxThreadCount = 5
+	rowLimit       = 100
+	host           = "https://tanium-dev.int.gdcorp.tools" // will be added to parameter store while cleaning up in next phase
+
+	avstringRegex = `(?::([?*]?(?:(?:[a-z0-9\-._]|(?:[\\][\\?*!"#$%&'()+,/:;<=>@[\]^{|}~])|[%~])*[?*\-]?)))?`
+
 	installedSoftwareQuestion                  = "Get Installed Applications from all machines with Computer Name matches %s"
 	computerNamesWithInstalledSoftwareQuestion = "Get Computer Name and Installed Application Version[%s] from all machines with Installed Applications:Name contains %s"
 )
+
+var (
+	// CPEComponents is a collection of names for all valid components within a valid CPE URI.
+	CPEComponents = []string{"cpe_name", "cpe_version", "part", "vendor", "product", "version", "update", "edition", "lang", "sw_edition", "target_sw", "target_hw", "other"}
+
+	// CPERegex is a regex that matches fully valid CPE 2.2/2.3-compliant URIs, separating each component into a submatch.
+	CPERegex = regexp.MustCompile(`(?i)` +
+		`(cpe)` + // cpe
+		`(?::(2[.]3))?` + // cpe version
+		`:[/]?([aoh*\-])` + // part
+		avstringRegex + // vendor
+		avstringRegex + // product
+		avstringRegex + // version
+		avstringRegex + // update
+		avstringRegex + // edition
+		`(?::((?:[a-z]{2,3}(?:-(?:[a-z]{2}|[0-9]{3}))?)|[*\-]))?` + // lang
+		avstringRegex + // sw_edition
+		avstringRegex + // target_sw
+		avstringRegex + // target_hw
+		avstringRegex) // other
+)
+
+// extractCPE extracts information about the specified CPE into various components, returning any errors encountered.
+func (m *TriageModule) extractCPE(cpeuri string) (map[string]string, error) {
+	result := map[string]string{}
+
+	match := CPERegex.FindStringSubmatch(cpeuri)
+	if len(match) <= 1 {
+		return nil, fmt.Errorf("unable to extract components of CPE %s", cpeuri)
+	}
+
+	match = match[1:] // remove the complete cpeuri match
+	for i, key := range CPEComponents {
+		if i < len(match) {
+			result[key] = match[i]
+		}
+	}
+
+	return result, nil
+}
 
 // SubmitTaniumQuestion returns the Tanium results for the questions that are queried
 func (m *TriageModule) SubmitTaniumQuestion(ctx context.Context, triageRequest *triage.Request) ([]*triage.Data, error) {
@@ -76,7 +119,6 @@ func (m *TriageModule) SubmitTaniumQuestion(ctx context.Context, triageRequest *
 }
 
 // performTaniumSearch given a Tanium question, create the question, wait for rowLimit results (or some maximum) to be available in Tanium, and return the column names, a channel of results, and an error if present
-
 func (m *TriageModule) performTaniumSearch(ctx context.Context, ioc string, iocType triage.IOCType) ([]string, chan tn.Row, error) {
 	var questionString string
 
@@ -84,17 +126,15 @@ func (m *TriageModule) performTaniumSearch(ctx context.Context, ioc string, iocT
 	case triage.GoDaddyHostnameType:
 		questionString = fmt.Sprintf(installedSoftwareQuestion, ioc)
 	case triage.CPEType:
-		softwareKeyword := regexp.MustCompile(`(?i)cpe:2[.]3?:[\/]?[aoh*\-]:[a-z0-9\-._]*:([a-z0-9\-._]*):`)
-		softwareName := softwareKeyword.FindAllStringSubmatch(ioc, -1)
-		fmt.Printf("%v", softwareName[0][1])
-		if len(softwareName) == 1 && len(softwareName[0]) == 2 {
-			softwareKeyword := softwareName[0][1]
-			softwareKeyword = strings.ReplaceAll(softwareKeyword, "_", " ")
-			softwareKeyword = strings.ReplaceAll(softwareKeyword, ".", " ")
-			questionString = fmt.Sprintf(computerNamesWithInstalledSoftwareQuestion, softwareKeyword, softwareKeyword)
-		} else {
-			return nil, nil, fmt.Errorf("Cannot extract software name from CPE %s", ioc)
+		cpeParts, err := m.extractCPE(ioc)
+		if err != nil {
+			return nil, nil, err
 		}
+
+		product := cpeParts["product"]
+		product = strings.ReplaceAll(product, "_", " ")
+		product = strings.ReplaceAll(product, ".", " ")
+		questionString = fmt.Sprintf(computerNamesWithInstalledSoftwareQuestion, product, product)
 	default:
 		return nil, nil, fmt.Errorf("Current IOC Type %s is not supported", iocType)
 	}
