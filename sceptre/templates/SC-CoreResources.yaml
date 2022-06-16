@@ -60,6 +60,10 @@ Parameters:
     Type: String
     Description: SHA1 hash of the vulnerabilitywatch lambda source
     Default: ""
+  CpeSubmitHash:
+    Type: String
+    Description: SHA1 hash of the cpesubmit lambda source
+    Default: ""
   ThreatApiJobBucket:
     Type: String
     Description: Name of S3 Bucket to work with Jobs\Modules big objects
@@ -824,6 +828,103 @@ Resources:
           Value: !GetAtt VulnerabilityWatchLambda.Outputs.LambdaFunctionArn
         - Key: Principal
           Value: events.amazonaws.com
+      Tags:
+        - Key: doNotShutDown
+          Value: true
+
+  CpeSubmitPolicyDynamoDB:
+    Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
+    Properties:
+      ProductName: IAMPolicy
+      ProvisioningArtifactName: 1.0.0
+      ProvisionedProductName: CpeSubmitPolicyDynamoDB
+      ProvisioningParameters:
+        - Key: PolicyNameSuffix
+          Value: CpeSubmitPolicyDynamoDB
+        - Key: PolicyJSON
+          Value: !Sub '{
+            "Version": "2012-10-17",
+            "Statement": [
+                {
+                    "Action": [
+                        "dynamodb:*"
+                    ],
+                    "Resource": "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/cve",
+                    "Effect": "Allow"
+                },
+                {
+                    "Action": [
+                        "logs:CreateLogGroup",
+                        "logs:CreateLogStream",
+                        "logs:PutLogEvents"
+                    ],
+                    "Resource": "*",
+                    "Effect": "Allow"
+                }
+            ]
+          }'
+      Tags:
+        - Key: doNotShutDown
+          Value: true
+
+  CpeSubmitRole:
+    DependsOn:
+      - ThreatPolicyDynamoDB
+      - ThreatPolicySecretsManager
+      - CpeSubmitPolicyDynamoDB
+    Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
+    Properties:
+      ProductName: IAMRole
+      ProvisioningArtifactName: 1.0.9
+      ProvisionedProductName: CpeSubmitRole
+      ProvisioningParameters:
+        - Key: RoleNameSuffix
+          Value: CpeSubmitRole
+        - Key: ManagedPolicyArns
+          Value: !Join
+            - ","
+            -
+              - arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess
+              - arn:aws:iam::aws:policy/AmazonSSMReadOnlyAccess
+              - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+              - arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole
+              - !Sub arn:aws:iam::${AWS::AccountId}:policy/GD-AWS-KMS-USER
+              - !Sub arn:aws:iam::${AWS::AccountId}:policy/AllowResourcesAccessToCloudWatchPolicy
+              - !Sub arn:aws:iam::${AWS::AccountId}:policy/${DevelopmentTeam}-custom-ThreatPolicyDynamoDB
+              - !Sub arn:aws:iam::${AWS::AccountId}:policy/${DevelopmentTeam}-custom-ThreatPolicySecretsManager
+              - !Sub arn:aws:iam::${AWS::AccountId}:policy/${DevelopmentTeam}-custom-CpeSubmitPolicyDynamoDB
+        - Key: AssumingServices
+          Value: lambda.amazonaws.com
+      Tags:
+        - Key: doNotShutDown
+          Value: true
+
+  CpeSubmitLambda:
+    DependsOn: CpeSubmitRole
+    Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
+    Properties:
+      ProductName: Lambda
+      ProvisioningArtifactName: 2.7.0
+      ProvisionedProductName: CpeSubmitLambda
+      ProvisioningParameters:
+        - Key: S3Bucket
+          Value: !Sub gd-${DevelopmentTeam}-${DevelopmentEnvironment}-code-bucket
+        - Key: S3Key
+          Value: !Sub cpesubmit/${CpeSubmitHash}
+        - Key: Handler
+          Value: index.handler
+        - Key: LambdaName
+          Value: cpesubmit
+        - Key: LambdaDescription
+          Value: !Sub cpesubmit lambda (${CpeSubmitHash})
+        - Key: MemorySize
+          Value: 512
+        - Key: Runtime
+          Value: nodejs14.x
+        - Key: Timeout
+          Value: 900
+        - Key: CustomIAMRoleNameSuffix
+          Value: CpeSubmitRole
       Tags:
         - Key: doNotShutDown
           Value: true

@@ -5,8 +5,8 @@
   "private": true,
   "main": "index.js",
   "scripts": {
-    "test": "mocha",
-    "test-ci": "mocha --watch=false"
+    "test": "",
+    "test-ci": ""
   },
   "author": "",
   "license": "",
