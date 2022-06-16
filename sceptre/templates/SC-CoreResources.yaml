@@ -920,7 +920,7 @@ Resources:
         - Key: MemorySize
           Value: 512
         - Key: Runtime
-          Value: nodejs14.x
+          Value: nodejs12.x
         - Key: Timeout
           Value: 900
         - Key: CustomIAMRoleNameSuffix
