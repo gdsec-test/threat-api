@@ -21,7 +21,7 @@ const (
 	avstringRegex = `(?::([?*]?(?:(?:[a-z0-9\-._]|(?:[\\][\\?*!"#$%&'()+,/:;<=>@[\]^{|}~])|[%~])*[?*\-]?)))?`
 
 	installedSoftwareQuestion                  = "Get Installed Applications from all machines with Computer Name matches %s"
-	computerNamesWithInstalledSoftwareQuestion = "Get Computer Name and Installed Application Version[%s] from all machines with Installed Applications:Name contains %s"
+	computerNamesWithInstalledSoftwareQuestion = "Get Computer Name and Installed Application Version[\"%s\"] from all machines with Installed Applications:Name contains \"%s\""
 )
 
 var (
