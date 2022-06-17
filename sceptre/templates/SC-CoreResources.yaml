@@ -925,6 +925,10 @@ Resources:
           Value: 900
         - Key: CustomIAMRoleNameSuffix
           Value: CpeSubmitRole
+        - Key: VpcSecurityGroups
+          Value: !Ref DXVpcSecurityGroups
+        - Key: VpcSubnetIds
+          Value: !Join [ ",", !Ref DXVpcSubnetIds ]
       Tags:
         - Key: doNotShutDown
           Value: true
