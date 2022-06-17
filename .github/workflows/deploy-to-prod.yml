@@ -95,7 +95,11 @@ jobs:
           pip install -U -r requirements.txt -r requirements-test.txt
 
           ssh-agent -k
-          echo ${{ secrets.NPM_ARTIFACTORY_TOKEN }} >> lambdas/cpesubmit/.npmrc
+          touch lambdas/cpesubmit/.npmrc
+          cat > lambdas/cpesubmit/.npmrc <<EOF
+          registry=https://artifactory.secureserver.net/artifactory/api/npm/node-virt/
+          //artifactory.secureserver.net/artifactory/api/npm/node-virt/:_authToken=${{ secrets.NPM_ARTIFACTORY_TOKEN }}
+          EOF
 
       - name: Setup golang environment
         uses: actions/setup-go@b22fbbc2921299758641fab08929b4ac52b32923
