@@ -184,7 +184,11 @@ jobs:
 
       - name: Install NVM to support NodeJS Version, all dependencies, Test and Build each code for only Javascript functions
         run: |
-          echo ${{ secrets.NPM_ARTIFACTORY_TOKEN }} >> lambdas/cpesubmit/.npmrc
+          touch lambdas/cpesubmit/.npmrc
+          cat > lambdas/cpesubmit/.npmrc <<EOF
+          registry=https://artifactory.secureserver.net/artifactory/api/npm/node-virt/
+          //artifactory.secureserver.net/artifactory/api/npm/node-virt/:_authToken=${{ secrets.NPM_ARTIFACTORY_TOKEN }}
+          EOF
           curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/master/install.sh | bash
           source ~/.bashrc
           source ~/.nvm/nvm.sh
