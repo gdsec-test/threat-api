@@ -198,7 +198,9 @@ jobs:
             cd "$d"
             nvm install
             nvm use
-            npm whoami --registry https://artifactory.secureserver.net/artifactory/api/npm/node-virt/
+            if test -f "$d/.npmrc"; then
+              npm whoami --registry https://artifactory.secureserver.net/artifactory/api/npm/node-virt/
+            fi;
             npm i
             npm run test-ci
             popd
