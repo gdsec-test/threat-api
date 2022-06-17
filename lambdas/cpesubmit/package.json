@@ -11,6 +11,7 @@
   "author": "",
   "license": "",
   "dependencies": {
+    "@aws-sdk/client-cloudwatch-logs": "^3.112.0",
     "aws-sdk": "^2.1052.0",
     "gd-auth-client": "^1.2.1",
     "node-fetch": "^2.6.7",
