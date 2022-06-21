@@ -17,7 +17,7 @@ THREAT_API_SOURCE=$(cd `dirname $0`/../.. && pwd)
 
 CODE_BUCKET=$(aws s3api list-buckets --output text --query 'Buckets[?ends_with(Name, `code-bucket`)].Name')
 RESOURCES_DIR=${THREAT_API_SOURCE}/sceptre/resources
-SYSTEM_LAMBDAS="manager responseprocessor vulnerabilitywatch"
+SYSTEM_LAMBDAS="manager responseprocessor vulnerabilitywatch cpesubmit"
 
 pushd ${RESOURCES_DIR}/authorizer
 ./build.sh

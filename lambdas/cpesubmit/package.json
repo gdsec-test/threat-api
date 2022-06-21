@@ -1,0 +1,45 @@
+{
+  "name": "cpesubmit",
+  "version": "1.0.0",
+  "description": "looks for CPEs stored in DynamoDB and submits Tanium Job to find computers with software. Job report is checked later as part of AWS Step Function Machine",
+  "private": true,
+  "main": "index.js",
+  "scripts": {
+    "test": "",
+    "test-ci": ""
+  },
+  "author": "",
+  "license": "",
+  "dependencies": {
+    "@aws-sdk/client-cloudwatch-logs": "^3.112.0",
+    "aws-sdk": "^2.1052.0",
+    "gd-auth-client": "^1.2.1",
+    "node-fetch": "^2.6.7",
+    "winston": "^3.4.0",
+    "winston-cloudwatch": "^3.1.1"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.17.9",
+    "@babel/preset-env": "^7.16.11",
+    "@sinonjs/fake-timers": "^9.1.2",
+    "@types/sinon": "^10.0.11",
+    "@typescript-eslint/eslint-plugin": "^5.9.1",
+    "@typescript-eslint/parser": "^5.9.1",
+    "acorn": "^8.7.0",
+    "chai": "^4.3.6",
+    "eslint": "^7.32.0",
+    "eslint-config-standard": "^16.0.3",
+    "eslint-plugin-import": "^2.25.4",
+    "eslint-plugin-mocha": "^10.0.4",
+    "eslint-plugin-node": "^11.1.0",
+    "eslint-plugin-prettier": "^4.0.0",
+    "eslint-plugin-promise": "^5.2.0",
+    "install": "^0.13.0",
+    "mocha": "^9.2.2",
+    "prettier": "^2.5.1",
+    "sinon": "^13.0.2",
+    "sinon-chai": "^3.7.0",
+    "typescript": "^4.6.3",
+    "util": "^0.12.4"
+  }
+}

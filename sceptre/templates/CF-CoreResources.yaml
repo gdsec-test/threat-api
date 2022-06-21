@@ -18,6 +18,10 @@ Parameters:
     Type: String
     Description: SHA1 hash of the vulnerabilitywatch lambda source
     Default: ""
+  CpeSubmitHash:
+    Type: String
+    Description: SHA1 hash of the cpesubmit lambda source
+    Default: ""
 
 Resources:
   SwaggerUIRole:
@@ -512,6 +516,40 @@ Resources:
       Handler: index.handler
       MemorySize: 256
       Role: !GetAtt VulnerabilityWatchRole.Arn
+      Runtime: nodejs12.x
+      Timeout: 30
+
+  CpeSubmitRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: threattools-custom-CpeSubmitRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess
+        - arn:aws:iam::aws:policy/AmazonSSMReadOnlyAccess
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+        - !Ref ThreatPolicySecretsManager
+        - !Ref ThreatPolicyDynamoDB
+        - !Ref ThreatPolicyKMS
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+
+  CpeSubmitLambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      Code:
+        S3Bucket: !Sub gd-threattools-${AWS::AccountId}-code-bucket
+        S3Key: !Sub cpesubmit/${CpeSubmitHash}
+      Description: !Sub cpesubmit lambda (${CpeSubmitHash})
+      FunctionName: cpesubmit
+      Handler: index.handler
+      MemorySize: 256
+      Role: !GetAtt CpeSubmitRole.Arn
       Runtime: nodejs12.x
       Timeout: 30
 
