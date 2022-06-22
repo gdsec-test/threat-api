@@ -110,11 +110,9 @@ Resources:
               "Statement": [
                 {
                   "Effect": "Allow",
-                  "Action": [
-                    "states:StartExecution"
-                  ],
+                  "Action": "states:*",
                   "Resource": [
-                    "${StepFunctionStateMachine.Outputs.StateMachine}"
+                    "*"
                   ]
                 }
               ]
@@ -145,10 +143,10 @@ Resources:
     Properties:
       ProductName: EventsRule
       ProvisioningArtifactName: 1.2.0
-      ProvisionedProductName: !Sub ${StateMachineName}-event-rule
+      ProvisionedProductName: !Sub ${StateMachineName}EventRule
       ProvisioningParameters:
         - Key: Name
-          Value: !Sub ${StateMachineName}-event-rule
+          Value: !Sub ${StateMachineName}EventRule
         - Key: Description
           Value: !Sub ${StateMachineName} Scheduled Rule
         - Key: ScheduleExpression
