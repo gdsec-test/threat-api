@@ -141,12 +141,12 @@ Resources:
     Type: AWS::Events::Rule
     Properties:
       Name: !Sub ${StateMachineName}NativeEventRule
-      RoleArn: !Sub "arn:aws:iam::${AWS::AccountId}:role/threattools-custom-LighthouseVulnerabilityWatch-event-role"
       ScheduleExpression: rate(2 minutes)
       State: ENABLED
       Targets:
         - Arn: !GetAtt StepFunctionStateMachine.Outputs.StateMachine
           Id: !Sub ${StateMachineName}EventStateMachine
+          RoleArn: !Sub "arn:aws:iam::${AWS::AccountId}:role/threattools-custom-LighthouseVulnerabilityWatch-event-role"
 
   CloudWatchEventRule:
     DependsOn: IAMRole
