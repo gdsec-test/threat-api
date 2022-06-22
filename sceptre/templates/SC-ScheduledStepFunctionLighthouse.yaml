@@ -129,6 +129,8 @@ Resources:
       ProvisioningArtifactName: 1.1.0
       ProvisionedProductName: !Sub ${StateMachineName}-event-role
       ProvisioningParameters:
+        - Key: AssumingServices
+          Value: events.amazonaws.com
         - Key: RoleNameSuffix
           Value: !Sub ${StateMachineName}-event-role
         - Key: ManagedPolicyArns
