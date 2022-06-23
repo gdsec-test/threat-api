@@ -46,8 +46,6 @@ Resources:
       ProvisioningParameters:
         - Key: StateMachineName
           Value: !Ref StateMachineName
-        # - Key: CustomIAMRoleNameSuffix
-        #   Value: !Sub ${StateMachineName}Role
         - Key: LoggingLevel
           Value: !Ref LoggingLevel
         - Key: LogExecutionData
