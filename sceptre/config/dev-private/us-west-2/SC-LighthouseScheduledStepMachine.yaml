@@ -3,4 +3,4 @@ parameters:
   StateMachineName: "LighthouseVulnerabilityWatch"
   LoggingLevel: "ALL"
   LogExecutionData: "true"
-  ScheduleExpression: cron(0/5 * * * ? *)
+  ScheduleExpression: cron(0 0/12 * * ? *)
