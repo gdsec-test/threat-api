@@ -132,7 +132,7 @@ func dumpCVECSV(rfCVEResults map[string]*rf.CVEReport) string {
 		// Processing few non string data before adding to CSV
 		var threatLists, rawriskRules []string
 		for _, threatlist := range data.Data.ThreatLists {
-			threatLists = append(threatLists, threatlist.(string))
+			threatLists = append(threatLists, fmt.Sprint(threatlist.(map[string]interface {})))
 		}
 		for _, rawrisk := range data.Data.Rawrisk {
 			rawriskRules = append(rawriskRules, rawrisk.Rule)

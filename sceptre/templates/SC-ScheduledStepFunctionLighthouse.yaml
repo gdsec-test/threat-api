@@ -1,0 +1,169 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Step Functions State Machine For Lighthouse project
+Parameters:
+  StateMachineName:
+    Type: String
+    Description: Name of the state machine.
+    Default: ""
+  LoggingLevel:
+    Type: String
+    Description: (optional) Defines which category of execution history events are logged.
+    Default: "OFF"
+    AllowedValues:
+      - ALL
+      - ERROR
+      - FATAL
+      - "OFF"
+  LogExecutionData:
+    Type: String
+    Description: (optional) Determines whether execution data is included in your log.
+    Default: false
+    AllowedValues:
+      - true
+      - false
+  ScheduleExpression:
+    Type: String
+    Description: (conditional) You must specify this property, the EventPattern property, or both. The schedule or rate (frequency) that determines when CloudWatch Events runs the rule.
+    AllowedPattern: ^(|cron\(([^ ]* ){5}[^ ]*\)|rate\([1-9][0-9]* (minute?|minutes?|hours?|days?)\))$
+    Default: ""
+  DevelopmentTeam:
+    Type: AWS::SSM::Parameter::Value<String>
+    Description: SSM Parameter for team owning the created resources.
+    Default: /AdminParams/Team/Name
+    AllowedValues:
+      - /AdminParams/Team/Name
+  Input:
+    Type: String
+    Description: (optional) JSON-formatted text string that is passed to the target. This value overrides the matched event.
+    Default: "{}"
+Resources:
+  StepFunctionStateMachine:
+    Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
+    Properties:
+      ProductName: StepFunctionStateMachine
+      ProvisioningArtifactName: 1.1.0
+      ProvisionedProductName: !Ref StateMachineName
+      ProvisioningParameters:
+        - Key: StateMachineName
+          Value: !Ref StateMachineName
+        - Key: LoggingLevel
+          Value: !Ref LoggingLevel
+        - Key: LogExecutionData
+          Value: !Ref LogExecutionData
+        - Key: LogGroupName
+          Value: !Sub ${StateMachineName}LogGroup
+        - Key: DefinitionString
+          Value: !Sub |-
+            {
+              "StartAt": "SubmitCPEQueryToTanium",
+              "States": {
+                "SubmitCPEQueryToTanium": {
+                  "Type": "Task",
+                  "Resource": "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:cpesubmit",
+                  "TimeoutSeconds": 900,
+                  "HeartbeatSeconds": 30,
+                  "Next": "TaniumWaitForResults",
+                  "Catch": [
+                    {
+                      "ErrorEquals": [
+                        "States.TaskFailed",
+                        "States.Timeout"
+                      ],
+                      "Next": "FailureStep"
+                    }
+                  ]
+                },
+                "TaniumWaitForResults": {
+                  "Type": "Wait",
+                  "Seconds": 300,
+                  "Next": "SuccessStep"
+                },
+                "FailureStep": {
+                  "Type": "Fail"
+                },
+                "SuccessStep": {
+                  "Type": "Pass",
+                  "End": true
+                }
+              }
+            }
+      Tags:
+        - Key: doNotShutDown
+          # change to false if it can be turned off outside of business hours
+          Value: "true"
+
+  IAMPolicy:
+    Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
+    Properties:
+      ProductName: IAMPolicy
+      ProvisioningArtifactName: 1.0.0
+      ProvisionedProductName: !Sub ${StateMachineName}-event-policy
+      ProvisioningParameters:
+        - Key: PolicyNameSuffix
+          Value: !Sub ${StateMachineName}-event-policy
+        - Key: PolicyJSON
+          Value: !Sub |-
+            {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Action": "states:*",
+                  "Resource": [
+                    "*"
+                  ]
+                }
+              ]
+            }
+      Tags:
+        - Key: doNotShutDown
+          Value: "true"
+
+  IAMRole:
+    DependsOn: IAMPolicy
+    Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
+    Properties:
+      ProductName: IAMRole
+      ProvisioningArtifactName: 1.1.0
+      ProvisionedProductName: !Sub ${StateMachineName}-event-role
+      ProvisioningParameters:
+        - Key: AssumingServices
+          Value: events.amazonaws.com
+        - Key: RoleNameSuffix
+          Value: !Sub ${StateMachineName}-event-role
+        - Key: ManagedPolicyArns
+          Value: !Join [",", [!Sub "arn:aws:iam::${AWS::AccountId}:policy/${DevelopmentTeam}-custom-${StateMachineName}-event-policy"]]
+      Tags:
+        - Key: doNotShutDown
+          Value: "true"
+
+  CloudWatchEventRule:
+    DependsOn: IAMRole
+    Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
+    Properties:
+      ProductName: EventsRule
+      ProvisioningArtifactName: 1.2.0
+      ProvisionedProductName: !Sub ${StateMachineName}EventRule
+      ProvisioningParameters:
+        - Key: Name
+          Value: !Sub ${StateMachineName}EventRule
+        - Key: Description
+          Value: !Sub ${StateMachineName} Scheduled Rule
+        - Key: ScheduleExpression
+          Value: !Ref ScheduleExpression
+        - Key: TargetArnRef
+          Value: !GetAtt StepFunctionStateMachine.Outputs.StateMachine
+        - Key: TargetId
+          Value: !Sub ${StateMachineName}-event-state-machine
+        - Key: Input
+          Value: !Ref Input
+        - Key: RoleArn
+          Value: !Sub "arn:aws:iam::${AWS::AccountId}:role/${DevelopmentTeam}-custom-${StateMachineName}-event-role"
+      Tags:
+        - Key: doNotShutDown
+          # change to false if it can be turned off outside of business hours
+          Value: "true"
+
+Outputs:
+  StateMachineArn:
+    Value: !GetAtt StepFunctionStateMachine.Outputs.StateMachine
