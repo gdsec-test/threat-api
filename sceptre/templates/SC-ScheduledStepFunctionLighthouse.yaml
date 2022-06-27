@@ -76,7 +76,23 @@ Resources:
                 "TaniumWaitForResults": {
                   "Type": "Wait",
                   "Seconds": 300,
-                  "Next": "SuccessStep"
+                  "Next": "ReportCPEResultFromTanium"
+                },
+                "ReportCPEResultFromTanium": {
+                  "Type": "Task",
+                  "Resource": "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:cpereport",
+                  "TimeoutSeconds": 900,
+                  "HeartbeatSeconds": 30,
+                  "Next": "SuccessStep",
+                  "Catch": [
+                    {
+                      "ErrorEquals": [
+                        "States.TaskFailed",
+                        "States.Timeout"
+                      ],
+                      "Next": "FailureStep"
+                    }
+                  ]
                 },
                 "FailureStep": {
                   "Type": "Fail"
