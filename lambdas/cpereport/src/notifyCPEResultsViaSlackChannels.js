@@ -54,28 +54,32 @@ function debounce(func, timeout = 1000) {
 }
 
 async function slack({ CPEs, creds: { botToken, channel } = {} }) {
-  async function sendSlackMessage({ blocks, parentThread = '' }) {
+  async function sendSlackMessage({ blocks, parentThread }) {
+    let slackBody = {
+      username: 'CPE Alert',
+      channel: `${channel}`,
+      blocks
+    };
+    if (parentThread) {
+      Logger.log('Slack message has parent thread:' + parentThread);
+      slackBody.thread_ts = parentThread;
+    }
     return await fetch('https://slack.com/api/chat.postMessage', {
       method: 'post',
       headers: {
         'Content-Type': 'application/json; charset=utf-8',
         Authorization: `Bearer ${botToken}`
       },
-      body: JSON.stringify({
-        username: 'CPE Alert',
-        channel: `${channel}`,
-        thread_ts: parentThread,
-        blocks
-      })
+      body: JSON.stringify(slackBody)
     })
       .then((response) => {
         return response.json();
       })
       .then((data = {}) => {
         if (data.ok) {
-          Logger.log('Alarm sent to Slack successfully');
+          Logger.log('Alarm sent to Slack successfully:' + JSON.stringify(data));
         } else {
-          Logger.log('Alarm sent to Slack with errors' + JSON.stringify(data));
+          Logger.log('Alarm sent to Slack with errors:' + JSON.stringify(data));
         }
         return data;
       })

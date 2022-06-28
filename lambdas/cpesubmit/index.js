@@ -42,7 +42,6 @@ async function handler(event, context = {}) {
   return {
     logstream: context.logStreamName,
     startedOn: new Date().toUTCString(),
-    done: true,
     scheduledJobs: Object.values(scheduledJobs || {})
   };
 }

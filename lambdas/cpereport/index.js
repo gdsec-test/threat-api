@@ -34,8 +34,11 @@ async function handler(event = {}, context = {}) {
     env,
     secretsAndParams
   });
+  let done = stillNotReadyJobs && stillNotReadyJobs.length ? false : true; // if no more jobs to we stop working
   let { retryFetchResults = 0 } = event;
-  retryFetchResults++;
+  if (!done) {
+    retryFetchResults++;
+  }
   await notifyCPEResultsViaSlackChannels({
     CPEs: extractCPEData(jobsResults),
     params: secretsAndParams
@@ -43,7 +46,7 @@ async function handler(event = {}, context = {}) {
   const handlerResponse = {
     logstream: context.logStreamName,
     startedOn: new Date().toUTCString(),
-    done: stillNotReadyJobs && stillNotReadyJobs.length ? false : true, // if no more jobs to we stop working
+    done,
     scheduledJobs: stillNotReadyJobs,
     retryFetchResults
   };
