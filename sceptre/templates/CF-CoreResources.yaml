@@ -520,7 +520,7 @@ Resources:
       Handler: index.handler
       MemorySize: 256
       Role: !GetAtt VulnerabilityWatchRole.Arn
-      Runtime: nodejs12.x
+      Runtime: nodejs14.x
       Timeout: 30
 
   CpeSubmitRole:
@@ -554,7 +554,7 @@ Resources:
       Handler: index.handler
       MemorySize: 256
       Role: !GetAtt CpeSubmitRole.Arn
-      Runtime: nodejs12.x
+      Runtime: nodejs14.x
       Timeout: 30
 
   CpeReportLambda:
