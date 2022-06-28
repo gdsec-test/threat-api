@@ -44,13 +44,11 @@ const getCPEFormattedRecord = ({ CPE = '', CIFound = [] }) => {
 };
 
 function debounce(func, timeout = 1000) {
-  let timer;
-  return (...args) => {
-    clearTimeout(timer);
-    timer = setTimeout(() => {
-      func.apply(this, args);
+  return new Promise((resolve, reject) => {
+    setTimeout(() => {
+      func.apply(this).then(data => resolve(data)).catch(data => reject(data));;
     }, timeout);
-  };
+  });
 }
 
 async function slack({ CPEs, creds: { botToken, channel } = {} }) {
@@ -126,10 +124,10 @@ async function slack({ CPEs, creds: { botToken, channel } = {} }) {
   Logger.log('Start sending threaded Slack messages:' + JSON.stringify(splitBlocks));
   const result = await Promise.all(
     splitBlocks.map((smallerBlock) => {
-        return sendSlackMessage({
+        return debounce(() => sendSlackMessage({
           parentThread: slackResponse.ts,
           blocks: smallerBlock
-        });
+        }));
       }
     )
   );
