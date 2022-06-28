@@ -63,6 +63,8 @@ async function slack({ CPEs, creds: { botToken, channel } = {} }) {
     if (parentThread) {
       Logger.log('Slack message has parent thread:' + parentThread);
       slackBody.thread_ts = parentThread;
+    } else {
+      Logger.log('Slack message has no parent thread');
     }
     return await fetch('https://slack.com/api/chat.postMessage', {
       method: 'post',
@@ -91,7 +93,7 @@ async function slack({ CPEs, creds: { botToken, channel } = {} }) {
     acc = [...acc, ...getCPEFormattedRecord(cpeData)];
     return acc;
   }, []);
-  const { ts: parentThreatId } = await sendSlackMessage({
+  const slackResponse = await sendSlackMessage({
     blocks: [
       {
         type: 'section',
@@ -102,6 +104,7 @@ async function slack({ CPEs, creds: { botToken, channel } = {} }) {
       }
     ]
   });
+  Logger.log('Response From Slack:' + JSON.stringify(slackResponse));
   const blocks = [
     {
       type: 'section',
@@ -120,14 +123,14 @@ async function slack({ CPEs, creds: { botToken, channel } = {} }) {
   while (blocks.length) {
     splitBlocks.push(blocks.splice(0, BLOCKS_PER_MESSAGE));
   }
+  Logger.log('Start sending threaded Slack messages:' + JSON.stringify(splitBlocks));
   const result = await Promise.all(
-    splitBlocks.map(
-      debounce((smallerBlock) => {
+    splitBlocks.map((smallerBlock) => {
         return sendSlackMessage({
-          parentThread: parentThreatId,
+          parentThread: slackResponse.ts,
           blocks: smallerBlock
         });
-      })
+      }
     )
   );
   return result;
