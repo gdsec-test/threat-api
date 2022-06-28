@@ -18,6 +18,8 @@ module.exports = async function submitTaniumJobs({
     });
   if (!authToken) {
     Logger.error('Error authenticating in SSO. See logs');
+  } else {
+    Logger.log('Authenticating in SSO successfull');
   }
   const cpeTaniumJobsLimit = parseInt(secretsAndParams.cpeTaniumJobsLimit) || 5;
 
@@ -38,6 +40,7 @@ module.exports = async function submitTaniumJobs({
     }
   };
   payload.body = JSON.stringify(params);
+  Logger.log('Submit Tanium Job:' + url + ' ' + JSON.stringify(params));
   const resp = await fetch(url, payload);
   return await resp.json();
 };
