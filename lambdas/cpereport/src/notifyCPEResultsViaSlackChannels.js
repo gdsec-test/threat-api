@@ -91,9 +91,6 @@ async function slack({ CPEs, creds: { botToken, channel } = {} }) {
     acc = [...acc, ...getCPEFormattedRecord(cpeData)];
     return acc;
   }, []);
-  if (!CPEFormatted.length) {
-    return Promise.resolve();
-  }
   const slackResponse = await sendSlackMessage({
     blocks: [
       {
