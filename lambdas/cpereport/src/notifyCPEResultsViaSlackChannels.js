@@ -3,9 +3,9 @@ const Logger = require('./logger');
 const fetch = (...args) =>
   import('node-fetch').then(({ default: fetch }) => fetch(...args));
 
-const BLOCKS_PER_MESSAGE = 50;
+const BLOCKS_PER_MESSAGE = 25;
 const MAX_TEXT_SIZE = 3000;
-const clampIt = (str) => str.slice(0, MAX_TEXT_SIZE);
+const clampIt = (str, size) => str.slice(0, size || MAX_TEXT_SIZE);
 
 const getCPEFormattedRecord = ({ CPE = '', CIFound = [] }) => {
   let CPEData = `<https://www.google.com/search?q=${CPE}|${CPE}>`;
@@ -31,7 +31,7 @@ const getCPEFormattedRecord = ({ CPE = '', CIFound = [] }) => {
           action_id: 'create_incident_in_snow',
           text: {
             type: 'plain_text',
-            text: `Create Incident for CPE ${CPE}`
+            text: clampIt(`Create Incident for CPE ${CPE}`, 70)
           },
           url: 'https://godaddy.service-now.com/nav_to.do?uri=%2Fincident.do%3Fsys_id%3D-1'
         }
