@@ -75,7 +75,7 @@ Resources:
                 },
                 "TaniumWaitForResults": {
                   "Type": "Wait",
-                  "Seconds": 60,
+                  "Seconds": 300,
                   "Next": "ReportCPEResultFromTanium"
                 },
                 "ReportCPEResultFromTanium": {

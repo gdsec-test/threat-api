@@ -23,7 +23,9 @@ module.exports = function extractCPEData(jobsResults = []) {
             for (let i = 0; i < Data.length; i += 3) {
               CIFound.push(Data[i]);
             }
-            acc.push({ CPE, CIFound });
+            if (CIFound.length) {
+              acc.push({ CPE, CIFound });
+            }
           }
         });
       } else {
