@@ -76,7 +76,44 @@ Resources:
                 "TaniumWaitForResults": {
                   "Type": "Wait",
                   "Seconds": 300,
-                  "Next": "SuccessStep"
+                  "Next": "ReportCPEResultFromTanium"
+                },
+                "ReportCPEResultFromTanium": {
+                  "Type": "Task",
+                  "Resource": "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:cpereport",
+                  "TimeoutSeconds": 900,
+                  "HeartbeatSeconds": 30,
+                  "Next": "CheckResult",
+                  "Catch": [
+                    {
+                      "ErrorEquals": [
+                        "States.TaskFailed",
+                        "States.Timeout"
+                      ],
+                      "Next": "FailureStep"
+                    }
+                  ]
+                },
+                "CheckResult": {
+                  "Type": "Choice",
+                  "Choices": [
+                    {
+                      "Variable": "$.allJobsDone",
+                      "BooleanEquals": true,
+                      "Next": "SuccessStep"
+                    },
+                    {
+                      "Variable": "$.retryFetchResults",
+                      "NumericLessThanEquals": 5,
+                      "Next": "TaniumWaitForResults"
+                    },
+                    {
+                      "Variable": "$.retryFetchResults",
+                      "NumericGreaterThan": 5,
+                      "Next": "FailureStep"
+                    }
+                  ],
+                  "Default": "SuccessStep"
                 },
                 "FailureStep": {
                   "Type": "Fail"

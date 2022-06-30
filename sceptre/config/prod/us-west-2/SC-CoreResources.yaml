@@ -12,6 +12,7 @@ parameters:
   ResponseProcessorHash: !file_contents resources/responseprocessor.sha1
   VulnerabilityWatchHash: !file_contents resources/vulnerabilitywatch.sha1
   CpeSubmitHash: !file_contents resources/cpesubmit.sha1
+  CpeReportHash: !file_contents resources/cpereport.sha1
   ThreatApiJobBucket: {{threat_api_job_bucket}}
 hooks:
   before_create:

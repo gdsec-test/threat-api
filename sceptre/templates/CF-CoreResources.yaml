@@ -22,6 +22,10 @@ Parameters:
     Type: String
     Description: SHA1 hash of the cpesubmit lambda source
     Default: ""
+  CpeReportHash:
+    Type: String
+    Description: SHA1 hash of the cpereport lambda source
+    Default: ""
 
 Resources:
   SwaggerUIRole:
@@ -516,7 +520,7 @@ Resources:
       Handler: index.handler
       MemorySize: 256
       Role: !GetAtt VulnerabilityWatchRole.Arn
-      Runtime: nodejs12.x
+      Runtime: nodejs14.x
       Timeout: 30
 
   CpeSubmitRole:
@@ -550,9 +554,22 @@ Resources:
       Handler: index.handler
       MemorySize: 256
       Role: !GetAtt CpeSubmitRole.Arn
-      Runtime: nodejs12.x
+      Runtime: nodejs14.x
       Timeout: 30
 
+  CpeReportLambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      Code:
+        S3Bucket: !Sub gd-threattools-${AWS::AccountId}-code-bucket
+        S3Key: !Sub cpereport/${CpeReportHash}
+      Description: !Sub cpereport lambda (${CpeReportHash})
+      FunctionName: cpereport
+      Handler: index.handler
+      MemorySize: 256
+      Role: !GetAtt CpeSubmitRole.Arn
+      Runtime: nodejs14.x
+      Timeout: 30
 Outputs:
   ThreatURL:
     Value: !Sub "https://${ThreatAPI}.execute-api.${AWS::Region}.amazonaws.com/gddeploy"

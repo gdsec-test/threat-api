@@ -64,6 +64,10 @@ Parameters:
     Type: String
     Description: SHA1 hash of the cpesubmit lambda source
     Default: ""
+  CpeReportHash:
+    Type: String
+    Description: SHA1 hash of the cpereport lambda source
+    Default: ""
   ThreatApiJobBucket:
     Type: String
     Description: Name of S3 Bucket to work with Jobs\Modules big objects
@@ -765,7 +769,7 @@ Resources:
     Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
     Properties:
       ProductName: Lambda
-      ProvisioningArtifactName: 2.3.0
+      ProvisioningArtifactName: 2.7.0
       ProvisionedProductName: VulnerabilityWatchLambda
       ProvisioningParameters:
         - Key: S3Bucket
@@ -781,7 +785,7 @@ Resources:
         - Key: MemorySize
           Value: 512
         - Key: Runtime
-          Value: nodejs12.x
+          Value: nodejs14.x
         - Key: Timeout
           Value: 900
         - Key: CustomIAMRoleNameSuffix
@@ -920,7 +924,41 @@ Resources:
         - Key: MemorySize
           Value: 512
         - Key: Runtime
-          Value: nodejs12.x
+          Value: nodejs14.x
+        - Key: Timeout
+          Value: 900
+        - Key: CustomIAMRoleNameSuffix
+          Value: CpeSubmitRole
+        - Key: VpcSecurityGroups
+          Value: !Ref DXVpcSecurityGroups
+        - Key: VpcSubnetIds
+          Value: !Join [ ",", !Ref DXVpcSubnetIds ]
+      Tags:
+        - Key: doNotShutDown
+          Value: true
+
+  CpeReportLambda:
+    DependsOn: CpeSubmitRole
+    Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
+    Properties:
+      ProductName: Lambda
+      ProvisioningArtifactName: 2.7.0
+      ProvisionedProductName: CpeReportLambda
+      ProvisioningParameters:
+        - Key: S3Bucket
+          Value: !Sub gd-${DevelopmentTeam}-${DevelopmentEnvironment}-code-bucket
+        - Key: S3Key
+          Value: !Sub cpereport/${CpeReportHash}
+        - Key: Handler
+          Value: index.handler
+        - Key: LambdaName
+          Value: cpereport
+        - Key: LambdaDescription
+          Value: !Sub cpereport lambda (${CpeReportHash})
+        - Key: MemorySize
+          Value: 512
+        - Key: Runtime
+          Value: nodejs14.x
         - Key: Timeout
           Value: 900
         - Key: CustomIAMRoleNameSuffix
