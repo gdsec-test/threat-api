@@ -1,3 +1,5 @@
+#!/bin/bash
+
 # this script builds and deploys docker image for running (Golang so far) ECS Task
 # build.sh should be called from it's directory with next arguments:
 # first - folder where Go module contained
@@ -6,9 +8,15 @@
 
 
 # build golang application binary, all private repos access should be setup to install depencencies (see docs/development/local-setup.md)
+SCRIPT_FOLDER="${0%/*}"
 APP_FOLDER=$1
 APPLICATION_NAME=$2
 AWS_ACCOUNT=$3
+echo Starting to build and deploy ECS Task for $APPLICATION_NAME, params: $APP_FOLDER, $SCRIPT_FOLDER
+
+#save original folder and move to build folder
+pushd $SCRIPT_FOLDER
+
 pushd .
 cd $APP_FOLDER
 set -eu
@@ -30,4 +38,7 @@ docker push $AWS_REPO/api-ecstask:$APPLICATION_NAME
 pushd .
 cd $APP_FOLDER
 rm -irf $APPLICATION_NAME
+popd
+
+# restore original folder
 popd
