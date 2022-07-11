@@ -33,6 +33,7 @@ exclude-signatures = [
 "1a7f12fa476c9e6e8891e680c20cc5c0167450fec61b765011f3d4e3f2bf646c", # github actions hash
 "54315a6a397da966bff445d1383e66a40dfcae60c17fb5da70ac82b7d7aa97a2", # name of AWS Role
 "1772d752ad01ac4aaf4f50e3f4de139098248a7b452468b9e1ea7cdaf2e9427b", # job id
+"6eda9f61af55e9f3822589ec20a3ec7f7a4f490db933c0e931a6c4943beae87a", #OpenCTI hash
 ]
 json = false
 regex = true
