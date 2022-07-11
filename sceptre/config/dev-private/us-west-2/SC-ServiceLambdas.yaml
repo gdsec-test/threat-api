@@ -24,6 +24,7 @@ hooks:
     - !cmd resources/log-group-create.py
   after_create:
     - !cmd rm -f resources/*.sha1
+    - !cmd pushd ../containers/golang && ./build.sh ./test/ testap {{aws_account}} && popd
   before_update:
     - !cmd resources/build-service-lambdas.sh
     - !cmd resources/log-group-create.py
