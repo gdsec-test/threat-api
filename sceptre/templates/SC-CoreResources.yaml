@@ -971,6 +971,23 @@ Resources:
         - Key: doNotShutDown
           Value: true
 
+  ECSTaskRepo:
+    Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
+    Properties:
+      ProductName: ECR
+      ProvisioningArtifactName: 1.2.0
+      ProvisionedProductName: ecstaskrepo
+      ProvisioningParameters:
+        - Key: ECRRepoName
+          Value: api-ecstask
+        - Key: DataClassificationTag
+          Value: "non-pii"
+        - Key: ECRMaxImageCount
+          Value: 10
+      Tags:
+        - Key: doNotShutDown
+          Value: true
+
 Outputs:
   StackArn:
     Value: !GetAtt ThreatAPI.CloudformationStackArn
