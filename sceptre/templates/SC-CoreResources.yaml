@@ -1035,8 +1035,8 @@ Resources:
     Properties:
       Family: api-ecstask-task
       Cpu: '256'
-      TaskRoleArn: !GetAtt ECSTaskIAMRole.CloudformationStackArn
-      ExecutionRoleArn: !GetAtt ECSTaskIAMRole.CloudformationStackArn
+      TaskRoleArn: !Sub arn:aws:iam::${AWS::AccountId}:role/threattools-custom-api-ecstask-role
+      ExecutionRoleArn: !Sub arn:aws:iam::${AWS::AccountId}:role/threattools-custom-api-ecstask-role
       NetworkMode: 'awsvpc'
       Memory: '512'
 #      ContainerDefinitions: {}
