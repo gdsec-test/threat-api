@@ -23,8 +23,8 @@ classDiagram
   	Hosted: ON_PREMISE
   }
 
-  SSO <|-- |Verify JWT<br/>Type: SYNC<br/>Routing: SERVER_TO_SERVER<br/>Resiliency: DEGRADE_TO_CACHE&gt;FAIL<br/>RPS: &lt;1K<br/>Burst: 5x<br/>Consumers/Day: Tens<br/>TLS: YES<br/>Authentication: JWT_USER<br/>Authorization: ROUTING| OpenCTI
-  SSO --|> |Load Credentials<br/>Type: SYNC<br/>Routing: SERVER_TO_SERVER<br/>Resiliency: DEGRADE_TO_CACHE&gt;FAIL<br/>RPS: &lt;1K<br/>Burst: 10x<br/>Consumers/Day: Tens<br/>TLS: YES<br/>Authentication: JWT_USER<br/>Authorization: ROUTING| OpenCTI
+  SSO <-- |Verify JWT<br/>Type: SYNC<br/>Routing: SERVER_TO_SERVER<br/>Resiliency: DEGRADE_TO_CACHE&gt;FAIL<br/>RPS: &lt;1K<br/>Burst: 5x<br/>Consumers/Day: Tens<br/>TLS: YES<br/>Authentication: JWT_USER<br/>Authorization: ROUTING| OpenCTI
+  SSO --> |Load Credentials<br/>Type: SYNC<br/>Routing: SERVER_TO_SERVER<br/>Resiliency: DEGRADE_TO_CACHE&gt;FAIL<br/>RPS: &lt;1K<br/>Burst: 10x<br/>Consumers/Day: Tens<br/>TLS: YES<br/>Authentication: JWT_USER<br/>Authorization: ROUTING| OpenCTI
 
-  ServiceNow ..|> |Backfill IoCs<br/>Type: ASYNC<br/>Routing: SERVER_TO_SERVER<br/>Resiliency: FAIL<br/>RPS: &lt;1K<br/>Burst: 1x<br/>Consumers/Day: One<br/>TLS: YES<br/>Authentication: JWT_USER<br/>Authorization: ROUTING| OpenCTI
+  ServiceNow -.-> |Backfill IoCs<br/>Type: ASYNC<br/>Routing: SERVER_TO_SERVER<br/>Resiliency: FAIL<br/>RPS: &lt;1K<br/>Burst: 1x<br/>Consumers/Day: One<br/>TLS: YES<br/>Authentication: JWT_USER<br/>Authorization: ROUTING| OpenCTI
 ```
