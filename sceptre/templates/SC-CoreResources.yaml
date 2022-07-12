@@ -988,6 +988,21 @@ Resources:
         - Key: doNotShutDown
           Value: true
 
+  ECSTaskFargateCluster:
+    Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
+    Properties:
+      ProductName: FargateCluster
+      ProvisioningArtifactName: 1.1.0
+      ProvisionedProductName: !Sub api-ecstask-cluster
+      ProvisioningParameters:
+        - Key: ClusterName
+          Value: api-ecstask-cluster
+        - Key: ContainerInsights
+          Value: true
+      Tags:
+        - Key: doNotShutDown
+          Value: true
+
 Outputs:
   StackArn:
     Value: !GetAtt ThreatAPI.CloudformationStackArn
