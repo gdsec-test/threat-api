@@ -993,14 +993,66 @@ Resources:
     Properties:
       ProductName: FargateCluster
       ProvisioningArtifactName: 1.1.0
-      ProvisionedProductName: !Sub api-ecstask-cluster
+      ProvisionedProductName: api-ecstask-cluster
       ProvisioningParameters:
         - Key: ClusterName
           Value: api-ecstask-cluster
         - Key: ContainerInsights
-          Value: true
+          Value: "enabled"
       Tags:
         - Key: doNotShutDown
+          Value: true
+
+  ECSTaskIAMRole:
+    Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
+    Properties:
+      ProductName: IAMRole
+      ProvisioningArtifactName: 1.2.0
+      ProvisionedProductName: api-ecstask-role
+      ProvisioningParameters:
+        - Key: AssumingServices
+          Value: ecs-tasks.amazonaws.com
+        - Key: RoleNameSuffix
+          Value: api-ecstask-role
+        - Key: ManagedPolicyArns
+          Value: !Join
+            - ","
+            -
+#              - !Sub "arn:aws:iam::${AWS::AccountId}:policy/GDDeployRoleAccessPolicy"
+              - "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
+              - "arn:aws:iam::aws:policy/AmazonSQSFullAccess"
+
+      Tags:
+        - Key: doNotShutDown
+          # change to false if it can be turned off outside of business hours
+          Value: 'true'
+
+  ECSTaskFargateService:
+    Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
+    Properties:
+      ProductName: FargateService
+      ProvisioningArtifactName: 1.26.4
+      ProvisionedProductName: api-ecstask-service
+      ProvisioningParameters:
+        - Key: ClusterName
+          Value: api-ecstask-cluster
+        - Key: ServiceName
+          Value: api-ecstask-service
+        - Key: TrafficType
+          Value: internal
+        - Key: RequiresIngress
+          Value: 'false'
+        - Key: CustomIAMRoleNameSuffix
+          Value: api-ecstask-role
+        - Key: CustomExecutionIAMRoleNameSuffix
+          Value: api-ecstask-role
+        - Key: Cpu
+          Value: '256'
+        - Key: Memory
+          Value: '1GB'
+      Tags:
+        - Key: doNotShutDown
+          # change to false if it can be turned off outside of business hours
           Value: true
 
 Outputs:
