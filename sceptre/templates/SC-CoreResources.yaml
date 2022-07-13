@@ -1018,9 +1018,14 @@ Resources:
           Value: !Join
             - ","
             -
-#              - !Sub "arn:aws:iam::${AWS::AccountId}:policy/GDDeployRoleAccessPolicy"
-              - "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
-              - "arn:aws:iam::aws:policy/AmazonSQSFullAccess"
+              - !Sub "arn:aws:iam::${AWS::AccountId}:policy/GDDeployRoleAccessPolicy"
+              - !Sub "arn:aws:iam::${AWS::AccountId}:policy/AllowResourcesAccessToCloudWatchPolicy"
+              - !Sub arn:aws:iam::${AWS::AccountId}:policy/GD-AWS-KMS-USER
+              - !Sub arn:aws:iam::${AWS::AccountId}:policy/${DevelopmentTeam}-custom-ThreatPolicySecretsManager
+              - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
+              - arn:aws:iam::aws:policy/AmazonSQSFullAccess
+              - arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess
+              - arn:aws:iam::aws:policy/AmazonSSMReadOnlyAccess
 
       Tags:
         - Key: doNotShutDown
