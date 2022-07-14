@@ -988,6 +988,50 @@ Resources:
         - Key: doNotShutDown
           Value: true
 
+  ECSTaskFargateCluster:
+    Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
+    Properties:
+      ProductName: FargateCluster
+      ProvisioningArtifactName: 1.1.0
+      ProvisionedProductName: api-ecstask-cluster
+      ProvisioningParameters:
+        - Key: ClusterName
+          Value: api-ecstask-cluster
+        - Key: ContainerInsights
+          Value: "enabled"
+      Tags:
+        - Key: doNotShutDown
+          Value: true
+
+  ECSTaskIAMRole:
+    Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
+    Properties:
+      ProductName: IAMRole
+      ProvisioningArtifactName: 1.2.0
+      ProvisionedProductName: api-ecstask-role
+      ProvisioningParameters:
+        - Key: AssumingServices
+          Value: ecs-tasks.amazonaws.com
+        - Key: RoleNameSuffix
+          Value: api-ecstask-role
+        - Key: ManagedPolicyArns
+          Value: !Join
+            - ","
+            -
+              - !Sub "arn:aws:iam::${AWS::AccountId}:policy/GDDeployRoleAccessPolicy"
+              - !Sub "arn:aws:iam::${AWS::AccountId}:policy/AllowResourcesAccessToCloudWatchPolicy"
+              - !Sub arn:aws:iam::${AWS::AccountId}:policy/GD-AWS-KMS-USER
+              - !Sub arn:aws:iam::${AWS::AccountId}:policy/${DevelopmentTeam}-custom-ThreatPolicySecretsManager
+              - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
+              - arn:aws:iam::aws:policy/AmazonSQSFullAccess
+              - arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess
+              - arn:aws:iam::aws:policy/AmazonSSMReadOnlyAccess
+
+      Tags:
+        - Key: doNotShutDown
+          # change to false if it can be turned off outside of business hours
+          Value: 'true'
+
 Outputs:
   StackArn:
     Value: !GetAtt ThreatAPI.CloudformationStackArn

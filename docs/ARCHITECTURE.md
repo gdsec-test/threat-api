@@ -21,6 +21,11 @@
   available output from the various service lambdas will be returned to the
   caller
 
+### Running Job as ECS Cluster Task
+* New approach is to invoke Task inside ECS Cluster `api-ecstask-cluster`. Task has no time limits like AWS Lambda
+* To support other interface ECS Task will be invoked from Boostrap Lambda similar to regular API module Lambda
+* ECS Task receives all needed params via task definition and later it puts results in SQS queue mimicing old interface
+
 ### Notes on architecture
 
 * Note that the WAF uses the default GoDaddy WAF rule set.  However, you need to have the rule `GenericRFI_BODY` overridden in the `AWS-AWSManagedRulesCommonRuleSet` rule set.  This rule blocks certain html in the body of requests, and we need that HTML for our API to function.
