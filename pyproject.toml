@@ -13,7 +13,8 @@ exclude-path-patterns = [
     "package-lock.json",
     "node_modules",
     "(.*)package-lock.json",
-    "(.*)node_modules"
+    "(.*)node_modules",
+    "docs/opencti/OpenCtiDeploymentDiagram.drawio"
 ]
 exclude-entropy-patterns = [
     {path-pattern = '\.github/workflows/.*\.(yaml|yml)', pattern = 'uses: .*@[a-zA-Z0-9]{40}', reason = 'GitHub Actions'}
@@ -34,6 +35,7 @@ exclude-signatures = [
 "54315a6a397da966bff445d1383e66a40dfcae60c17fb5da70ac82b7d7aa97a2", # name of AWS Role
 "1772d752ad01ac4aaf4f50e3f4de139098248a7b452468b9e1ea7cdaf2e9427b", # job id
 "6eda9f61af55e9f3822589ec20a3ec7f7a4f490db933c0e931a6c4943beae87a", #OpenCTI hash
+"45c1c370d6b4815319dc54ed4098280e917369d6c91e6e55847170ce1313d281", # draw.io diagram for OpenCTI
 ]
 json = false
 regex = true

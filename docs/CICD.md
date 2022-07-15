@@ -1,4 +1,6 @@
-# CICD using Github Actions
+# Deployment Diagram
+
+# Threat Tools CICD
 
 ## Secrets
 - Can be accessed from [Settings -> Secrets](https://github.com/gdcorp-infosec/threat-api/settings/secrets/actions)
@@ -65,3 +67,7 @@
     - SNOW_USER (Service account username for ServiceNow)
     - SNOW_PASS (Service account password for ServiceNow)
     - REPO_CLONE_TOKEN_SA_PAT (PAT to clone the `change-order-action` repository from `gdcorp-actions` )
+
+# OpenCTI
+
+![OpenCTI deployment diagram](opencti/OpenCtiDeploymentDiagram.png)
