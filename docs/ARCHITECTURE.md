@@ -1,6 +1,6 @@
-# Threat API
+# Functional Diagram
 
-## High Level Architecture
+## Threat Tools
 
 ![Threat API](./diagrams/threat_api_aws.svg)
 
@@ -30,6 +30,17 @@
 
 * Note that the WAF uses the default GoDaddy WAF rule set.  However, you need to have the rule `GenericRFI_BODY` overridden in the `AWS-AWSManagedRulesCommonRuleSet` rule set.  This rule blocks certain html in the body of requests, and we need that HTML for our API to function.
 
-## Job Request Flow
+### Job Request Flow
 
 ![Job Request Flow](diagrams/job_request_flow.svg)
+
+
+## OpenCTI
+
+### Functional
+
+![OpenCTI functional diagram](opencti/opencti_functional/diagram.jpg).
+
+### Sequence
+
+![OpenCTI sequence diagram](opencti/opencti_sequence_diagram.jpg).
