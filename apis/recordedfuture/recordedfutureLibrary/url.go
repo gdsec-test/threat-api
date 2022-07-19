@@ -17,8 +17,6 @@ const (
 // UrlReportFields are the fields to submit to get a standard URL report
 var UrlReportFields = []string{"analystNotes", "counts", "enterpriseLists", "entity", "links", "metrics", "relatedEntities", "risk", "riskMapping", "sightings", "timestamps"}
 
-//analystNotes,counts,enterpriseLists,entity,links,metrics,relatedEntities,risk,riskMapping,sightings,timestamps
-
 // UrlReport is a sample report that recorded future returns when enriching a URL
 // if you request the fields UrlReportFields
 type UrlReport struct {
@@ -102,13 +100,13 @@ type UrlReport struct {
 	} `json:"metadata"`
 }
 
-// EnrichDomain  performs a CVE search with RecordedFuture
-func EnrichDomain(ctx context.Context, RFKey string, RFClient *http.Client, ip string, fields []string, metadata bool) (*DomainReport, error) {
+// EnrichUrl  performs a CVE search with RecordedFuture
+func EnrichUrl(ctx context.Context, RFKey string, RFClient *http.Client, ioc string, fields []string, metadata bool) (*UrlReport, error) {
 	// Build URL
 	values := url.Values{}
 	values.Add("fields", strings.Join(fields, ","))
 	values.Add("metadata", fmt.Sprintf("%v", metadata))
-	URL := fmt.Sprintf("%s%v?%s", domainEndpoint, ip, values.Encode())
+	URL := fmt.Sprintf("%s%v?%s", urlEndpoint, ioc, values.Encode())
 
 	// Build request
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, URL, nil)
@@ -128,7 +126,7 @@ func EnrichDomain(ctx context.Context, RFKey string, RFClient *http.Client, ip s
 		return nil, fmt.Errorf("bad status code: %d", resp.StatusCode)
 	}
 
-	reportHolder := &DomainReport{}
+	reportHolder := &UrlReport{}
 	err = json.NewDecoder(resp.Body).Decode(reportHolder)
 	if err != nil {
 		return nil, err

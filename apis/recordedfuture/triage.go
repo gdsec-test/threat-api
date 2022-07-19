@@ -113,11 +113,28 @@ func (m *TriageModule) Triage(ctx context.Context, triageRequest *triage.Request
 		}
 
 		//calculate and add the metadata
-		triageData.Metadata = ipMetaDataExtract(rfDomainResults)
+		triageData.Metadata = domainMetaDataExtract(rfDomainResults)
 
 		//dump data as csv
 		triageData.DataType = triage.CSVType
 		triageData.Data = dumpDomainCSV(rfDomainResults)
 	}
+
+	if triageRequest.IOCsType == triage.URLType {
+		// retrieve results
+		rfUrlResults, err := m.urlReportCreate(ctx, triageRequest)
+		if err != nil {
+			triageData.Data = fmt.Sprintf("error from recorded future API for URL: %s", err)
+			return []*triage.Data{triageData}, err
+		}
+
+		// calculate and add the metadata
+		triageData.Metadata = urlMetaDataExtract(rfUrlResults)
+
+		// dump data as csv
+		triageData.DataType = triage.CSVType
+		triageData.Data = dumpUrlCSV(rfUrlResults)
+	}
+
 	return []*triage.Data{triageData}, nil
 }

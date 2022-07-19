@@ -68,7 +68,7 @@ func domainMetaDataExtract(rfDomainResults map[string]*rf.DomainReport) []string
 
 	for domain, data := range rfDomainResults {
 		if data == nil {
-			triageMetaData = append(triageMetaData, fmt.Sprintf("data doesnt't exist for this domain %s", domain))
+			triageMetaData = append(triageMetaData, fmt.Sprintf("data doesn't exist for this domain %s", domain))
 			continue
 		}
 
