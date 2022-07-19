@@ -32,6 +32,8 @@ func (m *TriageModule) Supports() []triage.IOCType {
 		triage.MD5Type,
 		triage.SHA1Type,
 		triage.SHA256Type,
+		triage.DomainType,
+		triage.URLType,
 	}
 }
 
@@ -102,5 +104,20 @@ func (m *TriageModule) Triage(ctx context.Context, triageRequest *triage.Request
 		triageData.Data = dumpHASHCSV(rfMD5Results)
 	}
 
+	if triageRequest.IOCsType == triage.DomainType {
+		//retrieve results
+		rfDomainResults, err := m.domainReportCreate(ctx, triageRequest)
+		if err != nil {
+			triageData.Data = fmt.Sprintf("error from recorded future API for domain: %s", err)
+			return []*triage.Data{triageData}, err
+		}
+
+		//calculate and add the metadata
+		triageData.Metadata = ipMetaDataExtract(rfDomainResults)
+
+		//dump data as csv
+		triageData.DataType = triage.CSVType
+		triageData.Data = dumpDomainCSV(rfDomainResults)
+	}
 	return []*triage.Data{triageData}, nil
 }
