@@ -39,7 +39,7 @@
 
 ### Functional
 
-![OpenCTI functional diagram](opencti/opencti_functional/diagram.jpg).
+![OpenCTI functional diagram](opencti/opencti_functional_diagram.jpg).
 
 ### Sequence
 
