@@ -109,6 +109,7 @@ func EnrichUrl(ctx context.Context, RFKey string, RFClient *http.Client, ioc str
 	values.Add("fields", strings.Join(fields, ","))
 	values.Add("metadata", fmt.Sprintf("%v", metadata))
 	URL := fmt.Sprintf("%s%v?%s", urlEndpoint, url.QueryEscape(ioc), values.Encode())
+	fmt.Println(URL)
 
 	// Build request
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, URL, nil)
