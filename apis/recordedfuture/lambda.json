@@ -9,7 +9,9 @@
       "IP",
       "MD5",
       "SHA1",
-      "SHA256"
+      "SHA256",
+      "DOMAIN",
+      "URL"
     ]
   }
 }
