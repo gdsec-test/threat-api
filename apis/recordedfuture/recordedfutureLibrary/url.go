@@ -55,7 +55,9 @@ type UrlReport struct {
 			Type  string `json:"type"`
 			Value int    `json:"value"`
 		} `json:"metrics"`
-		Links       []interface{} `json:"links"`
+		Links struct {
+			Error string `json:"error"`
+		} `json:"links"`
 		RiskMapping []struct {
 			Rule       string `json:"rule"`
 			Categories []struct {
@@ -106,7 +108,7 @@ func EnrichUrl(ctx context.Context, RFKey string, RFClient *http.Client, ioc str
 	values := url.Values{}
 	values.Add("fields", strings.Join(fields, ","))
 	values.Add("metadata", fmt.Sprintf("%v", metadata))
-	URL := fmt.Sprintf("%s%v?%s", urlEndpoint, ioc, values.Encode())
+	URL := fmt.Sprintf("%s%v?%s", urlEndpoint, url.QueryEscape(ioc), values.Encode())
 
 	// Build request
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, URL, nil)

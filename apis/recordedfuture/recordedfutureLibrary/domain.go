@@ -62,7 +62,9 @@ type DomainReport struct {
 			Type  string `json:"type"`
 			Value int    `json:"value"`
 		} `json:"metrics"`
-		Links       []interface{} `json:"links"`
+		Links struct {
+			Error string `json:"error"`
+		} `json:"links"`
 		RiskMapping []struct {
 			Rule       string `json:"rule"`
 			Categories []struct {
