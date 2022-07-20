@@ -108,8 +108,7 @@ func EnrichUrl(ctx context.Context, RFKey string, RFClient *http.Client, ioc str
 	values := url.Values{}
 	values.Add("fields", strings.Join(fields, ","))
 	values.Add("metadata", fmt.Sprintf("%v", metadata))
-	URL := fmt.Sprintf("%s%v?%s", urlEndpoint, url.QueryEscape(ioc), values.Encode())
-	fmt.Println(URL)
+	URL := fmt.Sprintf("%s%s?%s", urlEndpoint, url.QueryEscape(ioc), values.Encode())
 
 	// Build request
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, URL, nil)
@@ -126,7 +125,7 @@ func EnrichUrl(ctx context.Context, RFKey string, RFClient *http.Client, ioc str
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("bad status code: %d", resp.StatusCode)
+		return nil, fmt.Errorf("Bad response status code: %d", resp.StatusCode)
 	}
 
 	reportHolder := &UrlReport{}
