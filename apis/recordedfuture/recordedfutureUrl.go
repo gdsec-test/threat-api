@@ -11,10 +11,6 @@ import (
 	"github.com/gdcorp-infosec/threat-api/lambdas/common/triagelegacyconnector/triage"
 )
 
-const (
-	riskThreshold = 60
-)
-
 // urlReportCreate generates a map of UrlReport from RF API
 func (m *TriageModule) urlReportCreate(ctx context.Context, triageRequest *triage.Request) (map[string]*rf.UrlReport, error) {
 	rfUrlResults := make(map[string]*rf.UrlReport)
@@ -65,7 +61,7 @@ func urlMetaDataExtract(rfUrlResults map[string]*rf.UrlReport) []string {
 
 	riskUrl := 0
 
-	for ioc, data := range rUrlResults {
+	for ioc, data := range rfUrlResults {
 		if data == nil {
 			triageMetaData = append(triageMetaData, fmt.Sprintf("data doesn't exist for this URL: %s", ioc))
 			continue
