@@ -11,62 +11,54 @@ import (
 	"regexp"
 	"strings"
 	"sync"
+	"time"
 
 	// "github.com/gdcorp-infosec/threat-api/lambdas/common"
 	"github.com/gdcorp-infosec/threat-api/lambdas/common/triagelegacyconnector/triage"
 )
 
 const (
-	APIvoidEndpoint = "https://endpoint.apivoid.com/%s/v1/pay-as-you-go/?%s=%s&key=%s"
+	APIvoidEndpoint     = "https://endpoint.apivoid.com/%s/v1/pay-as-you-go/?%s=%s&key=%s"
+	limiterMilliseconds = 333
 )
 
-const (
-	maxThreadCount = 5 //TODO: Adjust the count according to your service
-)
-
-// GetAPIVoidData returns the needed data TODO: Provide the description in brief
+// GetAPIVoidData queries APIVoid's IP Reputation data and returns enriched results
 func (m *TriageModule) GetAPIVoidData(ctx context.Context, triageRequest *triage.Request) (map[string]*APIvoidReport, error) {
 
-	apivoidResults := make(map[string]*APIvoidReport) //TODO: Create the return structure accordingly
+	apivoidResults := make(map[string]*APIvoidReport)
 
-	wg := sync.WaitGroup{}
 	apivoidLock := sync.Mutex{}
-	threadLimit := make(chan int, maxThreadCount)
 
+	// insert all iocs into a channel for rate limiting
+	iocs := make(chan string, len(triageRequest.IOCs))
 	for _, ioc := range triageRequest.IOCs {
-		// Check context
-		select {
-		case <-ctx.Done():
-			break
-		case threadLimit <- 1:
-			wg.Add(1)
-		default:
+		iocs <- ioc
+	}
+	close(iocs)
+
+	// APIVoid developer docs suggest sending not more than 2-3 requests/second
+	// implementing a limiter to send a request to APIVoid every 333ms which is ~3 req/sec
+	limiter := time.Tick(limiterMilliseconds * time.Millisecond)
+	for ioc := range iocs {
+		<-limiter
+		span, spanCtx := tb.TracerLogger.StartSpan(ctx, "APIVoidLookup", "apivoid", "", "apivoidIoCLookup")
+		apivoidResult, err := GetAPIVoidReport(ctx, ioc, m.APIVoidClient, triageRequest.IOCsType, m.APIVoidKey)
+		if err != nil {
+			span.AddError(err)
+			apivoidLock.Lock()
+			apivoidResults[ioc] = nil
+			apivoidLock.Unlock()
+			span.End(spanCtx)
+			continue
 		}
 
-		span, spanCtx := tb.TracerLogger.StartSpan(ctx, "APIVoidLookup", "apivoid", "", "apivoidIoCLookup")
+		apivoidLock.Lock()
+		apivoidResults[ioc] = apivoidResult
+		apivoidLock.Unlock()
 
-		go func(ioc string) {
-			defer func() {
-				<-threadLimit
-				wg.Done()
-			}()
-			apivoidResult, err := GetAPIVoidReport(ctx, ioc, m.APIVoidClient, triageRequest.IOCsType, m.APIVoidKey)
-			if err != nil {
-				span.AddError(err)
-				apivoidLock.Lock()
-				apivoidResults[ioc] = nil
-				apivoidLock.Unlock()
-				return
-			}
-
-			apivoidLock.Lock()
-			apivoidResults[ioc] = apivoidResult
-			apivoidLock.Unlock()
-		}(ioc)
 		span.End(spanCtx)
-	}
 
-	wg.Wait()
+	}
 	return apivoidResults, nil
 }
 
@@ -158,7 +150,6 @@ func GetAPIVoidReport(ctx context.Context, ioc string, APIvoidClient *http.Clien
 		return nil, fmt.Errorf("API Void report is canceled due to not supported IOC type: %s,%s", iocType, ioc)
 	}
 	URL := fmt.Sprintf(APIvoidEndpoint, APIType, APIParam, ioc, APIVoidKey)
-	fmt.Println(URL)
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, URL, nil)
 	if err != nil {
