@@ -95,7 +95,7 @@ func dumpUrlCSV(rfUrlResults map[string]*rf.UrlReport) string {
 		"Last Seen",
 	}
 	csv.Write(headers)
-	for _, data := range rfUrlResults {
+	for ioc, data := range rfUrlResults {
 		if data == nil {
 			cols := make([]string, len(headers))
 			for i := 0; i < len(headers); i++ {

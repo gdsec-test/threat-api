@@ -31,10 +31,14 @@ func TestIpsToCsv(t *testing.T) {
 
 			expectedCSV := "Owner,ASN,Country,Harmless,Malicious,Suspicious,Timeout,Undetected,Badness\nThis is a fake response,1647895417,This is a fake response,0,0,0,0,0,0.00\nThis is a fake response,1647895417,This is a fake response,0,0,0,0,0,0.00\n"
 
+			fakeIocs := []string{
+				"127.0.0.1",
+				"255.255.255.255",
+			}
 			mockPayloads := make([]VirusTotalObject, 2)
 			mockPayloads[0] = &Object{}
 			mockPayloads[1] = &Object{}
-			actualCSV := IpsToCsv(mockPayloads, virusTotalMetaDataHolder)
+			actualCSV := IpsToCsv(fakeIocs, mockPayloads, virusTotalMetaDataHolder)
 
 			So(actualCSV, ShouldResemble, expectedCSV)
 		})

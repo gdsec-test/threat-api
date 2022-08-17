@@ -31,6 +31,10 @@ func TestDomainsToCsv(t *testing.T) {
 
 			expectedCSV := "Created,Reputation,WHOIS,Harmless,Malicious,Suspicious,Timeout,Undetected,Badness\n1969-12-31T19:01:05-05:00,1647895417,This is a test string,0,0,0,0,0,0.00\n1969-12-31T19:01:05-05:00,65,This is a test string,0,0,0,0,0,0.00\n"
 
+			fakeIocs := []string{
+				"CVE-1776-001",
+				"CVE-1984-007",
+			}
 			mockPayloads := make([]VirusTotalObject, 2)
 			mockPayloads[0] = &Object{}
 			mockPayloads[1] = &Object{}
@@ -41,7 +45,7 @@ func TestDomainsToCsv(t *testing.T) {
 				return expectedCSV
 			}))
 
-			actualCSV := DomainsToCsv(mockPayloads, virusTotalMetaDataHolder)
+			actualCSV := DomainsToCsv(fakeIocs, mockPayloads, virusTotalMetaDataHolder)
 
 			So(actualCSV, ShouldResemble, expectedCSV)
 		})

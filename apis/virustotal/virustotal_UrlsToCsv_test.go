@@ -33,10 +33,14 @@ func TestUrlsToCsv(t *testing.T) {
 			expectedCSV := "URL,Title,Reputation,First Submission,Harmless,Malicious,Suspicious,Timeout,Undetected,Badness\nThis is a fake response,This is a fake response,1647895417,2022-03-21T13:43:37-07:00,0,0,0,0,0,0.00\nThis is a fake response,This is a fake response,1647895417,2022-03-21T13:43:37-07:00,0,0,0,0,0,0.00\n"
 			removeLocaTimezone := regexp.MustCompile(`(\d{4}-\d{2}-\d{2})[^,]*`)
 			expectedCSV = removeLocaTimezone.ReplaceAllString(expectedCSV, "$1")
+			fakeIocs := []string{
+				"http://localhost/root",
+				"https://nowhere.site/path/to/nothing",
+			}
 			mockPayloads := make([]VirusTotalObject, 2)
 			mockPayloads[0] = &Object{}
 			mockPayloads[1] = &Object{}
-			actualCSV := UrlsToCsv(mockPayloads, virusTotalMetaDataHolder)
+			actualCSV := UrlsToCsv(fakeIocs, mockPayloads, virusTotalMetaDataHolder)
 			actualCSV = removeLocaTimezone.ReplaceAllString(actualCSV, "$1")
 			So(actualCSV, ShouldResemble, expectedCSV)
 		})
