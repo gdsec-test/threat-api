@@ -88,7 +88,9 @@ func dumpHASHCSV(rfHASHResults map[string]*rf.HashReport) string {
 	resp := bytes.Buffer{}
 	csv := csv.NewWriter(&resp)
 	// Write headers
-	csv.Write([]string{
+	headers := []string{
+		"IoC",
+		"Badness",
 		"IntelCardLink",
 		"Risk Score",
 		"Criticality",
@@ -98,10 +100,15 @@ func dumpHASHCSV(rfHASHResults map[string]*rf.HashReport) string {
 		"HashAlgorithm",
 		"ThreatLists",
 		"FileHashes",
-		"Badness",
-	})
-	for _, data := range rfHASHResults {
+	}
+	csv.Write(headers)
+	for ioc, data := range rfHASHResults {
 		if data == nil {
+			cols := make([]string, len(headers))
+			for i := 0; i < len(headers); i++ {
+				cols[i] = ""
+			}
+			csv.Write(cols)
 			continue
 		}
 		// Processing few non string data before adding to CSV
@@ -113,7 +120,10 @@ func dumpHASHCSV(rfHASHResults map[string]*rf.HashReport) string {
 			fileHashes = append(fileHashes, hash)
 		}
 
+		badness := float64(data.Data.Risk.Score) / 100.0
 		cols := []string{
+			ioc,
+			fmt.Sprintf("%.02f", badness),
 			data.Data.IntelCard,
 			fmt.Sprintf("%d", data.Data.Risk.Score),
 			fmt.Sprintf("%d", data.Data.Risk.Criticality),
@@ -123,7 +133,6 @@ func dumpHASHCSV(rfHASHResults map[string]*rf.HashReport) string {
 			data.Data.HashAlgorithm,
 			strings.Join(threatLists, " "),
 			strings.Join(fileHashes, "/"),
-			fmt.Sprintf("%.02f", float64(data.Data.Risk.Score)/100.0),
 		}
 		csv.Write(cols)
 	}

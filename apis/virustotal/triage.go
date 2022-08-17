@@ -85,7 +85,7 @@ func (m *TriageModule) ProcessRequest(ctx context.Context, triageRequest *triage
 			entries = append(entries, entry)
 		}
 		entriesVTObject := covertToVTObject(entries)
-		triageData.Data = HashesToCsv(entriesVTObject, metaDataHolder)
+		triageData.Data = HashesToCsv(triageRequest.IOCs, entriesVTObject, metaDataHolder)
 		triageData.Metadata = []string{fmt.Sprintf("Found %d matching %s hashes", len(entries), triageRequest.IOCsType)}
 	case triage.DomainType:
 		for _, ioc := range triageRequest.IOCs {
@@ -97,7 +97,7 @@ func (m *TriageModule) ProcessRequest(ctx context.Context, triageRequest *triage
 			entries = append(entries, entry)
 		}
 		entriesVTObject := covertToVTObject(entries)
-		triageData.Data = DomainsToCsv(entriesVTObject, metaDataHolder)
+		triageData.Data = DomainsToCsv(triageRequest.IOCs, entriesVTObject, metaDataHolder)
 		triageData.Metadata = []string{fmt.Sprintf("Found %d matching domains", len(entries))}
 	case triage.IPType:
 		for _, ioc := range triageRequest.IOCs {
@@ -109,7 +109,7 @@ func (m *TriageModule) ProcessRequest(ctx context.Context, triageRequest *triage
 			entries = append(entries, entry)
 		}
 		entriesVTObject := covertToVTObject(entries)
-		triageData.Data = IpsToCsv(entriesVTObject, metaDataHolder)
+		triageData.Data = IpsToCsv(triageRequest.IOCs, entriesVTObject, metaDataHolder)
 		triageData.Metadata = []string{fmt.Sprintf("Found %d matching IP address", len(entries))}
 	case triage.URLType:
 		for _, ioc := range triageRequest.IOCs {
@@ -121,7 +121,7 @@ func (m *TriageModule) ProcessRequest(ctx context.Context, triageRequest *triage
 			entries = append(entries, entry)
 		}
 		entriesVTObject := covertToVTObject(entries)
-		triageData.Data = UrlsToCsv(entriesVTObject, metaDataHolder)
+		triageData.Data = UrlsToCsv(triageRequest.IOCs, entriesVTObject, metaDataHolder)
 		triageData.Metadata = []string{fmt.Sprintf("Found %d matching URLs", len(entries))}
 	}
 	currentTime := time.Now()
@@ -181,11 +181,13 @@ func BadnessScore(reputation int64, analysis *VirusTotalAnalysis) float64 {
 
 // Dump the relevant fields from the VirusTotal Object returned by
 // the files interface into CSV format.
-func HashesToCsv(payloads []VirusTotalObject, metaDataHolder *vtlib.MetaData) string {
+func HashesToCsv(iocs []string, payloads []VirusTotalObject, metaDataHolder *vtlib.MetaData) string {
 	resp := bytes.Buffer{}
 	csv := csv.NewWriter(&resp)
 
-	csv.Write([]string{
+	headers := []string{
+		"IoC",
+		"Badness",
 		"MD5",
 		"SHA1",
 		"SHA256",
@@ -198,10 +200,10 @@ func HashesToCsv(payloads []VirusTotalObject, metaDataHolder *vtlib.MetaData) st
 		"Suspicious",
 		"Timeout",
 		"Undetected",
-		"Badness",
-	})
+	}
+	csv.Write(headers)
 
-	for _, payload := range payloads {
+	for i, payload := range payloads {
 		if payload == nil {
 			continue
 		}
@@ -256,6 +258,8 @@ func HashesToCsv(payloads []VirusTotalObject, metaDataHolder *vtlib.MetaData) st
 		}
 
 		cols := []string{
+			iocs[i],
+			strconv.FormatFloat(badness, 'f', 2, 64),
 			md5,
 			sha1,
 			sha256,
@@ -268,7 +272,6 @@ func HashesToCsv(payloads []VirusTotalObject, metaDataHolder *vtlib.MetaData) st
 			strconv.FormatInt(analysis.suspicious, 10),
 			strconv.FormatInt(analysis.timeout, 10),
 			strconv.FormatInt(analysis.undetected, 10),
-			strconv.FormatFloat(badness, 'f', 2, 64),
 		}
 		csv.Write(cols)
 	}
@@ -279,11 +282,13 @@ func HashesToCsv(payloads []VirusTotalObject, metaDataHolder *vtlib.MetaData) st
 
 // Dump the relevant fields from the VirusTotal Object returned by
 // the domains interface into CSV format.
-func DomainsToCsv(payloads []VirusTotalObject, metaDataHolder *vtlib.MetaData) string {
+func DomainsToCsv(iocs []string, payloads []VirusTotalObject, metaDataHolder *vtlib.MetaData) string {
 	resp := bytes.Buffer{}
 	csv := csv.NewWriter(&resp)
 
-	csv.Write([]string{
+	headers := []string{
+		"IoC",
+		"Badness",
 		"Created",
 		"Reputation",
 		"WHOIS",
@@ -292,10 +297,10 @@ func DomainsToCsv(payloads []VirusTotalObject, metaDataHolder *vtlib.MetaData) s
 		"Suspicious",
 		"Timeout",
 		"Undetected",
-		"Badness",
-	})
+	}
+	csv.Write(headers)
 
-	for _, payload := range payloads {
+	for i, payload := range payloads {
 		if payload == nil {
 			continue
 		}
@@ -330,6 +335,8 @@ func DomainsToCsv(payloads []VirusTotalObject, metaDataHolder *vtlib.MetaData) s
 		}
 
 		cols := []string{
+			iocs[i],
+			strconv.FormatFloat(badness, 'f', 2, 64),
 			creationDate,
 			strconv.FormatInt(reputation, 10),
 			whois,
@@ -338,7 +345,6 @@ func DomainsToCsv(payloads []VirusTotalObject, metaDataHolder *vtlib.MetaData) s
 			strconv.FormatInt(analysis.suspicious, 10),
 			strconv.FormatInt(analysis.timeout, 10),
 			strconv.FormatInt(analysis.undetected, 10),
-			strconv.FormatFloat(badness, 'f', 2, 64),
 		}
 		csv.Write(cols)
 	}
@@ -349,11 +355,13 @@ func DomainsToCsv(payloads []VirusTotalObject, metaDataHolder *vtlib.MetaData) s
 
 // Dump the relevant fields from the VirusTotal Object returned by
 // the ip_addresses interface into CSV format.
-func IpsToCsv(payloads []VirusTotalObject, metaDataHolder *vtlib.MetaData) string {
+func IpsToCsv(iocs []string, payloads []VirusTotalObject, metaDataHolder *vtlib.MetaData) string {
 	resp := bytes.Buffer{}
 	csv := csv.NewWriter(&resp)
 
 	csv.Write([]string{
+		"IoC",
+		"Badness",
 		"Owner",
 		"ASN",
 		"Country",
@@ -362,10 +370,9 @@ func IpsToCsv(payloads []VirusTotalObject, metaDataHolder *vtlib.MetaData) strin
 		"Suspicious",
 		"Timeout",
 		"Undetected",
-		"Badness",
 	})
 
-	for _, payload := range payloads {
+	for i, payload := range payloads {
 		if payload == nil {
 			continue
 		}
@@ -400,6 +407,8 @@ func IpsToCsv(payloads []VirusTotalObject, metaDataHolder *vtlib.MetaData) strin
 		}
 
 		cols := []string{
+			iocs[i],
+			strconv.FormatFloat(badness, 'f', 2, 64),
 			owner,
 			strconv.FormatInt(asn, 10),
 			country,
@@ -408,7 +417,6 @@ func IpsToCsv(payloads []VirusTotalObject, metaDataHolder *vtlib.MetaData) strin
 			strconv.FormatInt(analysis.suspicious, 10),
 			strconv.FormatInt(analysis.timeout, 10),
 			strconv.FormatInt(analysis.undetected, 10),
-			strconv.FormatFloat(badness, 'f', 2, 64),
 		}
 		csv.Write(cols)
 	}
@@ -419,12 +427,13 @@ func IpsToCsv(payloads []VirusTotalObject, metaDataHolder *vtlib.MetaData) strin
 
 // Dump the relevant fields from the VirusTotal Object returned by
 // the urls interface into CSV format.
-func UrlsToCsv(payloads []VirusTotalObject, metaDataHolder *vtlib.MetaData) string {
+func UrlsToCsv(iocs []string, payloads []VirusTotalObject, metaDataHolder *vtlib.MetaData) string {
 	resp := bytes.Buffer{}
 	csv := csv.NewWriter(&resp)
 
-	csv.Write([]string{
-		"URL",
+	headers := []string{
+		"IoC",
+		"Badness",
 		"Title",
 		"Reputation",
 		"First Submission",
@@ -433,10 +442,10 @@ func UrlsToCsv(payloads []VirusTotalObject, metaDataHolder *vtlib.MetaData) stri
 		"Suspicious",
 		"Timeout",
 		"Undetected",
-		"Badness",
-	})
+	}
+	csv.Write(headers)
 
-	for _, payload := range payloads {
+	for i, payload := range payloads {
 		if payload == nil {
 			continue
 		}
@@ -451,11 +460,6 @@ func UrlsToCsv(payloads []VirusTotalObject, metaDataHolder *vtlib.MetaData) stri
 		t := time.Unix(firstSubmissionEpoch, 0)
 		firstSubmission := t.Format(time.RFC3339)
 
-		url, err := payload.GetString("url")
-		if err != nil {
-			fmt.Println(err)
-			continue
-		}
 		title, err := payload.GetString("title")
 		if err != nil {
 			// some legitimate results omit a title field
@@ -476,7 +480,8 @@ func UrlsToCsv(payloads []VirusTotalObject, metaDataHolder *vtlib.MetaData) stri
 		}
 
 		cols := []string{
-			url,
+			iocs[i],
+			strconv.FormatFloat(badness, 'f', 2, 64),
 			title,
 			strconv.FormatInt(reputation, 10),
 			firstSubmission,
@@ -485,7 +490,6 @@ func UrlsToCsv(payloads []VirusTotalObject, metaDataHolder *vtlib.MetaData) stri
 			strconv.FormatInt(analysis.suspicious, 10),
 			strconv.FormatInt(analysis.timeout, 10),
 			strconv.FormatInt(analysis.undetected, 10),
-			strconv.FormatFloat(badness, 'f', 2, 64),
 		}
 		csv.Write(cols)
 	}

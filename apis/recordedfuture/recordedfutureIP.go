@@ -99,7 +99,9 @@ func dumpIPCSV(rfIPResults map[string]*rf.IPReport) string {
 	resp := bytes.Buffer{}
 	csv := csv.NewWriter(&resp)
 	// Write headers
-	csv.Write([]string{
+	headers := []string{
+		"IoC",
+		"Badness",
 		"IntelCardLink",
 		"Risk Score",
 		"Criticality",
@@ -107,11 +109,14 @@ func dumpIPCSV(rfIPResults map[string]*rf.IPReport) string {
 		"First Seen",
 		"Last Seen",
 		"ThreatLists",
-		"Badness",
-	})
-	for _, data := range rfIPResults {
+	}
+	csv.Write(headers)
+	for ioc, data := range rfIPResults {
 		if data == nil {
-			cols := []string{"", "", "", "", "", "", ""}
+			cols := make([]string, len(headers))
+			for i := 0; i < len(headers); i++ {
+				cols[i] = ""
+			}
 			csv.Write(cols)
 			continue
 		}
@@ -121,7 +126,10 @@ func dumpIPCSV(rfIPResults map[string]*rf.IPReport) string {
 			threatLists = append(threatLists, threatlist.Name)
 		}
 
+		badness := float64(data.Data.Risk.Score) / 100.0
 		cols := []string{
+			ioc,
+			fmt.Sprintf("%.02f", badness),
 			data.Data.IntelCard,
 			fmt.Sprintf("%d", data.Data.Risk.Score),
 			fmt.Sprintf("%d", data.Data.Risk.Criticality),
@@ -129,7 +137,6 @@ func dumpIPCSV(rfIPResults map[string]*rf.IPReport) string {
 			data.Data.Timestamps.FirstSeen.String(),
 			data.Data.Timestamps.LastSeen.String(),
 			strings.Join(threatLists, " "),
-			fmt.Sprintf("%.02f", float64(data.Data.Risk.Score)/100.0),
 		}
 		csv.Write(cols)
 	}
