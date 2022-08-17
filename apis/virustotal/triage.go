@@ -191,7 +191,6 @@ func HashesToCsv(iocs []string, payloads []VirusTotalObject, metaDataHolder *vtl
 		"MD5",
 		"SHA1",
 		"SHA256",
-		"Magic",
 		"File Size",
 		"First Seen",
 		"Reputation",
@@ -210,7 +209,7 @@ func HashesToCsv(iocs []string, payloads []VirusTotalObject, metaDataHolder *vtl
 
 		// convert the "first seen in the wild" field from
 		// the Linux epoch time as an integer into a RFC 3339 string
-		firstSeenEpoch, err := payload.GetInt64("first_seen_itw_date")
+		firstSeenEpoch, err := payload.GetInt64("first_submission_date")
 		if err != nil {
 			fmt.Println(err)
 			continue
@@ -229,11 +228,6 @@ func HashesToCsv(iocs []string, payloads []VirusTotalObject, metaDataHolder *vtl
 			continue
 		}
 		sha256, err := payload.GetString("sha256")
-		if err != nil {
-			fmt.Println(err)
-			continue
-		}
-		magic, err := payload.GetString("magic")
 		if err != nil {
 			fmt.Println(err)
 			continue
@@ -263,7 +257,6 @@ func HashesToCsv(iocs []string, payloads []VirusTotalObject, metaDataHolder *vtl
 			md5,
 			sha1,
 			sha256,
-			magic,
 			strconv.FormatInt(size, 10),
 			firstSeen,
 			strconv.FormatInt(reputation, 10),
