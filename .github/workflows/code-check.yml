@@ -11,8 +11,7 @@ jobs:
       - name: Add Environmental Vars for Dev-Private
         shell: bash
         run: |
-          echo ACCOUNT_ID=702044048079 >> $GITHUB_ENV
-          echo DEPLOY_ROLE=arn:aws:iam::702044048079:role/GD-AWS-USA-GD-ThreatTools-Dev-Private-Deploy >> $GITHUB_ENV
+          echo DEPLOY_ROLE=arn:aws:iam::345790377847:role/GD-AWS-USA-GD-ThreatTools-Dev-Private-Deploy >> $GITHUB_ENV
 
       - name: Configure AWS credentials for the DEV-PRIVATE Account
         uses: aws-actions/configure-aws-credentials@cefc5912bc61e2b5a3b049c839fc283c7712d4e0
@@ -46,20 +45,23 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b
 
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@05b148adc31e091bafbaf404f745055d4d3bc9d2
+      - name: Add Environmental Vars for Dev-Private
+        shell: bash
+        run: |
+          echo DEPLOY_ROLE=arn:aws:iam::345790377847:role/GD-AWS-USA-GD-ThreatTools-Dev-Private-Deploy >> $GITHUB_ENV
+
+      - name: Configure AWS credentials for the DEV-PRIVATE Account
+        uses: aws-actions/configure-aws-credentials@cefc5912bc61e2b5a3b049c839fc283c7712d4e0
         with:
-          aws-access-key-id: ${{ secrets.DEV_PRIVATE_AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.DEV_PRIVATE_AWS_SECRET_ACCESS_KEY }}
-          role-to-assume: arn:aws:iam::345790377847:role/GD-AWS-USA-GD-ThreatTools-Dev-Private-Deploy
-          role-duration-seconds: 1200                                 # default max is 7200
-          aws-region: us-west-2                                       # set region you want to target
+          role-to-assume: ${{ env.DEPLOY_ROLE }}
+          role-duration-seconds: 1200
+          aws-region: us-west-2
           role-skip-session-tagging: true
 
-      - name: Set up Python 3.9.0
+      - name: Set up Python 3.9
         uses: actions/setup-python@d09bd5e6005b175076f227b13d9730d56e9dcfcb
         with:
-          python-version: 3.9.0
+          python-version: 3.9
           architecture: 'x64'
 
       - name: Setup Python Environment
@@ -204,6 +206,3 @@ jobs:
             popd
           fi;
           done
-
-# TODO: Remove Test line here
-#          git config --global url.git@github.com:gdcorp-.insteadOf https://github.com/gdcorp-
