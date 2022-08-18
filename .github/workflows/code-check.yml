@@ -8,14 +8,18 @@ jobs:
   tartufo:
     runs-on: [self-hosted,threat-runners]
     steps:
-      - name: Configure AWS credentials for ECR access
-        uses: aws-actions/configure-aws-credentials@05b148adc31e091bafbaf404f745055d4d3bc9d2
+      - name: Add Environmental Vars for Dev-Private
+        shell: bash
+        run: |
+          echo ACCOUNT_ID=702044048079 >> $GITHUB_ENV
+          echo DEPLOY_ROLE=arn:aws:iam::702044048079:role/GD-AWS-USA-GD-ThreatTools-Dev-Private-Deploy >> $GITHUB_ENV
+
+      - name: Configure AWS credentials for the DEV-PRIVATE Account
+        uses: aws-actions/configure-aws-credentials@cefc5912bc61e2b5a3b049c839fc283c7712d4e0
         with:
-          aws-access-key-id: ${{ secrets.DEV_PRIVATE_AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.DEV_PRIVATE_AWS_SECRET_ACCESS_KEY }}
-          role-to-assume: arn:aws:iam::345790377847:role/GD-AWS-USA-GD-ThreatTools-Dev-Private-Deploy
-          role-duration-seconds: 1200                                 # default max is 7200
-          aws-region: us-west-2                                       # set region you want to target
+          role-to-assume: ${{ env.DEPLOY_ROLE }}
+          role-duration-seconds: 1200
+          aws-region: us-west-2
           role-skip-session-tagging: true
 
       - name: Login to Amazon ECR
@@ -32,19 +36,8 @@ jobs:
       - name: Checkout Current Repo to be Scanned
         uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b
 
-      - name: Checkout Tartufo Repo
-        uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b
-        with:
-          repository: gdcorp-actions/tartufo
-          token: ${{ secrets.REPO_CLONE_TOKEN_SA_PAT }} # PAT with read access to gdcorp-actions/tartufo
-          path: tartufo
-          ref: main
-          persist-credentials: false # Do not persist auth token in local git config.
-
-      - name: Tartufo secret scanning using the Tartufo GitHub Action
-        uses: ./tartufo
-        with:
-          github_token: ${{ secrets.REPO_CLONE_TOKEN_SA_PAT }}
+      - name: Tartufo Scan
+        uses: godaddy/tartufo-action@c82bd97f0052b12d204d03cea56a5f4667d9c0de
 
   python-code-check:
     needs: tartufo
