@@ -25,17 +25,23 @@ jobs:
     if: github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' || github.event_name == 'push'
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # v2.3.4
-          
+    
+      - name: Add Environmental Vars for Dev-Private
+        shell: bash
+        run: |
+          echo DEPLOY_ROLE=arn:aws:iam::345790377847:role/GD-AWS-USA-GD-ThreatTools-Dev-Private-Deploy >> $GITHUB_ENV
+      
       - name: Configure AWS credentials for the DEV-PRIVATE Account
         uses: aws-actions/configure-aws-credentials@cefc5912bc61e2b5a3b049c839fc283c7712d4e0
         with:
-          role-to-assume: arn:aws:iam::345790377847:role/GD-AWS-USA-GD-ThreatTools-Dev-Private-Deploy
-          role-duration-seconds: 7200 # 2 hours
+          role-to-assume: ${{ env.DEPLOY_ROLE }}
+          role-duration-seconds: 1200
           aws-region: us-west-2
           role-skip-session-tagging: true
 
+      - name: Checkout
+        uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # v2.3.4
+          
       - name: Login to Amazon ECR
         uses: aws-actions/amazon-ecr-login@3d4e073ce6a6845ed27b30a0fe05b6e22c80ac6b # 2.2.2
         with:
