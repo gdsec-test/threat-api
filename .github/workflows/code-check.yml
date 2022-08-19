@@ -36,8 +36,19 @@ jobs:
       - name: Checkout Current Repo to be Scanned
         uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b
 
-      - name: Tartufo Scan
-        uses: godaddy/tartufo-action@c82bd97f0052b12d204d03cea56a5f4667d9c0de
+      - name: Checkout Tartufo Repo
+        uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b
+        with:
+          repository: gdcorp-actions/tartufo
+          token: ${{ secrets.REPO_CLONE_TOKEN_SA_PAT }} # PAT with read access to gdcorp-actions/tartufo
+          path: tartufo
+          ref: main
+          persist-credentials: false # Do not persist auth token in local git config.
+
+      - name: Tartufo secret scanning using the Tartufo GitHub Action
+        uses: ./tartufo
+        with:
+          github_token: ${{ secrets.REPO_CLONE_TOKEN_SA_PAT }}
 
   python-code-check:
     needs: tartufo
