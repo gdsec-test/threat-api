@@ -54,7 +54,7 @@ jobs:
             path: ${{ env.REPO_CHECKOUT_PATH }}
 
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@cefc5912bc61e2b5a3b049c839fc283c7712d4e0
+        uses: aws-actions/configure-aws-credentials@58bb84115423d4d62a0290c218639a795576fe45
         with:
           role-to-assume: ${{ env.DEPLOY_ROLE }}
           role-duration-seconds: 7200 # 2 hours
