@@ -34,7 +34,7 @@ jobs:
           echo DEPLOY_ROLE=arn:aws:iam::345790377847:role/GD-AWS-USA-GD-ThreatTools-Dev-Private-Deploy >> $GITHUB_ENV
       
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@58bb84115423d4d62a0290c218639a795576fe45 # v1.7.0
+        uses: aws-actions/configure-aws-credentials@67fbcbb121271f7775d2e7715933280b06314838 # v1.7.0
         with:
           role-to-assume: ${{ env.DEPLOY_ROLE }}
           role-duration-seconds: 7200 # 2 hours
