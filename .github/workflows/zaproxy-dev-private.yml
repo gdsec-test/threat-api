@@ -32,15 +32,7 @@ jobs:
           echo CICD_ACCOUNT_ID=570415283994 >> $GITHUB_ENV
           echo CICD_DEPLOY_ROLE=arn:aws:iam::570415283994:role/GD-AWS-USA-GD-ThreatTools-CICD-Deploy >> $GITHUB_ENV
           echo DEPLOY_ROLE=arn:aws:iam::345790377847:role/GD-AWS-USA-GD-ThreatTools-Dev-Private-Deploy >> $GITHUB_ENV
-      
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@cefc5912bc61e2b5a3b049c839fc283c7712d4e0
-        with:
-          role-to-assume: ${{ env.DEPLOY_ROLE }}
-          role-duration-seconds: 7200 # 2 hours
-          role-skip-session-tagging: true
-          aws-region: us-west-2
-      
+
       - name: Get Secrets
         id: masked-secrets
         run: |
@@ -60,6 +52,14 @@ jobs:
             ref: ${{ github.ref }}
             token: ${{ steps.masked-secrets.outputs.ci-token }}
             path: ${{ env.REPO_CHECKOUT_PATH }}
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@cefc5912bc61e2b5a3b049c839fc283c7712d4e0
+        with:
+          role-to-assume: ${{ env.DEPLOY_ROLE }}
+          role-duration-seconds: 7200 # 2 hours
+          role-skip-session-tagging: true
+          aws-region: us-west-2
           
       - name: Login to Amazon ECR
         uses: aws-actions/amazon-ecr-login@9149ade017c57f86dea2f76a01f8b2d5bd06b10f # v1.5.1
@@ -79,7 +79,7 @@ jobs:
           -e MAX_PASS=50 \
           -e TASK_LIST='["zaproxy"]' \
           -e GITHUB_URL=${GITHUB_SERVER_URL} \
-          -e GITHUB_AUTH=${{ secrets.REPO_CLONE_TOKEN_SA_PAT }} \
+          -e GITHUB_AUTH=${{ steps.masked-secrets.outputs.ci-token }} \
           -e GITHUB_REPO=${GITHUB_REPOSITORY} \
           -e GITHUB_COMMIT=${GITHUB_SHA} \
           672751022979.dkr.ecr.us-west-2.amazonaws.com/cirrus-scan-cicd
