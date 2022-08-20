@@ -17,8 +17,8 @@ on:
   workflow_dispatch:
 
 jobs:
-  cirrus-scan-dev:
-    runs-on: ubuntu-latest
+  cirrus-scan-dev-private:
+    runs-on: [self-hosted,threat-runners]
     env:
       AWS_REGION: us-west-2
     # Only run if previous workflow is successful (e.g., tests are green) or it's another event that qualifies.
