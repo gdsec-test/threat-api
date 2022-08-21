@@ -77,6 +77,9 @@ jobs:
           GIT_SSH_COMMAND: "ssh -o StrictHostKeyChecking=no"
           SECURESERVER_ACCESS_KEY_GHC_SA: ${{ secrets.SECURESERVER_ACCESS_KEY_GHC_SA }}
         run: |
+          
+          ls # Check directory
+          
           eval "$(ssh-agent -s)"
           ssh-add - <<< "${SECURESERVER_ACCESS_KEY_GHC_SA}"
 
