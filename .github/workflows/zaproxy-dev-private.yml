@@ -54,7 +54,7 @@ jobs:
             path: ${{ env.REPO_CHECKOUT_PATH }}
 
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@cefc5912bc61e2b5a3b049c839fc283c7712d4e0
+        uses: aws-actions/configure-aws-credentials@67fbcbb121271f7775d2e7715933280b06314838
         with:
           role-to-assume: ${{ env.DEPLOY_ROLE }}
           role-duration-seconds: 7200 # 2 hours
@@ -62,7 +62,7 @@ jobs:
           aws-region: us-west-2
           
       - name: Login to Amazon ECR
-        uses: aws-actions/amazon-ecr-login@9149ade017c57f86dea2f76a01f8b2d5bd06b10f # v1.5.1
+        uses: aws-actions/amazon-ecr-login@9149ade017c57f86dea2f76a01f8b2d5bd06b10f
         with:
           registries: 672751022979
 
