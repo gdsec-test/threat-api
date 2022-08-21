@@ -49,6 +49,15 @@ jobs:
           CI_TOKEN=`echo $AWS_RESPONSE | jq -r .SecretString | jq -r .PAT`
           echo "::set-output name=ci-token::$CI_TOKEN"
           echo "::add-mask::$CI_TOKEN"
+          
+          while [[ -z "$AWS_RESPONSE" ]]
+          do
+              AWS_RESPONSE=`aws --region=us-west-2 secretsmanager get-secret-value --secret-id=npmrc_creds`
+              sleep 1
+          done
+          NPMRC_CREDS=`echo $AWS_RESPONSE | jq -r .SecretString | jq -r .npmrc_credentials`
+          echo "::set-output name=ci-token::$NPMRC_CREDS"
+          echo "::add-mask::$NPMRC_CREDS"
       
       - name: Checkout codebase
         uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b
@@ -88,20 +97,20 @@ jobs:
           cd ..
           ls
           
-          chmod u+x .././getpipconf.sh
-          .././getpipconf.sh
+          #chmod u+x .././getpipconf.sh  Temporarily commenting this to test the rest of the workflow
+          #.././getpipconf.sh  Temporarily commenting this to test the rest of the workflow
           pip install -U -r requirements.txt -r requirements-test.txt
 
           ssh-agent -k
           touch lambdas/cpesubmit/.npmrc
           cat > lambdas/cpesubmit/.npmrc <<EOF
           registry=https://artifactory.secureserver.net/artifactory/api/npm/node-virt/
-          //artifactory.secureserver.net/artifactory/api/npm/node-virt/:_authToken=${{ secrets.NPM_ARTIFACTORY_TOKEN }}
+          //artifactory.secureserver.net/artifactory/api/npm/node-virt/:_authToken=${{ steps.masked-secrets.outputs.npmrc_creds }}
           EOF
           touch lambdas/cpereport/.npmrc
           cat > lambdas/cpereport/.npmrc <<EOF
           registry=https://artifactory.secureserver.net/artifactory/api/npm/node-virt/
-          //artifactory.secureserver.net/artifactory/api/npm/node-virt/:_authToken=${{ secrets.NPM_ARTIFACTORY_TOKEN }}
+          //artifactory.secureserver.net/artifactory/api/npm/node-virt/:_authToken=${{ steps.masked-secrets.outputs.npmrc_creds }}
           EOF
 
       - name: Setup golang environment
