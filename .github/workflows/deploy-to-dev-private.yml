@@ -81,6 +81,13 @@ jobs:
           ssh-add - <<< "${SECURESERVER_ACCESS_KEY_GHC_SA}"
 
           source venv/bin/activate
+          
+          echo "Check directory"
+          ls
+          echo "Check parent directory"
+          cd ..
+          ls
+          
           chmod u+x .././getpipconf.sh
           .././getpipconf.sh
           pip install -U -r requirements.txt -r requirements-test.txt
