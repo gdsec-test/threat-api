@@ -94,10 +94,9 @@ jobs:
 
           source venv/bin/activate
           
-          echo "Check directory"
-          ls
-          echo "Check parent directory"
-          cd ..
+          echo "Check current directory"
+          pwd
+          echo "List contents"
           ls
           
           #chmod u+x .././getpipconf.sh  Temporarily commenting this to test the rest of the workflow
