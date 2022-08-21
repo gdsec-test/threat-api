@@ -29,19 +29,42 @@ jobs:
       - name: Reset gitconfig
         run: |
           rm -f $HOME/.gitconfig
-
-      - name: Checkout
+          
+      - name: Add Environmental Vars
+        run: |
+          echo REPO_NAME=`echo ${{ github.repository }} | awk -F '/' '{print $2}'` >> $GITHUB_ENV
+          echo REPO_CHECKOUT_PATH=./`echo ${{ github.repository }} | awk -F '/' '{print $2}'`-${{ github.run_id }} >> $GITHUB_ENV
+          echo CICD_ACCOUNT_ID=570415283994 >> $GITHUB_ENV
+          echo CICD_DEPLOY_ROLE=arn:aws:iam::570415283994:role/GD-AWS-USA-GD-ThreatTools-CICD-Deploy >> $GITHUB_ENV
+          echo DEPLOY_ROLE=arn:aws:iam::345790377847:role/GD-AWS-USA-GD-ThreatTools-Dev-Private-Deploy >> $GITHUB_ENV
+          
+      - name: Get Secrets
+        id: masked-secrets
+        run: |
+          while [[ -z "$AWS_RESPONSE" ]]
+          do
+              AWS_RESPONSE=`aws --region=us-west-2 secretsmanager get-secret-value --secret-id=/GitHub/Runner-Secrets`
+              sleep 1
+          done
+          CI_TOKEN=`echo $AWS_RESPONSE | jq -r .SecretString | jq -r .PAT`
+          echo "::set-output name=ci-token::$CI_TOKEN"
+          echo "::add-mask::$CI_TOKEN"
+      
+      - name: Checkout codebase
         uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b
+        with:
+            repository: gdcorp-infosec/${{ env.REPO_NAME }}
+            ref: ${{ github.ref }}
+            token: ${{ steps.masked-secrets.outputs.ci-token }}
+            path: ${{ env.REPO_CHECKOUT_PATH }}
 
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@05b148adc31e091bafbaf404f745055d4d3bc9d2
+        uses: aws-actions/configure-aws-credentials@cefc5912bc61e2b5a3b049c839fc283c7712d4e0
         with:
-          aws-access-key-id: ${{ secrets.DEV_PRIVATE_AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.DEV_PRIVATE_AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-west-2
-          role-to-assume: arn:aws:iam::345790377847:role/GD-AWS-USA-GD-ThreatTools-Dev-Private-Deploy
-          role-duration-seconds: 3600
+          role-to-assume: ${{ env.DEPLOY_ROLE }}
+          role-duration-seconds: 7200 # 2 hours
           role-skip-session-tagging: true
+          aws-region: us-west-2
 
       - name: Setup python environment
         run: |
@@ -84,7 +107,7 @@ jobs:
           GIT_SSH_COMMAND: "ssh -o StrictHostKeyChecking=no"
           SECURESERVER_ACCESS_KEY_GHC_SA: ${{ secrets.SECURESERVER_ACCESS_KEY_GHC_SA }}
           GITHUBCLOUD_SSH_PRIVATE_KEY: ${{ secrets.GITHUBCLOUD_SSH_PRIVATE_KEY }}
-          GH_ACCESS_TOKEN: ${{ secrets.REPO_CLONE_TOKEN_SA_PAT }}
+          GH_ACCESS_TOKEN: ${{ steps.masked-secrets.outputs.ci-token }}
           GOPRIVATE: "github.secureserver.net,github.com/gdcorp-*"
         run: |
           eval "$(ssh-agent -s)"
