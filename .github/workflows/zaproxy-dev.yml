@@ -18,23 +18,48 @@ on:
 
 jobs:
   cirrus-scan-dev:
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted,threat-runners]
     env:
       AWS_REGION: us-west-2
     # Only run if previous workflow is successful (e.g., tests are green) or it's another event that qualifies.
     if: github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' || github.event_name == 'push'
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # v2.3.4
+      - name: Add Environmental Vars
+        run: |
+          echo REPO_NAME=`echo ${{ github.repository }} | awk -F '/' '{print $2}'` >> $GITHUB_ENV
+          echo REPO_CHECKOUT_PATH=./`echo ${{ github.repository }} | awk -F '/' '{print $2}'`-${{ github.run_id }} >> $GITHUB_ENV
+          echo CICD_ACCOUNT_ID=570415283994 >> $GITHUB_ENV
+          echo CICD_DEPLOY_ROLE=arn:aws:iam::570415283994:role/GD-AWS-USA-GD-ThreatTools-CICD-Deploy >> $GITHUB_ENV
+          echo DEPLOY_ROLE=arn:aws:iam::786677461057:role/GD-AWS-USA-GD-ThreatTools-Dev-Deploy >> $GITHUB_ENV
 
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@05b148adc31e091bafbaf404f745055d4d3bc9d2 # v1.5.5
+      - name: Get Secrets
+        id: masked-secrets
+        run: |
+         while [[ -z "$AWS_RESPONSE" ]]
+         do
+            AWS_RESPONSE=`aws --region=us-west-2 secretsmanager get-secret-value --secret-id=/GitHub/Runner-Secrets`
+            sleep 1
+         done
+         CI_TOKEN=`echo $AWS_RESPONSE | jq -r .SecretString | jq -r .PAT`
+         echo "::set-output name=ci-token::$CI_TOKEN"
+         echo "::add-mask::$CI_TOKEN"
+      
+      - name: Checkout codebase
+        uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b
         with:
-          aws-region: ${{ env.AWS_REGION }}
-          role-to-assume: arn:aws:iam::786677461057:role/GD-AWS-USA-GD-ThreatTools-Dev-Deploy
+            repository: gdcorp-infosec/${{ env.REPO_NAME }}
+            ref: ${{ github.ref }}
+            token: ${{ steps.masked-secrets.outputs.ci-token }}
+            path: ${{ env.REPO_CHECKOUT_PATH }}
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@cefc5912bc61e2b5a3b049c839fc283c7712d4e0
+        with:
+          role-to-assume: ${{ env.DEPLOY_ROLE }}
           role-duration-seconds: 7200 # 2 hours
           role-skip-session-tagging: true
+          aws-region: us-west-2
 
       - name: Login to Amazon ECR
         uses: aws-actions/amazon-ecr-login@3d4e073ce6a6845ed27b30a0fe05b6e22c80ac6b # 2.2.2
@@ -54,7 +79,7 @@ jobs:
           -e MAX_PASS=50 \
           -e TASK_LIST='["zaproxy"]' \
           -e GITHUB_URL=${GITHUB_SERVER_URL} \
-          -e GITHUB_AUTH=${{ secrets.REPO_CLONE_TOKEN_SA_PAT }} \
+          -e GITHUB_AUTH=${{ steps.masked-secrets.outputs.ci-token }} \
           -e GITHUB_REPO=${GITHUB_REPOSITORY} \
           -e GITHUB_COMMIT=${GITHUB_SHA} \
           672751022979.dkr.ecr.us-west-2.amazonaws.com/cirrus-scan-cicd
