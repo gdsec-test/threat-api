@@ -77,15 +77,12 @@ jobs:
           GIT_SSH_COMMAND: "ssh -o StrictHostKeyChecking=no"
           SECURESERVER_ACCESS_KEY_GHC_SA: ${{ secrets.SECURESERVER_ACCESS_KEY_GHC_SA }}
         run: |
-          
-          ls # Check directory
-          
           eval "$(ssh-agent -s)"
           ssh-add - <<< "${SECURESERVER_ACCESS_KEY_GHC_SA}"
 
           source venv/bin/activate
-          chmod u+x ./getpipconf.sh
-          ./getpipconf.sh
+          chmod u+x .././getpipconf.sh
+          .././getpipconf.sh
           pip install -U -r requirements.txt -r requirements-test.txt
 
           ssh-agent -k
