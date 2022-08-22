@@ -69,14 +69,9 @@ jobs:
           NPMRC_CREDS=`echo $AWS_RESPONSE | jq -r .SecretString | jq -r .npmrc_credentials`
           echo "::set-output name=ci-token::$NPMRC_CREDS"
           echo "::add-mask::$NPMRC_CREDS"
-          
-      - name: Checkout codebase
+  
+      - name: Checkout current repo
         uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b
-        with:
-            repository: gdcorp-infosec/${{ env.REPO_NAME }}
-            ref: ${{ github.ref }}
-            token: ${{ steps.masked-secrets.outputs.ci-token }}
-            path: ${{ env.REPO_CHECKOUT_PATH }}
       
       - name: Install Python
         uses: actions/setup-python@b55428b1882923874294fa556849718a1d7f2ca5
