@@ -142,10 +142,10 @@ jobs:
           pip install gd-sceptre-hooks-resolvers
           cd sceptre
           aws s3 cp templates/SC-ServiceLambdas.yaml s3://gd-threattools-dev-private-code-bucket/template/SC-ServiceLambdas.yaml --quiet
-          sceptre launch -y dev-private/us-west-2
+          #sceptre launch -y dev-private/us-west-2 temporarily commenting this to test something
 
       - name: Update swagger
         run: |
           source venv/bin/activate
           cd sceptre
-          ./resources/swagger-ui-bucket-create.sh
+          #./resources/swagger-ui-bucket-create.sh temporarily commenting this to test something
