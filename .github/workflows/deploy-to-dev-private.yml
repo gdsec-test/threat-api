@@ -58,7 +58,7 @@ jobs:
           role-skip-session-tagging: true
           aws-region: us-west-2
 
-      - name: Get NPMRC Creds from ASM
+      - name: Get secrets from ASM
         id: masked-npmrc_creds
         run: |
           while [[ -z "$AWS_RESPONSE" ]]
@@ -69,6 +69,24 @@ jobs:
           NPMRC_CREDS=`echo $AWS_RESPONSE | jq -r .SecretString | jq -r .npmrc_credentials`
           echo "::set-output name=ci-token::$NPMRC_CREDS"
           echo "::add-mask::$NPMRC_CREDS"
+          
+          while [[ -z "$AWS_RESPONSE" ]]
+          do
+              AWS_RESPONSE=`aws --region=us-west-2 secretsmanager get-secret-value --secret-id=github-cloud-jomax-service-account-ssh-key-pair`
+              sleep 1
+          done
+          GITHUBCLOUD_SSH_PRIVATE_KEY=`echo $AWS_RESPONSE | jq -r .SecretString`
+          echo "::set-output name=githubcloud_sa_ssh_private_key::$GITHUBCLOUD_SSH_PRIVATE_KEY"
+          echo "::add-mask::$GITHUBCLOUD_SSH_PRIVATE_KEY"
+          
+                    while [[ -z "$AWS_RESPONSE" ]]
+          do
+              AWS_RESPONSE=`aws --region=us-west-2 secretsmanager get-secret-value --secret-id=github-cloud-jomax-service-account-ssh-key-pair-ghc-ghc`
+              sleep 1
+          done
+          SECURESERVER_ACCESS_KEY_GHC_SA=`echo $AWS_RESPONSE | jq -r .SecretString`
+          echo "::set-output name=githubcloud_sa_ssh_private_key_ghc::$SECURESERVER_ACCESS_KEY_GHC_SA"
+          echo "::add-mask::$SECURESERVER_ACCESS_KEY_GHC_SA"
   
       - name: Checkout current repo
         uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b
@@ -87,7 +105,7 @@ jobs:
       - name: Install python and other dependencies
         env:
           GIT_SSH_COMMAND: "ssh -o StrictHostKeyChecking=no"
-          SECURESERVER_ACCESS_KEY_GHC_SA: ${{ secrets.SECURESERVER_ACCESS_KEY_GHC_SA }}
+          SECURESERVER_ACCESS_KEY_GHC_SA: ${{ steps.masked-secrets.outputs.githubcloud_sa_ssh_private_key_ghc }}
         run: |
           eval "$(ssh-agent -s)"
           ssh-add - <<< "${SECURESERVER_ACCESS_KEY_GHC_SA}"
@@ -122,7 +140,7 @@ jobs:
         env:
           GIT_SSH_COMMAND: "ssh -o StrictHostKeyChecking=no"
           SECURESERVER_ACCESS_KEY_GHC_SA: ${{ secrets.SECURESERVER_ACCESS_KEY_GHC_SA }}
-          GITHUBCLOUD_SSH_PRIVATE_KEY: ${{ secrets.GITHUBCLOUD_SSH_PRIVATE_KEY }}
+          GITHUBCLOUD_SSH_PRIVATE_KEY: ${{ steps.masked-secrets.outputs.githubcloud_sa_ssh_private_key }}
           GH_ACCESS_TOKEN: ${{ steps.masked-secrets.outputs.ci-token }}
           GOPRIVATE: "github.secureserver.net,github.com/gdcorp-*"
         run: |
