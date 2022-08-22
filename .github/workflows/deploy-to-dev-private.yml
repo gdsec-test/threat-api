@@ -94,13 +94,8 @@ jobs:
 
           source venv/bin/activate
           
-          echo "Check current directory"
-          pwd
-          echo "List contents"
-          ls
-          
-          #chmod u+x .././getpipconf.sh  Temporarily commenting this to test the rest of the workflow
-          #.././getpipconf.sh  Temporarily commenting this to test the rest of the workflow
+          chmod u+x .././getpipconf.sh
+          .././getpipconf.sh
           pip install -U -r requirements.txt -r requirements-test.txt
 
           ssh-agent -k
