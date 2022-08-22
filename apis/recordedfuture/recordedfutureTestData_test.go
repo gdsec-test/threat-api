@@ -284,8 +284,9 @@ var TestRecordedFutureHASHReportData = `{
 								]
 						},
 						"fileHashes": [
-								"12345",
-								"123456789"
+								"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+								"BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
+								"CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC"								
 						],
 						"intelCard": "https://app.recordedfuture.com/live/sc/entity/hash%12345",
 						"links": {
