@@ -139,6 +139,7 @@ jobs:
       - name: Run sceptre
         run: |
           source venv/bin/activate
+          pip install gd-sceptre-hooks-resolvers
           cd sceptre
           aws s3 cp templates/SC-ServiceLambdas.yaml s3://gd-threattools-dev-private-code-bucket/template/SC-ServiceLambdas.yaml --quiet
           sceptre launch -y dev-private/us-west-2
