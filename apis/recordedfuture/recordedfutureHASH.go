@@ -12,6 +12,12 @@ import (
 	"github.com/gdcorp-infosec/threat-api/lambdas/common/triagelegacyconnector/triage"
 )
 
+const (
+	MD5_LENGTH    = 32
+	SHA1_LENGTH   = 40
+	SHA256_LENGTH = 64
+)
+
 //hashReportCreate generates a map of HASHReport from RF API
 func (m *TriageModule) hashReportCreate(ctx context.Context, triageRequest *triage.Request) (map[string]*rf.HashReport, error) {
 	rfHASHResults := make(map[string]*rf.HashReport)
@@ -82,13 +88,47 @@ func hashMetaDataExtract(rfHASHResults map[string]*rf.HashReport) []string {
 	return triageMetaData
 }
 
+// Recorded Future returns hashes for the same file as an array
+// of three strings, not noting which is which. sortHashes sorts
+// the hashes based on length and returns them in MD5, SHA1,
+// SHA256 order.
+func sortHashes(hash_list []string) (string, string, string) {
+	if hash_list == nil || len(hash_list) != 3 {
+		fmt.Print("Input hash list was not valid")
+		return "", "", ""
+	}
+
+	md5 := ""
+	sha1 := ""
+	sha256 := ""
+
+	for _, hash := range hash_list {
+		if len(hash) == MD5_LENGTH {
+			md5 = hash
+		} else if len(hash) == SHA1_LENGTH {
+			sha1 = hash
+		} else if len(hash) == SHA256_LENGTH {
+			sha256 = hash
+		} else {
+			fmt.Printf("Not a recognized hash length: \"%s\" (%d)", hash, len(hash))
+		}
+	}
+
+	return md5, sha1, sha256
+}
+
 //dumpHASHCSV dumps the triage data to CSV
 func dumpHASHCSV(rfHASHResults map[string]*rf.HashReport) string {
 	//Dump data as csv
 	resp := bytes.Buffer{}
 	csv := csv.NewWriter(&resp)
 	// Write headers
-	csv.Write([]string{
+	headers := []string{
+		"IoC",
+		"Badness",
+		"MD5",
+		"SHA1",
+		"SHA256",
 		"IntelCardLink",
 		"Risk Score",
 		"Criticality",
@@ -97,23 +137,31 @@ func dumpHASHCSV(rfHASHResults map[string]*rf.HashReport) string {
 		"Last Seen",
 		"HashAlgorithm",
 		"ThreatLists",
-		"FileHashes",
-		"Badness",
-	})
-	for _, data := range rfHASHResults {
+	}
+	csv.Write(headers)
+	for ioc, data := range rfHASHResults {
 		if data == nil {
+			cols := make([]string, len(headers))
+			for i := 0; i < len(headers); i++ {
+				cols[i] = ""
+			}
+			csv.Write(cols)
 			continue
 		}
 		// Processing few non string data before adding to CSV
-		var threatLists, fileHashes []string
+		var threatLists []string
 		for _, threatlist := range data.Data.ThreatLists {
 			threatLists = append(threatLists, threatlist.Name)
 		}
-		for _, hash := range data.Data.FileHashes {
-			fileHashes = append(fileHashes, hash)
-		}
+		md5, sha1, sha256 := sortHashes(data.Data.FileHashes)
 
+		badness := float64(data.Data.Risk.Score) / 100.0
 		cols := []string{
+			ioc,
+			fmt.Sprintf("%.02f", badness),
+			md5,
+			sha1,
+			sha256,
 			data.Data.IntelCard,
 			fmt.Sprintf("%d", data.Data.Risk.Score),
 			fmt.Sprintf("%d", data.Data.Risk.Criticality),
@@ -122,8 +170,6 @@ func dumpHASHCSV(rfHASHResults map[string]*rf.HashReport) string {
 			data.Data.Timestamps.LastSeen.String(),
 			data.Data.HashAlgorithm,
 			strings.Join(threatLists, " "),
-			strings.Join(fileHashes, "/"),
-			fmt.Sprintf("%.02f", float64(data.Data.Risk.Score)/100.0),
 		}
 		csv.Write(cols)
 	}

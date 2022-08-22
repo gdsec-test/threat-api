@@ -103,7 +103,9 @@ func dumpCVECSV(rfCVEResults map[string]*rf.CVEReport) string {
 	resp := bytes.Buffer{}
 	csv := csv.NewWriter(&resp)
 	// Write headers
-	csv.Write([]string{
+	headers := []string{
+		"IoC",
+		"Badness",
 		"IntelCardLink",
 		"Risk Score",
 		"Criticality",
@@ -120,11 +122,14 @@ func dumpCVECSV(rfCVEResults map[string]*rf.CVEReport) string {
 		"Confidentiality",
 		"Integrity",
 		"NVD Description",
-		"Badness",
-	})
-	for _, data := range rfCVEResults {
+	}
+	csv.Write(headers)
+	for ioc, data := range rfCVEResults {
 		if data == nil {
-			cols := []string{"", "", "", "", "", "", ""}
+			cols := make([]string, len(headers))
+			for i := 0; i < len(headers); i++ {
+				cols[i] = ""
+			}
 			csv.Write(cols)
 			continue
 		}
@@ -132,13 +137,15 @@ func dumpCVECSV(rfCVEResults map[string]*rf.CVEReport) string {
 		// Processing few non string data before adding to CSV
 		var threatLists, rawriskRules []string
 		for _, threatlist := range data.Data.ThreatLists {
-			threatLists = append(threatLists, fmt.Sprint(threatlist.(map[string]interface {})))
+			threatLists = append(threatLists, fmt.Sprint(threatlist.(map[string]interface{})))
 		}
 		for _, rawrisk := range data.Data.Rawrisk {
 			rawriskRules = append(rawriskRules, rawrisk.Rule)
 		}
 
 		cols := []string{
+			ioc,
+			fmt.Sprintf("%.02f", float64(data.Data.Risk.Score)/100.0),
 			data.Data.IntelCard,
 			fmt.Sprintf("%d", data.Data.Risk.Score),
 			fmt.Sprintf("%d", data.Data.Risk.Criticality),
@@ -155,7 +162,6 @@ func dumpCVECSV(rfCVEResults map[string]*rf.CVEReport) string {
 			data.Data.Cvss.Confidentiality,
 			data.Data.Cvss.Integrity,
 			data.Data.NvdDescription,
-			fmt.Sprintf("%.02f", float64(data.Data.Risk.Score)/100.0),
 		}
 		csv.Write(cols)
 	}

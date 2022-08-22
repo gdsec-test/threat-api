@@ -85,28 +85,35 @@ func dumpUrlCSV(rfUrlResults map[string]*rf.UrlReport) string {
 	resp := bytes.Buffer{}
 	csv := csv.NewWriter(&resp)
 	// Write headers
-	csv.Write([]string{
+	headers := []string{
+		"IoC",
+		"Badness",
 		"Risk Score",
 		"Criticality",
 		"CriticalityLabel",
 		"First Seen",
 		"Last Seen",
-		"Badness",
-	})
-	for _, data := range rfUrlResults {
+	}
+	csv.Write(headers)
+	for ioc, data := range rfUrlResults {
 		if data == nil {
-			cols := []string{"", "", "", "", "", ""}
+			cols := make([]string, len(headers))
+			for i := 0; i < len(headers); i++ {
+				cols[i] = ""
+			}
 			csv.Write(cols)
 			continue
 		}
 
+		badness := float64(data.Data.Risk.Score) / 100.0
 		cols := []string{
+			ioc,
+			fmt.Sprintf("%.02f", badness),
 			fmt.Sprintf("%d", data.Data.Risk.Score),
 			fmt.Sprintf("%d", data.Data.Risk.Criticality),
 			data.Data.Risk.CriticalityLabel,
 			data.Data.Timestamps.FirstSeen.String(),
 			data.Data.Timestamps.LastSeen.String(),
-			fmt.Sprintf("%.02f", float64(data.Data.Risk.Score)/100.0),
 		}
 		csv.Write(cols)
 	}
