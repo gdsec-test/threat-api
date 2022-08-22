@@ -66,13 +66,7 @@ jobs:
           role-skip-session-tagging: true
           aws-region: us-west-2
 
-      - name: Setup python environment
-        run: |
-          python3 -m venv venv
-          source venv/bin/activate
-          pip install -U pip
-
-      - name: Get NMPRC Creds from ASM
+      - name: Get NPMRC Creds from ASM
         id: masked-npmrc_creds
         run: |
           while [[ -z "$AWS_RESPONSE" ]]
@@ -83,6 +77,12 @@ jobs:
           NPMRC_CREDS=`echo $AWS_RESPONSE | jq -r .SecretString | jq -r .npmrc_credentials`
           echo "::set-output name=ci-token::$NPMRC_CREDS"
           echo "::add-mask::$NPMRC_CREDS"
+
+      - name: Setup python environment
+        run: |
+          python3 -m venv venv
+          source venv/bin/activate
+          pip install -U pip
 
       - name: Install python and other dependencies
         env:
