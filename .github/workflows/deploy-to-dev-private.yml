@@ -94,6 +94,9 @@ jobs:
 
           source venv/bin/activate
           
+          echo "List contents of current directory"
+          ls
+          
           chmod u+x .././getpipconf.sh
           .././getpipconf.sh
           pip install -U -r requirements.txt -r requirements-test.txt
