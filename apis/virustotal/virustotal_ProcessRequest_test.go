@@ -52,7 +52,7 @@ func TestProcessRequest(t *testing.T) {
 					"Badness scores are weighted 20% for the reputation and 80% for the anti-virus engine detections",
 				},
 				DataType: "",
-				Data:     "MD5,SHA1,SHA256,Magic,File Size,First Seen,Reputation,Harmless,Malicious,Suspicious,Timeout,Undetected,Badness\n",
+				Data:     "IoC,Badness,MD5,SHA1,SHA256,File Size,First Seen,Reputation,Harmless,Malicious,Suspicious,Timeout,Undetected\n",
 			}
 
 			actualTriageData, _ := triageModule.ProcessRequest(ctx1, &triageRequest, "")
