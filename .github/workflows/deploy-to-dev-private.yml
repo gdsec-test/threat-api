@@ -72,7 +72,7 @@ jobs:
           
           while [[ -z "$AWS_RESPONSE" ]]
           do
-              AWS_RESPONSE=`aws --region=us-west-2 secretsmanager get-secret-value --secret-id=github-cloud-jomax-service-account-ssh-key-pair`
+              AWS_RESPONSE=`aws --region=us-west-2 secretsmanager get-secret-value --secret-id=/ThreatTools/Integrations/github-cloud-jomax-service-account-ssh-key-pair`
               sleep 1
           done
           GITHUBCLOUD_SSH_PRIVATE_KEY=`echo $AWS_RESPONSE | jq -r .SecretString`
@@ -81,7 +81,7 @@ jobs:
           
                     while [[ -z "$AWS_RESPONSE" ]]
           do
-              AWS_RESPONSE=`aws --region=us-west-2 secretsmanager get-secret-value --secret-id=github-cloud-jomax-service-account-ssh-key-pair-ghc-ghc`
+              AWS_RESPONSE=`aws --region=us-west-2 secretsmanager get-secret-value --secret-id=/ThreatTools/Integrations/github-cloud-jomax-service-account-ssh-key-pair-ghc`
               sleep 1
           done
           SECURESERVER_ACCESS_KEY_GHC_SA=`echo $AWS_RESPONSE | jq -r .SecretString`
@@ -111,10 +111,7 @@ jobs:
           ssh-add - <<< "${SECURESERVER_ACCESS_KEY_GHC_SA}"
 
           source venv/bin/activate
-          
-          echo "List contents of current directory"
-          ls
-          
+      
           chmod u+x ./getpipconf.sh
           ./getpipconf.sh
           pip install -U -r requirements.txt -r requirements-test.txt
