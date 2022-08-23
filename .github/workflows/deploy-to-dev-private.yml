@@ -75,7 +75,7 @@ jobs:
               AWS_RESPONSE=`aws --region=us-west-2 secretsmanager get-secret-value --secret-id=/ThreatTools/Integrations/github-cloud-jomax-service-account-ssh-key-pair`
               sleep 1
           done
-          GITHUBCLOUD_SSH_PRIVATE_KEY=`echo $AWS_RESPONSE | jq -r .SecretString`
+          GITHUBCLOUD_SSH_PRIVATE_KEY=`echo $AWS_RESPONSE | jq -r .SecretString | jq -r .secureserver_creds`
           echo "::set-output name=githubcloud-sa-ssh-private-key::$GITHUBCLOUD_SSH_PRIVATE_KEY"
           echo "::add-mask::$GITHUBCLOUD_SSH_PRIVATE_KEY"
           
@@ -84,7 +84,7 @@ jobs:
               AWS_RESPONSE=`aws --region=us-west-2 secretsmanager get-secret-value --secret-id=/ThreatTools/Integrations/github-cloud-jomax-service-account-ssh-key-pair-ghc`
               sleep 1
           done
-          SECURESERVER_ACCESS_KEY_GHC_SA=`echo $AWS_RESPONSE | jq -r .SecretString`
+          SECURESERVER_ACCESS_KEY_GHC_SA=`echo $AWS_RESPONSE | jq -r .SecretString | jq -r .ghc_creds`
           echo "::set-output name=githubcloud-sa-ssh-private-key-ghc::$SECURESERVER_ACCESS_KEY_GHC_SA"
           echo "::add-mask::$SECURESERVER_ACCESS_KEY_GHC_SA"
   
