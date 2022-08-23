@@ -3,28 +3,24 @@ name: Code quality check
 on:
   pull_request:
     branches: [ develop ]
-  workflow_dispatch:
 
 jobs:
   tartufo:
     runs-on: [self-hosted,threat-runners]
     steps:
-      - name: Add Environmental Vars for Dev-Private
-        shell: bash
-        run: |
-          echo DEPLOY_ROLE=arn:aws:iam::345790377847:role/GD-AWS-USA-GD-ThreatTools-Dev-Private-Deploy >> $GITHUB_ENV
-
-      - name: Configure AWS credentials for the DEV-PRIVATE Account
-        uses: aws-actions/configure-aws-credentials@67fbcbb121271f7775d2e7715933280b06314838
+      - name: Configure AWS credentials for ECR access
+        uses: aws-actions/configure-aws-credentials@05b148adc31e091bafbaf404f745055d4d3bc9d2
         with:
-          role-to-assume: ${{ env.DEPLOY_ROLE }}
-          role-duration-seconds: 1200
-          aws-region: us-west-2
+          aws-access-key-id: ${{ secrets.DEV_PRIVATE_AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.DEV_PRIVATE_AWS_SECRET_ACCESS_KEY }}
+          role-to-assume: arn:aws:iam::345790377847:role/GD-AWS-USA-GD-ThreatTools-Dev-Private-Deploy
+          role-duration-seconds: 1200                                 # default max is 7200
+          aws-region: us-west-2                                       # set region you want to target
           role-skip-session-tagging: true
 
       - name: Login to Amazon ECR
         id: login-ecr
-        uses: aws-actions/amazon-ecr-login@9149ade017c57f86dea2f76a01f8b2d5bd06b10f
+        uses: aws-actions/amazon-ecr-login@3d4e073ce6a6845ed27b30a0fe05b6e22c80ac6b
 
       - name: Docker login for Golden Containers ECR
         env:
@@ -57,23 +53,20 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b
 
-      - name: Add Environmental Vars for Dev-Private
-        shell: bash
-        run: |
-          echo DEPLOY_ROLE=arn:aws:iam::345790377847:role/GD-AWS-USA-GD-ThreatTools-Dev-Private-Deploy >> $GITHUB_ENV
-
-      - name: Configure AWS credentials for the DEV-PRIVATE Account
-        uses: aws-actions/configure-aws-credentials@67fbcbb121271f7775d2e7715933280b06314838
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@05b148adc31e091bafbaf404f745055d4d3bc9d2
         with:
-          role-to-assume: ${{ env.DEPLOY_ROLE }}
-          role-duration-seconds: 1200
-          aws-region: us-west-2
+          aws-access-key-id: ${{ secrets.DEV_PRIVATE_AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.DEV_PRIVATE_AWS_SECRET_ACCESS_KEY }}
+          role-to-assume: arn:aws:iam::345790377847:role/GD-AWS-USA-GD-ThreatTools-Dev-Private-Deploy
+          role-duration-seconds: 1200                                 # default max is 7200
+          aws-region: us-west-2                                       # set region you want to target
           role-skip-session-tagging: true
 
-      - name: Set up Python 3.9
-        uses: actions/setup-python@b55428b1882923874294fa556849718a1d7f2ca5
+      - name: Set up Python 3.9.0
+        uses: actions/setup-python@d09bd5e6005b175076f227b13d9730d56e9dcfcb
         with:
-          python-version: 3.9
+          python-version: 3.9.0
           architecture: 'x64'
 
       - name: Setup Python Environment
@@ -129,7 +122,7 @@ jobs:
 
 #      TODO: Remove this actual AWS access once we have dependency injection
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@67fbcbb121271f7775d2e7715933280b06314838
+        uses: aws-actions/configure-aws-credentials@05b148adc31e091bafbaf404f745055d4d3bc9d2
         with:
           aws-access-key-id: ${{ secrets.DEV_PRIVATE_AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.DEV_PRIVATE_AWS_SECRET_ACCESS_KEY }}
@@ -185,7 +178,7 @@ jobs:
         uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b
 
       - name: Set up Javascript 3.9.0
-        uses: actions/setup-node@2fddd8803e2f5c9604345a0b591c3020ee971a93
+        uses: actions/setup-node@5b949b50c3461bbcd5a540b150c368278160234a
         with:
           node-version: 12.20.0
 
@@ -218,3 +211,6 @@ jobs:
             popd
           fi;
           done
+
+# TODO: Remove Test line here
+#          git config --global url.git@github.com:gdcorp-.insteadOf https://github.com/gdcorp-
