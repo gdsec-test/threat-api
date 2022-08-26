@@ -101,7 +101,7 @@ jobs:
           GIT_SSH_COMMAND: "ssh -o StrictHostKeyChecking=no"
           SECURESERVER_ACCESS_KEY_GHC_SA: ${{ secrets.SECURESERVER_ACCESS_KEY_GHC_SA }}
           GITHUBCLOUD_SSH_PRIVATE_KEY: ${{ secrets.GITHUBCLOUD_SSH_PRIVATE_KEY }}
-          GH_ACCESS_TOKEN: ${{ secrets.REPO_CLONE_TOKEN_SA_PAT }}
+          GH_ACCESS_TOKEN: ${{ steps.masked-secrets.outputs.ci-token }}
           GOPRIVATE: "github.secureserver.net,github.com/gdcorp-*"
         run: |
           eval "$(ssh-agent -s)"
