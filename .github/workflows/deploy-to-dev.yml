@@ -75,18 +75,6 @@ jobs:
           source venv/bin/activate
           pip install -U pip
       
-      - name: Get secrets from ASM
-        id: masked-npmrc_creds
-        run: |
-          while [[ -z "$AWS_RESPONSE" ]]
-          do
-              AWS_RESPONSE=`aws --region=us-west-2 secretsmanager get-secret-value --secret-id=npmrc_creds`
-              sleep 1
-          done
-          NPMRC_CREDS=`echo $AWS_RESPONSE | jq -r .SecretString | jq -r .npmrc_credentials`
-          echo "::set-output name=npmrc-creds::$NPMRC_CREDS"
-          echo "::add-mask::$NPMRC_CREDS"
-
       - name: Install python and other dependencies
         env:
           GIT_SSH_COMMAND: "ssh -o StrictHostKeyChecking=no"
@@ -104,12 +92,12 @@ jobs:
           touch lambdas/cpesubmit/.npmrc
           cat > lambdas/cpesubmit/.npmrc <<EOF
           registry=https://artifactory.secureserver.net/artifactory/api/npm/node-virt/
-          //artifactory.secureserver.net/artifactory/api/npm/node-virt/:_authToken=${{ steps.masked-secrets.outputs.npmrc-creds }}
+          //artifactory.secureserver.net/artifactory/api/npm/node-virt/:_authToken=${{ secrets.NPM_ARTIFACTORY_TOKEN }}
           EOF
           touch lambdas/cpereport/.npmrc
           cat > lambdas/cpereport/.npmrc <<EOF
           registry=https://artifactory.secureserver.net/artifactory/api/npm/node-virt/
-          //artifactory.secureserver.net/artifactory/api/npm/node-virt/:_authToken=${{ steps.masked-secrets.outputs.npmrc-creds }}
+          //artifactory.secureserver.net/artifactory/api/npm/node-virt/:_authToken=${{ secrets.NPM_ARTIFACTORY_TOKEN }}
           EOF
 
       - name: Setup golang environment
