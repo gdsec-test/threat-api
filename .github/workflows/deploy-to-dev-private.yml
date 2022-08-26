@@ -34,7 +34,6 @@ jobs:
         run: |
           echo REPO_NAME=`echo ${{ github.repository }} | awk -F '/' '{print $2}'` >> $GITHUB_ENV
           echo REPO_CHECKOUT_PATH=./`echo ${{ github.repository }} | awk -F '/' '{print $2}'`-${{ github.run_id }} >> $GITHUB_ENV
-          echo CICD_ACCOUNT_ID=570415283994 >> $GITHUB_ENV
           echo CICD_DEPLOY_ROLE=arn:aws:iam::570415283994:role/GD-AWS-USA-GD-ThreatTools-CICD-Deploy >> $GITHUB_ENV
           echo DEPLOY_ROLE=arn:aws:iam::345790377847:role/GD-AWS-USA-GD-ThreatTools-Dev-Private-Deploy >> $GITHUB_ENV
           
