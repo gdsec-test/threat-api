@@ -29,53 +29,19 @@ jobs:
       - name: Reset gitconfig
         run: |
           rm -f $HOME/.gitconfig
-          
-      - name: Add Environmental Vars
-        run: |
-          echo REPO_NAME=`echo ${{ github.repository }} | awk -F '/' '{print $2}'` >> $GITHUB_ENV
-          echo REPO_CHECKOUT_PATH=./`echo ${{ github.repository }} | awk -F '/' '{print $2}'`-${{ github.run_id }} >> $GITHUB_ENV
-          echo CICD_DEPLOY_ROLE=arn:aws:iam::570415283994:role/GD-AWS-USA-GD-ThreatTools-CICD-Deploy >> $GITHUB_ENV
-          echo DEPLOY_ROLE=arn:aws:iam::345790377847:role/GD-AWS-USA-GD-ThreatTools-Dev-Private-Deploy >> $GITHUB_ENV
-          
-      - name: Get Secrets
-        id: masked-secrets
-        run: |
-          while [[ -z "$AWS_RESPONSE" ]]
-          do
-              AWS_RESPONSE=`aws --region=us-west-2 secretsmanager get-secret-value --secret-id=/GitHub/Runner-Secrets`
-              sleep 1
-          done
-          CI_TOKEN=`echo $AWS_RESPONSE | jq -r .SecretString | jq -r .PAT`
-          echo "::set-output name=ci-token::$CI_TOKEN"
-          echo "::add-mask::$CI_TOKEN"
+
+      - name: Checkout
+        uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b
 
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@67fbcbb121271f7775d2e7715933280b06314838
+        uses: aws-actions/configure-aws-credentials@05b148adc31e091bafbaf404f745055d4d3bc9d2
         with:
-          role-to-assume: ${{ env.DEPLOY_ROLE }}
-          role-duration-seconds: 7200 # 2 hours
-          role-skip-session-tagging: true
+          aws-access-key-id: ${{ secrets.DEV_PRIVATE_AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.DEV_PRIVATE_AWS_SECRET_ACCESS_KEY }}
           aws-region: us-west-2
-
-      - name: Get secrets from ASM
-        id: masked-npmrc_creds
-        run: |
-          while [[ -z "$AWS_RESPONSE" ]]
-          do
-              AWS_RESPONSE=`aws --region=us-west-2 secretsmanager get-secret-value --secret-id=npmrc_creds`
-              sleep 1
-          done
-          NPMRC_CREDS=`echo $AWS_RESPONSE | jq -r .SecretString | jq -r .npmrc_credentials`
-          echo "::set-output name=npmrc-creds::$NPMRC_CREDS"
-          echo "::add-mask::$NPMRC_CREDS"
-  
-      - name: Checkout current repo
-        uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b
-      
-      - name: Install Python
-        uses: actions/setup-python@b55428b1882923874294fa556849718a1d7f2ca5
-        with:
-          python-version: 3.9
+          role-to-assume: arn:aws:iam::345790377847:role/GD-AWS-USA-GD-ThreatTools-Dev-Private-Deploy
+          role-duration-seconds: 3600
+          role-skip-session-tagging: true
 
       - name: Setup python environment
         run: |
@@ -86,13 +52,12 @@ jobs:
       - name: Install python and other dependencies
         env:
           GIT_SSH_COMMAND: "ssh -o StrictHostKeyChecking=no"
-          SECURESERVER_ACCESS_KEY_GHC_SA: ${{ secrets.SECURESERVER_ACCESS_KEY_GHC_SA }} 
+          SECURESERVER_ACCESS_KEY_GHC_SA: ${{ secrets.SECURESERVER_ACCESS_KEY_GHC_SA }}
         run: |
           eval "$(ssh-agent -s)"
           ssh-add - <<< "${SECURESERVER_ACCESS_KEY_GHC_SA}"
 
           source venv/bin/activate
-      
           chmod u+x ./getpipconf.sh
           ./getpipconf.sh
           pip install -U -r requirements.txt -r requirements-test.txt
@@ -101,12 +66,12 @@ jobs:
           touch lambdas/cpesubmit/.npmrc
           cat > lambdas/cpesubmit/.npmrc <<EOF
           registry=https://artifactory.secureserver.net/artifactory/api/npm/node-virt/
-          //artifactory.secureserver.net/artifactory/api/npm/node-virt/:_authToken=${{ steps.masked-secrets.outputs.npmrc-creds }}
+          //artifactory.secureserver.net/artifactory/api/npm/node-virt/:_authToken=${{ secrets.NPM_ARTIFACTORY_TOKEN }}
           EOF
           touch lambdas/cpereport/.npmrc
           cat > lambdas/cpereport/.npmrc <<EOF
           registry=https://artifactory.secureserver.net/artifactory/api/npm/node-virt/
-          //artifactory.secureserver.net/artifactory/api/npm/node-virt/:_authToken=${{ steps.masked-secrets.outputs.npmrc-creds }}
+          //artifactory.secureserver.net/artifactory/api/npm/node-virt/:_authToken=${{ secrets.NPM_ARTIFACTORY_TOKEN }}
           EOF
 
       - name: Setup golang environment
@@ -119,7 +84,7 @@ jobs:
           GIT_SSH_COMMAND: "ssh -o StrictHostKeyChecking=no"
           SECURESERVER_ACCESS_KEY_GHC_SA: ${{ secrets.SECURESERVER_ACCESS_KEY_GHC_SA }}
           GITHUBCLOUD_SSH_PRIVATE_KEY: ${{ secrets.GITHUBCLOUD_SSH_PRIVATE_KEY }}
-          GH_ACCESS_TOKEN: ${{ steps.masked-secrets.outputs.ci-token }}
+          GH_ACCESS_TOKEN: ${{ secrets.REPO_CLONE_TOKEN_SA_PAT }}
           GOPRIVATE: "github.secureserver.net,github.com/gdcorp-*"
         run: |
           eval "$(ssh-agent -s)"
@@ -135,7 +100,6 @@ jobs:
       - name: Run sceptre
         run: |
           source venv/bin/activate
-          pip install gd-sceptre-hooks-resolvers
           cd sceptre
           aws s3 cp templates/SC-ServiceLambdas.yaml s3://gd-threattools-dev-private-code-bucket/template/SC-ServiceLambdas.yaml --quiet
           sceptre launch -y dev-private/us-west-2
