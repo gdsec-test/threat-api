@@ -9,15 +9,42 @@ jobs:
   tartufo:
     runs-on: [self-hosted,threat-runners]
     steps:
-      - name: Configure AWS credentials for ECR access
-        uses: aws-actions/configure-aws-credentials@05b148adc31e091bafbaf404f745055d4d3bc9d2
+      #- name: Configure AWS credentials for ECR access
+      #  uses: aws-actions/configure-aws-credentials@05b148adc31e091bafbaf404f745055d4d3bc9d2
+      #  with:
+      #    aws-access-key-id: ${{ secrets.DEV_PRIVATE_AWS_ACCESS_KEY_ID }}
+      #    aws-secret-access-key: ${{ secrets.DEV_PRIVATE_AWS_SECRET_ACCESS_KEY }}
+      #    role-to-assume: arn:aws:iam::345790377847:role/GD-AWS-USA-GD-ThreatTools-Dev-Private-Deploy
+      #    role-duration-seconds: 1200                                 # default max is 7200
+      #    aws-region: us-west-2                                       # set region you want to target
+      #    role-skip-session-tagging: true
+
+      - name: Add Environmental Vars
+        run: |
+          # echo REPO_NAME=`echo ${{ github.repository }} | awk -F '/' '{print $2}'` >> $GITHUB_ENV
+          # echo REPO_CHECKOUT_PATH=./`echo ${{ github.repository }} | awk -F '/' '{print $2}'`-${{ github.run_id }} >> $GITHUB_ENV
+          # echo CICD_DEPLOY_ROLE=arn:aws:iam::570415283994:role/GD-AWS-USA-GD-ThreatTools-CICD-Deploy >> $GITHUB_ENV
+          echo DEPLOY_ROLE=arn:aws:iam::345790377847:role/GD-AWS-USA-GD-ThreatTools-Dev-Private-Deploy >> $GITHUB_ENV
+          
+      - name: Get Secrets
+        id: masked-secrets
+        run: |
+          while [[ -z "$AWS_RESPONSE" ]]
+          do
+              AWS_RESPONSE=`aws --region=us-west-2 secretsmanager get-secret-value --secret-id=/GitHub/Runner-Secrets`
+              sleep 1
+          done
+          CI_TOKEN=`echo $AWS_RESPONSE | jq -r .SecretString | jq -r .PAT`
+          echo "::set-output name=ci-token::$CI_TOKEN"
+          echo "::add-mask::$CI_TOKEN"
+      
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@67fbcbb121271f7775d2e7715933280b06314838
         with:
-          aws-access-key-id: ${{ secrets.DEV_PRIVATE_AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.DEV_PRIVATE_AWS_SECRET_ACCESS_KEY }}
-          role-to-assume: arn:aws:iam::345790377847:role/GD-AWS-USA-GD-ThreatTools-Dev-Private-Deploy
-          role-duration-seconds: 1200                                 # default max is 7200
-          aws-region: us-west-2                                       # set region you want to target
+          role-to-assume: ${{ env.DEPLOY_ROLE }}
+          role-duration-seconds: 7200 # 2 hours
           role-skip-session-tagging: true
+          aws-region: us-west-2
 
       - name: Login to Amazon ECR
         id: login-ecr
@@ -37,7 +64,7 @@ jobs:
         uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b
         with:
           repository: gdcorp-actions/tartufo
-          token: ${{ secrets.REPO_CLONE_TOKEN_SA_PAT }} # PAT with read access to gdcorp-actions/tartufo
+          token: ${{ steps.masked-secrets.outputs.ci-token }} # PAT with read access to gdcorp-actions/tartufo
           path: tartufo
           ref: main
           persist-credentials: false # Do not persist auth token in local git config.
@@ -45,7 +72,7 @@ jobs:
       - name: Tartufo secret scanning using the Tartufo GitHub Action
         uses: ./tartufo
         with:
-          github_token: ${{ secrets.REPO_CLONE_TOKEN_SA_PAT }}
+          github_token: ${{ steps.masked-secrets.outputs.ci-token }}
 
   python-code-check:
     needs: tartufo
@@ -54,15 +81,32 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b
 
+      - name: Add Environmental Vars
+        run: |
+          # echo REPO_NAME=`echo ${{ github.repository }} | awk -F '/' '{print $2}'` >> $GITHUB_ENV
+          # echo REPO_CHECKOUT_PATH=./`echo ${{ github.repository }} | awk -F '/' '{print $2}'`-${{ github.run_id }} >> $GITHUB_ENV
+          # echo CICD_DEPLOY_ROLE=arn:aws:iam::570415283994:role/GD-AWS-USA-GD-ThreatTools-CICD-Deploy >> $GITHUB_ENV
+          echo DEPLOY_ROLE=arn:aws:iam::345790377847:role/GD-AWS-USA-GD-ThreatTools-Dev-Private-Deploy >> $GITHUB_ENV
+          
+      - name: Get Secrets
+        id: masked-secrets
+        run: |
+          while [[ -z "$AWS_RESPONSE" ]]
+          do
+              AWS_RESPONSE=`aws --region=us-west-2 secretsmanager get-secret-value --secret-id=/GitHub/Runner-Secrets`
+              sleep 1
+          done
+          CI_TOKEN=`echo $AWS_RESPONSE | jq -r .SecretString | jq -r .PAT`
+          echo "::set-output name=ci-token::$CI_TOKEN"
+          echo "::add-mask::$CI_TOKEN"
+      
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@05b148adc31e091bafbaf404f745055d4d3bc9d2
+        uses: aws-actions/configure-aws-credentials@67fbcbb121271f7775d2e7715933280b06314838
         with:
-          aws-access-key-id: ${{ secrets.DEV_PRIVATE_AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.DEV_PRIVATE_AWS_SECRET_ACCESS_KEY }}
-          role-to-assume: arn:aws:iam::345790377847:role/GD-AWS-USA-GD-ThreatTools-Dev-Private-Deploy
-          role-duration-seconds: 1200                                 # default max is 7200
-          aws-region: us-west-2                                       # set region you want to target
+          role-to-assume: ${{ env.DEPLOY_ROLE }}
+          role-duration-seconds: 7200 # 2 hours
           role-skip-session-tagging: true
+          aws-region: us-west-2
 
       - name: Set up Python 3.9.0
         uses: actions/setup-python@d09bd5e6005b175076f227b13d9730d56e9dcfcb
@@ -122,16 +166,32 @@ jobs:
         uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b
 
 #      TODO: Remove this actual AWS access once we have dependency injection
+      - name: Add Environmental Vars
+        run: |
+          # echo REPO_NAME=`echo ${{ github.repository }} | awk -F '/' '{print $2}'` >> $GITHUB_ENV
+          # echo REPO_CHECKOUT_PATH=./`echo ${{ github.repository }} | awk -F '/' '{print $2}'`-${{ github.run_id }} >> $GITHUB_ENV
+          # echo CICD_DEPLOY_ROLE=arn:aws:iam::570415283994:role/GD-AWS-USA-GD-ThreatTools-CICD-Deploy >> $GITHUB_ENV
+          echo DEPLOY_ROLE=arn:aws:iam::345790377847:role/GD-AWS-USA-GD-ThreatTools-Dev-Private-Deploy >> $GITHUB_ENV
+          
+      - name: Get Secrets
+        id: masked-secrets
+        run: |
+          while [[ -z "$AWS_RESPONSE" ]]
+          do
+              AWS_RESPONSE=`aws --region=us-west-2 secretsmanager get-secret-value --secret-id=/GitHub/Runner-Secrets`
+              sleep 1
+          done
+          CI_TOKEN=`echo $AWS_RESPONSE | jq -r .SecretString | jq -r .PAT`
+          echo "::set-output name=ci-token::$CI_TOKEN"
+          echo "::add-mask::$CI_TOKEN"
+      
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@05b148adc31e091bafbaf404f745055d4d3bc9d2
+        uses: aws-actions/configure-aws-credentials@67fbcbb121271f7775d2e7715933280b06314838
         with:
-          aws-access-key-id: ${{ secrets.DEV_PRIVATE_AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.DEV_PRIVATE_AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-west-2
-          role-to-assume: arn:aws:iam::345790377847:role/GD-AWS-USA-GD-ThreatTools-Dev-Private-Deploy
-          role-duration-seconds: 3600
+          role-to-assume: ${{ env.DEPLOY_ROLE }}
+          role-duration-seconds: 7200 # 2 hours
           role-skip-session-tagging: true
-
+          aws-region: us-west-2
       - name: Set up Go
         uses: actions/setup-go@b22fbbc2921299758641fab08929b4ac52b32923
         with:
@@ -142,7 +202,7 @@ jobs:
           GIT_SSH_COMMAND: "ssh -o StrictHostKeyChecking=no"
           SECURESERVER_ACCESS_KEY_GHC_SA: ${{ secrets.SECURESERVER_ACCESS_KEY_GHC_SA }}
           GITHUBCLOUD_SSH_PRIVATE_KEY: ${{ secrets.GITHUBCLOUD_SSH_PRIVATE_KEY }}
-          GH_ACCESS_TOKEN: ${{ secrets.REPO_CLONE_TOKEN_SA_PAT }}
+          GH_ACCESS_TOKEN: ${{ steps.masked-secrets.outputs.ci-token }}
           GOPRIVATE: "github.secureserver.net,github.com/gdcorp-*"
         run: |
           eval "$(ssh-agent -s)"
