@@ -35,7 +35,7 @@ jobs:
 
       - name: Login to Amazon ECR
         id: login-ecr
-        uses: aws-actions/amazon-ecr-login@3d4e073ce6a6845ed27b30a0fe05b6e22c80ac6b
+        uses: aws-actions/amazon-ecr-login@9149ade017c57f86dea2f76a01f8b2d5bd06b10f
 
       - name: Docker login for Golden Containers ECR
         env:
@@ -93,7 +93,7 @@ jobs:
           aws-region: us-west-2
 
       - name: Set up Python 3.9.0
-        uses: actions/setup-python@d09bd5e6005b175076f227b13d9730d56e9dcfcb
+        uses: actions/setup-python@b55428b1882923874294fa556849718a1d7f2ca5
         with:
           python-version: 3.9.0
           architecture: 'x64'
@@ -222,7 +222,7 @@ jobs:
         uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b
 
       - name: Set up Javascript 3.9.0
-        uses: actions/setup-node@5b949b50c3461bbcd5a540b150c368278160234a
+        uses: actions/setup-node@2fddd8803e2f5c9604345a0b591c3020ee971a93
         with:
           node-version: 12.20.0
 
