@@ -18,8 +18,8 @@ name: ThreatAPI Deployment (DEV)
 # See: https://github.com/golang/go/issues/38964
 
 on:
-  #push:
-  #  branches: [ develop ] # Trigger workflow on all pushes to develop branch
+  push:
+    branches: [ develop ] # Trigger workflow on all pushes to develop branch
   workflow_dispatch:
 
 jobs:
