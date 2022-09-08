@@ -604,7 +604,7 @@ Resources:
     Properties:
       Name: /ThreatTools/Modules/recordedfuture
       Type: String
-      Value: '{"supportedIOCTypes": ["CVE", "IP", "MD5", "SHA1", "SHA256"]}'
+      Value: '{"supportedIOCTypes": ["CVE", "IP", "MD5", "SHA1", "SHA256", "DOMAIN", "URL"]}'
 
   recordedfutureAppSecSubscriptionFilter:
     DependsOn: recordedfutureLambdaFunction
