@@ -16,6 +16,7 @@ const LAMBDA_ROOT_DIRS = [MODULES_DIR, 'lambdas'];
 const RUNTIMES = [
   'go1.x',
   'nodejs12.x',
+  'nodejs14.x',
   'python2.7',
   'python3.6',
   'python3.7',

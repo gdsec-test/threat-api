@@ -25,7 +25,7 @@ repos:
       - id: check-byte-order-marker
         stages: [commit]
   - repo: https://github.com/godaddy/tartufo
-    rev: v3.0.0
+    rev: v3.1.4
     hooks:
       - id: tartufo
         stages: [commit]

@@ -1,0 +1,40 @@
+{
+  "name": "cpesubmit",
+  "version": "1.0.0",
+  "description": "looks for CPEs stored in DynamoDB and submits Tanium Job to find computers with software. Job report is checked later as part of AWS Step Function Machine",
+  "private": true,
+  "main": "index.js",
+  "scripts": {
+    "test": "",
+    "test-ci": ""
+  },
+  "author": "",
+  "license": "",
+  "dependencies": {
+    "@aws-sdk/client-cloudwatch-logs": "^3.118.0",
+    "aws-sdk": "^2.1162.0",
+    "gd-auth-client": "^1.2.1",
+    "node-fetch": "^2.6.7",
+    "papaparse": "^5.3.2",
+    "winston": "^3.8.0",
+    "winston-cloudwatch": "^6.0.1"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.17.9",
+    "@babel/preset-env": "^7.16.11",
+    "@typescript-eslint/eslint-plugin": "^5.29.0",
+    "@typescript-eslint/parser": "^5.29.0",
+    "acorn": "^8.7.1",
+    "eslint": "^8.18.0",
+    "eslint-config-standard": "^17.0.0",
+    "eslint-plugin-import": "^2.26.0",
+    "eslint-plugin-n": "^15.2.3",
+    "eslint-plugin-node": "^11.1.0",
+    "eslint-plugin-prettier": "^4.0.0",
+    "eslint-plugin-promise": "^6.0.0",
+    "install": "^0.13.0",
+    "prettier": "^2.7.1",
+    "typescript": "^4.7.4",
+    "util": "^0.12.4"
+  }
+}

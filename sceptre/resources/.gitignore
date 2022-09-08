@@ -1,1 +1,5 @@
 *.sha1
+venv
+function.zip
+pip.conf
+package

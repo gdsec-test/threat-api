@@ -11,6 +11,7 @@ parameters:
   servicenowSHA1: !file_contents resources/servicenow.sha1
   shodanSHA1: !file_contents resources/shodan.sha1
   sucuriSHA1: !file_contents resources/sucuri.sha1
+  taniumSHA1: !file_contents resources/tanium.sha1
   trustarSHA1: !file_contents resources/trustar.sha1
   urlhausSHA1: !file_contents resources/urlhaus.sha1
   urlscanioSHA1: !file_contents resources/urlscanio.sha1
@@ -23,8 +24,10 @@ hooks:
     - !cmd resources/log-group-create.py
   after_create:
     - !cmd rm -f resources/*.sha1
+    - !cmd ../containers/golang/build.sh ./test/ testap {{aws_account}}
   before_update:
     - !cmd resources/build-service-lambdas.sh
     - !cmd resources/log-group-create.py
   after_update:
     - !cmd rm -f resources/*.sha1
+    - !cmd ../containers/golang/build.sh ./test/ testap {{aws_account}}

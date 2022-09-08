@@ -34,6 +34,10 @@ Parameters:
     Type: String
     Description: SHA1 hash of the sucuri lambda source
     Default: ""
+  taniumSHA1:
+    Type: String
+    Description: SHA1 hash of the tanium lambda source
+    Default: ""
   trustarSHA1:
     Type: String
     Description: SHA1 hash of the trustar lambda source
@@ -308,7 +312,7 @@ Resources:
     Properties:
       Name: /ThreatTools/Modules/recordedfuture
       Type: String
-      Value: '{"supportedIOCTypes": ["CVE", "IP", "MD5", "SHA1", "SHA256"]}'
+      Value: '{"supportedIOCTypes": ["CVE", "IP", "MD5", "SHA1", "SHA256", "DOMAIN", "URL"]}'
 
   servicenowLambdaFunction:
     Type: AWS::Lambda::Function
@@ -459,6 +463,56 @@ Resources:
       Name: /ThreatTools/Modules/sucuri
       Type: String
       Value: '{"supportedIOCTypes": ["DOMAIN"]}'
+
+  taniumLambdaFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      Code:
+        S3Bucket: !Sub gd-threattools-${AWS::AccountId}-code-bucket
+        S3Key: !Sub tanium/${taniumSHA1}
+      Description: !Sub tanium lambda (${taniumSHA1})
+      FunctionName: tanium
+      Handler: tanium
+      MemorySize: 256
+      Role: !Sub arn:aws:iam::${AWS::AccountId}:role/threattools-custom-ThreatRole
+      Runtime: go1.x
+      Timeout: 900
+
+  taniumLambdaPermission:
+    DependsOn: taniumLambdaFunction
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:tanium
+      Principal: sns.amazonaws.com
+      SourceArn: !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:JobRequests
+
+  taniumSNSSubscription:
+    DependsOn: taniumLambdaFunction
+    Type: AWS::SNS::Subscription
+    Properties:
+      Endpoint: !GetAtt taniumLambdaFunction.Arn
+      Protocol: lambda
+      TopicArn: !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:JobRequests
+
+  taniumLambdaEventInvokeConfig:
+    DependsOn: taniumLambdaFunction
+    Type: AWS::Lambda::EventInvokeConfig
+    Properties:
+      DestinationConfig:
+        OnSuccess:
+          Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobResponses
+        OnFailure:
+          Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobFailures
+      FunctionName: tanium
+      Qualifier: $LATEST
+
+  taniumLambdaMetadata:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: /ThreatTools/Modules/tanium
+      Type: String
+      Value: '{"supportedIOCTypes": []}'
 
   trustarLambdaFunction:
     Type: AWS::Lambda::Function

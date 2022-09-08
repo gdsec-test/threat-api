@@ -6,6 +6,8 @@ parameters:
   ManagerHash: !file_contents resources/manager.sha1
   ResponseProcessorHash: !file_contents resources/responseprocessor.sha1
   VulnerabilityWatchHash: !file_contents resources/vulnerabilitywatch.sha1
+  CpeSubmitHash: !file_contents resources/cpesubmit.sha1
+  CpeReportHash: !file_contents resources/cpereport.sha1
 hooks:
   before_create:
     - !cmd resources/upload-api-spec.sh

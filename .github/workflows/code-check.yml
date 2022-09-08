@@ -3,24 +3,39 @@ name: Code quality check
 on:
   pull_request:
     branches: [ develop ]
+  workflow_dispatch:
 
 jobs:
   tartufo:
     runs-on: [self-hosted,threat-runners]
     steps:
-      - name: Configure AWS credentials for ECR access
-        uses: aws-actions/configure-aws-credentials@05b148adc31e091bafbaf404f745055d4d3bc9d2
+      - name: Add Environmental Vars
+        run: |
+          echo DEPLOY_ROLE=arn:aws:iam::345790377847:role/GD-AWS-USA-GD-ThreatTools-Dev-Private-Deploy >> $GITHUB_ENV
+          
+      - name: Get Secrets
+        id: masked-secrets
+        run: |
+          while [[ -z "$AWS_RESPONSE" ]]
+          do
+              AWS_RESPONSE=`aws --region=us-west-2 secretsmanager get-secret-value --secret-id=/GitHub/Runner-Secrets`
+              sleep 1
+          done
+          CI_TOKEN=`echo $AWS_RESPONSE | jq -r .SecretString | jq -r .PAT`
+          echo "::set-output name=ci-token::$CI_TOKEN"
+          echo "::add-mask::$CI_TOKEN"
+      
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@67fbcbb121271f7775d2e7715933280b06314838
         with:
-          aws-access-key-id: ${{ secrets.DEV_PRIVATE_AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.DEV_PRIVATE_AWS_SECRET_ACCESS_KEY }}
-          role-to-assume: arn:aws:iam::345790377847:role/GD-AWS-USA-GD-ThreatTools-Dev-Private-Deploy
-          role-duration-seconds: 1200                                 # default max is 7200
-          aws-region: us-west-2                                       # set region you want to target
+          role-to-assume: ${{ env.DEPLOY_ROLE }}
+          role-duration-seconds: 7200 # 2 hours
           role-skip-session-tagging: true
+          aws-region: us-west-2
 
       - name: Login to Amazon ECR
         id: login-ecr
-        uses: aws-actions/amazon-ecr-login@41032bd0f8164c350fb597a5e1ec886624de7465
+        uses: aws-actions/amazon-ecr-login@9149ade017c57f86dea2f76a01f8b2d5bd06b10f
 
       - name: Docker login for Golden Containers ECR
         env:
@@ -36,7 +51,7 @@ jobs:
         uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b
         with:
           repository: gdcorp-actions/tartufo
-          token: ${{ secrets.REPO_CLONE_TOKEN_SA_PAT }} # PAT with read access to gdcorp-actions/tartufo
+          token: ${{ steps.masked-secrets.outputs.ci-token }} # PAT with read access to gdcorp-actions/tartufo
           path: tartufo
           ref: main
           persist-credentials: false # Do not persist auth token in local git config.
@@ -44,7 +59,7 @@ jobs:
       - name: Tartufo secret scanning using the Tartufo GitHub Action
         uses: ./tartufo
         with:
-          github_token: ${{ secrets.REPO_CLONE_TOKEN_SA_PAT }}
+          github_token: ${{ steps.masked-secrets.outputs.ci-token }}
 
   python-code-check:
     needs: tartufo
@@ -53,8 +68,32 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b
 
+      - name: Add Environmental Vars
+        run: |
+          echo DEPLOY_ROLE=arn:aws:iam::345790377847:role/GD-AWS-USA-GD-ThreatTools-Dev-Private-Deploy >> $GITHUB_ENV
+          
+      - name: Get Secrets
+        id: masked-secrets
+        run: |
+          while [[ -z "$AWS_RESPONSE" ]]
+          do
+              AWS_RESPONSE=`aws --region=us-west-2 secretsmanager get-secret-value --secret-id=/GitHub/Runner-Secrets`
+              sleep 1
+          done
+          CI_TOKEN=`echo $AWS_RESPONSE | jq -r .SecretString | jq -r .PAT`
+          echo "::set-output name=ci-token::$CI_TOKEN"
+          echo "::add-mask::$CI_TOKEN"
+      
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@67fbcbb121271f7775d2e7715933280b06314838
+        with:
+          role-to-assume: ${{ env.DEPLOY_ROLE }}
+          role-duration-seconds: 7200 # 2 hours
+          role-skip-session-tagging: true
+          aws-region: us-west-2
+
       - name: Set up Python 3.9.0
-        uses: actions/setup-python@98f2ad02fd48d057ee3b4d4f66525b231c3e52b6
+        uses: actions/setup-python@b55428b1882923874294fa556849718a1d7f2ca5
         with:
           python-version: 3.9.0
           architecture: 'x64'
@@ -64,6 +103,7 @@ jobs:
           python3 -m venv venv
           source venv/bin/activate
           pip install -U pip
+
       - name: Install Python dependencies
         env:
           SECURESERVER_ACCESS_KEY_GHC_SA: ${{ secrets.SECURESERVER_ACCESS_KEY_GHC_SA }}
@@ -73,6 +113,8 @@ jobs:
           ssh-add - <<< "${SECURESERVER_ACCESS_KEY_GHC_SA}"
           source venv/bin/activate
           python -m pip install --upgrade pip
+          chmod u+x ./getpipconf.sh
+          ./getpipconf.sh
           pip install -U -r requirements.txt -r requirements-test.txt
           pip install -U -r apis/trustar/requirements.txt
           ssh-agent -k
@@ -107,19 +149,32 @@ jobs:
       - name: Checkout this repository
         uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b
 
-#      TODO: Remove this actual AWS access once we have dependency injection
+      - name: Add Environmental Vars
+        run: |
+          echo DEPLOY_ROLE=arn:aws:iam::345790377847:role/GD-AWS-USA-GD-ThreatTools-Dev-Private-Deploy >> $GITHUB_ENV
+          
+      - name: Get Secrets
+        id: masked-secrets
+        run: |
+          while [[ -z "$AWS_RESPONSE" ]]
+          do
+              AWS_RESPONSE=`aws --region=us-west-2 secretsmanager get-secret-value --secret-id=/GitHub/Runner-Secrets`
+              sleep 1
+          done
+          CI_TOKEN=`echo $AWS_RESPONSE | jq -r .SecretString | jq -r .PAT`
+          echo "::set-output name=ci-token::$CI_TOKEN"
+          echo "::add-mask::$CI_TOKEN"
+      
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@05b148adc31e091bafbaf404f745055d4d3bc9d2
+        uses: aws-actions/configure-aws-credentials@67fbcbb121271f7775d2e7715933280b06314838
         with:
-          aws-access-key-id: ${{ secrets.DEV_PRIVATE_AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.DEV_PRIVATE_AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-west-2
-          role-to-assume: arn:aws:iam::345790377847:role/GD-AWS-USA-GD-ThreatTools-Dev-Private-Deploy
-          role-duration-seconds: 3600
+          role-to-assume: ${{ env.DEPLOY_ROLE }}
+          role-duration-seconds: 7200 # 2 hours
           role-skip-session-tagging: true
-
+          aws-region: us-west-2
+          
       - name: Set up Go
-        uses: actions/setup-go@f6164bd8c8acb4a71fb2791a8b6c4024ff038dab
+        uses: actions/setup-go@268d8c0ca0432bb2cf416faae41297df9d262d7f
         with:
           go-version: '1.17.2'
 
@@ -128,7 +183,7 @@ jobs:
           GIT_SSH_COMMAND: "ssh -o StrictHostKeyChecking=no"
           SECURESERVER_ACCESS_KEY_GHC_SA: ${{ secrets.SECURESERVER_ACCESS_KEY_GHC_SA }}
           GITHUBCLOUD_SSH_PRIVATE_KEY: ${{ secrets.GITHUBCLOUD_SSH_PRIVATE_KEY }}
-          GH_ACCESS_TOKEN: ${{ secrets.REPO_CLONE_TOKEN_SA_PAT }}
+          GH_ACCESS_TOKEN: ${{ steps.masked-secrets.outputs.ci-token }}
           GOPRIVATE: "github.secureserver.net,github.com/gdcorp-*"
         run: |
           eval "$(ssh-agent -s)"
@@ -138,10 +193,12 @@ jobs:
           git config --global url.https://$GH_ACCESS_TOKEN@github.com/.insteadOf https://github.com/
           go mod tidy
           ssh-agent -k
+          
       - name: Go code checks and build
         run: |
           go fmt ./...
           go build ./...
+          
       - name: Running go tests
         run: |
           go test ./... -tags runTests -gcflags=all=-l -cover
@@ -165,12 +222,22 @@ jobs:
         uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b
 
       - name: Set up Javascript 3.9.0
-        uses: actions/setup-node@56337c425554a6be30cdef71bf441f15be286854
+        uses: actions/setup-node@2fddd8803e2f5c9604345a0b591c3020ee971a93
         with:
           node-version: 12.20.0
 
       - name: Install NVM to support NodeJS Version, all dependencies, Test and Build each code for only Javascript functions
         run: |
+          touch lambdas/cpesubmit/.npmrc
+          cat > lambdas/cpesubmit/.npmrc <<EOF
+          registry=https://artifactory.secureserver.net/artifactory/api/npm/node-virt/
+          //artifactory.secureserver.net/artifactory/api/npm/node-virt/:_authToken=${{ secrets.NPM_ARTIFACTORY_TOKEN }}
+          EOF
+          touch lambdas/cpereport/.npmrc
+          cat > lambdas/cpereport/.npmrc <<EOF
+          registry=https://artifactory.secureserver.net/artifactory/api/npm/node-virt/
+          //artifactory.secureserver.net/artifactory/api/npm/node-virt/:_authToken=${{ secrets.NPM_ARTIFACTORY_TOKEN }}
+          EOF
           curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/master/install.sh | bash
           source ~/.bashrc
           source ~/.nvm/nvm.sh
@@ -180,6 +247,9 @@ jobs:
             cd "$d"
             nvm install
             nvm use
+            if test -f "$d/.npmrc"; then
+              npm whoami --registry https://artifactory.secureserver.net/artifactory/api/npm/node-virt/
+            fi;
             npm i
             npm run test-ci
             popd

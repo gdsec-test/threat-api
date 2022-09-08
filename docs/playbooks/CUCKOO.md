@@ -1,3 +1,0 @@
-# Cuckoo/ CAPE
-
-TODO (Courtney)

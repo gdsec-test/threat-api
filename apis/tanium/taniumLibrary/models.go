@@ -45,9 +45,9 @@ type Sensor struct {
 }
 
 type SensorRef struct {
-	Name      string `json:"name"`
-	RealMsAvg int    `json:"real_ms_avg"`
-	StartChar string `json:"start_char"`
+	Name      string      `json:"name"`
+	RealMsAvg int         `json:"real_ms_avg"`
+	StartChar interface{} `json:"start_char"`
 }
 
 type Filter struct {
@@ -155,7 +155,7 @@ type QuestionDefinition struct {
 	ContextGroup          Group       `json:"context_group"`
 	Expiration            string      `json:"expiration"`
 	ExpireSeconds         int         `json:"expire_seconds"`
-	ForceComputerId       bool        `json:"force_computer_id_flag"`
+	ForceComputerId       interface{} `json:"force_computer_id_flag"`
 	FromCanonicalText     int         `json:"from_canonical_text"`
 	Group                 Group       `json:"group"`
 	Hidden                bool        `json:"hidden_flag"`
@@ -170,7 +170,7 @@ type QuestionDefinition struct {
 	SavedQuestion         Group       `json:"saved_question"`
 	Selects               []Select    `json:"selects"`
 	SensorReferences      []SensorRef `json:"sensor_references"`
-	SkipLock              bool        `json:"skip_lock_flag"`
+	SkipLock              interface{} `json:"skip_lock_flag"`
 	User                  Common      `json:"user"`
 }
 
@@ -194,8 +194,6 @@ type Row struct {
 
 // ResultSet is the Tanium ResultSet object
 type ResultSet struct {
-	MaxAvailableAge          string   `json:"max_available_age"`
-	Now                      string   `json:"now"`
 	Age                      int      `json:"age"`
 	CacheId                  string   `json:"cache_id"`
 	Columns                  []Column `json:"columns"`

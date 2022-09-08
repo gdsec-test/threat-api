@@ -2,8 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
-	tn "github.com/gdcorp-infosec/threat-api/apis/tanium/taniumLibrary"
 	"net/http"
 
 	"github.com/gdcorp-infosec/threat-api/lambdas/common/toolbox"
@@ -18,9 +16,7 @@ const (
 
 // TriageModule triage module
 type TriageModule struct {
-	ExampleKey    string
-	ExampleUser   string
-	ExampleClient *http.Client
+	TaniumClient *http.Client
 }
 
 // GetDocs of Tanium triage module
@@ -30,7 +26,7 @@ func (m *TriageModule) GetDocs() *triage.Doc {
 
 // Supports returns true of we support this ioc type
 func (m *TriageModule) Supports() []triage.IOCType {
-	return nil
+	return []triage.IOCType{triage.GoDaddyHostnameType, triage.CPEType}
 }
 
 // Triage retrieves data by talking to the Tanium library
@@ -44,20 +40,13 @@ func (m *TriageModule) Triage(ctx context.Context, triageRequest *triage.Request
 	span, ctx = tb.TracerLogger.StartSpan(ctx, "Tanium", "triage", "questionquery", "get")
 	defer span.End(ctx)
 
+	if m.TaniumClient == nil {
+		m.TaniumClient = http.DefaultClient
+	}
+
 	var err error
-	var triageProgramsData map[string]chan tn.Row
-	triageTaniumMachineData := &triage.Data{
-		Title:    "Programs and versions installed in the queried machine",
-		Metadata: []string{},
-	}
 
-	triageProgramsData, err = m.GetProgramsFromGodaddyMachines(ctx, triageRequest)
-	if err != nil {
-		triageTaniumMachineData.Data = fmt.Sprintf("error from tanium: %s", err)
-	} else {
-		triageTaniumMachineData.DataType = triage.CSVType
-		triageTaniumMachineData.Data = dumpCSV(triageProgramsData)
-	}
+	result, err := m.SubmitTaniumQuestion(ctx, triageRequest)
 
-	return []*triage.Data{triageTaniumMachineData}, nil
+	return result, err
 }

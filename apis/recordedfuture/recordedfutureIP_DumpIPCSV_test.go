@@ -30,7 +30,7 @@ func TestDumpIPCSV(t *testing.T) {
 			responseReportString := TestRecordedFutureIPReportData
 			json.Unmarshal([]byte(responseReportString), &RecordedFutureIPReportData)
 
-			expectedCSV := "IntelCardLink,Risk Score,Criticality,CriticalityLabel,First Seen,Last Seen,ThreatLists,Badness\nhttps://app.recordedfuture.com/live/sc/entity/ip%3A216.151.180.100,15,1,Unusual,2017-04-13 07:54:49.283 +0000 UTC,2017-06-13 01:10:15.003 +0000 UTC,,0.15\n"
+			expectedCSV := "IoC,Badness,IntelCardLink,Risk Score,Criticality,CriticalityLabel,First Seen,Last Seen,ThreatLists\n123.45.67.89,0.15,https://app.recordedfuture.com/live/sc/entity/ip%3A216.151.180.100,15,1,Unusual,2017-04-13 07:54:49.283 +0000 UTC,2017-06-13 01:10:15.003 +0000 UTC,\n"
 
 			reports := map[string]*rf.IPReport{
 				"123.45.67.89": RecordedFutureIPReportData,

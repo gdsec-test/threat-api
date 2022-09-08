@@ -5,7 +5,7 @@ template_path: sc-gha-repo-runner.yaml
 stack_name: cicd-runners
 parameters:
   ProductVersion: 1.3.6
-  RunnerName: github-actions-runner
+  RunnerName: github-actions-runner-threat-api
   RunnerLabels: self-hosted, threat-runners
   RunnerAutoScalingGroupDesiredSize: "1"
   RunnerVolumeSize: "20"
@@ -13,12 +13,13 @@ parameters:
   GitHubOrganization: gdcorp-infosec
   GitHubRepository: threat-api
   GitHubSecretName: /GitHub/Runner-Secrets
-  RunnerVersion: "2.288.1"
   RunnerAutoScalingGroupWarmPoolSize: "2"
   RunnerAutoScalingGroupSubnets: /AdminParams/VPC/DXAPPSubnets
+  RunnerGroupName: threat-api-runners
   RunnerAMIId: /GoldenAMI/gd-ubuntu20.04/latest
   DeviceName: /dev/sda1
   UseCICDRole: "true"
+  IsOrgRunner: "false"
   CustomUserData: |
     sudo snap install amazon-ssm-agent --classic
     sudo systemctl start snap.amazon-ssm-agent.amazon-ssm-agent.service

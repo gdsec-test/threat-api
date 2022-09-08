@@ -60,6 +60,14 @@ Parameters:
     Type: String
     Description: SHA1 hash of the vulnerabilitywatch lambda source
     Default: ""
+  CpeSubmitHash:
+    Type: String
+    Description: SHA1 hash of the cpesubmit lambda source
+    Default: ""
+  CpeReportHash:
+    Type: String
+    Description: SHA1 hash of the cpereport lambda source
+    Default: ""
   ThreatApiJobBucket:
     Type: String
     Description: Name of S3 Bucket to work with Jobs\Modules big objects
@@ -199,7 +207,7 @@ Resources:
         - Key: MemorySize
           Value: 128
         - Key: Runtime
-          Value: python3.6
+          Value: python3.7
         - Key: Timeout
           Value: 5
         - Key: CustomIAMRoleNameSuffix
@@ -761,7 +769,7 @@ Resources:
     Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
     Properties:
       ProductName: Lambda
-      ProvisioningArtifactName: 2.3.0
+      ProvisioningArtifactName: 2.7.0
       ProvisionedProductName: VulnerabilityWatchLambda
       ProvisioningParameters:
         - Key: S3Bucket
@@ -777,7 +785,7 @@ Resources:
         - Key: MemorySize
           Value: 512
         - Key: Runtime
-          Value: nodejs12.x
+          Value: nodejs14.x
         - Key: Timeout
           Value: 900
         - Key: CustomIAMRoleNameSuffix
@@ -827,6 +835,202 @@ Resources:
       Tags:
         - Key: doNotShutDown
           Value: true
+
+  CpeSubmitPolicyDynamoDB:
+    Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
+    Properties:
+      ProductName: IAMPolicy
+      ProvisioningArtifactName: 1.0.0
+      ProvisionedProductName: CpeSubmitPolicyDynamoDB
+      ProvisioningParameters:
+        - Key: PolicyNameSuffix
+          Value: CpeSubmitPolicyDynamoDB
+        - Key: PolicyJSON
+          Value: !Sub '{
+            "Version": "2012-10-17",
+            "Statement": [
+                {
+                    "Action": [
+                        "dynamodb:*"
+                    ],
+                    "Resource": "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/cve",
+                    "Effect": "Allow"
+                },
+                {
+                    "Action": [
+                        "logs:CreateLogGroup",
+                        "logs:CreateLogStream",
+                        "logs:PutLogEvents"
+                    ],
+                    "Resource": "*",
+                    "Effect": "Allow"
+                }
+            ]
+          }'
+      Tags:
+        - Key: doNotShutDown
+          Value: true
+
+  CpeSubmitRole:
+    DependsOn:
+      - ThreatPolicyDynamoDB
+      - ThreatPolicySecretsManager
+      - CpeSubmitPolicyDynamoDB
+    Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
+    Properties:
+      ProductName: IAMRole
+      ProvisioningArtifactName: 1.0.9
+      ProvisionedProductName: CpeSubmitRole
+      ProvisioningParameters:
+        - Key: RoleNameSuffix
+          Value: CpeSubmitRole
+        - Key: ManagedPolicyArns
+          Value: !Join
+            - ","
+            -
+              - arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess
+              - arn:aws:iam::aws:policy/AmazonSSMReadOnlyAccess
+              - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+              - arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole
+              - !Sub arn:aws:iam::${AWS::AccountId}:policy/GD-AWS-KMS-USER
+              - !Sub arn:aws:iam::${AWS::AccountId}:policy/AllowResourcesAccessToCloudWatchPolicy
+              - !Sub arn:aws:iam::${AWS::AccountId}:policy/${DevelopmentTeam}-custom-ThreatPolicyDynamoDB
+              - !Sub arn:aws:iam::${AWS::AccountId}:policy/${DevelopmentTeam}-custom-ThreatPolicySecretsManager
+              - !Sub arn:aws:iam::${AWS::AccountId}:policy/${DevelopmentTeam}-custom-CpeSubmitPolicyDynamoDB
+        - Key: AssumingServices
+          Value: lambda.amazonaws.com
+      Tags:
+        - Key: doNotShutDown
+          Value: true
+
+  CpeSubmitLambda:
+    DependsOn: CpeSubmitRole
+    Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
+    Properties:
+      ProductName: Lambda
+      ProvisioningArtifactName: 2.7.0
+      ProvisionedProductName: CpeSubmitLambda
+      ProvisioningParameters:
+        - Key: S3Bucket
+          Value: !Sub gd-${DevelopmentTeam}-${DevelopmentEnvironment}-code-bucket
+        - Key: S3Key
+          Value: !Sub cpesubmit/${CpeSubmitHash}
+        - Key: Handler
+          Value: index.handler
+        - Key: LambdaName
+          Value: cpesubmit
+        - Key: LambdaDescription
+          Value: !Sub cpesubmit lambda (${CpeSubmitHash})
+        - Key: MemorySize
+          Value: 512
+        - Key: Runtime
+          Value: nodejs14.x
+        - Key: Timeout
+          Value: 900
+        - Key: CustomIAMRoleNameSuffix
+          Value: CpeSubmitRole
+        - Key: VpcSecurityGroups
+          Value: !Ref DXVpcSecurityGroups
+        - Key: VpcSubnetIds
+          Value: !Join [ ",", !Ref DXVpcSubnetIds ]
+      Tags:
+        - Key: doNotShutDown
+          Value: true
+
+  CpeReportLambda:
+    DependsOn: CpeSubmitRole
+    Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
+    Properties:
+      ProductName: Lambda
+      ProvisioningArtifactName: 2.7.0
+      ProvisionedProductName: CpeReportLambda
+      ProvisioningParameters:
+        - Key: S3Bucket
+          Value: !Sub gd-${DevelopmentTeam}-${DevelopmentEnvironment}-code-bucket
+        - Key: S3Key
+          Value: !Sub cpereport/${CpeReportHash}
+        - Key: Handler
+          Value: index.handler
+        - Key: LambdaName
+          Value: cpereport
+        - Key: LambdaDescription
+          Value: !Sub cpereport lambda (${CpeReportHash})
+        - Key: MemorySize
+          Value: 512
+        - Key: Runtime
+          Value: nodejs14.x
+        - Key: Timeout
+          Value: 900
+        - Key: CustomIAMRoleNameSuffix
+          Value: CpeSubmitRole
+        - Key: VpcSecurityGroups
+          Value: !Ref DXVpcSecurityGroups
+        - Key: VpcSubnetIds
+          Value: !Join [ ",", !Ref DXVpcSubnetIds ]
+      Tags:
+        - Key: doNotShutDown
+          Value: true
+
+  ECSTaskRepo:
+    Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
+    Properties:
+      ProductName: ECR
+      ProvisioningArtifactName: 1.2.0
+      ProvisionedProductName: ecstaskrepo
+      ProvisioningParameters:
+        - Key: ECRRepoName
+          Value: api-ecstask
+        - Key: DataClassificationTag
+          Value: "non-pii"
+        - Key: ECRMaxImageCount
+          Value: 10
+      Tags:
+        - Key: doNotShutDown
+          Value: true
+
+  ECSTaskFargateCluster:
+    Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
+    Properties:
+      ProductName: FargateCluster
+      ProvisioningArtifactName: 1.1.0
+      ProvisionedProductName: api-ecstask-cluster
+      ProvisioningParameters:
+        - Key: ClusterName
+          Value: api-ecstask-cluster
+        - Key: ContainerInsights
+          Value: "enabled"
+      Tags:
+        - Key: doNotShutDown
+          Value: true
+
+  ECSTaskIAMRole:
+    Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
+    Properties:
+      ProductName: IAMRole
+      ProvisioningArtifactName: 1.2.0
+      ProvisionedProductName: api-ecstask-role
+      ProvisioningParameters:
+        - Key: AssumingServices
+          Value: ecs-tasks.amazonaws.com
+        - Key: RoleNameSuffix
+          Value: api-ecstask-role
+        - Key: ManagedPolicyArns
+          Value: !Join
+            - ","
+            -
+              - !Sub "arn:aws:iam::${AWS::AccountId}:policy/GDDeployRoleAccessPolicy"
+              - !Sub "arn:aws:iam::${AWS::AccountId}:policy/AllowResourcesAccessToCloudWatchPolicy"
+              - !Sub arn:aws:iam::${AWS::AccountId}:policy/GD-AWS-KMS-USER
+              - !Sub arn:aws:iam::${AWS::AccountId}:policy/${DevelopmentTeam}-custom-ThreatPolicySecretsManager
+              - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
+              - arn:aws:iam::aws:policy/AmazonSQSFullAccess
+              - arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess
+              - arn:aws:iam::aws:policy/AmazonSSMReadOnlyAccess
+
+      Tags:
+        - Key: doNotShutDown
+          # change to false if it can be turned off outside of business hours
+          Value: 'true'
 
 Outputs:
   StackArn:

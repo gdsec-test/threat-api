@@ -30,7 +30,7 @@ func TestDumpHASHCSV(t *testing.T) {
 			responseReportString := TestRecordedFutureHASHReportData
 			json.Unmarshal([]byte(responseReportString), &RecordedFutureHASHReportData)
 
-			expectedCSV := "IntelCardLink,Risk Score,Criticality,CriticalityLabel,First Seen,Last Seen,HashAlgorithm,ThreatLists,FileHashes,Badness\nhttps://app.recordedfuture.com/live/sc/entity/hash%12345,70,3,Malicious,2019-04-28 06:42:19.004 +0000 UTC,2022-01-25 07:00:04.129 +0000 UTC,MD5,,12345/123456789,0.70\n"
+			expectedCSV := "IoC,Badness,MD5,SHA1,SHA256,IntelCardLink,Risk Score,Criticality,CriticalityLabel,First Seen,Last Seen,HashAlgorithm,ThreatLists\n123456,0.70,AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA,BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB,CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC,https://app.recordedfuture.com/live/sc/entity/hash%12345,70,3,Malicious,2019-04-28 06:42:19.004 +0000 UTC,2022-01-25 07:00:04.129 +0000 UTC,MD5,\n"
 
 			reports := map[string]*rf.HashReport{
 				"123456": RecordedFutureHASHReportData,

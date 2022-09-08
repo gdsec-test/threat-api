@@ -36,6 +36,10 @@ func (m *TriageModule) Supports() []triage.IOCType {
 	return []triage.IOCType{triage.DomainType}
 }
 
+func (m *TriageModule) DoDomainQuery(c *cmap.Client, ctx context.Context, domain string) (*cmap.DomainQuery, error) {
+	return c.DoDomainQuery(ctx, domain)
+}
+
 // Triage Uses DCU's CMAP service to enrich shopper information about a GoDaddy domain
 // It uses this library: https://github.com/gdcorp-infosec/cmap-go
 func (m *TriageModule) Triage(ctx context.Context, triageRequest *triage.Request) ([]*triage.Data, error) {
@@ -89,7 +93,7 @@ func (m *TriageModule) Triage(ctx context.Context, triageRequest *triage.Request
 
 		// Process this domain
 		span, _ = tb.TracerLogger.StartSpan(ctx, "CMAPDomainEnrich", "cmap", "domain", "enrich")
-		result, err := c.DoDomainQuery(ctx, domain)
+		result, err := m.DoDomainQuery(c, ctx, domain)
 		if err != nil {
 			err = fmt.Errorf("cmap lookup error: %w", err)
 			span.AddError(err)
