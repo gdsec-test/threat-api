@@ -61,9 +61,9 @@ func (m *TriageModule) GetNVDData(ctx context.Context, triageRequest *triage.Req
 	return nvdResults, nil
 }
 
-//cveMetaDataExtract gets the high level insights for CVE
+// cveMetaDataExtract gets the high level insights for CVE
 func cveMetaDataExtract(nvdResults map[string]*nvd.NVDReport) []string {
-	var triageMetaData []string
+	triageMetaData := make([]string, 0)
 	riskCVE := 0
 
 	for cve, data := range nvdResults {
@@ -87,7 +87,7 @@ func cveMetaDataExtract(nvdResults map[string]*nvd.NVDReport) []string {
 	return triageMetaData
 }
 
-//dumpCSV dumps the triage data to CSV
+// dumpCSV dumps the triage data to CSV
 func dumpCSV(nvdNVDResults map[string]*nvd.NVDReport) string {
 	//Dump data as csv
 	resp := bytes.Buffer{}

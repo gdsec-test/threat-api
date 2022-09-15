@@ -62,7 +62,7 @@ func (m *TriageModule) domainReportCreate(ctx context.Context, triageRequest *tr
 
 // domainMetaDataExtract gets the high level insights for a domain
 func domainMetaDataExtract(rfDomainResults map[string]*rf.DomainReport) []string {
-	var triageMetaData []string
+	triageMetaData := make([]string, 0)
 
 	riskDomain := 0
 
