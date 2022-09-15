@@ -57,7 +57,7 @@ func (m *TriageModule) urlReportCreate(ctx context.Context, triageRequest *triag
 
 // urlMetaDataExtract gets the high level insights for a URL
 func urlMetaDataExtract(rfUrlResults map[string]*rf.UrlReport) []string {
-	var triageMetaData []string
+	triageMetaData := make([]string, 0)
 
 	riskUrl := 0
 
