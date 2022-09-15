@@ -63,7 +63,8 @@ func (m *TriageModule) cveReportCreate(ctx context.Context, triageRequest *triag
 
 //cveMetaDataExtract gets the high level insights for CVE
 func cveMetaDataExtract(rfCVEResults map[string]*rf.CVEReport) []string {
-	var triageMetaData, accessVectors []string
+	triageMetaData := make([]string, 0)
+	accessVectors := make([]string, 0)
 	riskCVE := 0
 	affectedSystemsCPE := 0
 

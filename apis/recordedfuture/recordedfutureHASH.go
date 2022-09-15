@@ -65,7 +65,7 @@ func (m *TriageModule) hashReportCreate(ctx context.Context, triageRequest *tria
 
 //hashMetaDataExtract gets the high level insights for HASH
 func hashMetaDataExtract(rfHASHResults map[string]*rf.HashReport) []string {
-	var triageMetaData []string
+	triageMetaData := make([]string, 0)
 	riskHASH := 0
 
 	for hash, data := range rfHASHResults {
