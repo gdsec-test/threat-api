@@ -12,7 +12,7 @@ import (
 	"github.com/gdcorp-infosec/threat-api/lambdas/common/triagelegacyconnector/triage"
 )
 
-//cveReportCreate generates a map of CVEReport from RF API
+// cveReportCreate generates a map of CVEReport from RF API
 func (m *TriageModule) ipReportCreate(ctx context.Context, triageRequest *triage.Request) (map[string]*rf.IPReport, error) {
 	rfIPResults := make(map[string]*rf.IPReport)
 
@@ -56,9 +56,9 @@ func (m *TriageModule) ipReportCreate(ctx context.Context, triageRequest *triage
 	return rfIPResults, nil
 }
 
-//ipMetaDataExtract gets the high level insights for IP
+// ipMetaDataExtract gets the high level insights for IP
 func ipMetaDataExtract(rfIPResults map[string]*rf.IPReport) []string {
-	var triageMetaData []string
+	triageMetaData := make([]string, 0)
 	riskyCIDRIPs := make(map[string]int)
 
 	riskIP := 0
@@ -93,7 +93,7 @@ func ipMetaDataExtract(rfIPResults map[string]*rf.IPReport) []string {
 	return triageMetaData
 }
 
-//dumpIPCSV dumps the triage data to CSV
+// dumpIPCSV dumps the triage data to CSV
 func dumpIPCSV(rfIPResults map[string]*rf.IPReport) string {
 	//Dump data as csv
 	resp := bytes.Buffer{}
