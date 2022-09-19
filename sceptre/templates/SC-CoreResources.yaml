@@ -352,6 +352,14 @@ Resources:
                       ],
                       "Resource": "arn:aws:s3:::gd-${DevelopmentTeam}-${DevelopmentEnvironment}-${ThreatApiJobBucket}/*",
                       "Effect": "Allow"
+                  },
+                  {
+                      "Effect": "Allow",
+                      "Action": [
+                          "iam:PassRole",
+                          "ecs:RunTask"
+                      ],
+                      "Resource": "*"
                   }
               ]
             }
@@ -382,6 +390,8 @@ Resources:
               - !Sub arn:aws:iam::${AWS::AccountId}:policy/${DevelopmentTeam}-custom-ThreatPolicySecretsManager
               - !Sub arn:aws:iam::${AWS::AccountId}:policy/${DevelopmentTeam}-custom-ThreatPolicySQS
               - !Sub arn:aws:iam::${AWS::AccountId}:policy/${DevelopmentTeam}-custom-ThreatPolicyLambdaModules
+              - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
+
         - Key: AssumingServices
           Value: lambda.amazonaws.com
       Tags:
@@ -1004,6 +1014,8 @@ Resources:
           Value: true
 
   ECSTaskIAMRole:
+    DependsOn:
+      - ThreatPolicySecretsManager
     Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
     Properties:
       ProductName: IAMRole

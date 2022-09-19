@@ -21,7 +21,7 @@ pushd .
 cd $APP_FOLDER
 set -eu
 go get ./...
-# GOOS is set to Linux, but for Mac OS local development it shoul be GOOS=darwin
+# GOOS is set to Linux, but for Mac OS local development it should be GOOS=darwin
 env GOPRIVATE=github.secureserver.net,github.com/gdcorp-* GOOS=linux GOARCH=amd64 go build -o $APPLICATION_NAME
 popd
 

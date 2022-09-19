@@ -155,18 +155,6 @@ Resources:
         - Key: doNotShutDown
           Value: true
 
-  apivoidLambdaEventInvokeConfig:
-    DependsOn: apivoidLambdaFunction
-    Type: AWS::Lambda::EventInvokeConfig
-    Properties:
-      DestinationConfig:
-        OnSuccess:
-          Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobResponses
-        OnFailure:
-          Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobFailures
-      FunctionName: apivoid
-      Qualifier: $LATEST
-
   apivoidLambdaMetadata:
     Type: AWS::SSM::Parameter
     Properties:
@@ -187,6 +175,19 @@ Resources:
       Tags:
           - Key: doNotShutDown
             Value: "true"
+
+  apivoidLambdaEventInvokeConfig:
+    DependsOn: apivoidLambdaFunction
+    Type: AWS::Lambda::EventInvokeConfig
+    Properties:
+      DestinationConfig:
+        OnSuccess:
+          Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobResponses
+        OnFailure:
+          Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobFailures
+      FunctionName: apivoid
+      Qualifier: $LATEST
+
 
   cmapLambdaFunction:
     Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
@@ -263,18 +264,6 @@ Resources:
         - Key: doNotShutDown
           Value: true
 
-  cmapLambdaEventInvokeConfig:
-    DependsOn: cmapLambdaFunction
-    Type: AWS::Lambda::EventInvokeConfig
-    Properties:
-      DestinationConfig:
-        OnSuccess:
-          Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobResponses
-        OnFailure:
-          Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobFailures
-      FunctionName: cmap
-      Qualifier: $LATEST
-
   cmapLambdaMetadata:
     Type: AWS::SSM::Parameter
     Properties:
@@ -295,6 +284,19 @@ Resources:
       Tags:
           - Key: doNotShutDown
             Value: "true"
+
+  cmapLambdaEventInvokeConfig:
+    DependsOn: cmapLambdaFunction
+    Type: AWS::Lambda::EventInvokeConfig
+    Properties:
+      DestinationConfig:
+        OnSuccess:
+          Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobResponses
+        OnFailure:
+          Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobFailures
+      FunctionName: cmap
+      Qualifier: $LATEST
+
 
   nvdLambdaFunction:
     Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
@@ -371,18 +373,6 @@ Resources:
         - Key: doNotShutDown
           Value: true
 
-  nvdLambdaEventInvokeConfig:
-    DependsOn: nvdLambdaFunction
-    Type: AWS::Lambda::EventInvokeConfig
-    Properties:
-      DestinationConfig:
-        OnSuccess:
-          Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobResponses
-        OnFailure:
-          Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobFailures
-      FunctionName: nvd
-      Qualifier: $LATEST
-
   nvdLambdaMetadata:
     Type: AWS::SSM::Parameter
     Properties:
@@ -403,6 +393,19 @@ Resources:
       Tags:
           - Key: doNotShutDown
             Value: "true"
+
+  nvdLambdaEventInvokeConfig:
+    DependsOn: nvdLambdaFunction
+    Type: AWS::Lambda::EventInvokeConfig
+    Properties:
+      DestinationConfig:
+        OnSuccess:
+          Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobResponses
+        OnFailure:
+          Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobFailures
+      FunctionName: nvd
+      Qualifier: $LATEST
+
 
   passivetotalLambdaFunction:
     Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
@@ -479,18 +482,6 @@ Resources:
         - Key: doNotShutDown
           Value: true
 
-  passivetotalLambdaEventInvokeConfig:
-    DependsOn: passivetotalLambdaFunction
-    Type: AWS::Lambda::EventInvokeConfig
-    Properties:
-      DestinationConfig:
-        OnSuccess:
-          Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobResponses
-        OnFailure:
-          Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobFailures
-      FunctionName: passivetotal
-      Qualifier: $LATEST
-
   passivetotalLambdaMetadata:
     Type: AWS::SSM::Parameter
     Properties:
@@ -511,6 +502,19 @@ Resources:
       Tags:
           - Key: doNotShutDown
             Value: "true"
+
+  passivetotalLambdaEventInvokeConfig:
+    DependsOn: passivetotalLambdaFunction
+    Type: AWS::Lambda::EventInvokeConfig
+    Properties:
+      DestinationConfig:
+        OnSuccess:
+          Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobResponses
+        OnFailure:
+          Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobFailures
+      FunctionName: passivetotal
+      Qualifier: $LATEST
+
 
   recordedfutureLambdaFunction:
     Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
@@ -587,18 +591,6 @@ Resources:
         - Key: doNotShutDown
           Value: true
 
-  recordedfutureLambdaEventInvokeConfig:
-    DependsOn: recordedfutureLambdaFunction
-    Type: AWS::Lambda::EventInvokeConfig
-    Properties:
-      DestinationConfig:
-        OnSuccess:
-          Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobResponses
-        OnFailure:
-          Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobFailures
-      FunctionName: recordedfuture
-      Qualifier: $LATEST
-
   recordedfutureLambdaMetadata:
     Type: AWS::SSM::Parameter
     Properties:
@@ -619,6 +611,19 @@ Resources:
       Tags:
           - Key: doNotShutDown
             Value: "true"
+
+  recordedfutureLambdaEventInvokeConfig:
+    DependsOn: recordedfutureLambdaFunction
+    Type: AWS::Lambda::EventInvokeConfig
+    Properties:
+      DestinationConfig:
+        OnSuccess:
+          Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobResponses
+        OnFailure:
+          Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobFailures
+      FunctionName: recordedfuture
+      Qualifier: $LATEST
+
 
   servicenowLambdaFunction:
     Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
@@ -695,18 +700,6 @@ Resources:
         - Key: doNotShutDown
           Value: true
 
-  servicenowLambdaEventInvokeConfig:
-    DependsOn: servicenowLambdaFunction
-    Type: AWS::Lambda::EventInvokeConfig
-    Properties:
-      DestinationConfig:
-        OnSuccess:
-          Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobResponses
-        OnFailure:
-          Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobFailures
-      FunctionName: servicenow
-      Qualifier: $LATEST
-
   servicenowLambdaMetadata:
     Type: AWS::SSM::Parameter
     Properties:
@@ -727,6 +720,19 @@ Resources:
       Tags:
           - Key: doNotShutDown
             Value: "true"
+
+  servicenowLambdaEventInvokeConfig:
+    DependsOn: servicenowLambdaFunction
+    Type: AWS::Lambda::EventInvokeConfig
+    Properties:
+      DestinationConfig:
+        OnSuccess:
+          Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobResponses
+        OnFailure:
+          Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobFailures
+      FunctionName: servicenow
+      Qualifier: $LATEST
+
 
   shodanLambdaFunction:
     Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
@@ -803,18 +809,6 @@ Resources:
         - Key: doNotShutDown
           Value: true
 
-  shodanLambdaEventInvokeConfig:
-    DependsOn: shodanLambdaFunction
-    Type: AWS::Lambda::EventInvokeConfig
-    Properties:
-      DestinationConfig:
-        OnSuccess:
-          Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobResponses
-        OnFailure:
-          Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobFailures
-      FunctionName: shodan
-      Qualifier: $LATEST
-
   shodanLambdaMetadata:
     Type: AWS::SSM::Parameter
     Properties:
@@ -835,6 +829,19 @@ Resources:
       Tags:
           - Key: doNotShutDown
             Value: "true"
+
+  shodanLambdaEventInvokeConfig:
+    DependsOn: shodanLambdaFunction
+    Type: AWS::Lambda::EventInvokeConfig
+    Properties:
+      DestinationConfig:
+        OnSuccess:
+          Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobResponses
+        OnFailure:
+          Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobFailures
+      FunctionName: shodan
+      Qualifier: $LATEST
+
 
   sucuriLambdaFunction:
     Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
@@ -911,18 +918,6 @@ Resources:
         - Key: doNotShutDown
           Value: true
 
-  sucuriLambdaEventInvokeConfig:
-    DependsOn: sucuriLambdaFunction
-    Type: AWS::Lambda::EventInvokeConfig
-    Properties:
-      DestinationConfig:
-        OnSuccess:
-          Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobResponses
-        OnFailure:
-          Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobFailures
-      FunctionName: sucuri
-      Qualifier: $LATEST
-
   sucuriLambdaMetadata:
     Type: AWS::SSM::Parameter
     Properties:
@@ -944,6 +939,19 @@ Resources:
           - Key: doNotShutDown
             Value: "true"
 
+  sucuriLambdaEventInvokeConfig:
+    DependsOn: sucuriLambdaFunction
+    Type: AWS::Lambda::EventInvokeConfig
+    Properties:
+      DestinationConfig:
+        OnSuccess:
+          Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobResponses
+        OnFailure:
+          Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobFailures
+      FunctionName: sucuri
+      Qualifier: $LATEST
+
+
   taniumLambdaFunction:
     Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
     Properties:
@@ -956,15 +964,15 @@ Resources:
         - Key: S3Key
           Value: !Sub tanium/${taniumSHA1}
         - Key: Handler
-          Value: tanium
+          Value: main.handler
         - Key: LambdaName
           Value: tanium
         - Key: LambdaDescription
           Value: !Sub tanium lambda (${taniumSHA1})
         - Key: MemorySize
-          Value: 256
+          Value: 128
         - Key: Runtime
-          Value: go1.x
+          Value: python3.8
         - Key: Timeout
           Value: 900
         - Key: CustomIAMRoleNameSuffix
@@ -1019,24 +1027,12 @@ Resources:
         - Key: doNotShutDown
           Value: true
 
-  taniumLambdaEventInvokeConfig:
-    DependsOn: taniumLambdaFunction
-    Type: AWS::Lambda::EventInvokeConfig
-    Properties:
-      DestinationConfig:
-        OnSuccess:
-          Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobResponses
-        OnFailure:
-          Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobFailures
-      FunctionName: tanium
-      Qualifier: $LATEST
-
   taniumLambdaMetadata:
     Type: AWS::SSM::Parameter
     Properties:
       Name: /ThreatTools/Modules/tanium
       Type: String
-      Value: '{"supportedIOCTypes": []}'
+      Value: '{"supportedIOCTypes": ["GODADDY_HOSTNAME", "CPE"]}'
 
   taniumAppSecSubscriptionFilter:
     DependsOn: taniumLambdaFunction
@@ -1051,6 +1047,7 @@ Resources:
       Tags:
           - Key: doNotShutDown
             Value: "true"
+
 
   trustarLambdaFunction:
     Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
@@ -1127,18 +1124,6 @@ Resources:
         - Key: doNotShutDown
           Value: true
 
-  trustarLambdaEventInvokeConfig:
-    DependsOn: trustarLambdaFunction
-    Type: AWS::Lambda::EventInvokeConfig
-    Properties:
-      DestinationConfig:
-        OnSuccess:
-          Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobResponses
-        OnFailure:
-          Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobFailures
-      FunctionName: trustar
-      Qualifier: $LATEST
-
   trustarLambdaMetadata:
     Type: AWS::SSM::Parameter
     Properties:
@@ -1159,6 +1144,19 @@ Resources:
       Tags:
           - Key: doNotShutDown
             Value: "true"
+
+  trustarLambdaEventInvokeConfig:
+    DependsOn: trustarLambdaFunction
+    Type: AWS::Lambda::EventInvokeConfig
+    Properties:
+      DestinationConfig:
+        OnSuccess:
+          Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobResponses
+        OnFailure:
+          Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobFailures
+      FunctionName: trustar
+      Qualifier: $LATEST
+
 
   urlhausLambdaFunction:
     Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
@@ -1235,18 +1233,6 @@ Resources:
         - Key: doNotShutDown
           Value: true
 
-  urlhausLambdaEventInvokeConfig:
-    DependsOn: urlhausLambdaFunction
-    Type: AWS::Lambda::EventInvokeConfig
-    Properties:
-      DestinationConfig:
-        OnSuccess:
-          Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobResponses
-        OnFailure:
-          Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobFailures
-      FunctionName: urlhaus
-      Qualifier: $LATEST
-
   urlhausLambdaMetadata:
     Type: AWS::SSM::Parameter
     Properties:
@@ -1267,6 +1253,19 @@ Resources:
       Tags:
           - Key: doNotShutDown
             Value: "true"
+
+  urlhausLambdaEventInvokeConfig:
+    DependsOn: urlhausLambdaFunction
+    Type: AWS::Lambda::EventInvokeConfig
+    Properties:
+      DestinationConfig:
+        OnSuccess:
+          Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobResponses
+        OnFailure:
+          Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobFailures
+      FunctionName: urlhaus
+      Qualifier: $LATEST
+
 
   urlscanioLambdaFunction:
     Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
@@ -1343,18 +1342,6 @@ Resources:
         - Key: doNotShutDown
           Value: true
 
-  urlscanioLambdaEventInvokeConfig:
-    DependsOn: urlscanioLambdaFunction
-    Type: AWS::Lambda::EventInvokeConfig
-    Properties:
-      DestinationConfig:
-        OnSuccess:
-          Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobResponses
-        OnFailure:
-          Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobFailures
-      FunctionName: urlscanio
-      Qualifier: $LATEST
-
   urlscanioLambdaMetadata:
     Type: AWS::SSM::Parameter
     Properties:
@@ -1375,6 +1362,19 @@ Resources:
       Tags:
           - Key: doNotShutDown
             Value: "true"
+
+  urlscanioLambdaEventInvokeConfig:
+    DependsOn: urlscanioLambdaFunction
+    Type: AWS::Lambda::EventInvokeConfig
+    Properties:
+      DestinationConfig:
+        OnSuccess:
+          Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobResponses
+        OnFailure:
+          Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobFailures
+      FunctionName: urlscanio
+      Qualifier: $LATEST
+
 
   virustotalLambdaFunction:
     Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
@@ -1451,18 +1451,6 @@ Resources:
         - Key: doNotShutDown
           Value: true
 
-  virustotalLambdaEventInvokeConfig:
-    DependsOn: virustotalLambdaFunction
-    Type: AWS::Lambda::EventInvokeConfig
-    Properties:
-      DestinationConfig:
-        OnSuccess:
-          Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobResponses
-        OnFailure:
-          Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobFailures
-      FunctionName: virustotal
-      Qualifier: $LATEST
-
   virustotalLambdaMetadata:
     Type: AWS::SSM::Parameter
     Properties:
@@ -1483,6 +1471,19 @@ Resources:
       Tags:
           - Key: doNotShutDown
             Value: "true"
+
+  virustotalLambdaEventInvokeConfig:
+    DependsOn: virustotalLambdaFunction
+    Type: AWS::Lambda::EventInvokeConfig
+    Properties:
+      DestinationConfig:
+        OnSuccess:
+          Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobResponses
+        OnFailure:
+          Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobFailures
+      FunctionName: virustotal
+      Qualifier: $LATEST
+
 
   whoisLambdaFunction:
     Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
@@ -1559,18 +1560,6 @@ Resources:
         - Key: doNotShutDown
           Value: true
 
-  whoisLambdaEventInvokeConfig:
-    DependsOn: whoisLambdaFunction
-    Type: AWS::Lambda::EventInvokeConfig
-    Properties:
-      DestinationConfig:
-        OnSuccess:
-          Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobResponses
-        OnFailure:
-          Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobFailures
-      FunctionName: whois
-      Qualifier: $LATEST
-
   whoisLambdaMetadata:
     Type: AWS::SSM::Parameter
     Properties:
@@ -1591,6 +1580,19 @@ Resources:
       Tags:
           - Key: doNotShutDown
             Value: "true"
+
+  whoisLambdaEventInvokeConfig:
+    DependsOn: whoisLambdaFunction
+    Type: AWS::Lambda::EventInvokeConfig
+    Properties:
+      DestinationConfig:
+        OnSuccess:
+          Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobResponses
+        OnFailure:
+          Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobFailures
+      FunctionName: whois
+      Qualifier: $LATEST
+
 
   zerobounceLambdaFunction:
     Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
@@ -1667,18 +1669,6 @@ Resources:
         - Key: doNotShutDown
           Value: true
 
-  zerobounceLambdaEventInvokeConfig:
-    DependsOn: zerobounceLambdaFunction
-    Type: AWS::Lambda::EventInvokeConfig
-    Properties:
-      DestinationConfig:
-        OnSuccess:
-          Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobResponses
-        OnFailure:
-          Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobFailures
-      FunctionName: zerobounce
-      Qualifier: $LATEST
-
   zerobounceLambdaMetadata:
     Type: AWS::SSM::Parameter
     Properties:
@@ -1699,3 +1689,15 @@ Resources:
       Tags:
           - Key: doNotShutDown
             Value: "true"
+
+  zerobounceLambdaEventInvokeConfig:
+    DependsOn: zerobounceLambdaFunction
+    Type: AWS::Lambda::EventInvokeConfig
+    Properties:
+      DestinationConfig:
+        OnSuccess:
+          Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobResponses
+        OnFailure:
+          Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobFailures
+      FunctionName: zerobounce
+      Qualifier: $LATEST

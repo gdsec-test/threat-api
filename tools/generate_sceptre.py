@@ -47,11 +47,13 @@ CONFIG_END = dedent(
         - !cmd resources/log-group-create.py
       after_create:
         - !cmd rm -f resources/*.sha1
+        - !cmd ../containers/golang/build.sh ./taniumContainerApplication/ tanium {{aws_account}}
       before_update:
         - !cmd resources/build-service-lambdas.sh
         - !cmd resources/log-group-create.py
       after_update:
         - !cmd rm -f resources/*.sha1
+        - !cmd ../containers/golang/build.sh ./taniumContainerApplication/ tanium {{aws_account}}
     """
 )
 
@@ -129,6 +131,23 @@ CF_RESOURCES_BLOCK = dedent(
         Name: /ThreatTools/Modules/__NAME__
         Type: String
         Value: '__METADATA__'
+    """
+)
+
+CF_RESOURCES_SQS_SUBSCRIBE_BLOCK = dedent(
+    """\
+
+    __NAME__LambdaEventInvokeConfig:
+      DependsOn: __NAME__LambdaFunction
+      Type: AWS::Lambda::EventInvokeConfig
+      Properties:
+        DestinationConfig:
+          OnSuccess:
+            Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobResponses
+          OnFailure:
+            Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobFailures
+        FunctionName: __NAME__
+        Qualifier: $LATEST
     """
 )
 
@@ -283,18 +302,6 @@ SC_RESOURCES_BLOCK = dedent(
           - Key: doNotShutDown
             Value: true
 
-    __NAME__LambdaEventInvokeConfig:
-      DependsOn: __NAME__LambdaFunction
-      Type: AWS::Lambda::EventInvokeConfig
-      Properties:
-        DestinationConfig:
-          OnSuccess:
-            Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobResponses
-          OnFailure:
-            Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobFailures
-        FunctionName: __NAME__
-        Qualifier: $LATEST
-
     __NAME__LambdaMetadata:
       Type: AWS::SSM::Parameter
       Properties:
@@ -315,6 +322,25 @@ SC_RESOURCES_BLOCK = dedent(
         Tags:
             - Key: doNotShutDown
               Value: "true"
+
+    """
+)
+
+
+SC_RESOURCES_SQS_SUBSCRIBE_BLOCK = dedent(
+    """\
+    __NAME__LambdaEventInvokeConfig:
+      DependsOn: __NAME__LambdaFunction
+      Type: AWS::Lambda::EventInvokeConfig
+      Properties:
+        DestinationConfig:
+          OnSuccess:
+            Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobResponses
+          OnFailure:
+            Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobFailures
+        FunctionName: __NAME__
+        Qualifier: $LATEST
+
     """
 )
 
@@ -410,7 +436,12 @@ if lambdas:
 
     cf_template += "\nResources:\n"
     for fn in sorted(lambdas.keys()):
-        cf_template += expand_template(CF_RESOURCES_BLOCK, lambdas[fn], 2)
+        lambda_name = lambdas[fn]["__NAME__"]
+        template_block = CF_RESOURCES_BLOCK
+        # special condition to add SQS queue submission by regular Lambdas, not boostrap for ECS Task
+        if not lambda_name == "tanium":
+            template_block += CF_RESOURCES_SQS_SUBSCRIBE_BLOCK
+        cf_template += expand_template(template_block, lambdas[fn], 2)
         cf_template += "\n"
 
 open(join(SCEPTRE_PATH, "templates", "CF-ServiceLambdas.yaml"), "w").write(
@@ -441,7 +472,12 @@ if lambdas:
 
     sc_template += "\nResources:\n"
     for fn in sorted(lambdas.keys()):
-        sc_template += expand_template(SC_RESOURCES_BLOCK, lambdas[fn], 2)
+        lambda_name = lambdas[fn]["__NAME__"]
+        template_block = SC_RESOURCES_BLOCK
+        # special condition to add SQS queue submission by regular Lambdas, not boostrap for ECS Task
+        if not lambda_name == "tanium":
+            template_block += SC_RESOURCES_SQS_SUBSCRIBE_BLOCK
+        sc_template += expand_template(template_block, lambdas[fn], 2)
         sc_template += "\n"
 
 open(join(SCEPTRE_PATH, "templates", "SC-ServiceLambdas.yaml"), "w").write(

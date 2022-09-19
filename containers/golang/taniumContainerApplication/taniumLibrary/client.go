@@ -3,18 +3,15 @@ package taniumLibrary
 import (
 	"context"
 	"crypto/tls"
-	"encoding/json"
 	"fmt"
 	"net/http"
+	"os"
 	"strings"
-
-	"github.com/gdcorp-infosec/threat-api/lambdas/common/toolbox"
 )
 
 // APIVersion is the currently-supported version of go-tanium for the Tanium API
 const (
 	APIVersion = 2
-	secretID   = "/ThreatTools/Integrations/tanium"
 )
 
 // Config contains optional fields that can be set by the caller prior to initializing a new TaniumClient
@@ -32,7 +29,7 @@ type TaniumClient struct {
 // NewTaniumClient creates a new *TaniumClient that is authenticated to the provided Tanium host using the provided credentials.
 //
 // The returned *TaniumClient should be used for interactions with the Tanium API, unless any errors have been returned
-func NewTaniumClient(ctx context.Context, host string) (*TaniumClient, error) {
+func NewTaniumClient(ctx context.Context, host string) *TaniumClient {
 	var configCopy Config
 	c := &TaniumClient{
 		config: &configCopy,
@@ -49,21 +46,9 @@ func NewTaniumClient(ctx context.Context, host string) (*TaniumClient, error) {
 
 	c.config.baseURL = strings.Trim(host, "/") + fmt.Sprintf("/api/v%d", APIVersion)
 
-	tb := toolbox.GetToolbox()
-	defer tb.Close(ctx)
+	c.config.APIKey = os.Getenv("TANIUM_API_KEY")
 
-	secret, err := tb.GetFromCredentialsStore(ctx, secretID, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	secretMap := map[string]string{}
-	if err := json.Unmarshal([]byte(*secret.SecretString), &secretMap); err != nil {
-		return nil, err
-	}
-	c.config.APIKey = secretMap["APIKey"]
-
-	return c, err
+	return c
 }
 
 // GET performs HTTP GET request to the specified endpoint path using the authenticated TaniumClient's session.

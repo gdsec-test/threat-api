@@ -483,6 +483,28 @@
       }
     }
   },
+  "ModuleList": {
+    "type": "object",
+    "properties": {
+      "modulename": {
+        "type": "object",
+        "items": {
+          "supportedIOCTypes": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          },
+          "actions": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          }
+        }
+      }
+    }
+  },
   "securityDefinitions": {
     "sso-jwt-header": {
       "name": "Authorization",

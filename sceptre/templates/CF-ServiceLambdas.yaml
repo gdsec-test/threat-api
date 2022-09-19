@@ -114,6 +114,18 @@ Resources:
       Type: String
       Value: '{"supportedIOCTypes": ["DOMAIN", "IP", "URL"]}'
 
+  apivoidLambdaEventInvokeConfig:
+    DependsOn: apivoidLambdaFunction
+    Type: AWS::Lambda::EventInvokeConfig
+    Properties:
+      DestinationConfig:
+        OnSuccess:
+          Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobResponses
+        OnFailure:
+          Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobFailures
+      FunctionName: apivoid
+      Qualifier: $LATEST
+
   cmapLambdaFunction:
     Type: AWS::Lambda::Function
     Properties:
@@ -163,6 +175,18 @@ Resources:
       Name: /ThreatTools/Modules/cmap
       Type: String
       Value: '{"supportedIOCTypes": ["DOMAIN"], "actions": {"Run": {"requiredADGroups": ["ENG-Threat Research", "ENG-DCU"]}, "ViewPII": {"requiredADGroups": ["ENG-Threat Research", "ENG-DCU"]}}}'
+
+  cmapLambdaEventInvokeConfig:
+    DependsOn: cmapLambdaFunction
+    Type: AWS::Lambda::EventInvokeConfig
+    Properties:
+      DestinationConfig:
+        OnSuccess:
+          Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobResponses
+        OnFailure:
+          Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobFailures
+      FunctionName: cmap
+      Qualifier: $LATEST
 
   nvdLambdaFunction:
     Type: AWS::Lambda::Function
@@ -214,6 +238,18 @@ Resources:
       Type: String
       Value: '{"supportedIOCTypes": ["CVE"]}'
 
+  nvdLambdaEventInvokeConfig:
+    DependsOn: nvdLambdaFunction
+    Type: AWS::Lambda::EventInvokeConfig
+    Properties:
+      DestinationConfig:
+        OnSuccess:
+          Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobResponses
+        OnFailure:
+          Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobFailures
+      FunctionName: nvd
+      Qualifier: $LATEST
+
   passivetotalLambdaFunction:
     Type: AWS::Lambda::Function
     Properties:
@@ -263,6 +299,18 @@ Resources:
       Name: /ThreatTools/Modules/passivetotal
       Type: String
       Value: '{"supportedIOCTypes": ["DOMAIN", "IP"]}'
+
+  passivetotalLambdaEventInvokeConfig:
+    DependsOn: passivetotalLambdaFunction
+    Type: AWS::Lambda::EventInvokeConfig
+    Properties:
+      DestinationConfig:
+        OnSuccess:
+          Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobResponses
+        OnFailure:
+          Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobFailures
+      FunctionName: passivetotal
+      Qualifier: $LATEST
 
   recordedfutureLambdaFunction:
     Type: AWS::Lambda::Function
@@ -314,6 +362,18 @@ Resources:
       Type: String
       Value: '{"supportedIOCTypes": ["CVE", "IP", "MD5", "SHA1", "SHA256", "DOMAIN", "URL"]}'
 
+  recordedfutureLambdaEventInvokeConfig:
+    DependsOn: recordedfutureLambdaFunction
+    Type: AWS::Lambda::EventInvokeConfig
+    Properties:
+      DestinationConfig:
+        OnSuccess:
+          Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobResponses
+        OnFailure:
+          Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobFailures
+      FunctionName: recordedfuture
+      Qualifier: $LATEST
+
   servicenowLambdaFunction:
     Type: AWS::Lambda::Function
     Properties:
@@ -363,6 +423,18 @@ Resources:
       Name: /ThreatTools/Modules/servicenow
       Type: String
       Value: '{"supportedIOCTypes": ["GODADDY_HOSTNAME"]}'
+
+  servicenowLambdaEventInvokeConfig:
+    DependsOn: servicenowLambdaFunction
+    Type: AWS::Lambda::EventInvokeConfig
+    Properties:
+      DestinationConfig:
+        OnSuccess:
+          Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobResponses
+        OnFailure:
+          Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobFailures
+      FunctionName: servicenow
+      Qualifier: $LATEST
 
   shodanLambdaFunction:
     Type: AWS::Lambda::Function
@@ -414,6 +486,18 @@ Resources:
       Type: String
       Value: '{"supportedIOCTypes": ["DOMAIN", "IP"]}'
 
+  shodanLambdaEventInvokeConfig:
+    DependsOn: shodanLambdaFunction
+    Type: AWS::Lambda::EventInvokeConfig
+    Properties:
+      DestinationConfig:
+        OnSuccess:
+          Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobResponses
+        OnFailure:
+          Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobFailures
+      FunctionName: shodan
+      Qualifier: $LATEST
+
   sucuriLambdaFunction:
     Type: AWS::Lambda::Function
     Properties:
@@ -464,6 +548,18 @@ Resources:
       Type: String
       Value: '{"supportedIOCTypes": ["DOMAIN"]}'
 
+  sucuriLambdaEventInvokeConfig:
+    DependsOn: sucuriLambdaFunction
+    Type: AWS::Lambda::EventInvokeConfig
+    Properties:
+      DestinationConfig:
+        OnSuccess:
+          Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobResponses
+        OnFailure:
+          Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobFailures
+      FunctionName: sucuri
+      Qualifier: $LATEST
+
   taniumLambdaFunction:
     Type: AWS::Lambda::Function
     Properties:
@@ -472,10 +568,10 @@ Resources:
         S3Key: !Sub tanium/${taniumSHA1}
       Description: !Sub tanium lambda (${taniumSHA1})
       FunctionName: tanium
-      Handler: tanium
-      MemorySize: 256
+      Handler: main.handler
+      MemorySize: 128
       Role: !Sub arn:aws:iam::${AWS::AccountId}:role/threattools-custom-ThreatRole
-      Runtime: go1.x
+      Runtime: python3.8
       Timeout: 900
 
   taniumLambdaPermission:
@@ -512,7 +608,7 @@ Resources:
     Properties:
       Name: /ThreatTools/Modules/tanium
       Type: String
-      Value: '{"supportedIOCTypes": []}'
+      Value: '{"supportedIOCTypes": ["GODADDY_HOSTNAME", "CPE"]}'
 
   trustarLambdaFunction:
     Type: AWS::Lambda::Function
@@ -564,6 +660,18 @@ Resources:
       Type: String
       Value: '{"supportedIOCTypes": ["DOMAIN", "IP", "MD5", "SHA1", "SHA256", "URL", "CVE", "EMAIL"]}'
 
+  trustarLambdaEventInvokeConfig:
+    DependsOn: trustarLambdaFunction
+    Type: AWS::Lambda::EventInvokeConfig
+    Properties:
+      DestinationConfig:
+        OnSuccess:
+          Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobResponses
+        OnFailure:
+          Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobFailures
+      FunctionName: trustar
+      Qualifier: $LATEST
+
   urlhausLambdaFunction:
     Type: AWS::Lambda::Function
     Properties:
@@ -613,6 +721,18 @@ Resources:
       Name: /ThreatTools/Modules/urlhaus
       Type: String
       Value: '{"supportedIOCTypes": ["DOMAIN", "IP", "URL", "MD5", "SHA256"]}'
+
+  urlhausLambdaEventInvokeConfig:
+    DependsOn: urlhausLambdaFunction
+    Type: AWS::Lambda::EventInvokeConfig
+    Properties:
+      DestinationConfig:
+        OnSuccess:
+          Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobResponses
+        OnFailure:
+          Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobFailures
+      FunctionName: urlhaus
+      Qualifier: $LATEST
 
   urlscanioLambdaFunction:
     Type: AWS::Lambda::Function
@@ -664,6 +784,18 @@ Resources:
       Type: String
       Value: '{"supportedIOCTypes": ["URL"]}'
 
+  urlscanioLambdaEventInvokeConfig:
+    DependsOn: urlscanioLambdaFunction
+    Type: AWS::Lambda::EventInvokeConfig
+    Properties:
+      DestinationConfig:
+        OnSuccess:
+          Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobResponses
+        OnFailure:
+          Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobFailures
+      FunctionName: urlscanio
+      Qualifier: $LATEST
+
   virustotalLambdaFunction:
     Type: AWS::Lambda::Function
     Properties:
@@ -713,6 +845,18 @@ Resources:
       Name: /ThreatTools/Modules/virustotal
       Type: String
       Value: '{"supportedIOCTypes": ["DOMAIN", "IP", "URL", "MD5", "SHA256"]}'
+
+  virustotalLambdaEventInvokeConfig:
+    DependsOn: virustotalLambdaFunction
+    Type: AWS::Lambda::EventInvokeConfig
+    Properties:
+      DestinationConfig:
+        OnSuccess:
+          Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobResponses
+        OnFailure:
+          Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobFailures
+      FunctionName: virustotal
+      Qualifier: $LATEST
 
   whoisLambdaFunction:
     Type: AWS::Lambda::Function
@@ -764,6 +908,18 @@ Resources:
       Type: String
       Value: '{"supportedIOCTypes": ["DOMAIN"]}'
 
+  whoisLambdaEventInvokeConfig:
+    DependsOn: whoisLambdaFunction
+    Type: AWS::Lambda::EventInvokeConfig
+    Properties:
+      DestinationConfig:
+        OnSuccess:
+          Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobResponses
+        OnFailure:
+          Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobFailures
+      FunctionName: whois
+      Qualifier: $LATEST
+
   zerobounceLambdaFunction:
     Type: AWS::Lambda::Function
     Properties:
@@ -813,3 +969,15 @@ Resources:
       Name: /ThreatTools/Modules/zerobounce
       Type: String
       Value: '{"supportedIOCTypes": ["EMAIL"]}'
+
+  zerobounceLambdaEventInvokeConfig:
+    DependsOn: zerobounceLambdaFunction
+    Type: AWS::Lambda::EventInvokeConfig
+    Properties:
+      DestinationConfig:
+        OnSuccess:
+          Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobResponses
+        OnFailure:
+          Destination: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:JobFailures
+      FunctionName: zerobounce
+      Qualifier: $LATEST

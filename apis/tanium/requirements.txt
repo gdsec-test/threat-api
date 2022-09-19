@@ -1,0 +1,4 @@
+boto3>=1.18.24
+botocore>=1.21.24
+ecs-logging==1.0.1
+requests==2.26.0

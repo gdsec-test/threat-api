@@ -35,6 +35,8 @@ func handler(ctx context.Context, request events.SQSEvent) (string, error) {
 	span2, _ := t.TracerLogger.StartSpan(ctx, "ResponseProcessorHandler", "responseprocessor", "", "ProcessingCompletedJobData")
 	// Process each SQS record
 	for _, sqsRecord := range request.Records {
+		span.LogKV("SQSBody", sqsRecord.Body)
+		t.Logger.WithFields(logrus.Fields{"SQSBody": sqsRecord.Body}).Info("Unmarshaling completed job data")
 		completedLambdaData, err := unmarshal_body(ctx, sqsRecord)
 		if err != nil {
 			t.Logger.WithFields(logrus.Fields{"error": err, "body": sqsRecord.Body}).Error("Error unmarshaling completed job data")
@@ -42,9 +44,14 @@ func handler(ctx context.Context, request events.SQSEvent) (string, error) {
 			defer span.End(ctx)
 			continue
 		}
-		// Get lambda name from the event source ARN
+
 		lambdaName := ""
-		if groups, ok := regexgrouphelp.FindRegexGroups(lambdaNameRegex, completedLambdaData.RequestContext.FunctionArn)["lambdaName"]; ok && len(groups) > 0 {
+		//Tanium runs on container for the runtime, else get lambda name from the event source ARN
+		if len(completedLambdaData.ResponsePayload) > 0 {
+			if completedLambdaData.ResponsePayload[0].ModuleName == "tanium" {
+				lambdaName = "tanium"
+			}
+		} else if groups, ok := regexgrouphelp.FindRegexGroups(lambdaNameRegex, completedLambdaData.RequestContext.FunctionArn)["lambdaName"]; ok && len(groups) > 0 {
 			lambdaName = groups[0]
 		}
 
@@ -59,6 +66,7 @@ func handler(ctx context.Context, request events.SQSEvent) (string, error) {
 		}
 		//TODO: Maybe log error if there is one like with other functions?
 		//Logic not there in initial response processor so unsure about this
+		fmt.Println("Printing the completedLambdaData structure --> ", completedLambdaData)
 		err = processSuccessfulJob(ctx, completedLambdaData, lambdaName)
 		if err != nil {
 			span2.LogKV("error", err)
@@ -193,7 +201,7 @@ func UpdateDatabaseItem(dynamodbClient *dynamodb.DynamoDB, ctx context.Context, 
 
 	update := expression.
 		Set(expression.Name(fmt.Sprintf("responses.%s", request.ModuleName)), expression.Value(*encryptedData))
-		expr, err := expression.NewBuilder().WithUpdate(update).Build()
+	expr, err := expression.NewBuilder().WithUpdate(update).Build()
 
 	if err != nil {
 		return fmt.Errorf("error creating update expression: %w", err)

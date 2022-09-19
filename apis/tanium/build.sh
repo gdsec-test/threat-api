@@ -1,6 +1,11 @@
 #!/bin/bash
 
-set -eu
-env GOPRIVATE=github.secureserver.net,github.com/gdcorp-* GOOS=linux GOARCH=amd64 go build -o tanium
 rm -f function.zip
-zip -9q function.zip tanium
+rm -f -r tempdeps
+
+pip install --target tempdeps -r requirements.txt
+cd tempdeps
+zip -qr ../function.zip .
+
+cd ..
+zip -qg function.zip main.py logger.py

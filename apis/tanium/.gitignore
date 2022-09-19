@@ -1,2 +1,6 @@
+.venv
+venv
 function.zip
-tanium
+__pycache__
+.vscode
+tempdeps
