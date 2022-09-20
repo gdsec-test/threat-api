@@ -26,3 +26,5 @@ The following IOC types are supported:
 | `mitre_technique` | Mitre Technique
 | `mitre_subtechnique` | Mitre Subtechnique
 | `mitre_mitigation` | Mitre Mitigation
+| `file_ref` | File by reference (URL)
+| `file_base64` | Base64-encoded file/data stream 
