@@ -1,0 +1,6 @@
+jbxapi>=3.17.2
+polling2
+boto3>=1.18.24
+aws-okta-processor
+chardet
+pre-commit
