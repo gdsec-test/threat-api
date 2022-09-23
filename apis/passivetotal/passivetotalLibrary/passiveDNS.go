@@ -30,7 +30,7 @@ type PDNSReport struct {
 	LastSeen     string             `json:"lastSeen"`
 	Results      []PDNSReportResult `json:"results"`
 	QueryType    string             `json:"queryType"`
-	Pager        interface{}        `json:"pager"`
+	Pager        string             `json:"pager"`
 	QueryValue   string             `json:"queryValue"`
 }
 
@@ -41,11 +41,16 @@ type PassiveTotalResolution struct {
 	Sources   []string `json:"sources"`
 }
 
+// This is a nested, multi-level hierarchy
+//   First level: DNS record type (A, CNAME, MX, etc.)
+//   Second level: the resolution value (IP address or domain depending on the query)
+type NestedResolutions map[string]map[string][]PassiveTotalResolution
+
 type PassiveTotalResponse struct {
-	Value       string                   `json:"query"`
-	FirstSeen   string                   `json:"firstSeen"`
-	LastSeen    string                   `json:"lastSeen"`
-	Resolutions []PassiveTotalResolution `json:"resolutions"`
+	Value       string            `json:"query"`
+	FirstSeen   string            `json:"firstSeen"`
+	LastSeen    string            `json:"lastSeen"`
+	Resolutions NestedResolutions `json:"resolutions"`
 }
 
 // Convert the structure returned by Passive Total into the
@@ -56,8 +61,12 @@ func (p *PDNSReport) MakeDomainResponse() *PassiveTotalResponse {
 		FirstSeen: p.FirstSeen,
 		LastSeen:  p.LastSeen,
 	}
+	response.Resolutions = make(NestedResolutions)
 	for _, q := range p.Results {
-		response.Resolutions = append(response.Resolutions, *q.MakeDomainResolution())
+		if _, ok := response.Resolutions[q.RecordType]; !ok {
+			response.Resolutions[q.RecordType] = make(map[string][]PassiveTotalResolution)
+		}
+		response.Resolutions[q.RecordType][q.Value] = append(response.Resolutions[q.RecordType][q.Value], *q.MakeDomainResolution())
 	}
 	return &response
 }
@@ -93,7 +102,7 @@ func GetPassiveDNS(ctx context.Context, ptUrl string, ioc string, user string, k
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("bad status code: %d", resp.StatusCode)
+		return nil, fmt.Errorf("Bad status code: %d", resp.StatusCode)
 	}
 
 	reportHolder := &PDNSReport{}
