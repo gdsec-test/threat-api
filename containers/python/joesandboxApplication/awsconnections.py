@@ -5,12 +5,13 @@ from typing import Dict
 import boto3
 from botocore.exceptions import ClientError
 
+AWS_REGION = "us-west-2"
 SECRETS_MANAGER_ID = "/ThreatTools/Integrations/joesandbox"
 PARAMETER_STORE_S3_BUCKET_NAME = "/Quicksand/forensic-storage-bucket"
 
 
 def retrieve_aws_parameter_store() -> str:
-    ssm_client = boto3.client("ssm")
+    ssm_client = boto3.client("ssm", region_name=AWS_REGION)
     response = ssm_client.get_parameter(
         Name=PARAMETER_STORE_S3_BUCKET_NAME, WithDecryption=False
     )
@@ -20,7 +21,7 @@ def retrieve_aws_parameter_store() -> str:
 
 def retrieve_secrets() -> Dict[str, str]:
     """Retrieve the API information from Secrets Manager"""
-    sm_client = boto3.client("secretsmanager")
+    sm_client = boto3.client("secretsmanager", region_name=AWS_REGION)
 
     secret = None
     try:
@@ -51,7 +52,7 @@ def upload_file_to_s3(file_name, object_name) -> bool:
     """
 
     # Upload the file
-    s3_client = boto3.client("s3")
+    s3_client = boto3.client("s3", region_name=AWS_REGION)
     bucket_name = retrieve_aws_parameter_store()
     try:
         response = s3_client.upload_file(

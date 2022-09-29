@@ -108,9 +108,9 @@ if __name__ == "__main__":
         print("Uploading to S3")
         upload_success = upload_file_to_s3(result_filename, s3_path + result_filename)
         if upload_success:
-            print("upload to S3 successful")
+            print("Upload to S3 successful")
             # remove the local file after uploading
             if os.path.exists(result_filename):
                 os.remove(result_filename)
         else:
-            print("failed to upload to S3")
+            print("Failed to upload to S3")
