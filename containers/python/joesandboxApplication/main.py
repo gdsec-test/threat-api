@@ -2,9 +2,12 @@ import logging
 import os
 
 import jbxapi
+import json
 import polling2
 import chardet
+import datetime
 from awsconnections import *
+from fakelambdastructure import *
 
 AWS_REGION = "us-west-2"
 MODULE_NAME = "joesandbox"
@@ -14,6 +17,8 @@ SAMPLE_RETRY_SECONDS = 300  # retry every 5 mins to see if the sample report is 
 ID_RETRY_SECONDS = (
     120  # retry every 2 mins to see if the web_id exists to retrieve status
 )
+SUCCESS_SQS_QUEUE = "JobResponses"
+FAILURE_SQS_QUEUE = "JobFailures"
 
 """API documentation can be found at 'https://github.com/joesecurity/jbxapi/blob/master/docs/api.md' """
 
@@ -68,10 +73,12 @@ if __name__ == "__main__":
     # Set harcoded env variables for testing
     os.environ["SAMPLE_SUBMISSION_ID"] = "2705650"
     os.environ["SAMPLE_FOLDER_S3_URI"] = "quicksand/example-sample-malware/"
+    os.environ["JOB_ID"] = "fake_job_id"
 
     # Get the web_id from env variable
     web_id = os.getenv("SAMPLE_SUBMISSION_ID")
     s3_path = os.getenv("SAMPLE_FOLDER_S3_URI")
+    job_id = os.getenv("JOB_ID")
 
     # ------------- Wait until the webID is available -------------------
 
@@ -113,4 +120,47 @@ if __name__ == "__main__":
             if os.path.exists(result_filename):
                 os.remove(result_filename)
         else:
-            print("Failed to upload to S3")
+            print("failed to upload to S3")
+
+        print("Converting data to match triage data")
+        fake_lambda_data = FakeLambdaDestination(
+            version="1.0",
+            time_stamp=str(datetime.datetime.now()),
+        )
+        response_payload_data = CompletedJobData(
+            module_name=MODULE_NAME, job_id=job_id, response=""
+        )
+        fake_lambda_data.response_payload = [response_payload_data]
+
+        # Putting it in triage data for Response processor to read it
+        triage_result_data = TriageData(
+            title="Joe Sandbox data",
+            datatype="json",
+            metadata="",
+            data=web_id + "  " + info["status"] + "  " + run["detection"],
+        )
+
+        response_payload_data.response = json.dumps(triage_result_data.to_dict())
+
+        # A fake request context that the corresponding lambda would have returned
+        request_context = RequestContext(
+            request_id="",
+            function_arn="arn:aws:lambda:us-west-2:aws-account-number:function:joesandbox",
+            # the corresponding joesandbox lambda was "Successfully" invoked by sns, which subsequently started this app
+            condition="Success",
+            approximate_invoke_count=0,  # not used in code anywhere, just assigning the int to 0
+        )
+        response_context = ResponseContext(
+            status_code=200,  # Considering the application succeeds
+            executed_version="$LATEST",  # hard coding a fake one
+        )
+        fake_lambda_data.request_context = request_context
+        fake_lambda_data.response_context = response_context
+        # Just assigning one result in the list as joe sandbox returns one data for now ie, triage_result_data
+        fake_lambda_data.response_payload = [response_payload_data]
+
+        print("Sending data to SQS")
+        # See - https://github.com/boto/botocore/issues/2705#issuecomment-1238197780 for the below env var
+        os.environ["BOTO_DISABLE_COMMONNAME"] = "true"
+        if write_to_sqs(SUCCESS_SQS_QUEUE, json.dumps(fake_lambda_data.to_dict())):
+            print("Successfully uploaded")

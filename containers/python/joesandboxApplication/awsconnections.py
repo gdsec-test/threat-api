@@ -65,3 +65,14 @@ def upload_file_to_s3(file_name, object_name) -> bool:
         logging.error(e)
         return False
     return True
+
+
+def write_to_sqs(queue_name, message_to_send) -> bool:
+    sqs = boto3.resource("sqs", region_name=AWS_REGION)
+
+    queue = sqs.get_queue_by_name(QueueName=queue_name)
+
+    response = queue.send_message(MessageBody=message_to_send)
+    if response.get("Failed"):
+        return False
+    return True
