@@ -1,0 +1,75 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: ThreatTools API Core Resources
+
+Parameters:
+  JoeSandboxClusterName:
+    Type: String
+    Description: Name of the Fargate Cluster which runs the Joe Sandbox Fargate Service
+  JobID:
+    Type: String
+    Description: Threat Tools Job ID
+    Default: ''
+  WebID:
+    Type: String
+    Description: Joe Sandbox Web ID
+    Default: ''
+  IoCType:
+    Type: String
+    Description: Job IoC Type
+    Default: ''
+  IoCList:
+    Type: String
+    Description: List of IoCs
+    Default: ''
+
+Resources:
+  JoeSandboxFargateCluster:
+    Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
+    Properties:
+      ProductName: FargateCluster
+      ProvisioningArtifactName: 1.1.0
+      ProvisionedProductName: joesandbox-ecs
+      ProvisioningParameters:
+        - Key: ClusterName
+          Value: !Ref JoeSandboxClusterName
+        - Key: ContainerInsights
+          Value: "enabled"
+      Tags:
+        - Key: doNotShutDown
+          Value: true
+
+  FargateService:
+    DependsOn: JoeSandboxFargateCluster
+    Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
+    Properties:
+      ProductName: FargateService
+      ProvisioningArtifactName: 3.1.0
+      ProvisionedProductName: JoeSandboxFargateService
+      ProvisioningParameters:
+        - Key: ClusterName
+          Value: !Ref JoeSandboxClusterName
+        - Key: ServiceName
+          Value: joesandbox
+        - Key: ImageTag
+          Value: latest
+        - Key: MinContainers
+          Value: 1
+        - Key: DesiredContainers
+          Value: 1
+        - Key: MaxContainers
+          Value: 5
+        - Key: Cpu
+          Value: 256
+        - Key: Memory
+          Value: 0.5GB
+        - Key: AccessLogsEnabled
+          Value: true
+        - Key: RequiresIngress
+          Value: false
+        - Key: ECRRepo
+          Value: !Sub ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/joesandbox
+        - Key: EnvironmentVariablesJson
+          Value: !Sub '[{"Name":"JOB_ID","Value":"${JobID}"},{"Name":"WEB_ID","Value":"${WebID}"},{"Name":"IOC_TYPE","Value":"${IoCType}"},{"Name":"IOC_LIST","Value":"${IoCList}"}]'
+      Tags:
+        - Key: doNotShutDown
+          Value: true

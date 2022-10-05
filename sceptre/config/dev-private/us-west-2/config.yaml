@@ -2,3 +2,7 @@ region: us-west-2
 threatapi_domain_name: api-private.threat.int.dev-gdcorp.tools
 threatapi_certificate_arn: 6675d2cd-100f-442a-ad8a-e49075091ca4
 sso_host: sso.dev-gdcorp.tools
+job_id: ''
+web_id: ''
+ioc_type: ''
+ioc_list: ''

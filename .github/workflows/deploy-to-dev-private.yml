@@ -62,6 +62,7 @@ jobs:
           python3 -m venv venv
           source venv/bin/activate
           pip install -U pip
+          pip install sceptre
 
       - name: Install python and other dependencies
         env:
@@ -111,6 +112,21 @@ jobs:
 
           ssh-agent -k
 
+      - name: Create ECR Repo for the Joe Sandbox Container Image
+        run: |
+          source venv/bin/activate
+          cd sceptre
+          sceptre launch dev-private/us-west-2/SC-JoeSandboxECR.yaml -y
+
+      - name: Upload Container Image to the Joe Sandbox ECR Repo
+        run: |
+          aws ecr get-login-password --region us-west-2 | docker login --username AWS --password-stdin 764525110978.dkr.ecr.us-west-2.amazonaws.com
+          aws ecr get-login-password --region us-west-2 | docker login --username AWS --password-stdin 345790377847.dkr.ecr.us-west-2.amazonaws.com
+          cd ./containers/python/joesandboxApplication
+          docker build -t joesandbox .
+          docker tag joesandbox:latest 345790377847.dkr.ecr.us-west-2.amazonaws.com/joesandbox:latest
+          docker push 345790377847.dkr.ecr.us-west-2.amazonaws.com/joesandbox:latest
+    
       - name: Run sceptre
         run: |
           source venv/bin/activate
