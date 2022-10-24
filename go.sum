@@ -298,8 +298,6 @@ github.secureserver.net/auth-contrib/go-auth v1.2.1 h1:Bb7sojPpx0yftwcowFFTYrZ7X
 github.secureserver.net/auth-contrib/go-auth v1.2.1/go.mod h1:AzLUi56S3nSh/vK+IGtTkgTd/Qd/rEF8aRSd0WNC/8k=
 github.secureserver.net/go/sso-client v0.0.1 h1:Wcw37QbIQjyMAjwqyspzCs56F2DLVGPl3kxa+F66gPU=
 github.secureserver.net/go/sso-client v0.0.1/go.mod h1:kQ2libP+lxTthjItGO/a65YcWRVAswwR84MGAOfeB+g=
-github.secureserver.net/threat/go-ldap v0.0.0-20201017001259-d06e7b5f7252 h1:bIUX4Cw94igHxeSu6Yl44a/9VRO1BKfUuBv8JtbadO0=
-github.secureserver.net/threat/go-ldap v0.0.0-20201017001259-d06e7b5f7252/go.mod h1:k7kUhrR6aWUC86oL8hc7yDnu4Lwr0mTYdOahKFmeW0g=
 go.elastic.co/apm v1.11.0 h1:uJyt6nCW9880sZhfl1tB//Jy/5TadNoAd8edRUtgb3w=
 go.elastic.co/apm v1.11.0/go.mod h1:qoOSi09pnzJDh5fKnfY7bPmQgl8yl2tULdOu03xhui0=
 go.elastic.co/apm/module/apmhttp v1.11.0 h1:k/MjK0y2aLOXumoM8jcWXqxvIFlMS4U8Bn9cMUPdVX0=
