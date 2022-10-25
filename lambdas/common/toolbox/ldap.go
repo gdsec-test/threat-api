@@ -3,7 +3,7 @@ package toolbox
 import (
 	"os"
 
-	"github.secureserver.net/threat/go-ldap"
+	"github.com/gdcorp-infosec/go-ldap"
 )
 
 // GetADGroupsLDAP will get the AD groups from the jomax AD server using the provided username.

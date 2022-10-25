@@ -77,6 +77,8 @@ github.com/gdcorp-infosec/cmap-go v0.0.0-20210910182244-ffed93b0c375 h1:1wBBapIP
 github.com/gdcorp-infosec/cmap-go v0.0.0-20210910182244-ffed93b0c375/go.mod h1:zRxWCzFrwMYoqRcTqlnpar/ZxPFlHyOn34lUWoV4Z0Q=
 github.com/gdcorp-infosec/go-ioc v0.0.0-20211221221900-675db6b52f14 h1:jyYj2Gi9YTnfOcVSCc0emb0SDDrM50qsecPcaG8+raw=
 github.com/gdcorp-infosec/go-ioc v0.0.0-20211221221900-675db6b52f14/go.mod h1:rTZ3+EX4WDDj4KZtVNUvcToXfc/LYLWY6sPEQgbHym0=
+github.com/gdcorp-infosec/go-ldap v0.0.0-20221020132206-9e528603f3dc h1:xBEXxennXx9ngI+/wph53hDTM7deSKPwqpJJzx+48IM=
+github.com/gdcorp-infosec/go-ldap v0.0.0-20221020132206-9e528603f3dc/go.mod h1:VuPN9FVuNXdUibcjSoqcaV2IjHNOMWrfZi+aZxs8U9o=
 github.com/ghodss/yaml v1.0.0/go.mod h1:4dBDuWmgqj2HViK6kFavaiC9ZROes6MMH2rRYeMEF04=
 github.com/gin-contrib/sse v0.1.0/go.mod h1:RHrZQHXnP2xjPF+u1gW/2HnVO7nvIa9PG3Gm+fLHvGI=
 github.com/gin-gonic/gin v1.6.3/go.mod h1:75u5sXoLsGZoRN5Sgbi1eraJ4GU3++wFwWzhwvtwp4M=
@@ -209,10 +211,6 @@ github.com/opencontainers/runc v1.0.2 h1:opHZMaswlyxz1OuGpBE53Dwe4/xF7EZTY0A2L/F
 github.com/opencontainers/runc v1.0.2/go.mod h1:aTaHFFwQXuA71CiyxOdFFIorAoemI04suvGRQFzWTD0=
 github.com/opencontainers/runtime-spec v1.0.3-0.20210326190908-1c3f411f0417/go.mod h1:jwyrGlmzljRJv/Fgzds9SsS/C5hL+LL3ko9hs6T5lQ0=
 github.com/opencontainers/selinux v1.8.2/go.mod h1:MUIHuUEvKB1wtJjQdOyYRgOnLD2xAPP8dBsCoU0KuF8=
-github.com/oschwald/geoip2-golang v1.4.0 h1:5RlrjCgRyIGDz/mBmPfnAF4h8k0IAcRv9PvrpOfz+Ug=
-github.com/oschwald/geoip2-golang v1.4.0/go.mod h1:8QwxJvRImBH+Zl6Aa6MaIcs5YdlZSTKtzmPGzQqi9ng=
-github.com/oschwald/maxminddb-golang v1.6.0 h1:KAJSjdHQ8Kv45nFIbtoLGrGWqHFajOIm7skTyz/+Dls=
-github.com/oschwald/maxminddb-golang v1.6.0/go.mod h1:DUJFucBg2cvqx42YmDa/+xHvb0elJtOm3o4aFQ/nb/w=
 github.com/pelletier/go-toml v1.2.0/go.mod h1:5z9KED0ma1S8pY6P1sdut58dfprrGBbd/94hg7ilaic=
 github.com/pkg/errors v0.8.0/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
 github.com/pkg/errors v0.8.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
@@ -300,8 +298,6 @@ github.secureserver.net/auth-contrib/go-auth v1.2.1 h1:Bb7sojPpx0yftwcowFFTYrZ7X
 github.secureserver.net/auth-contrib/go-auth v1.2.1/go.mod h1:AzLUi56S3nSh/vK+IGtTkgTd/Qd/rEF8aRSd0WNC/8k=
 github.secureserver.net/go/sso-client v0.0.1 h1:Wcw37QbIQjyMAjwqyspzCs56F2DLVGPl3kxa+F66gPU=
 github.secureserver.net/go/sso-client v0.0.1/go.mod h1:kQ2libP+lxTthjItGO/a65YcWRVAswwR84MGAOfeB+g=
-github.secureserver.net/threat/go-ldap v0.0.0-20201017001259-d06e7b5f7252 h1:bIUX4Cw94igHxeSu6Yl44a/9VRO1BKfUuBv8JtbadO0=
-github.secureserver.net/threat/go-ldap v0.0.0-20201017001259-d06e7b5f7252/go.mod h1:k7kUhrR6aWUC86oL8hc7yDnu4Lwr0mTYdOahKFmeW0g=
 go.elastic.co/apm v1.11.0 h1:uJyt6nCW9880sZhfl1tB//Jy/5TadNoAd8edRUtgb3w=
 go.elastic.co/apm v1.11.0/go.mod h1:qoOSi09pnzJDh5fKnfY7bPmQgl8yl2tULdOu03xhui0=
 go.elastic.co/apm/module/apmhttp v1.11.0 h1:k/MjK0y2aLOXumoM8jcWXqxvIFlMS4U8Bn9cMUPdVX0=
@@ -383,7 +379,6 @@ golang.org/x/sys v0.0.0-20191025021431-6c3a3bfe00ae/go.mod h1:h1NjWce9XRLGQEsW7w
 golang.org/x/sys v0.0.0-20191026070338-33540a1f6037/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
 golang.org/x/sys v0.0.0-20191115151921-52ab43148777/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
 golang.org/x/sys v0.0.0-20191204072324-ce4227a45e2e/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
-golang.org/x/sys v0.0.0-20191224085550-c709ea063b76/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
 golang.org/x/sys v0.0.0-20200116001909-b77594299b42/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
 golang.org/x/sys v0.0.0-20200323222414-85ca7c5b95cd/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
 golang.org/x/sys v0.0.0-20200909081042-eff7692f9009/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
