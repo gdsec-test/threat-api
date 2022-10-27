@@ -18,11 +18,11 @@ import (
 	"github.com/aws/aws-sdk-go/service/sns"
 	. "github.com/aws/aws-sdk-go/service/sns"
 	"github.com/aws/aws-sdk-go/service/ssm"
+	"github.com/gdcorp-golang/auth/gdtoken"
 	"github.com/gdcorp-infosec/threat-api/lambdas/common"
 	"github.com/gdcorp-infosec/threat-api/lambdas/common/toolbox"
 	"github.com/godaddy/asherah/go/appencryption"
 	. "github.com/smartystreets/goconvey/convey"
-	"github.secureserver.net/auth-contrib/go-auth/gdtoken"
 )
 
 func TestEncryptSubmission(t *testing.T) {
@@ -276,10 +276,10 @@ func TestStoreRequestedModulesList(t *testing.T) {
 		Convey("returns error if cannot save modules in DynamoDB", func() {
 			err := errors.New("Cannot save modules in DynamoDB")
 			patches = append(patches, ApplyMethod(reflect.TypeOf(dynamoDBClient), "PutItem",
-			func(c *dynamodb.DynamoDB, input *dynamodb.PutItemInput) (*dynamodb.PutItemOutput, error) {
-				actualItem = input.Item
-				return nil, err
-			}))
+				func(c *dynamodb.DynamoDB, input *dynamodb.PutItemInput) (*dynamodb.PutItemOutput, error) {
+					actualItem = input.Item
+					return nil, err
+				}))
 			actualErr := storeRequestedModulesList(tb, ctx1, jwtToken, dynamoDBRequest, originRequester, jobID, encryptedDataMarshalled)
 			So(actualErr, ShouldResemble, err)
 		})

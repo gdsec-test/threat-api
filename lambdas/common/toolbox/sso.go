@@ -8,9 +8,9 @@ import (
 	"strings"
 
 	"github.com/aws/aws-lambda-go/events"
+	"github.com/gdcorp-golang/auth/gdsso"
+	"github.com/gdcorp-golang/auth/gdtoken"
 	"github.com/gdcorp-infosec/threat-api/lambdas/common/toolbox/appsectracing"
-	"github.secureserver.net/auth-contrib/go-auth/gdsso"
-	"github.secureserver.net/auth-contrib/go-auth/gdtoken"
 )
 
 const (
@@ -115,7 +115,7 @@ func (t *Toolbox) GetJWTGroups(ctx context.Context, jwt string) ([]string, error
 
 // getJWTADGroups makes a request to SSO to get the AD groups of the JWT.
 // Hopefully this can be moved to the godaddy SSO library someday
-// https://github.secureserver.net/auth-contrib/go-auth/issues/30
+// https://github.com/gdcorp-golang/auth/issues/30
 func (t *Toolbox) getJWTADGroups(ctx context.Context, jwt string) ([]string, error) {
 	var span *appsectracing.Span
 	span, ctx = t.TracerLogger.StartSpan(ctx, "GetJWTADGroups", "auth", "jwt", "getadgroups")
