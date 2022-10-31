@@ -17,7 +17,6 @@ require (
 	github.com/stretchr/testify v1.6.1
 	github.com/vertoforce/regexgrouphelp v0.1.1
 	github.secureserver.net/auth-contrib/go-auth v1.2.1
-	github.secureserver.net/threat/go-ldap v0.0.0-20201017001259-d06e7b5f7252
 	go.elastic.co/apm v1.11.0
 	go.elastic.co/apm/module/apmhttp v1.11.0
 	go.elastic.co/apm/module/apmlambda v1.11.0
@@ -29,6 +28,7 @@ require (
 require (
 	github.com/agiledragon/gomonkey/v2 v2.7.0
 	github.com/gdcorp-infosec/go-sso-client v1.1.0
+	github.com/gdcorp-infosec/go-ldap v0.0.0-20221020132206-9e528603f3dc
 )
 
 require (

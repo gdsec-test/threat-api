@@ -56,10 +56,10 @@ jobs:
           echo "::add-mask::$CI_TOKEN"
 
       - name: Checkout
-        uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b
+        uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8
 
       # Checkout the change-order-action
-      - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b
+      - uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8
         with:
           repository: gdcorp-actions/change-order-action
           ref: main
@@ -123,7 +123,7 @@ jobs:
           EOF
 
       - name: Setup golang environment
-        uses: actions/setup-go@b22fbbc2921299758641fab08929b4ac52b32923
+        uses: actions/setup-go@c4a742cab115ed795e34d4513e2cf7d472deb55f
         with:
           go-version: '1.17.2'
 
