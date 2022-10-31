@@ -80,14 +80,6 @@ func TestManagerHandler(t *testing.T) {
 				return GetModulesResponse, nil
 			}))
 
-			LaunchVulnerabilityResponse := events.APIGatewayProxyResponse{}
-		var isLaunchVulnerabilityCalled events.APIGatewayProxyRequest
-		patches = append(patches, ApplyFunc(InvokeVulnerabilityService,
-			func(ctx context.Context, request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
-				isLaunchVulnerabilityCalled = request
-				return LaunchVulnerabilityResponse, nil
-			}))
-
 		Reset(func() {
 			// deferred reset all stubs\mocks after every test suite running
 			for _, patch := range patches {
@@ -160,14 +152,6 @@ func TestManagerHandler(t *testing.T) {
 			map[string]string{},
 			http.MethodPost,
 			&isGetModulesCalled,
-		})
-
-		APICalls = append(APICalls, &TestAPICall{
-			"LaunchVulnerability",
-			"/vulnerability",
-			map[string]string{},
-			http.MethodPost,
-			&isLaunchVulnerabilityCalled,
 		})
 
 		for _, APICall := range APICalls {
