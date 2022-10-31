@@ -45,10 +45,10 @@ jobs:
           aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $ECR_REGISTRY
 
       - name: Checkout Current Repo to be Scanned
-        uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b
+        uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8
 
       - name: Checkout Tartufo Repo
-        uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b
+        uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8
         with:
           repository: gdcorp-actions/tartufo
           token: ${{ steps.masked-secrets.outputs.ci-token }} # PAT with read access to gdcorp-actions/tartufo
@@ -66,7 +66,7 @@ jobs:
     runs-on: [self-hosted,threat-runners]
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b
+        uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8
 
       - name: Add Environmental Vars
         run: |
@@ -147,7 +147,7 @@ jobs:
         run: |
           rm -f $HOME/.gitconfig
       - name: Checkout this repository
-        uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b
+        uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8
 
       - name: Add Environmental Vars
         run: |
@@ -219,7 +219,7 @@ jobs:
     runs-on: [self-hosted,threat-runners]
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b
+        uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8
 
       - name: Set up Javascript 3.9.0
         uses: actions/setup-node@2fddd8803e2f5c9604345a0b591c3020ee971a93
