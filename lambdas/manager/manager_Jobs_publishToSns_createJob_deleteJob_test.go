@@ -17,11 +17,11 @@ import (
 	"github.com/aws/aws-sdk-go/service/dynamodb/expression"
 	"github.com/aws/aws-sdk-go/service/sns"
 	. "github.com/aws/aws-sdk-go/service/sns"
+	"github.com/gdcorp-golang/auth/gdtoken"
 	"github.com/gdcorp-infosec/threat-api/lambdas/common"
 	"github.com/gdcorp-infosec/threat-api/lambdas/common/toolbox"
 	. "github.com/gdcorp-infosec/threat-api/lambdas/common/toolbox"
 	. "github.com/smartystreets/goconvey/convey"
-	"github.secureserver.net/auth-contrib/go-auth/gdtoken"
 )
 
 func TestPublishToSns(t *testing.T) {
@@ -384,9 +384,9 @@ func TestDeleteJob(t *testing.T) {
 		Convey("should return error if scanning in DynamoDB failed", func() {
 			err := errors.New("I am scanning error for deleted job error")
 			patches = append(patches, ApplyMethod(reflect.TypeOf(dynamoDBClient), "Scan",
-			func(client *dynamodb.DynamoDB, input *dynamodb.ScanInput) (*dynamodb.ScanOutput, error) {
-				return nil, err
-			}))
+				func(client *dynamodb.DynamoDB, input *dynamodb.ScanInput) (*dynamodb.ScanOutput, error) {
+					return nil, err
+				}))
 			actualResponse, actualError := deleteJob(ctx1, *APIGatewayRequest, jobID)
 			So(actualError, ShouldResemble, fmt.Errorf("error searching for job id in db: %w", err))
 			So(actualResponse, ShouldResemble, events.APIGatewayProxyResponse{StatusCode: http.StatusInternalServerError})
@@ -403,9 +403,9 @@ func TestDeleteJob(t *testing.T) {
 		Convey("should return error if deleting job in DynamoDB failed", func() {
 			err := errors.New("I am delete error for deleted job")
 			patches = append(patches, ApplyMethod(reflect.TypeOf(dynamoDBClient), "DeleteItem",
-			func(client *dynamodb.DynamoDB, input *dynamodb.DeleteItemInput) (*dynamodb.DeleteItemOutput, error) {
-				return nil, err
-			}))
+				func(client *dynamodb.DynamoDB, input *dynamodb.DeleteItemInput) (*dynamodb.DeleteItemOutput, error) {
+					return nil, err
+				}))
 			actualResponse, actualError := deleteJob(ctx1, *APIGatewayRequest, jobID)
 			So(actualError, ShouldResemble, fmt.Errorf("error deleting job in DB: %w", err))
 			So(actualResponse, ShouldResemble, events.APIGatewayProxyResponse{StatusCode: http.StatusInternalServerError})

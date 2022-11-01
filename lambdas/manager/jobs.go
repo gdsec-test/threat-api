@@ -15,9 +15,9 @@ import (
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
 	"github.com/aws/aws-sdk-go/service/dynamodb/expression"
 	"github.com/aws/aws-sdk-go/service/sns"
+	"github.com/gdcorp-golang/auth/gdtoken"
 	"github.com/gdcorp-infosec/threat-api/lambdas/common"
 	"github.com/gdcorp-infosec/threat-api/lambdas/common/toolbox"
-	"github.secureserver.net/auth-contrib/go-auth/gdtoken"
 )
 
 // Build modified / simplified JobDBEntry for each job

@@ -294,8 +294,8 @@ github.com/xordataexchange/crypt v0.0.3-0.20170626215501-b2862e3d0a77/go.mod h1:
 github.com/yuin/goldmark v1.1.27/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=
 github.com/yuin/goldmark v1.2.1/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=
 github.com/yuin/goldmark v1.4.1/go.mod h1:mwnBkeHKe2W/ZEtQ+71ViKU8L12m81fl3OWwC1Zlc8k=
-github.secureserver.net/auth-contrib/go-auth v1.2.1 h1:Bb7sojPpx0yftwcowFFTYrZ7XdMF6wJDRtTKYXPj4Ek=
-github.secureserver.net/auth-contrib/go-auth v1.2.1/go.mod h1:AzLUi56S3nSh/vK+IGtTkgTd/Qd/rEF8aRSd0WNC/8k=
+github.com/gdcorp-golang/auth v1.2.1 h1:Bb7sojPpx0yftwcowFFTYrZ7XdMF6wJDRtTKYXPj4Ek=
+github.com/gdcorp-golang/auth v1.2.1/go.mod h1:AzLUi56S3nSh/vK+IGtTkgTd/Qd/rEF8aRSd0WNC/8k=
 github.secureserver.net/go/sso-client v0.0.1 h1:Wcw37QbIQjyMAjwqyspzCs56F2DLVGPl3kxa+F66gPU=
 github.secureserver.net/go/sso-client v0.0.1/go.mod h1:kQ2libP+lxTthjItGO/a65YcWRVAswwR84MGAOfeB+g=
 go.elastic.co/apm v1.11.0 h1:uJyt6nCW9880sZhfl1tB//Jy/5TadNoAd8edRUtgb3w=

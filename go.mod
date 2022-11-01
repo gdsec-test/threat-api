@@ -16,7 +16,7 @@ require (
 	github.com/sirupsen/logrus v1.8.1
 	github.com/stretchr/testify v1.6.1
 	github.com/vertoforce/regexgrouphelp v0.1.1
-	github.secureserver.net/auth-contrib/go-auth v1.2.1
+	github.com/gdcorp-golang/auth v1.2.1
 	github.secureserver.net/go/sso-client v0.0.1
 	go.elastic.co/apm v1.11.0
 	go.elastic.co/apm/module/apmhttp v1.11.0
