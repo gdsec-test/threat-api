@@ -64,9 +64,6 @@ const (
 	MitreGroupType        IOCType = "MITRE_GROUP"
 	MitreSoftwareType     IOCType = "MITRE_SOFTWARE"
 	MitreDetectionType    IOCType = "MITRE_DETECTION"
-	// IOCs for passing raw files/data
-	FileRefType    IOCType = "FILE_REF"
-	FileBase64Type IOCType = "FILE_BASE64"
 )
 
 type IOCTypes []IOCType
@@ -95,8 +92,6 @@ var AllIOCTypes = IOCTypes{
 	MitreGroupType,
 	MitreSoftwareType,
 	MitreDetectionType,
-	FileRefType,
-	FileBase64Type,
 }
 
 // IOCTypes.ToString() returns the human-readable strings for all supported IOCs.
