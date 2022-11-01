@@ -73,14 +73,14 @@ github.com/elastic/go-windows v1.0.0 h1:qLURgZFkkrYyTTkvYpsZIgf83AUsdIHfvlJaqaZ7
 github.com/elastic/go-windows v1.0.0/go.mod h1:TsU0Nrp7/y3+VwE82FoZF8gC/XFg/Elz6CcloAxnPgU=
 github.com/frankban/quicktest v1.11.3/go.mod h1:wRf/ReqHper53s+kmmSZizM8NamnL3IM0I9ntUbOk+k=
 github.com/fsnotify/fsnotify v1.4.7/go.mod h1:jwhsz4b93w/PPRr/qN1Yymfu8t87LnFCMoQvtojpjFo=
-github.com/gdcorp-infosec/cmap-go v0.0.0-20210910182244-ffed93b0c375 h1:1wBBapIPU7B0PS9jQjoM+TkyidditXXHxFsa80//inE=
-github.com/gdcorp-infosec/cmap-go v0.0.0-20210910182244-ffed93b0c375/go.mod h1:zRxWCzFrwMYoqRcTqlnpar/ZxPFlHyOn34lUWoV4Z0Q=
+github.com/gdcorp-infosec/cmap-go v1.0.1 h1:+Nntj6nIVnkl6jPWtZZXmuo2wLurHwY03X5KwFH3n5M=
+github.com/gdcorp-infosec/cmap-go v1.0.1/go.mod h1:IBtRltqr5MDCY96+OR4T3PdFH/BQR3qjd5zCTHuq3wE=
 github.com/gdcorp-infosec/go-ioc v0.0.0-20211221221900-675db6b52f14 h1:jyYj2Gi9YTnfOcVSCc0emb0SDDrM50qsecPcaG8+raw=
 github.com/gdcorp-infosec/go-ioc v0.0.0-20211221221900-675db6b52f14/go.mod h1:rTZ3+EX4WDDj4KZtVNUvcToXfc/LYLWY6sPEQgbHym0=
-github.com/gdcorp-infosec/go-sso-client v1.1.0 h1:WVBpKa7+e4EX3jkNGKrNgrhYWLiAU/Hu7TQib6D/61Y=
-github.com/gdcorp-infosec/go-sso-client v1.1.0/go.mod h1:hMBcnPr2ogvI9UxoXUfG/gJRkUYK66JImJxhwlkoWpk=
 github.com/gdcorp-infosec/go-ldap v0.0.0-20221020132206-9e528603f3dc h1:xBEXxennXx9ngI+/wph53hDTM7deSKPwqpJJzx+48IM=
 github.com/gdcorp-infosec/go-ldap v0.0.0-20221020132206-9e528603f3dc/go.mod h1:VuPN9FVuNXdUibcjSoqcaV2IjHNOMWrfZi+aZxs8U9o=
+github.com/gdcorp-infosec/go-sso-client v1.1.0 h1:WVBpKa7+e4EX3jkNGKrNgrhYWLiAU/Hu7TQib6D/61Y=
+github.com/gdcorp-infosec/go-sso-client v1.1.0/go.mod h1:hMBcnPr2ogvI9UxoXUfG/gJRkUYK66JImJxhwlkoWpk=
 github.com/ghodss/yaml v1.0.0/go.mod h1:4dBDuWmgqj2HViK6kFavaiC9ZROes6MMH2rRYeMEF04=
 github.com/gin-contrib/sse v0.1.0/go.mod h1:RHrZQHXnP2xjPF+u1gW/2HnVO7nvIa9PG3Gm+fLHvGI=
 github.com/gin-gonic/gin v1.6.3/go.mod h1:75u5sXoLsGZoRN5Sgbi1eraJ4GU3++wFwWzhwvtwp4M=
@@ -298,6 +298,8 @@ github.com/yuin/goldmark v1.2.1/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9dec
 github.com/yuin/goldmark v1.4.1/go.mod h1:mwnBkeHKe2W/ZEtQ+71ViKU8L12m81fl3OWwC1Zlc8k=
 github.secureserver.net/auth-contrib/go-auth v1.2.1 h1:Bb7sojPpx0yftwcowFFTYrZ7XdMF6wJDRtTKYXPj4Ek=
 github.secureserver.net/auth-contrib/go-auth v1.2.1/go.mod h1:AzLUi56S3nSh/vK+IGtTkgTd/Qd/rEF8aRSd0WNC/8k=
+github.secureserver.net/threat/go-ldap v0.0.0-20201017001259-d06e7b5f7252 h1:bIUX4Cw94igHxeSu6Yl44a/9VRO1BKfUuBv8JtbadO0=
+github.secureserver.net/threat/go-ldap v0.0.0-20201017001259-d06e7b5f7252/go.mod h1:k7kUhrR6aWUC86oL8hc7yDnu4Lwr0mTYdOahKFmeW0g=
 go.elastic.co/apm v1.11.0 h1:uJyt6nCW9880sZhfl1tB//Jy/5TadNoAd8edRUtgb3w=
 go.elastic.co/apm v1.11.0/go.mod h1:qoOSi09pnzJDh5fKnfY7bPmQgl8yl2tULdOu03xhui0=
 go.elastic.co/apm/module/apmhttp v1.11.0 h1:k/MjK0y2aLOXumoM8jcWXqxvIFlMS4U8Bn9cMUPdVX0=

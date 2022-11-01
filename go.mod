@@ -6,7 +6,7 @@ require (
 	github.com/VirusTotal/vt-go v0.0.0-20201216104058-17a6ee4f94a6
 	github.com/aws/aws-lambda-go v1.19.1
 	github.com/aws/aws-sdk-go v1.35.27
-	github.com/gdcorp-infosec/cmap-go v0.0.0-20210910182244-ffed93b0c375
+	github.com/gdcorp-infosec/cmap-go v1.0.1
 	github.com/gdcorp-infosec/go-ioc v0.0.0-20211221221900-675db6b52f14
 	github.com/godaddy/asherah/go/appencryption v0.1.5
 	github.com/likexian/whois v1.12.1
@@ -27,8 +27,8 @@ require (
 
 require (
 	github.com/agiledragon/gomonkey/v2 v2.7.0
-	github.com/gdcorp-infosec/go-sso-client v1.1.0
 	github.com/gdcorp-infosec/go-ldap v0.0.0-20221020132206-9e528603f3dc
+	github.com/gdcorp-infosec/go-sso-client v1.1.0
 )
 
 require (
@@ -66,6 +66,7 @@ require (
 	github.com/smartystreets/assertions v1.2.0 // indirect
 	github.com/vertoforce/multiregex v0.0.0-20200305221808-10dce2b47221 // indirect
 	github.com/vertoforce/streamregex v0.0.0-20200126210557-5b6afd4f6723 // indirect
+	github.secureserver.net/threat/go-ldap v0.0.0-20201017001259-d06e7b5f7252 // indirect
 	go.elastic.co/fastjson v1.1.0 // indirect
 	go.uber.org/atomic v1.5.0 // indirect
 	go.uber.org/multierr v1.3.0 // indirect
