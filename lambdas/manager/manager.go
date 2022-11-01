@@ -21,7 +21,6 @@ const (
 	originRequesterKey = "originrequester"
 	// API Version and API path prefix
 	version = "v1"
-	vulnerabilitywatchLambdaName = "vulnerabilitywatch"
 )
 
 // Normall I wouldn't use global variables like this, but in such a small
@@ -77,13 +76,6 @@ func handler(ctx context.Context, request events.APIGatewayProxyRequest) (events
 		return classifyIOCs(ctx, request)
 	case strings.HasSuffix(path, version+"/modules"):
 		return GetModules(ctx, request)
-	case strings.HasSuffix(path, version+"/vulnerability"):
-		switch request.HTTPMethod {
-		case http.MethodPost:
-			return InvokeVulnerabilityService(ctx, request)
-		default:
-			return events.APIGatewayProxyResponse{StatusCode: http.StatusMethodNotAllowed}, nil
-		}
 	default:
 		return events.APIGatewayProxyResponse{StatusCode: http.StatusNotFound}, nil
 	}
