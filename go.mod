@@ -66,6 +66,7 @@ require (
 	github.com/smartystreets/assertions v1.2.0 // indirect
 	github.com/vertoforce/multiregex v0.0.0-20200305221808-10dce2b47221 // indirect
 	github.com/vertoforce/streamregex v0.0.0-20200126210557-5b6afd4f6723 // indirect
+	github.secureserver.net/threat/go-ldap v0.0.0-20201017001259-d06e7b5f7252 // indirect
 	go.elastic.co/fastjson v1.1.0 // indirect
 	go.uber.org/atomic v1.5.0 // indirect
 	go.uber.org/multierr v1.3.0 // indirect

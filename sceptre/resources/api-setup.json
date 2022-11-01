@@ -204,32 +204,6 @@
         }
       }
     },
-    "/v1/vulnerability": {
-      "post": {
-        "summary": "Launch Vulnerability Watch Service manually",
-        "description": "This API triggers Vulnerability Watch Service manually. It reports back brief information about found CVEs",
-        "produces": [
-          "application/json"
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful operation"
-          }
-        },
-        "security": [
-          {
-            "JWTAuthorizer": []
-          }
-        ],
-        "x-amazon-apigateway-integration": {
-          "type": "aws_proxy",
-          "uri": "arn:aws:apigateway:us-west-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-west-2:___AWS_ACCOUNT___:function:manager/invocations",
-          "passthroughBehavior": "when_no_match",
-          "httpMethod": "POST",
-          "contentHandling": "CONVERT_TO_TEXT"
-        }
-      }
-    },
     "/swagger": {
       "get": {
         "produces": [

@@ -64,21 +64,3 @@ Resources:
         - Key: doNotShutDown
           Value: true
 
-  ThreatVulnerabilityPermission:
-    Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
-    Properties:
-      ProductName: LambdaPermission
-      ProvisioningArtifactName: 1.0.1
-      ProvisionedProductName: ThreatVulnerabilityPermission
-      ProvisioningParameters:
-        - Key: Action
-          Value: lambda:InvokeFunction
-        - Key: FunctionName
-          Value: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:vulnerabilitywatch
-        - Key: Principal
-          Value: lambda.amazonaws.com
-        - Key: SourceArn
-          Value: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:manager
-      Tags:
-        - Key: doNotShutDown
-          Value: true

@@ -438,29 +438,6 @@
           }
         }
       }
-    },
-    "VulnerabilityReport": {
-      "type": "object",
-      "properties": {
-        "logstream": {
-          "type": "string"
-        },
-        "startedOn": {
-          "type": "string"
-        },
-        "updatedCVEs": {
-          "type": "array",
-          "items": {
-            "type": "object"
-          }
-        },
-        "newCVEs": {
-          "type": "array",
-          "items": {
-            "type": "object"
-          }
-        }
-      }
     }
   },
   "securityDefinitions": {

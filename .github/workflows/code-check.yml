@@ -12,7 +12,7 @@ jobs:
       - name: Add Environmental Vars
         run: |
           echo DEPLOY_ROLE=arn:aws:iam::345790377847:role/GD-AWS-USA-GD-ThreatTools-Dev-Private-Deploy >> $GITHUB_ENV
-          
+
       - name: Get Secrets
         id: masked-secrets
         run: |
@@ -24,7 +24,7 @@ jobs:
           CI_TOKEN=`echo $AWS_RESPONSE | jq -r .SecretString | jq -r .PAT`
           echo "::set-output name=ci-token::$CI_TOKEN"
           echo "::add-mask::$CI_TOKEN"
-      
+
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@67fbcbb121271f7775d2e7715933280b06314838
         with:
@@ -71,7 +71,7 @@ jobs:
       - name: Add Environmental Vars
         run: |
           echo DEPLOY_ROLE=arn:aws:iam::345790377847:role/GD-AWS-USA-GD-ThreatTools-Dev-Private-Deploy >> $GITHUB_ENV
-          
+
       - name: Get Secrets
         id: masked-secrets
         run: |
@@ -83,7 +83,7 @@ jobs:
           CI_TOKEN=`echo $AWS_RESPONSE | jq -r .SecretString | jq -r .PAT`
           echo "::set-output name=ci-token::$CI_TOKEN"
           echo "::add-mask::$CI_TOKEN"
-      
+
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@67fbcbb121271f7775d2e7715933280b06314838
         with:
@@ -152,7 +152,7 @@ jobs:
       - name: Add Environmental Vars
         run: |
           echo DEPLOY_ROLE=arn:aws:iam::345790377847:role/GD-AWS-USA-GD-ThreatTools-Dev-Private-Deploy >> $GITHUB_ENV
-          
+
       - name: Get Secrets
         id: masked-secrets
         run: |
@@ -164,7 +164,7 @@ jobs:
           CI_TOKEN=`echo $AWS_RESPONSE | jq -r .SecretString | jq -r .PAT`
           echo "::set-output name=ci-token::$CI_TOKEN"
           echo "::add-mask::$CI_TOKEN"
-      
+
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@67fbcbb121271f7775d2e7715933280b06314838
         with:
@@ -172,11 +172,11 @@ jobs:
           role-duration-seconds: 7200 # 2 hours
           role-skip-session-tagging: true
           aws-region: us-west-2
-          
+
       - name: Set up Go
         uses: actions/setup-go@c4a742cab115ed795e34d4513e2cf7d472deb55f
         with:
-          go-version: '1.17.2'
+          go-version: '1.19.2'
 
       - name: Install dependencies
         env:
@@ -193,12 +193,12 @@ jobs:
           git config --global url.https://$GH_ACCESS_TOKEN@github.com/.insteadOf https://github.com/
           go mod tidy
           ssh-agent -k
-          
+
       - name: Go code checks and build
         run: |
           go fmt ./...
           go build ./...
-          
+
       - name: Running go tests
         run: |
           go test ./... -tags runTests -gcflags=all=-l -cover
