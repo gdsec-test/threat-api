@@ -30,7 +30,7 @@ jobs:
       - name: Reset gitconfig
         run: |
           rm -f $HOME/.gitconfig
-          
+
       - name: Add Environmental Vars
         run: |
           echo DEPLOY_ROLE=arn:aws:iam::786677461057:role/GD-AWS-USA-GD-ThreatTools-Dev-Deploy >> $GITHUB_ENV
@@ -71,7 +71,7 @@ jobs:
           python3 -m venv venv
           source venv/bin/activate
           pip install -U pip
-      
+
       - name: Install python and other dependencies
         env:
           GIT_SSH_COMMAND: "ssh -o StrictHostKeyChecking=no"
@@ -84,18 +84,6 @@ jobs:
           chmod u+x ./getpipconf.sh
           ./getpipconf.sh
           pip install -U -r requirements.txt -r requirements-test.txt
-
-          ssh-agent -k
-          touch lambdas/cpesubmit/.npmrc
-          cat > lambdas/cpesubmit/.npmrc <<EOF
-          registry=https://artifactory.secureserver.net/artifactory/api/npm/node-virt/
-          //artifactory.secureserver.net/artifactory/api/npm/node-virt/:_authToken=${{ secrets.NPM_ARTIFACTORY_TOKEN }}
-          EOF
-          touch lambdas/cpereport/.npmrc
-          cat > lambdas/cpereport/.npmrc <<EOF
-          registry=https://artifactory.secureserver.net/artifactory/api/npm/node-virt/
-          //artifactory.secureserver.net/artifactory/api/npm/node-virt/:_authToken=${{ secrets.NPM_ARTIFACTORY_TOKEN }}
-          EOF
 
       - name: Setup golang environment
         uses: actions/setup-go@c4a742cab115ed795e34d4513e2cf7d472deb55f

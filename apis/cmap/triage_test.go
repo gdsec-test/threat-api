@@ -28,7 +28,7 @@ func TestTriage(t *testing.T) {
 	for i, triageRequest := range triageRequests {
 		data, err := triageModule.Triage(ctx, triageRequest)
 		if err != nil {
-			t.Errorf("test %d failed: %w", i, err)
+			t.Errorf("test %d failed: %v", i, err)
 			continue
 		}
 		if len(data) == 0 {

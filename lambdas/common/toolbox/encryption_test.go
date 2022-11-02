@@ -16,13 +16,13 @@ func TestEncrypt(t *testing.T) {
 	// Test encryption
 	encryptedData, err := toolbox.Encrypt(ctx, "TestJob", testData)
 	if err != nil {
-		t.Errorf("error encrypting: %w", err)
+		t.Errorf("error encrypting: %v", err)
 		return
 	}
 
 	decryptedData, err := toolbox.Decrypt(ctx, "TestJob", *encryptedData)
 	if err != nil {
-		t.Errorf("error decrypting: %w", err)
+		t.Errorf("error decrypting: %v", err)
 		return
 	}
 	if !reflect.DeepEqual(decryptedData, testData) {
