@@ -80,7 +80,7 @@ jobs:
       - name: Setup golang environment
         uses: actions/setup-go@c4a742cab115ed795e34d4513e2cf7d472deb55f
         with:
-          go-version: '1.19.2'
+          go-version: '1.17.2'
 
       - name: Install golang dependencies
         env:
