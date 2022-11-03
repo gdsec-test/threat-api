@@ -15,8 +15,7 @@ exclude-path-patterns = [
     "(.*)package-lock.json",
     "(.*)node_modules",
     "docs/opencti/OpenCtiDeploymentDiagram.drawio",
-    "docs/opencti/OpenCtiFunctionalDiagram.drawio",
-    "containers/golang/taniumContainerApplication/go.sum"
+    "docs/opencti/OpenCtiFunctionalDiagram.drawio"
 ]
 exclude-entropy-patterns = [
     {path-pattern = '\.github/workflows/.*\.(yaml|yml)', pattern = 'uses: .*@[a-zA-Z0-9]{40}', reason = 'GitHub Actions'}

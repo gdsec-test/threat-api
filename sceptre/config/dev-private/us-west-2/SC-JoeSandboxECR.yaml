@@ -1,8 +1,0 @@
-template_path: SC-JoeSandboxECR.yaml
-
-parameters:
-  RepositoryName: 'joesandbox'
-
-hooks:
-  before_delete:
-    - !cmd aws ecr batch-delete-image --repository-name joesandbox --image-ids imageTag=latest
