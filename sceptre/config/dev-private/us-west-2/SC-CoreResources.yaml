@@ -18,10 +18,12 @@ hooks:
   after_create:
     - !cmd rm -f resources/*.sha1
     - !cmd resources/swagger-ui-bucket-create.sh
+    - !cmd resources/delete-cve-ddb.py
   before_update:
     - !cmd resources/upload-api-spec.sh
     - !cmd resources/build-system-lambdas.sh
   after_update:
     - !cmd rm -f resources/*.sha1
+    - !cmd resources/delete-cve-ddb.py
   before_delete:
     - !cmd resources/swagger-ui-bucket-delete.py
