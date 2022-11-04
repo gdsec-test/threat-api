@@ -193,7 +193,7 @@ func UpdateDatabaseItem(dynamodbClient *dynamodb.DynamoDB, ctx context.Context, 
 
 	update := expression.
 		Set(expression.Name(fmt.Sprintf("responses.%s", request.ModuleName)), expression.Value(*encryptedData))
-		expr, err := expression.NewBuilder().WithUpdate(update).Build()
+	expr, err := expression.NewBuilder().WithUpdate(update).Build()
 
 	if err != nil {
 		return fmt.Errorf("error creating update expression: %w", err)

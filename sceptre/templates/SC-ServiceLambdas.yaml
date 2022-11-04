@@ -1468,7 +1468,7 @@ Resources:
     Properties:
       Name: /ThreatTools/Modules/virustotal
       Type: String
-      Value: '{"supportedIOCTypes": ["DOMAIN", "IP", "URL", "MD5", "SHA256"]}'
+      Value: '{"supportedIOCTypes": ["DOMAIN", "IP", "URL", "MD5", "SHA1", "SHA256"]}'
 
   virustotalAppSecSubscriptionFilter:
     DependsOn: virustotalLambdaFunction

@@ -197,26 +197,6 @@
           }
         }
       }
-    },
-    "/vulnerability": {
-      "post": {
-        "tags": [
-          "Miscellaneous"
-        ],
-        "summary": "Launch Vulnerability Watch Service manually",
-        "description": "This API triggers Vulnerability Watch Service manually. It reports back brief information about found CVEs",
-        "produces": [
-          "application/json"
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful operation",
-            "schema": {
-              "$ref": "#/definitions/VulnerabilityReport"
-            }
-          }
-        }
-      }
     }
   },
   "definitions": {
@@ -455,29 +435,6 @@
           "type": "array",
           "items": {
             "$ref": "#/definitions/IOCType"
-          }
-        }
-      }
-    },
-    "VulnerabilityReport": {
-      "type": "object",
-      "properties": {
-        "logstream": {
-          "type": "string"
-        },
-        "startedOn": {
-          "type": "string"
-        },
-        "updatedCVEs": {
-          "type": "array",
-          "items": {
-            "type": "object"
-          }
-        },
-        "newCVEs": {
-          "type": "array",
-          "items": {
-            "type": "object"
           }
         }
       }

@@ -1,6 +1,6 @@
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v3.2.0
+    rev: v4.3.0
     hooks:
       - id: trailing-whitespace
         stages: [commit]
@@ -25,12 +25,12 @@ repos:
       - id: check-byte-order-marker
         stages: [commit]
   - repo: https://github.com/godaddy/tartufo
-    rev: v3.1.4
+    rev: v3.2.1
     hooks:
       - id: tartufo
         stages: [commit]
   - repo: https://github.com/psf/black
-    rev: 20.8b1
+    rev: 22.8.0
     hooks:
       - id: black
         stages: [commit]

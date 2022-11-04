@@ -6,20 +6,17 @@ require (
 	github.com/VirusTotal/vt-go v0.0.0-20201216104058-17a6ee4f94a6
 	github.com/aws/aws-lambda-go v1.19.1
 	github.com/aws/aws-sdk-go v1.35.27
-	github.com/gdcorp-infosec/cmap-go v0.0.0-20210910182244-ffed93b0c375
+	github.com/gdcorp-golang/auth v1.8.0
+	github.com/gdcorp-infosec/cmap-go v1.0.1
 	github.com/gdcorp-infosec/go-ioc v0.0.0-20211221221900-675db6b52f14
 	github.com/godaddy/asherah/go/appencryption v0.1.5
 	github.com/likexian/whois v1.12.1
 	github.com/likexian/whois-parser v1.20.3
 	github.com/ns3777k/go-shodan/v4 v4.2.0
 	github.com/opencontainers/runc v1.0.2 // indirect
-	github.com/oschwald/geoip2-golang v1.4.0
 	github.com/sirupsen/logrus v1.8.1
-	github.com/stretchr/testify v1.6.1
+	github.com/stretchr/testify v1.7.0
 	github.com/vertoforce/regexgrouphelp v0.1.1
-	github.secureserver.net/auth-contrib/go-auth v1.2.1
-	github.secureserver.net/go/sso-client v0.0.1
-	github.secureserver.net/threat/go-ldap v0.0.0-20201017001259-d06e7b5f7252
 	go.elastic.co/apm v1.11.0
 	go.elastic.co/apm/module/apmhttp v1.11.0
 	go.elastic.co/apm/module/apmlambda v1.11.0
@@ -29,9 +26,14 @@ require (
 )
 
 require (
+	github.com/agiledragon/gomonkey/v2 v2.7.0
+	github.com/gdcorp-infosec/go-ldap v1.1.0
+	github.com/gdcorp-infosec/go-sso-client v1.1.0
+)
+
+require (
 	github.com/BurntSushi/toml v0.3.1 // indirect
 	github.com/PuerkitoBio/goquery v1.5.1 // indirect
-	github.com/agiledragon/gomonkey/v2 v2.7.0 // indirect
 	github.com/andybalholm/cascadia v1.1.0 // indirect
 	github.com/armon/go-radix v1.0.0 // indirect
 	github.com/awnumar/memcall v0.0.0-20190930130926-11bbaffc6c8f // indirect
@@ -55,7 +57,6 @@ require (
 	github.com/mmcdole/gofeed v1.0.0-beta2 // indirect
 	github.com/mmcdole/goxpp v0.0.0-20181012175147-0068e33feabf // indirect
 	github.com/mpvl/unique v0.0.0-20150818121801-cbe035fff7de // indirect
-	github.com/oschwald/maxminddb-golang v1.6.0 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/prometheus/procfs v0.0.3 // indirect

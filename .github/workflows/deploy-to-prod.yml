@@ -25,10 +25,10 @@ on:
 jobs:
   deploy_to_prod:
     runs-on: [self-hosted,threat-runners]
-    
+
     if: github.ref == 'refs/heads/main'
     steps:
-      
+
       # Get version to reference in CO
       - name: Get version
         id: get-version
@@ -38,7 +38,7 @@ jobs:
       - name: Reset gitconfig
         run: |
           rm -f $HOME/.gitconfig
-          
+
       - name: Add Environmental Vars
         run: |
           echo DEPLOY_ROLE=arn:aws:iam::338932590174:role/GD-AWS-USA-GD-ThreatTools-Prod-Deploy >> $GITHUB_ENV
@@ -56,10 +56,10 @@ jobs:
           echo "::add-mask::$CI_TOKEN"
 
       - name: Checkout
-        uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b
+        uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8
 
       # Checkout the change-order-action
-      - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b
+      - uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8
         with:
           repository: gdcorp-actions/change-order-action
           ref: main
@@ -110,20 +110,8 @@ jobs:
           ./getpipconf.sh
           pip install -U -r requirements.txt -r requirements-test.txt
 
-          ssh-agent -k
-          touch lambdas/cpesubmit/.npmrc
-          cat > lambdas/cpesubmit/.npmrc <<EOF
-          registry=https://artifactory.secureserver.net/artifactory/api/npm/node-virt/
-          //artifactory.secureserver.net/artifactory/api/npm/node-virt/:_authToken=${{ secrets.NPM_ARTIFACTORY_TOKEN }}
-          EOF
-          touch lambdas/cpereport/.npmrc
-          cat > lambdas/cpereport/.npmrc <<EOF
-          registry=https://artifactory.secureserver.net/artifactory/api/npm/node-virt/
-          //artifactory.secureserver.net/artifactory/api/npm/node-virt/:_authToken=${{ secrets.NPM_ARTIFACTORY_TOKEN }}
-          EOF
-
       - name: Setup golang environment
-        uses: actions/setup-go@b22fbbc2921299758641fab08929b4ac52b32923
+        uses: actions/setup-go@c4a742cab115ed795e34d4513e2cf7d472deb55f
         with:
           go-version: '1.17.2'
 
@@ -144,6 +132,14 @@ jobs:
           go mod tidy
 
           ssh-agent -k
+
+#      This script automatically updates your sceptre files based on directories in apis/.
+#      Note: It's infrastructure on fly and not written back to github
+      - name: Run tools/generate_sceptre.py
+        run: |
+          source venv/bin/activate
+          cd tools
+          python3 generate_sceptre.py
 
       - name: Run sceptre
         run: |

@@ -1,0 +1,25 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Joe Sandbox ECR repository
+
+Parameters:
+  RepositoryName:
+    Type: String
+    Description: ECR repository name
+
+Resources:
+  JoeSandboxECRRepo:
+        Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
+        Properties:
+          ProductName: ECR
+          ProvisioningArtifactName: 1.2.1
+          ProvisionedProductName: joesandbox-ecr
+          ProvisioningParameters:
+            - Key: ECRRepoName
+              Value: !Ref RepositoryName
+            - Key: DataClassificationTag
+              Value: "non-pii"
+            - Key: ECRMaxImageCount
+              Value: 10
+          Tags:
+            - Key: doNotShutDown
+              Value: true

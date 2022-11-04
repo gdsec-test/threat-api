@@ -1,6 +1,0 @@
-template_path: "SC-ScheduledStepFunctionLighthouse.yaml"
-parameters:
-  StateMachineName: "LighthouseVulnerabilityWatch"
-  LoggingLevel: "ALL"
-  LogExecutionData: "true"
-  ScheduleExpression: cron(0 0/12 * * ? *)

@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"reflect"
 	"testing"
+
 	. "github.com/agiledragon/gomonkey/v2"
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-sdk-go/aws"
@@ -15,10 +16,10 @@ import (
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
 	"github.com/aws/aws-sdk-go/service/dynamodb/expression"
+	"github.com/gdcorp-golang/auth/gdtoken"
 	"github.com/gdcorp-infosec/threat-api/lambdas/common"
 	"github.com/gdcorp-infosec/threat-api/lambdas/common/toolbox"
 	. "github.com/smartystreets/goconvey/convey"
-	"github.secureserver.net/auth-contrib/go-auth/gdtoken"
 )
 
 func TestGetJob(t *testing.T) {

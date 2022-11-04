@@ -30,7 +30,7 @@ jobs:
       - name: Reset gitconfig
         run: |
           rm -f $HOME/.gitconfig
-          
+
       - name: Add Environmental Vars
         run: |
           echo DEPLOY_ROLE=arn:aws:iam::786677461057:role/GD-AWS-USA-GD-ThreatTools-Dev-Deploy >> $GITHUB_ENV
@@ -56,7 +56,7 @@ jobs:
           aws-region: us-west-2
 
       - name: Checkout
-        uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b
+        uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@67fbcbb121271f7775d2e7715933280b06314838
@@ -71,7 +71,7 @@ jobs:
           python3 -m venv venv
           source venv/bin/activate
           pip install -U pip
-      
+
       - name: Install python and other dependencies
         env:
           GIT_SSH_COMMAND: "ssh -o StrictHostKeyChecking=no"
@@ -85,20 +85,8 @@ jobs:
           ./getpipconf.sh
           pip install -U -r requirements.txt -r requirements-test.txt
 
-          ssh-agent -k
-          touch lambdas/cpesubmit/.npmrc
-          cat > lambdas/cpesubmit/.npmrc <<EOF
-          registry=https://artifactory.secureserver.net/artifactory/api/npm/node-virt/
-          //artifactory.secureserver.net/artifactory/api/npm/node-virt/:_authToken=${{ secrets.NPM_ARTIFACTORY_TOKEN }}
-          EOF
-          touch lambdas/cpereport/.npmrc
-          cat > lambdas/cpereport/.npmrc <<EOF
-          registry=https://artifactory.secureserver.net/artifactory/api/npm/node-virt/
-          //artifactory.secureserver.net/artifactory/api/npm/node-virt/:_authToken=${{ secrets.NPM_ARTIFACTORY_TOKEN }}
-          EOF
-
       - name: Setup golang environment
-        uses: actions/setup-go@b22fbbc2921299758641fab08929b4ac52b32923
+        uses: actions/setup-go@c4a742cab115ed795e34d4513e2cf7d472deb55f
         with:
           go-version: '1.17.2'
 
@@ -119,6 +107,14 @@ jobs:
           go mod tidy
 
           ssh-agent -k
+
+#      This script automatically updates your sceptre files based on directories in apis/.
+#      Note: It's infrastructure on fly and not written back to github
+      - name: Run tools/generate_sceptre.py
+        run: |
+          source venv/bin/activate
+          cd tools
+          python3 generate_sceptre.py
 
       - name: Run sceptre
         run: |
