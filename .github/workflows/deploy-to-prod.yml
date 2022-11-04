@@ -133,6 +133,14 @@ jobs:
 
           ssh-agent -k
 
+#      This script automatically updates your sceptre files based on directories in apis/.
+#      Note: It's infrastructure on fly and not written back to github
+      - name: Run tools/generate_sceptre.py
+        run: |
+          source venv/bin/activate
+          cd tools
+          python3 generate_sceptre.py
+
       - name: Run sceptre
         run: |
           source venv/bin/activate
