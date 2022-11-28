@@ -36,8 +36,8 @@ func (t *Toolbox) GetModules(ctx context.Context) (map[string]LambdaMetadata, er
 			if lastSlash := strings.LastIndex(parameterName, "/"); lastSlash != -1 {
 				parameterName = parameterName[lastSlash+1:]
 			}
-			// Quick fix to not include tanium in the modules list page. Should be removed when tanium is supported in Prod
-			if parameterName != "tanium" {
+			// Quick fix to exclude tanium and zerobounce from the API results
+			if parameterName != "tanium" && parameterName != "zerobounce" {
 				ret[parameterName] = metadata
 			}
 
