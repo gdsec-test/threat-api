@@ -1,4 +1,4 @@
 region: us-west-2
 threatapi_domain_name: api.threat.int.gdcorp.tools
-threatapi_certificate_arn: d343bacb-b3ca-4d40-bccd-f13f9d8d8abd
+threatapi_certificate_arn: 5d144796-59f1-4985-b03c-a85ce4579b5a
 sso_host: sso.gdcorp.tools
