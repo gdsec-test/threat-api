@@ -1,6 +1,6 @@
 boto3>=1.18.24
 botocore>=1.21.24
-certifi==2021.5.30
+certifi==2022.12.7
 charset-normalizer==2.0.4
 configparser==5.0.2
 ecs-logging==1.0.1
