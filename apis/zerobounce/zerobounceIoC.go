@@ -67,7 +67,6 @@ func (m *TriageModule) GetZeroBounceData(ctx context.Context, triageRequest *tri
 	return zerobounceResults, nil
 }
 
-
 func zerobounceMetaDataExtract(zerobounceResults map[string]*zb.ZeroBounceReport, metaData *zb.MetaData) []string {
 
 	var triageMetaData []string
@@ -79,7 +78,7 @@ func zerobounceMetaDataExtract(zerobounceResults map[string]*zb.ZeroBounceReport
 	return triageMetaData
 }
 
-//dumpCSV dumps the triage data to CSV
+// dumpCSV dumps the triage data to CSV
 func DumpCSV(zerobounceResults map[string]*zb.ZeroBounceReport, metaData *zb.MetaData) string {
 	//Dump data as csv
 	resp := bytes.Buffer{}
