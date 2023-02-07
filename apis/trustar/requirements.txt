@@ -4,7 +4,7 @@ certifi==2021.5.30
 charset-normalizer==2.0.4
 configparser==5.0.2
 ecs-logging==1.0.1
-future==0.18.2
+future==0.18.3
 idna==3.2
 jmespath==0.10.0
 JSON-log-formatter==0.4.0
