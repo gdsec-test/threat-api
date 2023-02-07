@@ -1,0 +1,84 @@
+name: Renew SSL Certificate (Dev-Private)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  renew_cert_dev_private:
+    runs-on: [self-hosted,threat-runners]
+    env:
+      aws-account-id: 570415283994
+      environment: CICD
+    steps:
+      # The setup-python action doesn't always work on aws hosted runners.
+      # This is an alternative approach if you know your runner has python37 installed by default.
+      - name: setup python path
+        run: echo "/home/github-actions/.local/bin" >> $GITHUB_PATH
+
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Get Runner AWS Region
+        id: get_aws_region
+        run: |
+          RUNNER_AWS_REGION=`aws ec2 describe-availability-zones --output text --query 'AvailabilityZones[0].[RegionName]'`
+          echo "::set-output name=aws-region::$RUNNER_AWS_REGION"
+
+      - name: Set Runner's AWS Region Environment Variable
+        run: |
+          echo "RUNNER_AWS_REGION=${{ steps.get_aws_region.outputs.aws-region }}" >> $GITHUB_ENV
+
+      - name: Get SSO Credentials
+        id: sso-credentials
+        run: |
+          AWS_RESPONSE=`aws --region=${{ env.RUNNER_AWS_REGION }} secretsmanager get-secret-value --secret-id=Github-cloud-jomax-service-account-primary-creds`
+
+          SSO_USERNAME=`echo $AWS_RESPONSE | jq -r .SecretString | jq -r .login`
+          echo "::set-output name=sso_username::$SSO_USERNAME"
+          echo "::add-mask::$SSO_USERNAME"
+
+          SSO_PASSWORD=`echo $AWS_RESPONSE | jq -r .SecretString | jq -r .pass`
+          echo "::set-output name=sso_password::$SSO_PASSWORD"
+          echo "::add-mask::$SSO_PASSWORD"
+
+      - name: Get SSO token
+        id: sso
+        run: |
+          while [[ -z "$SSO_RESPONSE" ]]
+          do
+              SSO_RESPONSE=`curl -X POST https://sso.godaddy.com/v1/api/token -H 'Content-Type: application/json' -d '{"username":"${{ steps.sso-credentials.outputs.sso_username }}","password":"${{ steps.sso-credentials.outputs.sso_password }}","realm":"jomax"}'`
+              sleep 1
+          done
+          SSO_TOKEN=`echo $SSO_RESPONSE | jq -r .data`
+          echo "::set-output name=sso-token::$SSO_TOKEN"
+          echo "::add-mask::$SSO_TOKEN"
+
+      # we are getting a token that's stored in AWS Secrets Manager
+      - name: Get Github Token
+        id: github-token
+        run: |
+          AWS_RESPONSE=`aws --region=${{ env.RUNNER_AWS_REGION }} secretsmanager get-secret-value --secret-id=/GitHub/Runner-Secrets`
+
+          GITHUB_TOKEN=`echo $AWS_RESPONSE | jq -r .SecretString | jq -r .PAT`
+          echo "::set-output name=token::$GITHUB_TOKEN"
+          echo "::add-mask::$GITHUB_TOKEN"
+
+      - name: Configure AWS Credentials for Target
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          role-to-assume: "arn:aws:iam::345790377847:role/GD-AWS-USA-GD-ThreatTools-Dev-Private-Deploy"
+          role-duration-seconds: 900
+          role-skip-session-tagging: true
+          aws-region: us-west-2
+
+      - name: Import SSL Secrets
+        uses: gdcorp-actions/ssl-action
+        with:
+          command: import-secrets
+          certificates: '[{"server":"api-private.threat.int.dev-gdcorp.tools"}]'
+          team: org-infosec-software-engineering
+          effort: threatresearch
+          renew: true
+          renewal_days: 60
+          skip_cert_issue: true
+          sso_token: ${{ steps.sso.outputs.sso-token }}
