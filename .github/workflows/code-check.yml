@@ -10,7 +10,7 @@ jobs:
     runs-on: [self-hosted,threat-runners]
     steps:
     - name: Checkout current repo
-      uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b
+      uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c
     
     - name: Install Python
       uses: actions/setup-python@98f2ad02fd48d057ee3b4d4f66525b231c3e52b6
@@ -25,7 +25,7 @@ jobs:
     runs-on: [self-hosted,threat-runners]
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@755da8c3cf115ac066823e79a1e1788f8940201b
+        uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c
 
       - name: Add Environmental Vars
         run: |
@@ -106,7 +106,7 @@ jobs:
         run: |
           rm -f $HOME/.gitconfig
       - name: Checkout this repository
-        uses: actions/checkout@755da8c3cf115ac066823e79a1e1788f8940201b
+        uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c
 
       - name: Add Environmental Vars
         run: |
