@@ -39,6 +39,26 @@ exclude-signatures = [
 "6eda9f61af55e9f3822589ec20a3ec7f7a4f490db933c0e931a6c4943beae87a", # OpenCTI hash
 "45c1c370d6b4815319dc54ed4098280e917369d6c91e6e55847170ce1313d281", # Deployment draw.io diagram for OpenCTI
 "f6a5ffc951b69b53fc3892e28a27922f3de2a4ec49035a135e69fac7bd97dac2", # Functional draw.io diagram for OpenCTI
+"33079f5a768439db2f704f9a0d592b4f14498858e140e25e8a8bb9c87ab6a938", # GitHub page link in docs/playbooks/THREAT_API.md
+"303fd104a0c87decb1ac26ca628a4bb5f93493c9d81a4fd858d9f4b5a8bab9bc", # Test URL in lambdas/manager/classify_test.go
+"6d79da9445dcf30ebd54ed8447936749c25a3afaac3c1d87d2d4c331a7e994e8", # Test URL in lambdas/manager/classify_test.go
+"1942b9aa39288c60c569b76e972414abab3b0b1e06ebbf4010e289571a93a331", # Branch diff on sceptre/config/dev-private/us-west-2/SC-CloudWatchAlarm.yaml
+"1942b9aa39288c60c569b76e972414abab3b0b1e06ebbf4010e289571a93a331", # Branch diff on sceptre/config/dev-private/us-west-2/SC-CloudWatchAlarm.yaml
+"a567e9e1978e269a0229f305f0dde1244a72401169328511e162f25007edc44b", # Branch diff on sceptre/config/dev-private/us-west-2/SC-WAFv2Regional.yaml
+"a567e9e1978e269a0229f305f0dde1244a72401169328511e162f25007edc44b", # Branch diff on sceptre/config/dev-private/us-west-2/SC-WAFv2Regional.yaml
+"c8e80d8732f5607fb4498f84c7e0d59efad218c7e47b9ecdbb102dc837b75f6a", # Branch diff on sceptre/config/dev/us-west-2/SC-CloudWatchAlarm.yaml
+"c8e80d8732f5607fb4498f84c7e0d59efad218c7e47b9ecdbb102dc837b75f6a", # Branch diff on sceptre/config/dev/us-west-2/SC-CloudWatchAlarm.yaml
+"6d8aa5a2db21b2639fe73b8c8de46dc6ec8d54c0c70213232dca7e8d0d712bae", # Branch diff on sceptre/config/dev/us-west-2/SC-WAFv2Regional.yaml
+"6d8aa5a2db21b2639fe73b8c8de46dc6ec8d54c0c70213232dca7e8d0d712bae", # Branch diff on sceptre/config/dev/us-west-2/SC-WAFv2Regional.yaml
+"68bff0231ea8d8b05e719e66b769c7765b1b5f03aee779c77012c482471b92c8", # Branch diff on sceptre/config/prod/us-west-2/SC-CloudWatchAlarm.yaml
+"68bff0231ea8d8b05e719e66b769c7765b1b5f03aee779c77012c482471b92c8", # Branch diff on sceptre/config/prod/us-west-2/SC-CloudWatchAlarm.yaml
+"5d7cdad17996a5b3fec5953150425b716f254e49a895754cc700fe4fbcc05362", # Branch diff on sceptre/config/prod/us-west-2/SC-WAFv2Regional.yaml
+"74f9caa39ba412a27b05a38ce5e7834113b494f183f3a153c2e8465c6d2574a3", # Branch diff on sceptre/config/prod/us-west-2/SC-WAFv2Regional.yaml
+"74f9caa39ba412a27b05a38ce5e7834113b494f183f3a153c2e8465c6d2574a3", # Branch diff on sceptre/config/prod/us-west-2/SC-WAFv2Regional.yaml
+"d928239f6a696b1946c7127c1146fecd0138b437593fb60b27b553bd708f35b1", # GitHub page links in sceptre/resources/api-setup.json
+"69c31d077dd6e4760f0ef88b72c5549152735c06fab8aecef1b504268c54dd41", # GitHub page link in sceptre/resources/swagger.json
+"abbe6d51b00098f538bba884a4ebdc4a433f4ca68b1dea254969035c3eff38a6", # SharePoint page link in tools/README.md
+"f06bb6c497fb48db153ca6d24d6fc94ccb152c59f7dcfaa01eb9e7efef477b7f", # SharePoint page link in tools/README.md
 ]
 json = false
 regex = true
