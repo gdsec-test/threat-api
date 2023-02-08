@@ -115,6 +115,8 @@
 
 ### Sceptre / CloudFormation / Service Catalog
 
+**Note**: Make sure that the Docker daemon is running on your localhost before running `sceptre launch` locally using the VS Code terminal (or any other IDE/terminal of your choice).
+
 Run sceptre to configure the AWS account (substituting the appropriate
 environment):
 
