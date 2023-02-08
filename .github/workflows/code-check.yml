@@ -18,7 +18,7 @@ jobs:
         python-version: 3.9
     
     - name: Tartufo Scan
-      uses: godaddy/tartufo-action@c82bd97f0052b12d204d03cea56a5f4667d9c0de
+      uses: godaddy/tartufo-action@37f3389ebfb544c729e6427e6ff545dc00d8a0b2
 
   python-code-check:
     needs: tartufo
