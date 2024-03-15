@@ -46,7 +46,7 @@ jobs:
          echo "::add-mask::$CI_TOKEN"
       
       - name: Checkout codebase
-        uses: actions/checkout@755da8c3cf115ac066823e79a1e1788f8940201b
+        uses: actions/checkout@9bb56186c3b09b4f86b1c65136769dd318469633
         with:
             repository: gdcorp-infosec/${{ env.REPO_NAME }}
             ref: ${{ github.ref }}
