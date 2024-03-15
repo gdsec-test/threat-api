@@ -78,7 +78,7 @@ jobs:
           pip install -U -r requirements.txt -r requirements-test.txt
 
       - name: Setup golang environment
-        uses: actions/setup-go@6edd4406fa81c3da01a34fa6f6343087c207a568
+        uses: actions/setup-go@0c52d547c9bc32b1aa3301fd7a9cb496313a4491
         with:
           go-version: '1.17.2'
 
